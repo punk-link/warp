@@ -2,7 +2,17 @@
 
 public class WarpContent
 {
-    public Guid Id { get; set; }
-    public required string Content { get; set; }
-    public required TimeSpan ExpiresIn { get; set; }
+    public WarpContent(Guid id, string content, DateTime createdAt, TimeSpan expiresIn)
+    {
+        Id = id;
+        Content = content;
+        CreatedAt = createdAt;
+        ExpiresIn = expiresIn;
+    }
+
+
+    public Guid Id { get; }
+    public string Content { get; }
+    public DateTime CreatedAt {get; }
+    public TimeSpan ExpiresIn { get; }
 }

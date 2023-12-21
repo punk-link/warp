@@ -16,17 +16,18 @@ public class WarpContentService : IWarpContentService
     }
 
 
-    public Result<Guid, ProblemDetails> Add(WarpContent content)
+    public Result<Guid, ProblemDetails> Add(string content, TimeSpan expiresIn)
     {
+        var warpContent = new WarpContent(Guid.NewGuid(), content, DateTime.UtcNow, expiresIn);
+        
         var validator = new WarpContentValidator();
-        var validationResult = validator.Validate(content);
+        var validationResult = validator.Validate(warpContent);
         if (!validationResult.IsValid)
             return validationResult.ToFailure<Guid>();
         
-        content.Id = Guid.NewGuid();
-        _memoryCache.Set(content.Id, content, content.ExpiresIn);
+        _memoryCache.Set(warpContent.Id, warpContent, expiresIn);
 
-        return Result.Success<Guid, ProblemDetails>(content.Id);
+        return Result.Success<Guid, ProblemDetails>(warpContent.Id);
     }
     
     

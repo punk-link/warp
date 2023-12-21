@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Net;
+﻿using System.Net;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Warp.WebApp.Models.ProblemDetails;
@@ -36,7 +35,9 @@ namespace Warp.WebApp.Helpers
 
         public static List<Error> GetErrors(this ProblemDetails details)
         {
-            var errorsObject = details.Extensions[ErrorsExtensionToken];
+            if (!details.Extensions.TryGetValue(ErrorsExtensionToken, out var errorsObject))
+                return Enumerable.Empty<Error>().ToList();
+            
             if (errorsObject is null)
                 return Enumerable.Empty<Error>().ToList();
             
@@ -49,7 +50,10 @@ namespace Warp.WebApp.Helpers
 
         public static string GetTraceId(this ProblemDetails details)
         {
-            return details.Extensions[TraceIdExtensionToken] as string ?? string.Empty;
+            if (!details.Extensions.TryGetValue(TraceIdExtensionToken, out var traceId))
+                return string.Empty;
+            
+            return traceId as string ?? string.Empty;
         }
 
 

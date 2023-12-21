@@ -2,7 +2,6 @@ using System.ComponentModel;
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Warp.WebApp.Models;
 using Warp.WebApp.Services;
 
 namespace Warp.WebApp.Pages;
@@ -23,15 +22,10 @@ public class IndexModel : BasePageModel
 
     public IActionResult OnPost()
     {
-        var content = new WarpContent
-        {
-            Content = TextContent,
-            ExpiresIn = GetExpirationPeriod(SelectedExpirationPeriod)
-        };
-        
-        var (_, isFailure, id, problemDetails) = _warpContentService.Add(content);
+        var expiresIn = GetExpirationPeriod(SelectedExpirationPeriod);
+        var (_, isFailure, id, problemDetails) = _warpContentService.Add(TextContent, expiresIn);
         if (!isFailure)
-            return RedirectToPage("./Index", new { id });
+            return RedirectToPage("./Entry", new { id });
 
         return RedirectToError(problemDetails);
 

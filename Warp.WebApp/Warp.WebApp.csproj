@@ -17,10 +17,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="Pages\Entry.cshtml" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="CSharpFunctionalExtensions" Version="2.40.3" />
     <PackageReference Include="FluentValidation" Version="11.8.1" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.5" />
@@ -35,10 +31,6 @@
 
   <ItemGroup>
     <_ContentIncludedByDefault Remove="Pages\Entry.cshtml" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="Pages\Entry.cshtml" />
   </ItemGroup>
 
 </Project>

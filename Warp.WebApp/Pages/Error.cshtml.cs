@@ -39,7 +39,7 @@ public class ErrorModel : BasePageModel
         => !string.IsNullOrEmpty(RequestId);
     
     
-    public string? Detail { get; set; } = "An error occurred while processing your request";
+    public string? Detail { get; set; } = "An error occurred while processing your request.";
     public List<Error> Errors { get; set; } = Enumerable.Empty<Error>().ToList();
     public string? RequestId { get; set; }
     public int Status { get; set; } = 500;

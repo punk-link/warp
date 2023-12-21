@@ -1,9 +1,14 @@
 ﻿@page "{id:Guid}"
-@model Warp.WebApp.Pages.EntryModel
+@model EntryModel
 @{
     ViewData["Title"] = "Home page";
 }
 
 <div class="text-center">
-    Test/test
+    <div>
+        This entry expires in @Model.ExpiresIn
+    </div>
+    <div>
+        @Model.TextContent
+    </div>
 </div>
