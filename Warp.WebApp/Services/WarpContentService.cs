@@ -1,4 +1,5 @@
-﻿using CSharpFunctionalExtensions;
+﻿using System.Net;
+using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Warp.WebApp.Helpers;
@@ -7,9 +8,9 @@ using Warp.WebApp.Models.Validators;
 
 namespace Warp.WebApp.Services;
 
-public class WrapContentService : IWrapContentService
+public class WarpContentService : IWarpContentService
 {
-    public WrapContentService(IMemoryCache memoryCache)
+    public WarpContentService(IMemoryCache memoryCache)
     {
         _memoryCache = memoryCache;
     }
@@ -29,12 +30,12 @@ public class WrapContentService : IWrapContentService
     }
     
     
-    public Result<WarpContent> Get(Guid id)
+    public Result<WarpContent, ProblemDetails> Get(Guid id)
     {
         if (_memoryCache.TryGetValue(id, out WarpContent? content))
-            return Result.Success(content!);
+            return Result.Success<WarpContent, ProblemDetails>(content!);
         
-        return Result.Failure<WarpContent>("Content not found");
+        return Result.Failure<WarpContent, ProblemDetails>(ProblemDetailsHelper.Create("Content not found.", HttpStatusCode.NotFound));
     }
 
     

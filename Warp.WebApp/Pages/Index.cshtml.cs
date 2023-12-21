@@ -11,40 +11,25 @@ namespace Warp.WebApp.Pages;
 public class IndexModel : BasePageModel
 {
 
-    public IndexModel(ILogger<IndexModel> logger, IWrapContentService wrapContentService)
+    public IndexModel(ILoggerFactory loggerFactory, IWarpContentService warpContentService) : base(loggerFactory)
     {
-        _logger = logger;
-        _wrapContentService = wrapContentService;
+        _warpContentService = warpContentService;
     }
     
     
-    public IActionResult OnGet(Guid? id)
-    {
-        if (id is null)
-            return Page();
-        
-        var (_, isFailure, content, problemDetails) = _wrapContentService.Get(id.Value);
-        if (isFailure)
-        {
-            //_logger.LogError(error!);
-            //AddProblemDetails(problemDetails);
-            return RedirectToPage("./Error");
-        }
-        
-        TextContent = content.Content;
-        return Page();
-    }
+    public IActionResult OnGet()
+        => Page();
 
 
     public IActionResult OnPost()
     {
         var content = new WarpContent
         {
-            Content = "", // TextContent,
+            Content = TextContent,
             ExpiresIn = GetExpirationPeriod(SelectedExpirationPeriod)
         };
         
-        var (_, isFailure, id, problemDetails) = _wrapContentService.Add(content);
+        var (_, isFailure, id, problemDetails) = _warpContentService.Add(content);
         if (!isFailure)
             return RedirectToPage("./Index", new { id });
 
@@ -66,9 +51,10 @@ public class IndexModel : BasePageModel
 
     
     [DisplayName("Expires in: ")]
-    public string SelectedExpirationPeriod { get; set; }
+    public string SelectedExpirationPeriod { get; set; } = string.Empty;
+
     [BindProperty]
-    public string TextContent { get; set; }
+    public string TextContent { get; set; } = string.Empty;
     
     public List<SelectListItem> ExpirationPeriodOptions
         =>
@@ -81,6 +67,5 @@ public class IndexModel : BasePageModel
         ];
     
         
-    private readonly ILogger<IndexModel> _logger;
-    private readonly IWrapContentService _wrapContentService;
+    private readonly IWarpContentService _warpContentService;
 }

@@ -2,7 +2,7 @@ using Warp.WebApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddTransient<IWrapContentService, WrapContentService>();
+builder.Services.AddTransient<IWarpContentService, WarpContentService>();
 
 builder.Services.AddMemoryCache();
 builder.Services.AddRazorPages();
