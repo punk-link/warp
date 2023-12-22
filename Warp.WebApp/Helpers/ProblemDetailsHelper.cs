@@ -40,11 +40,11 @@ namespace Warp.WebApp.Helpers
             
             if (errorsObject is null)
                 return Enumerable.Empty<Error>().ToList();
-            
-            var jsonElement = (JsonElement) errorsObject;
-            var errors = JsonSerializer.Deserialize<List<Error>>(jsonElement.GetRawText());
-            
-            return errors ?? Enumerable.Empty<Error>().ToList();
+
+            if (errorsObject is JsonElement jsonElement)
+                return JsonSerializer.Deserialize<List<Error>>(jsonElement.GetRawText())!;
+
+            return (List<Error>) errorsObject;
         }
 
 
