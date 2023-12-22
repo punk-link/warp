@@ -19,23 +19,42 @@ public class EntryModel : BasePageModel
         if (isFailure)
         {
             return problemDetails.Status == StatusCodes.Status404NotFound 
-                ? RedirectToPage("./not-found") 
+                ? RedirectToPage("./NotFound") 
                 : RedirectToError(problemDetails);
         }
 
-        ExpiresIn = GetExpirationTimeSpan(content.CreatedAt);
+        ExpiresIn = GetExpirationMessage(content.ExpiresAt);
         TextContent = content.Content;
         
         return Page();
     }
 
 
-    private static TimeSpan GetExpirationTimeSpan(DateTime createdAt)
-        => DateTime.UtcNow - createdAt;
+    private static string GetExpirationMessage(DateTime expiresAt)
+    {
+        var timeSpan = GetExpirationTimeSpan(expiresAt);
+        if (1 < timeSpan.Days)
+            return $"The entry expires in {timeSpan.Days} days.";
+
+        if (1 < timeSpan.Hours)
+            return $"The entry expires in {timeSpan.Hours} hours.";
+
+        if (1 < timeSpan.Minutes)
+            return $"The entry expires in {timeSpan.Minutes} minutes.";
+
+        if (1 < timeSpan.Seconds)
+            return $"The entry expires in {timeSpan.Seconds} seconds.";
+        
+        return "The entry expires now.";
+    }
+
+
+    private static TimeSpan GetExpirationTimeSpan(DateTime expiresAt)
+        => expiresAt - DateTime.UtcNow;
 
 
     public string TextContent { get; set; } = string.Empty;
-    public TimeSpan ExpiresIn { get; set; }
+    public string ExpiresIn { get; set; } = string.Empty; 
 
     
     private readonly IWarpContentService _warpContentService;

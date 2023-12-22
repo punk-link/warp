@@ -11,7 +11,7 @@ public class WarpContentValidator : AbstractValidator<WarpContent>
             .WithErrorCode(LoggingConstants.WarpContentEmpty.ToString())
             .WithMessage("Can't add the content. The body is empty.");
         
-        RuleFor(x => x.ExpiresIn).GreaterThan(default(TimeSpan))
+        RuleFor(x => x.ExpiresAt).GreaterThan(default(DateTime))
             .WithErrorCode(LoggingConstants.WarpExpirationPeriodEmpty.ToString())
             .WithMessage("Can't add the content. The expiration period is empty.");
     }

@@ -42,7 +42,7 @@ public class BasePageModel : PageModel
 
         LogErrors(problemDetails, traceId);
         
-        return RedirectToPage("/error");
+        return RedirectToPage("./Error");
     }
 
 

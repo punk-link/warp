@@ -45,6 +45,7 @@ public class IndexModel : BasePageModel
 
     
     [DisplayName("Expires in: ")]
+    [BindProperty]
     public string SelectedExpirationPeriod { get; set; } = string.Empty;
 
     [BindProperty]

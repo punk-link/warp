@@ -18,7 +18,8 @@ public class WarpContentService : IWarpContentService
 
     public Result<Guid, ProblemDetails> Add(string content, TimeSpan expiresIn)
     {
-        var warpContent = new WarpContent(Guid.NewGuid(), content, DateTime.UtcNow, expiresIn);
+        var now = DateTime.UtcNow;
+        var warpContent = new WarpContent(Guid.NewGuid(), content, now, now + expiresIn);
         
         var validator = new WarpContentValidator();
         var validationResult = validator.Validate(warpContent);
