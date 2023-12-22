@@ -18,16 +18,14 @@ public class EntryModel : BasePageModel
         var (_, isFailure, content, problemDetails) = _warpContentService.Get(id);
         if (isFailure)
         {
-            if (problemDetails.Status == StatusCodes.Status404NotFound)
-            {
-                // TODO: redirect to not found
-            }
-            
-            return RedirectToError(problemDetails);
+            return problemDetails.Status == StatusCodes.Status404NotFound 
+                ? RedirectToPage("./not-found") 
+                : RedirectToError(problemDetails);
         }
 
         ExpiresIn = GetExpirationTimeSpan(content.CreatedAt);
         TextContent = content.Content;
+        
         return Page();
     }
 
