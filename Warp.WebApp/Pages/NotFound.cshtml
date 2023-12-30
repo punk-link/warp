@@ -4,4 +4,21 @@
     ViewData["Title"] = "The entry wasn't found";
 }
 
-<h1 class="text-danger">The entry wasn't found</h1>
+<div class="grid-container">
+    <div class="grid-column-1">
+        <partial name="Shared/_Social"/>
+    </div>
+    <div class="grid-column-2 secondary">
+        <div>
+            Warp
+        </div>
+        <div class="error-code-container">
+            404
+        </div>
+        <div class="not-found-message-container">
+            <p>Oops...</p>
+            <p>The entry wasn't found</p>
+        </div>
+    </div>
+    <div class="grid-column-3"></div>
+</div>
