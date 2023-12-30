@@ -1,8 +1,11 @@
 :root {
+    --primary-100: #A762FF;
+    --primary-120: #8C4EDA; 
     --text-10: #EFEFEF;
     --text-20: #D9D9D9;
     --text-40: #B9B9B9;
     --text-60: #9F9F9F;
+    --white-100: #FFF;
 }
 
 html {
@@ -21,8 +24,37 @@ a {
     text-decoration: none;
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+button {
+    display: inline-flex;
+    height: 3.5rem;
+    padding: 1rem 3.75rem;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 0.625rem;
+    flex-shrink: 0;
+    border-radius: 0.3125rem;
+    border: none;
+    text-align: center;
+    font-family: Montserrat;
+    font-size: 1.25rem;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+    outline: none;
+}
+
+.btn-primary {
+    background: var(--primary-100, #A762FF);
+    color: var(--white-100, #FFF);
+}
+
+.btn-primary:hover {
+    background: var(--primary-100, #A762FF);
+}
+
+.btn-primary:active {
+    background: var(--primary-120, #8C4EDA);
 }
 
 .grid-container {
@@ -47,10 +79,16 @@ a {
     grid-area: 1 / 3 / 2 / 4;
 }
 
-.error-code-container {
-    margin: 15vh 0 1.5rem;
-    color: var(--text-10, #EFEFEF);
-    font-size: 10rem;
+.back-button-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.back-button-container a {
+    color: var(--text-60, #9F9F9F);
+    font-size: 1rem;
+    padding: 0.25rem 0rem;
 }
 
 .copyright {
@@ -64,6 +102,12 @@ a {
 .nav-container a {
     color: var(--text-60, #9F9F9F);
     padding: 0.25rem 0rem;
+}
+
+.error-code-container {
+    margin: 15vh 0 1.5rem;
+    color: var(--text-10, #EFEFEF);
+    font-size: 10rem;
 }
 
 .error-message-container {
@@ -82,7 +126,7 @@ a {
 }
 
 .error-message-container .error-list p {
-    padding-left: 1rem;
+    padding-left: 1rem 0 0 1rem;
 }
 
 .error-message-container .request-id {
@@ -111,7 +155,7 @@ a {
     justify-content: flex-end;
 }
 
-.social-container {
+.empty-left-column-container {
     display: grid;
     grid-template-columns: 1fr 2fr;
     grid-template-rows: 1fr;
@@ -125,7 +169,6 @@ a {
     line-height: normal;
     letter-spacing: 0.01875rem;
     font-size: 0.625rem;
-
     height: 100vh;
-    padding-bottom: 2.5rem;
+    padding: 2.5rem 0;
 }

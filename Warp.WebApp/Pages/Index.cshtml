@@ -4,7 +4,7 @@
     ViewData["Title"] = "Home page";
 }
 
-<div class="text-center">
+<div class="warp-container">
     <form method="post" class="form-vertical">
         <div class="form-group">
             <textarea asp-for="TextContent" rows="10" cols="100"></textarea>
@@ -13,6 +13,6 @@
             <label asp-for="SelectedExpirationPeriod"></label>
             <select asp-for="SelectedExpirationPeriod" asp-items="Model.ExpirationPeriodOptions"></select>
         </div>
-        <button type="submit">Create</button>
+        <button class="btn-primary" type="submit">Create</button>
     </form>
 </div>
