@@ -1,28 +1,46 @@
 ﻿@page "/error"
 @model ErrorModel
 @{
-    ViewData["Title"] = $"Error {Model.Status}";
+    ViewData["Title"] = $"Error {Model.Title}";
 }
 
-<h1 class="text-danger">@Model.Title</h1>
-<h2 class="text-danger">@Model.Detail</h2>
+<div class="grid-container">
+    <div class="grid-column-1">
+        <partial name="Shared/_Social" />
+    </div>
+    <div class="grid-column-2 secondary">
+        <div>
+            Warp
+        </div>
+        <div class="error-code-container">
+            @Model.Status
+        </div>
+        <div class="error-message-container">
+            <p>@Model.Detail</p>
+            <div class="request-id">
+                @if (Model.ShowRequestId)
+                {
+                    <p>
+                        <strong>Request ID:</strong> <code>@Model.RequestId</code>
+                    </p>
+                }
 
-@if (Model.ShowRequestId)
-{
-    <p>
-        <strong>Request ID:</strong> <code>@Model.RequestId</code>
-    </p>
-}
-
-@if (Model.ShowErrors)
-{
-    <h3>Errors</h3>
-    <p>
-        @foreach(var error in Model.Errors)
-        {
-            <p>
-                <strong>@error.Code:</strong> @error.Message
-            </p>
-        }
-    </p>
-}
+            </div>
+            <div class="error-list">
+                @if (Model.ShowErrors)
+                {
+                    <h3>Errors:</h3>
+                    <p>
+                        @foreach(var error in Model.Errors)
+                        {
+                            <p>
+                                <strong>@error.Code.</strong> @error.Message
+                            </p>
+                        }
+                    </p>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="grid-column-3"></div>
+</div>

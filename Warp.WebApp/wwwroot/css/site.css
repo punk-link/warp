@@ -11,10 +11,6 @@ html {
     position: relative;
 }
 
-body {
-    margin-bottom: 60px;
-}
-
 @media (min-width: 768px) {
   html {
     font-size: 16px;
@@ -70,18 +66,32 @@ a {
     padding: 0.25rem 0rem;
 }
 
-.not-found-message-container {
+.error-message-container {
     width: 23.75rem;
     height: 6.125rem;
     flex-shrink: 0;
 }
 
-.not-found-message-container p:nth-child(1) {
+.error-message-container p:nth-of-type(1) {
+    line-height: 2.5rem;
     margin-bottom: .25rem;
 }
 
-.not-found-message-container p:nth-child(2) {
+.error-message-container p:nth-of-type(2) {
     font-size: 1rem;
+}
+
+.error-message-container .error-list p {
+    padding-left: 1rem;
+}
+
+.error-message-container .request-id {
+    font-size: 1rem;
+    margin: 1rem 0;
+}
+
+.error-message-container .request-id p {
+    line-height: 1.2rem;
 }
 
 .secondary {
