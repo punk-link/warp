@@ -4,15 +4,20 @@
     ViewData["Title"] = "Home page";
 }
 
-<div class="warp-container">
-    <form method="post" class="form-vertical">
-        <div class="form-group">
-            <textarea asp-for="TextContent" rows="10" cols="100"></textarea>
-        </div>
-        <div class="form-group">
-            <label asp-for="SelectedExpirationPeriod"></label>
-            <select asp-for="SelectedExpirationPeriod" asp-items="Model.ExpirationPeriodOptions"></select>
-        </div>
-        <button class="btn-primary" type="submit">Create</button>
-    </form>
+<div class="container">
+    <div class="logo-container">
+        <partial name="Shared/_Logo" />
+    </div>
+    <div class="warp-container">
+        <form method="post" class="form-vertical">
+            <div class="form-group">
+                <textarea id="warp-content-textarea" asp-for="TextContent" required></textarea>
+            </div>
+            <div class="form-group">
+                <label asp-for="SelectedExpirationPeriod"></label>
+                <select asp-for="SelectedExpirationPeriod" asp-items="Model.ExpirationPeriodOptions"></select>
+            </div>
+            <button class="btn-primary" type="submit">Create</button>
+        </form>
+    </div>
 </div>
