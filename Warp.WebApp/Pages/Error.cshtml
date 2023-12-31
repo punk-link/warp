@@ -4,18 +4,11 @@
     ViewData["Title"] = $"Error {Model.Title}";
 }
 
-<div class="grid-container">
-    <div class="grid-column-1">
-        <div class="empty-left-column-container">
-            <div class="grid-column-1">
-                <partial name="Shared/_BackButton" />
-            </div>
-            <div class="grid-column-2 social">
-                <partial name="Shared/_Social" />
-            </div>
-        </div>
+<div class="grid-v-container grid-v-3 vh100">
+    <div class="grid-v-col-1">
+        <partial name="Shared/_EmptyLeftGridColumn" />
     </div>
-    <div class="grid-column-2 secondary">
+    <div class="grid-v-col-2 secondary-grey-column">
         <partial name="Shared/_Logo" />
         <div class="error-code-container">
             @Model.Status
@@ -29,7 +22,6 @@
                         <strong>Request ID:</strong> <code>@Model.RequestId</code>
                     </p>
                 }
-
             </div>
             <div class="error-list">
                 @if (Model.ShowErrors)
@@ -47,5 +39,5 @@
             </div>
         </div>
     </div>
-    <div class="grid-column-3"></div>
+    <div class="grid-v-col-3"></div>
 </div>

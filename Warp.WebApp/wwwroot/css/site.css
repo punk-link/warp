@@ -1,15 +1,10 @@
-:root {
-    --error: #FFA767;
-    --primary-60: #C99EFF;
-    --primary-100: #A762FF;
-    --primary-120: #8C4EDA;
-    --text-10: #EFEFEF;
-    --text-20: #D9D9D9;
-    --text-40: #B9B9B9;
-    --text-60: #9F9F9F;
-    --text-100: #484848;
-    --white-100: #FFF;
-}
+@import url(button.css);
+@import url(dimensions.css);
+@import url(flex.css);
+@import url(form.css);
+@import url(grid.css);
+@import url(textarea.css);
+@import url(variables.css);
 
 html {
     font-size: 14px;
@@ -36,30 +31,10 @@ a {
     text-decoration: none;
 }
 
-button {
-    display: inline-flex;
-    height: 3.5rem;
-    padding: 1rem 3.75rem;
-    flex-direction: column;
-    justify-content: center;
-    align-items: flex-start;
-    gap: 0.625rem;
-    flex-shrink: 0;
-    border-radius: 0.3125rem;
-    border: none;
-    text-align: center;
-    font-family: Montserrat;
-    font-size: 1.25rem;
-    font-style: normal;
-    font-weight: 700;
-    line-height: normal;
-    outline: none;
-}
-
 select {
     border: none;
     color: var(--primary-100, #A762FF);
-    text-align: center;
+    text-align: start;
     font-family: Montserrat;
     font-size: 1.125rem;
     font-style: normal;
@@ -77,91 +52,14 @@ select {
         outline: none;
     }
 
-textarea {
-    display: flex;
-    width: auto;
-    padding: 0.625rem 1.25rem 0.875rem 1.25rem;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.375rem;
-    border-radius: 0.75rem;
-    border-color: var(--primary-100, #A762FF);
+.back-button-container a {
+    color: var(--text-60, #9F9F9F);
+    font-size: 1rem;
+    padding: 0.25rem 0rem;
 }
-
-    textarea:active {
-        border-color: var(--primary-60, #C99EFF);
-        outline: none;
-    }
-
-    textarea:focus {
-        border-color: var(--primary-60, #C99EFF);
-        outline: none;
-    }
-
-    textarea:user-invalid {
-        background: var(--error, #FFA767);
-        border-color: var(--white-100, #FFF);
-        outline: none;
-    }
-
-.btn-primary {
-    background: var(--primary-100, #A762FF);
-    color: var(--white-100, #FFF);
-}
-
-    .btn-primary:hover {
-        background: var(--primary-100, #A762FF);
-    }
-
-    .btn-primary:active {
-        background: var(--primary-120, #8C4EDA);
-        outline: none;
-    }
-
-    .btn-primary:focus {
-        background: var(--primary-120, #8C4EDA);
-        outline: none;
-    }
-
-.grid-container {
-    display: grid;
-    grid-template-columns: 2fr 2fr 1fr;
-    grid-template-rows: 1fr;
-    grid-column-gap: 0px;
-    grid-row-gap: 0px;
-
-    height: 100vh;
-}
-
-.grid-column-1 {
-    grid-area: 1 / 1 / 2 / 2;
-}
-
-.grid-column-2 {
-    grid-area: 1 / 2 / 2 / 3;
-}
-
-.grid-column-3 {
-    grid-area: 1 / 3 / 2 / 4;
-}
-
-.back-button-container {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-}
-
-    .back-button-container a {
-        color: var(--text-60, #9F9F9F);
-        font-size: 1rem;
-        padding: 0.25rem 0rem;
-    }
 
 .container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    max-width: 1000px;
+    max-width: 976px;
 }
 
 .copyright {
@@ -169,21 +67,7 @@ textarea {
 }
 
 .empty-left-column-container {
-    display: grid;
-    grid-template-columns: 1fr 2fr;
-    grid-template-rows: 1fr;
-    grid-column-gap: 0px;
-    grid-row-gap: 0px;
-    color: var(--text-60, #9F9F9F);
-    font-family: Montserrat;
-    font-size: 0.625rem;
-    font-style: normal;
-    font-weight: 400;
-    line-height: normal;
-    letter-spacing: 0.01875rem;
-    font-size: 0.625rem;
-    height: 100vh;
-    padding: 2.5rem 0;
+    padding: 2.5rem 1rem 2.5rem 0;
 }
 
 .error-code-container {
@@ -220,23 +104,15 @@ textarea {
         line-height: 1.2rem;
     }
 
-.form-group {
-    margin: 1rem 0;
-}
-    .form-group label {
-        color: var(--text-60, #9F9F9F);
-        font-family: Montserrat;
-        font-size: 0.75rem;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-        letter-spacing: 0.015rem;
-        display: block;
+.footer-grid {
+    padding: 2.5rem 1rem;
+    width: 100%;
 }
 
-    .form-group label:after {
-        content: ": "
-    }
+.header-grid {
+    padding: 2.5rem 0;
+    width: 100%;
+}
 
 .logo {
     font-family: Krona One;
@@ -248,14 +124,6 @@ textarea {
     color: var(--primary-100, #A762FF);
 }
 
-.logo-container {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    margin: 2.5rem;
-    width: 100%;
-}
-
 .nav-container {
     margin: .75rem 0;
 }
@@ -265,25 +133,20 @@ textarea {
         padding: 0.25rem 0rem;
     }
 
-.secondary {
+.secondary-grey-column {
     background: var(--text-20, #D9D9D9);
     color: var(--text-60, #9F9F9F);
-    font-family: Montserrat;
     font-size: 2.5rem;
-    font-style: normal;
-    font-weight: 400;
-    line-height: normal;
     padding: 2.5rem;
 }
 
 .social {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
+    color: var(--text-60, #9F9F9F);
+    font-size: 0.625rem;
+    letter-spacing: 0.01875rem;
+    font-size: 0.625rem;
 }
 
 #warp-content-textarea {
     min-width: 50vw;
-    width: auto;
-    height: 50vh;
 }

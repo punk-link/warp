@@ -1,0 +1,19 @@
+﻿.form-group {
+    margin: 1rem 0;
+}
+
+    .form-group label {
+        color: var(--text-60, #9F9F9F);
+        font-family: Montserrat;
+        font-size: 0.75rem;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+        letter-spacing: 0.015rem;
+        display: block;
+        padding-left: 0.625rem;
+    }
+
+        .form-group label:after {
+            content: ": "
+        }

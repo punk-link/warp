@@ -4,20 +4,38 @@
     ViewData["Title"] = "Home page";
 }
 
-<div class="container">
-    <div class="logo-container">
-        <partial name="Shared/_Logo" />
+<div class="grid-v-container grid-v-3 header-grid">
+    <div class="grid-v-col-1"></div>
+    <div class="grid-v-col-2">
+        <partial name="Shared/_Logo"/>
     </div>
-    <div class="warp-container">
-        <form method="post" class="form-vertical">
-            <div class="form-group">
-                <textarea id="warp-content-textarea" asp-for="TextContent" required></textarea>
-            </div>
+    <div class="grid-v-col-3"></div>
+</div>
+<div class="warp-container">
+    <form method="post" class="form-vertical">
+        <div class="form-group">
+            <textarea id="warp-content-textarea" class="vh50" asp-for="TextContent" required></textarea>
+        </div>
+        <div class="flex-container align-center justify-space-between">
             <div class="form-group">
                 <label asp-for="SelectedExpirationPeriod"></label>
                 <select asp-for="SelectedExpirationPeriod" asp-items="Model.ExpirationPeriodOptions"></select>
             </div>
-            <button class="btn-primary" type="submit">Create</button>
-        </form>
+            <div>
+                <button class="btn-primary" type="submit">Create</button>
+            </div>
+        </div>
+    </form>
+</div>
+<div class="grid-v-container grid-v-3 footer-grid">
+    <div class="grid-v-col-1">
+        <div class="grid-v-container grid-v-2">
+            <div class="grid-v-col-1"></div>
+            <div class="grid-v-col-2 social flex-container flex-direction-column justify-flex-end">
+                <partial name="Shared/_Social"/>
+            </div>
+        </div>
     </div>
+    <div class="grid-v-col-2"></div>
+    <div class="grid-v-col-3"></div>
 </div>

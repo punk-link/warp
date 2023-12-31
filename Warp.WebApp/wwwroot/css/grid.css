@@ -1,0 +1,26 @@
+﻿.grid-v-container {
+    display: grid;
+    grid-template-rows: 1fr;
+    grid-column-gap: 0px;
+    grid-row-gap: 0px;
+}
+
+.grid-v-2 {
+    grid-template-columns: 1fr 2fr;
+}
+
+.grid-v-3 {
+    grid-template-columns: 2fr 2fr 1fr;
+}
+
+.grid-v-col-1 {
+    grid-area: 1 / 1 / 2 / 2;
+}
+
+.grid-v-col-2 {
+    grid-area: 1 / 2 / 2 / 3;
+}
+
+.grid-v-col-3 {
+    grid-area: 1 / 3 / 2 / 4;
+}
