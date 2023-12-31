@@ -4,7 +4,8 @@
     ViewData["Title"] = "Home page";
 }
 
-<div class="text-center">
+<partial name="Shared/_Header" />
+<div class="warp-container flex-container flex-direction-column">
     <div>
         @Model.ExpiresIn
     </div>
@@ -12,3 +13,4 @@
         @Model.TextContent
     </div>
 </div>
+<partial name="Shared/_Footer" />
