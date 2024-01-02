@@ -1,0 +1,21 @@
+﻿select {
+    background: none;
+    border: none;
+    color: var(--primary-100, #A762FF);
+    text-align: start;
+    font-family: Montserrat;
+    font-size: 1.125rem;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+}
+
+    select:focus {
+        outline: none;
+    }
+
+option {
+    border: none;
+    box-shadow: none;
+    outline: none;
+}

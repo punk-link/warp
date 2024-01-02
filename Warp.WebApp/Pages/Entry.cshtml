@@ -6,11 +6,20 @@
 
 <partial name="Shared/_Header" />
 <div class="warp-container flex-container flex-direction-column">
-    <div>
+    <div class="expiration-message-container">
         @Model.ExpiresIn
     </div>
-    <div>
+    <div class="warp-content-container">
         @Model.TextContent
+    </div>
+    <div class="button-bar flex-container flex-direction-row justify-flex-end">
+        <button class="btn-tertiary" type="submit">
+            <div>
+                <i class="icofont-copy"></i>
+                copy link
+            </div>
+        </button>
+        <button class="btn-tertiary" type="submit">report</button>
     </div>
 </div>
 <partial name="Shared/_Footer" />

@@ -36,3 +36,17 @@
         background: var(--primary-120, #8C4EDA);
         outline: none;
     }
+
+.btn-tertiary {
+    background: none;
+    border: none;
+    color: var(--primary-100, #A762FF);
+    cursor: pointer;
+    margin: .5rem 3rem;
+    padding: .5rem .75rem;
+}
+
+    .btn-tertiary div i {
+        font-size: 1rem;
+        padding-right: 0.625rem;
+    }

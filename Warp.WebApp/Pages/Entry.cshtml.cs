@@ -34,18 +34,18 @@ public class EntryModel : BasePageModel
     {
         var timeSpan = GetExpirationTimeSpan(expiresAt);
         if (1 < timeSpan.Days)
-            return $"The entry expires in {timeSpan.Days} days.";
+            return $"The entry expires in {timeSpan.Days} days";
 
         if (1 < timeSpan.Hours)
-            return $"The entry expires in {timeSpan.Hours} hours.";
+            return $"The entry expires in {timeSpan.Hours} hours";
 
         if (1 < timeSpan.Minutes)
-            return $"The entry expires in {timeSpan.Minutes} minutes.";
+            return $"The entry expires in {timeSpan.Minutes} minutes";
 
         if (1 < timeSpan.Seconds)
-            return $"The entry expires in {timeSpan.Seconds} seconds.";
+            return $"The entry expires in {timeSpan.Seconds} seconds";
         
-        return "The entry expires now.";
+        return "The entry expires now";
     }
 
 

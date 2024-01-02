@@ -2,7 +2,7 @@
 * @package IcoFont 
 * @version 1.0.1 
 * @author   
-* @copyright 2023 
+* @copyright 2024 
 * @license - https://icofont.com/license/
 */
 
@@ -36,6 +36,11 @@ url("./fonts/icofont.woff") format("woff");
 .icofont-simple-left:before
 {
   content: "\eab5";
+}
+
+.icofont-copy:before
+{
+  content: "\edea";
 }
 
 [class^="icofont-"].icofont-duotone,
