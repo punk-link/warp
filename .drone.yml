@@ -1,0 +1,67 @@
+kind: pipeline
+type: docker
+name: Build
+
+trigger:
+  branch:
+    - master
+  event:
+    include:
+      - push
+steps:
+
+- name: Test application 
+  image: mcr.microsoft.com/dotnet/sdk:8.0
+  commands:
+    - dotnet build -c Release
+    - dotnet test -c Release
+    
+- name: Build docker image & push to repository
+  image: plugins/docker
+  environment:
+    BUILD_VERSION: ${DRONE_COMMIT_SHA:0:7}
+  settings:
+    registry: registry.punk.link
+    repo: registry.punk.link/warp-webapp
+    tags:
+      - ${DRONE_COMMIT_SHA:0:7}
+      - ${DRONE_COMMIT_BRANCH}
+    force_tag: true
+    use_cache: true
+    username:
+      from_secret: DOCKER_LOGIN
+    password:
+      from_secret: DOCKER_PASSWORD
+ 
+- name: Deploy to DEV
+  image: pelotech/drone-helm3
+  settings:
+    mode: upgrade
+    chart: ./Helm/
+    release: api-v2-dev
+    values_files: ["Helm/values_dev.yaml"]
+    namespace: dev
+    skip_tls_verify: true
+    wait_for_upgrade: true
+    values: image.tag=${DRONE_COMMIT_SHA:0:7}
+  environment:
+    KUBE_API_SERVER:
+      from_secret: KUBERNETES_DEV_API
+    KUBE_TOKEN:
+      from_secret: KUBERNETES_DEV_TOKEN      
+      
+- name: send telegram notification
+  image: appleboy/drone-telegram
+  settings:
+    token: 
+      from_secret: TELEGRAM_TOKEN
+    to: 
+      from_secret: TELEGRAM_GROUP_ID
+    message: >
+      {{#success build.status}}
+        ✅ Build {{build.number}} `{{ build.event }}` of `{{repo.name}}` succeeded. Commit by {{commit.author}} on `{{commit.branch}}` ``` {{commit.message}} ``` {{ build.link }}
+      {{else}}
+        ❌ Build {{build.number}} `{{ build.event }}` of `{{repo.name}}` failed. Commit by {{commit.author}} on `{{commit.branch}}` ``` {{commit.message}} ``` {{ build.link }}
+      {{/success}}
+  when:
+    status: [success, failure]  

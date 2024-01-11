@@ -1,0 +1,94 @@
+replicaCount: 1
+
+
+jaeger:
+  collector_host: dns:///jaeger-all-in-one.observability:14250
+
+
+image:
+  repository: registry.punk.link/warp
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "latest"
+
+imagePullSecrets:
+  - name: punk-link-registry
+nameOverride: ""
+imagePullSecrets:
+  - name: punk-link-registry
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+  grpc:
+    port: 9000
+  db:
+    port: 5432  
+
+ingress:
+  enabled: true
+  className: ""
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    kubernetes.io/ingress.class: nginx
+    ingress.kubernetes.io/force-ssl-redirect: "true" 
+  hosts:
+    - host: warp.punk.link
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+   - secretName: warp-tls
+     hosts:
+       - warp.punk.link
+
+resources:
+  limits:
+    cpu: 50m
+    memory: 256Mi
+  requests:
+    cpu: 50m
+    memory: 256Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+env:
+  ASPNETCORE_URLS: http://*:80
+  ASPNETCORE_ENVIRONMENT: "Development"
+  PNKL_VAULT_ADDR: "http://vault.dev.svc.cluster.local:8200"
+  
+  
