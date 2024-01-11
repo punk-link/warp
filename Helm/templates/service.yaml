@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "service.fullname" . }}
+  name: {{ include "punk-link-api-v2.fullname" . }}
   labels:
-    {{- include "service.labels" . | nindent 4 }}
+    {{- include "punk-link-api-v2.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -11,9 +11,13 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
+    - port: {{ .Values.service.grpc.port }}
+      targetPort: grpc
+      protocol: TCP
+      name: grpc
     - port: {{ .Values.service.db.port }}
       targetPort: db
       protocol: TCP
       name: db     
   selector:
-    {{- include "service.selectorLabels" . | nindent 4 }}
+    {{- include "punk-link-api-v2.selectorLabels" . | nindent 4 }}

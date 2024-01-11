@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "service.fullname" . }}
+  name: {{ include "punk-link-api-v2.fullname" . }}
   labels:
-    {{- include "service.labels" . | nindent 4 }}
+    {{- include "punk-link-api-v2.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "service.selectorLabels" . | nindent 6 }}
+      {{- include "punk-link-api-v2.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -18,13 +18,13 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "service.selectorLabels" . | nindent 8 }}
+        {{- include "punk-link-api-v2.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "service.serviceAccountName" . }}
+      serviceAccountName: {{ include "punk-link-api-v2.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -51,6 +51,9 @@ spec:
           ports:
             - name: http
               containerPort: 80
+              protocol: TCP
+            - name: grpc
+              containerPort: {{ .Values.service.grpc.port }}
               protocol: TCP
             - name: db
               containerPort: {{ .Values.service.db.port }}

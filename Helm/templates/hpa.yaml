@@ -2,14 +2,14 @@
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "service.fullname" . }}
+  name: {{ include "punk-link-api-v2.fullname" . }}
   labels:
-    {{- include "service.labels" . | nindent 4 }}
+    {{- include "punk-link-api-v2.labels" . | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "service.fullname" . }}
+    name: {{ include "punk-link-api-v2.fullname" . }}
   minReplicas: {{ .Values.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.autoscaling.maxReplicas }}
   metrics:
