@@ -6,6 +6,7 @@ builder.Services.AddTransient<IWarpContentService, WarpContentService>();
 
 builder.Services.AddMemoryCache();
 builder.Services.AddRazorPages();
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
@@ -19,6 +20,8 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+app.UseHealthChecks("/health");
 
 app.UseRouting();
 
