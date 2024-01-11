@@ -97,13 +97,11 @@ a {
 }
 
 .footer-grid {
-    background: var(--secondary-60, #F2FFE1);
     padding: 2.5rem 0;
     width: 100%;
 }
 
 .header-grid {
-    background: var(--secondary-60, #F2FFE1);
     padding: 2.5rem 0;
     width: 100%;
 }
@@ -142,7 +140,6 @@ a {
 }
 
 .warp-container {
-    background: var(--secondary-60, #F2FFE1);
     height: 100%;
     width: 100%;
 }
@@ -152,7 +149,6 @@ a {
 }
 
 .warp-input-container {
-    background: var(--secondary-60, #F2FFE1);
     height: 100%;
     width: 100%;
 }
