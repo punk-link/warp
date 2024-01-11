@@ -24,7 +24,7 @@ public class EntryModel : BasePageModel
         }
 
         ExpiresIn = GetExpirationMessage(content.ExpiresAt);
-        TextContent = content.Content;
+        TextContent = TextFormatter.Format(content.Content);
         
         return Page();
     }

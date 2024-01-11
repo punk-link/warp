@@ -10,7 +10,7 @@
         @Model.ExpiresIn
     </div>
     <div class="warp-content-container">
-        @Model.TextContent
+        @Html.Raw(Model.TextContent)
     </div>
     <div class="button-bar flex-container flex-direction-row justify-flex-end">
         <button class="btn-tertiary" type="submit">
