@@ -10,9 +10,10 @@ namespace Warp.WebApp.Services;
 
 public class WarpContentService : IWarpContentService
 {
-    public WarpContentService(IMemoryCache memoryCache)
+    public WarpContentService(IMemoryCache memoryCache, IReportService reportService)
     {
         _memoryCache = memoryCache;
+        _reportService = reportService;
     }
 
 
@@ -34,6 +35,9 @@ public class WarpContentService : IWarpContentService
     
     public Result<WarpContent, ProblemDetails> Get(Guid id)
     {
+        if (_reportService.Contains(id))
+            return Result.Failure<WarpContent, ProblemDetails>(ProblemDetailsHelper.Create("Content not found.", HttpStatusCode.NotFound));
+        
         if (_memoryCache.TryGetValue(id, out WarpContent? content))
             return Result.Success<WarpContent, ProblemDetails>(content!);
         
@@ -42,4 +46,5 @@ public class WarpContentService : IWarpContentService
 
     
     private readonly IMemoryCache _memoryCache;
+    private readonly IReportService _reportService;
 }

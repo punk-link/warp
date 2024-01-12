@@ -1,0 +1,37 @@
+﻿.modal-background {
+    background: #F2FFE180;
+    display: none;
+    height: 100%;
+    left: 0;
+    overflow: auto;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 100;
+}
+
+.modal-window {
+    background: var(--secondary-05, #F5F5F5);
+    border-radius: 0.625rem;
+    padding: 1.5rem 2.5rem 3rem;
+    width: 30vw;
+}
+
+    .modal-window div h1 {
+        color: var(--text-60, #9F9F9F);
+        font-family: Montserrat;
+        font-size: 2rem;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+    }
+
+    .modal-window div p {
+        color: var(--text-100, #484848);
+        font-family: Montserrat;
+        font-size: 1.5rem;
+        font-style: normal;
+        font-weight: 400;
+        line-height: normal;
+        margin-bottom: 2.5rem;
+    }

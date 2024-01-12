@@ -1,7 +1,7 @@
 ﻿@page "/entry/{id:Guid}"
 @model EntryModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Warp";
 }
 
 <partial name="Shared/_Header" />
@@ -13,13 +13,26 @@
         @Html.Raw(Model.TextContent)
     </div>
     <div class="button-bar flex-container flex-direction-row justify-flex-end">
-        <button class="btn-tertiary" type="button" onclick="copyUrl()">
+        <button id="copy-url-button" class="btn-tertiary" type="button">
             <div>
                 <i class="icofont-copy"></i>
                 copy link
             </div>
         </button>
-        <button class="btn-tertiary" type="button">report</button>
+        <button id="report-button" class="btn-tertiary" type="button">report</button>
     </div>
 </div>
 <partial name="Shared/_Footer" />
+<partial name="Shared/_ModalWindow" model="@Model.ModalWindowModel"/>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        let copyButton = document.getElementById('copy-url-button');
+        copyButton.onclick = () => copyUrl();
+
+        let modalAction = document.getElementById('modal-action');
+        modalAction.onclick = () => report('@Model.Id');
+
+        let reportButton = document.getElementById('report-button');
+        reportButton.onclick = (e) => showModal(e);
+    });
+</script>

@@ -1,7 +1,8 @@
-
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
+using Warp.WebApp.Pages.Shared;
 using Warp.WebApp.Services;
+using Warp.WebApp.Utils;
 
 namespace Warp.WebApp.Pages;
 
@@ -23,8 +24,16 @@ public class EntryModel : BasePageModel
                 : RedirectToError(problemDetails);
         }
 
+        Id = id;
         ExpiresIn = GetExpirationMessage(content.ExpiresAt);
         TextContent = TextFormatter.Format(content.Content);
+
+        ModalWindowModel = new _ModalWindowModel
+        {
+            Action = "report",
+            Header = "report entry",
+            Prompt = "You are about to report this content. This action restricts an access to the content for all viewers. Are you sure?"
+        };
         
         return Page();
     }
@@ -53,8 +62,10 @@ public class EntryModel : BasePageModel
         => expiresAt - DateTime.UtcNow;
 
 
+    public string ExpiresIn { get; set; } = string.Empty;
+    public Guid Id { get; set; }
+    public _ModalWindowModel ModalWindowModel { get; set; } = default!;
     public string TextContent { get; set; } = string.Empty;
-    public string ExpiresIn { get; set; } = string.Empty; 
 
     
     private readonly IWarpContentService _warpContentService;

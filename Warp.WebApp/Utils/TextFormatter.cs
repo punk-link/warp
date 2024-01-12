@@ -1,4 +1,4 @@
-﻿namespace Warp.WebApp.Services;
+﻿namespace Warp.WebApp.Utils;
 
 public static class TextFormatter
 {
@@ -14,7 +14,7 @@ public static class TextFormatter
 
             result += $"<p>{paragraph}</p>";
         }
-        
+
         return result;
     }
 
