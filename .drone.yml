@@ -47,7 +47,7 @@ steps:
   settings:
     mode: upgrade
     chart: ./Helm/
-    release: api-v2-dev
+    release: warp-webapp
     values_files: ["Helm/values_dev.yaml"]
     namespace: dev
     skip_tls_verify: true
