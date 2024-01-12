@@ -12,13 +12,22 @@ steps:
 
 - name: Test application 
   image: mcr.microsoft.com/dotnet/sdk:8.0
+  environment:
+    GITHUB_TOKEN:
+      from_secret: GITHUB_TOKEN     
+    PNKL_VAULT_TOKEN:
+      from_secret: PNKL_VAULT_TOKEN    
   commands:
     - dotnet build -c Release
     - dotnet test -c Release
     
 - name: Build docker image & push to repository
   image: plugins/docker
-  environment:
+  environment: 
+    GITHUB_TOKEN:
+      from_secret: GITHUB_TOKEN     
+    PNKL_VAULT_TOKEN:
+      from_secret: PNKL_VAULT_TOKEN    
     BUILD_VERSION: ${DRONE_COMMIT_SHA:0:7}
   settings:
     registry: registry.punk.link
@@ -38,7 +47,7 @@ steps:
   settings:
     mode: upgrade
     chart: ./Helm/
-    release: api-v2-dev
+    release: warp-webapp
     values_files: ["Helm/values_dev.yaml"]
     namespace: dev
     skip_tls_verify: true

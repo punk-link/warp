@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "punk-link-api-v2.fullname" . }}
+  name: {{ include "warp-webapp.fullname" . }}
   labels:
-    {{- include "punk-link-api-v2.labels" . | nindent 4 }}
+    {{- include "warp-webapp.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.type }}
   ports:
@@ -20,4 +20,4 @@ spec:
       protocol: TCP
       name: db     
   selector:
-    {{- include "punk-link-api-v2.selectorLabels" . | nindent 4 }}
+    {{- include "warp-webapp.selectorLabels" . | nindent 4 }}
