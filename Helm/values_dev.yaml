@@ -6,7 +6,7 @@ jaeger:
 
 
 image:
-  repository: registry.punk.link/warp
+  repository: registry.punk.link/warp-webapp
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: "latest"
