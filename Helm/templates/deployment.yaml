@@ -1,16 +1,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "punk-link-api-v2.fullname" . }}
+  name: {{ include "warp-webapp.fullname" . }}
   labels:
-    {{- include "punk-link-api-v2.labels" . | nindent 4 }}
+    {{- include "warp-webapp.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "punk-link-api-v2.selectorLabels" . | nindent 6 }}
+      {{- include "warp-webapp.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -18,13 +18,13 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "punk-link-api-v2.selectorLabels" . | nindent 8 }}
+        {{- include "warp-webapp.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "punk-link-api-v2.serviceAccountName" . }}
+      serviceAccountName: {{ include "warp-webapp.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:

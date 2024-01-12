@@ -69,10 +69,7 @@ resources:
   limits:
     cpu: 50m
     memory: 256Mi
-  requests:
-    cpu: 50m
-    memory: 256Mi
-
+ 
 autoscaling:
   enabled: false
   minReplicas: 1
