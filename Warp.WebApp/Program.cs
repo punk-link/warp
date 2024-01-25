@@ -4,6 +4,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddSingleton<IReportStorage, ReportStorage>();
 builder.Services.AddTransient<IReportService, ReportService>();
+builder.Services.AddTransient<IViewCountService, ViewCountService>();
 builder.Services.AddTransient<IWarpContentService, WarpContentService>();
 
 builder.Services.AddMemoryCache();

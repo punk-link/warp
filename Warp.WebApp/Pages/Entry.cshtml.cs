@@ -8,9 +8,10 @@ namespace Warp.WebApp.Pages;
 
 public class EntryModel : BasePageModel
 {
-    public EntryModel(ILoggerFactory loggerFactory, IWarpContentService warpContentService) : base(loggerFactory)
+    public EntryModel(ILoggerFactory loggerFactory, IWarpContentService warpContentService, IViewCountService viewCountService) : base(loggerFactory)
     {
         _warpContentService = warpContentService;
+        _viewCountService = viewCountService;
     }
     
     
@@ -27,6 +28,7 @@ public class EntryModel : BasePageModel
         Id = id;
         ExpiresIn = GetExpirationMessage(content.ExpiresAt);
         TextContent = TextFormatter.Format(content.Content);
+        ViewCount = _viewCountService.AddAndGet(id);
 
         ModalWindowModel = new _ModalWindowModel
         {
@@ -66,7 +68,9 @@ public class EntryModel : BasePageModel
     public Guid Id { get; set; }
     public _ModalWindowModel ModalWindowModel { get; set; } = default!;
     public string TextContent { get; set; } = string.Empty;
+    public int ViewCount { get; set; } = 1;
 
     
     private readonly IWarpContentService _warpContentService;
+    private readonly IViewCountService _viewCountService;
 }

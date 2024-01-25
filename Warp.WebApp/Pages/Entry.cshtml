@@ -6,8 +6,13 @@
 
 <partial name="Shared/_Header" />
 <div class="warp-container flex-container flex-direction-column">
-    <div class="expiration-message-container">
-        @Model.ExpiresIn
+    <div class="expiration-message-container flex-container flex-direction-row justify-space-between">
+        <div>
+            @Model.ExpiresIn
+        </div>
+        <div>
+            @Model.ViewCount
+        </div>
     </div>
     <div class="warp-content-container">
         @Html.Raw(Model.TextContent)
