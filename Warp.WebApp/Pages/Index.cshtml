@@ -7,24 +7,26 @@
 <partial name="Shared/_Header"/>
 <div class="warp-input-container flex-container flex-direction-column">
     <div class="gallery"></div>
-    <form method="post" class="form-vertical">
-        <div id="image-container" class="form-group">
-            <p>Drag & drop photos here or <strong>Browse</strong></p>
-            <input type="file" class="file" multiple="multiple" accept="image/*" onchange="handleFiles(this.files)">
-        </div>
-        <div class="form-group">
-            <textarea id="warp-content-textarea" class="vh50" asp-for="TextContent" required></textarea>
-        </div>
-        <div class="flex-container align-center justify-space-between">
+    <div class="drop-area">
+        <form method="post" class="form-vertical">
+            <div class="image-container" class="form-group">
+                <p>Drag & drop photos here or <button class="btn-tertiary" type="button">browse</button></p>
+                <input type="file" id="file" class="file-input" multiple="multiple" accept="image/*">
+            </div>
             <div class="form-group">
-                <label asp-for="SelectedExpirationPeriod"></label>
-                <select asp-for="SelectedExpirationPeriod" asp-items="Model.ExpirationPeriodOptions"></select>
+                <textarea id="warp-content-textarea" class="vh50" asp-for="TextContent"></textarea>
             </div>
-            <div>
-                <button class="btn-primary" type="submit">Create</button>
+            <div class="flex-container align-center justify-space-between">
+                <div class="form-group">
+                    <label asp-for="SelectedExpirationPeriod"></label>
+                    <select asp-for="SelectedExpirationPeriod" asp-items="Model.ExpirationPeriodOptions"></select>
+                </div>
+                <div>
+                    <button class="btn-primary" type="submit">create</button>
+                </div>
             </div>
-        </div>
-    </form>
+        </form>
+    </div>
 </div>
 <partial name="Shared/_Footer" />
 <script src="js/drop-area.js"></script>

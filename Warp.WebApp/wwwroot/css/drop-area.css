@@ -1,1 +1,31 @@
-﻿
+﻿.drop-area {
+    border: 2px dashed transparent;
+    border-radius: 0.75rem;
+}
+
+.drop-area.highlighted {
+    border: 2px dashed var(--primary-60, #C99EFF);
+    border-radius: 0.75rem;
+}
+
+.file-input {
+    display: none;
+}
+
+.image-container p {
+    color: var(--text-60, #9F9F9F);
+    font-family: Montserrat;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    letter-spacing: 0.015rem;
+    display: block;
+    padding-left: 0.625rem;
+    text-align: center;
+}
+
+.image-container button {
+    font-size: 1rem;
+    margin: 0;
+    padding: 0;
+}
