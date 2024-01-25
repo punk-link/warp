@@ -1,5 +1,6 @@
 @import url(button.css);
 @import url(dimensions.css);
+@import url(drop-area.css);
 @import url(flex.css);
 @import url(form.css);
 @import url(grid.css);
@@ -107,6 +108,11 @@ a {
     width: 100%;
 }
 
+.gallery img {
+    border-radius: 0.75rem;
+    width: 100%;
+}
+
 .logo a {
     font-family: Krona One;
     font-size: 30px;
@@ -163,8 +169,3 @@ a {
         box-sizing: border-box;
         width: 100%;
     }
-
-#image-container img {
-    border-radius: 0.75rem;
-    width: 100%;
-}

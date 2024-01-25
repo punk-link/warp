@@ -6,8 +6,11 @@
 
 <partial name="Shared/_Header"/>
 <div class="warp-input-container flex-container flex-direction-column">
-    <form method="post" class="form-vertical">        
-        <div id="image-container">
+    <div class="gallery"></div>
+    <form method="post" class="form-vertical">
+        <div id="image-container" class="form-group">
+            <p>Drag & drop photos here or <strong>Browse</strong></p>
+            <input type="file" class="file" multiple="multiple" accept="image/*" onchange="handleFiles(this.files)">
         </div>
         <div class="form-group">
             <textarea id="warp-content-textarea" class="vh50" asp-for="TextContent" required></textarea>
@@ -24,11 +27,14 @@
     </form>
 </div>
 <partial name="Shared/_Footer" />
+<script src="js/drop-area.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         document.body.addEventListener('keydown', async function (e) {
             if (e.ctrlKey && (e.key === 'v' || e.key === 'V'))
                 await pasteImages();
         });
+
+        addDropAreaEvents();
     });
 </script>

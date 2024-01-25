@@ -2,8 +2,8 @@
     let image = document.createElement('img');
     image.src = URL.createObjectURL(blob);
 
-    let imageContainer = document.getElementById('image-container');
-    imageContainer.append(image);
+    let gallery = document.getElementsByClassName('gallery')[0];
+    gallery.append(image);
 
     let textArea = document.getElementById('warp-content-textarea');
     textArea.style.display = 'none';
@@ -23,6 +23,11 @@ function copyUrl() {
     } finally {
         document.body.style.cursor = 'auto';
     }
+}
+
+
+function handleFiles(files) {
+    ([...files]).forEach(appendImage);
 }
 
 
