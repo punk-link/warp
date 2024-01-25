@@ -6,7 +6,9 @@
 
 <partial name="Shared/_Header"/>
 <div class="warp-input-container flex-container flex-direction-column">
-    <form method="post" class="form-vertical">
+    <form method="post" class="form-vertical">        
+        <div id="image-container">
+        </div>
         <div class="form-group">
             <textarea id="warp-content-textarea" class="vh50" asp-for="TextContent" required></textarea>
         </div>
@@ -22,3 +24,11 @@
     </form>
 </div>
 <partial name="Shared/_Footer" />
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        document.body.addEventListener('keydown', async function (e) {
+            if (e.ctrlKey && (e.key === 'v' || e.key === 'V'))
+                await pasteImages();
+        });
+    });
+</script>

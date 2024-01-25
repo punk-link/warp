@@ -163,3 +163,8 @@ a {
         box-sizing: border-box;
         width: 100%;
     }
+
+#image-container img {
+    border-radius: 0.75rem;
+    width: 100%;
+}
