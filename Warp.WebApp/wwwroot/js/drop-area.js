@@ -27,12 +27,31 @@ function addDropAreaEvents() {
 }
 
 
-function appendImage(file) {
-    let image = document.createElement('img');
-    image.src = URL.createObjectURL(file);
-
+function appendImage(files) {
     let gallery = document.getElementsByClassName('gallery')[0];
-    gallery.append(image);
+
+    files.forEach(file => {
+        let image = document.createElement('img');
+        image.src = URL.createObjectURL(file);
+
+        gallery.append(image);
+    });
+}
+
+
+function appendPreview(files) {
+    let gallery = document.getElementsByClassName('gallery')[0];
+
+    files.forEach(file => {
+        let reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onloadend = function () {
+            let image = document.createElement('img');
+            img.src = reader.result;
+
+            gallery.append(image);
+        }
+    });
 }
 
 
@@ -51,7 +70,9 @@ async function pasteImages() {
                 files.push(blob);
             }
             
-            processFiles(files);
+            //appendImage(files);
+            uploadFiles(files);
+            appendPreview(files);
         }
     } catch(err) {
         console.error(err);
@@ -61,22 +82,26 @@ async function pasteImages() {
 
 function processDrop(e) {
     let transfer = e.dataTransfer;
-    let files = transfer.files;
-
-    processFiles(files);
+    let fileList = transfer.files;
+    let files = Array.from(fileList)
+    
+    //appendImage(files);
+    uploadFiles(files);
+    appendPreview(files);
 }
 
 
-function processFiles(files) {
-    ([...files]).forEach(file => {
-        appendImage(file);
+function uploadFiles(files) {
+    document.forms[0].addEventListener('submit', (e) => {
+        e.preventDefault();
 
         let form = document.forms[0];
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
+        let formData = new FormData(form);
 
-            let formData = new FormData(form);
-            alert(JSON.stringify(formData));
+        files.forEach(file => {
+            formData.append('Images', file, file.name);
         });
+
+        alert(JSON.stringify(Array.from(formData)));
     });
 }

@@ -11,7 +11,7 @@
         <form method="post" class="form-vertical">
             <div class="image-container" class="form-group">
                 <p>Drag & drop photos here or <button class="btn-tertiary" type="button">browse</button></p>
-                <input type="file" id="file" class="file-input" multiple="multiple" accept="image/*">
+                <input asp-for="Images" type="file" id="file" class="file-input" multiple="multiple" accept="image/*">
             </div>
             <div class="form-group">
                 <textarea id="warp-content-textarea" class="vh50" asp-for="TextContent"></textarea>

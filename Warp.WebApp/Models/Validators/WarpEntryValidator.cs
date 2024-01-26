@@ -3,9 +3,9 @@ using Warp.WebApp.Constants.Logging;
 
 namespace Warp.WebApp.Models.Validators;
 
-public class WarpContentValidator : AbstractValidator<WarpContent>
+public class WarpEntryValidator : AbstractValidator<WarpEntry>
 {
-    public WarpContentValidator()
+    public WarpEntryValidator()
     {
         RuleFor(x => x.Content).NotEmpty()
             .WithErrorCode(LoggingConstants.WarpContentEmpty.ToString())

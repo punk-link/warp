@@ -2,6 +2,7 @@ using Warp.WebApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddSingleton<IImageService, ImageService>();
 builder.Services.AddSingleton<IReportStorage, ReportStorage>();
 builder.Services.AddTransient<IReportService, ReportService>();
 builder.Services.AddTransient<IViewCountService, ViewCountService>();

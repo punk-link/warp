@@ -9,7 +9,6 @@ namespace Warp.WebApp.Pages;
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 public class IndexModel : BasePageModel
 {
-
     public IndexModel(ILoggerFactory loggerFactory, IWarpContentService warpContentService) : base(loggerFactory)
     {
         _warpContentService = warpContentService;
@@ -43,7 +42,10 @@ public class IndexModel : BasePageModel
             _ => new TimeSpan(0, 5, 0)
         };
 
-    
+
+    [BindProperty]
+    public List<IFormFile> Images { get; set; } = [];
+
     [DisplayName("Expires in")]
     [BindProperty]
     public string SelectedExpirationPeriod { get; set; } = string.Empty;
