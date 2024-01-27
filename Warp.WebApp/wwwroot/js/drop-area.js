@@ -20,38 +20,74 @@ function addDropAreaEvents() {
         });
     });
 
-    dropArea.addEventListener('drop', processDrop);
+    dropArea.addEventListener('drop', async (e) => await dropImages(e));
 
     let fileInput = document.getElementById('file');
-    fileInput.onchange = (e) => handleFiles(e.files);
+    fileInput.onchange = (e) => {
+        let files = Array.from(e.target.files)
+        uploadFiles(files);
+    };
+
+    let uploadButton = document.getElementById('upload-button');
+    uploadButton.onclick = () => fileInput.click();
 }
 
 
-function appendImage(files) {
-    let gallery = document.getElementsByClassName('gallery')[0];
-
-    files.forEach(file => {
-        let image = document.createElement('img');
-        image.src = URL.createObjectURL(file);
-
-        gallery.append(image);
-    });
-}
-
-
-function appendPreview(files) {
-    let gallery = document.getElementsByClassName('gallery')[0];
+function appendPreview(files, uploadResults) {
+    let gallery = document.getElementsByClassName('upload-gallery')[0];
+    let imageContainer = document.getElementsByClassName('image-container')[0];
 
     files.forEach(file => {
         let reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onloadend = function () {
-            let image = document.createElement('img');
-            img.src = reader.result;
+            // TODO: add classes for image scaling
 
-            gallery.append(image);
+            let imageWrapper = document.createElement('div');
+            imageWrapper.classList.add('image-wrapper');
+            
+            let image = document.createElement('img');
+            image.src = reader.result;
+
+            if (uploadResults[file.name]) {
+                let input = getInputToImageId(uploadResults[file.name]);
+                imageContainer.append(input);
+                
+                let uploadedIcon = getImageUploadedIcon();
+                imageWrapper.append(uploadedIcon);
+            }
+
+            imageWrapper.append(image);
+            gallery.append(imageWrapper);
         }
     });
+}
+
+
+function getImageUploadedIcon() {
+    let uploadedIcon = document.createElement('i');
+    uploadedIcon.classList.add('icofont-cloud-upload');
+
+    let iconWrapper = document.createElement('div');
+    iconWrapper.classList.add('icon-wrapper');
+    iconWrapper.classList.add('flex-container');
+    iconWrapper.classList.add('justify-center');
+    iconWrapper.classList.add('align-center');
+
+    iconWrapper.append(uploadedIcon);
+
+    return iconWrapper;
+}
+
+
+function getInputToImageId(id) {
+    let input = document.createElement('input');
+    input.style.display = 'none';
+    input.name = 'ImageIds';
+    input.type = 'text';
+    input.value = id;
+
+    return input;
 }
 
 
@@ -60,48 +96,49 @@ async function pasteImages() {
         await navigator.permissions.query({ name: 'clipboard-read' });
 
         let clipboardItems = await navigator.clipboard.read();
+        let files = [];
         for (let item of clipboardItems) {
             let imageTypes = item.types
                 .filter(type => type.startsWith('image/'));
             
-            let files = [];
             for (let type of imageTypes) {
                 let blob = await item.getType(type);
                 files.push(blob);
             }
-            
-            //appendImage(files);
-            uploadFiles(files);
-            appendPreview(files);
         }
+        
+        uploadFiles(files);
     } catch(err) {
         console.error(err);
     }
 }
 
 
-function processDrop(e) {
+function dropImages(e) {
     let transfer = e.dataTransfer;
     let fileList = transfer.files;
     let files = Array.from(fileList)
     
-    //appendImage(files);
     uploadFiles(files);
-    appendPreview(files);
 }
 
 
-function uploadFiles(files) {
-    document.forms[0].addEventListener('submit', (e) => {
-        e.preventDefault();
-
-        let form = document.forms[0];
-        let formData = new FormData(form);
-
-        files.forEach(file => {
-            formData.append('Images', file, file.name);
-        });
-
-        alert(JSON.stringify(Array.from(formData)));
+async function uploadFiles(files) {
+    let formData = new FormData();
+    files.forEach(file => {
+        formData.append('Images', file, file.name);
     });
+
+    let response = await fetch('/api/images/', {
+        method: 'POST',
+        body: formData
+    });
+
+    if (response.status !== 200) {
+        console.error(response.status, response.statusText);
+        return;
+    }
+        
+    let responseContent = await response.json();
+    appendPreview(files, responseContent);
 }

@@ -33,14 +33,19 @@ url("./fonts/icofont.woff") format("woff");
   -webkit-font-smoothing: antialiased;
 }
 
+.icofont-copy:before
+{
+  content: "\edea";
+}
+
 .icofont-simple-left:before
 {
   content: "\eab5";
 }
 
-.icofont-copy:before
+.icofont-cloud-upload:before
 {
-  content: "\edea";
+  content: "\eee7";
 }
 
 [class^="icofont-"].icofont-duotone,

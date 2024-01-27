@@ -11,6 +11,25 @@
 .file-input {
     display: none;
 }
+.gallery img {
+    border-radius: 0.75rem;
+    margin: 1rem;
+    min-width: 650px;
+    width: max-content;
+}
+
+.icon-wrapper {
+    background-color: var(--white-100, #FFF);
+    border-radius: 50%;
+    height: 3rem;
+    margin: 1rem;
+    position: absolute;
+    width: 3rem;
+}
+
+    .icon-wrapper i {
+        color: var(--primary-100, #A762FF)
+    }
 
 .image-container p {
     color: var(--text-60, #9F9F9F);
@@ -28,4 +47,15 @@
     font-size: 1rem;
     margin: 0;
     padding: 0;
+}
+
+.image-wrapper {
+    max-width: 50%;
+    margin: 1rem;
+}
+
+.upload-gallery img {
+    border-radius: 0.75rem;
+    min-width: 325px;
+    width: 100%;
 }

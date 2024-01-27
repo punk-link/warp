@@ -15,11 +15,11 @@ function copyUrl() {
 
 
 async function report(id) {
-    let result = await fetch('/api/reports/' + id, {
+    let response = await fetch('/api/reports/' + id, {
         method: 'POST'
     });
 
-    if (result.status === 204)
+    if (response.status === 204)
         location.href = '/';
 }
 

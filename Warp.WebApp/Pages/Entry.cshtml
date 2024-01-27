@@ -14,6 +14,12 @@
             @Model.ViewCount
         </div>
     </div>
+    <div class="gallery flex-container flex-direction-column align-center">
+        @foreach (var url in Model.ImageUrls)
+        {
+            <img src=@url/>
+        }
+    </div>
     <div class="warp-content-container">
         @Html.Raw(Model.TextContent)
     </div>

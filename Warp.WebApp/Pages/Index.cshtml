@@ -6,12 +6,12 @@
 
 <partial name="Shared/_Header"/>
 <div class="warp-input-container flex-container flex-direction-column">
-    <div class="gallery"></div>
+    <div class="upload-gallery flex-container wrapped justify-evenly"></div>
     <div class="drop-area">
         <form method="post" class="form-vertical">
             <div class="image-container" class="form-group">
-                <p>Drag & drop photos here or <button class="btn-tertiary" type="button">browse</button></p>
-                <input asp-for="Images" type="file" id="file" class="file-input" multiple="multiple" accept="image/*">
+                <p>Drag & drop photos here or <button id="upload-button" class="btn-tertiary" type="button">browse</button></p>
+                <input type="file" id="file" class="file-input" multiple="multiple" accept="image/*">
             </div>
             <div class="form-group">
                 <textarea id="warp-content-textarea" class="vh50" asp-for="TextContent"></textarea>

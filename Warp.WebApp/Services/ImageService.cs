@@ -1,5 +1,7 @@
-﻿using System.Text.Json;
+﻿using CSharpFunctionalExtensions;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
+using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
 
 namespace Warp.WebApp.Services;
@@ -12,39 +14,26 @@ public class ImageService : IImageService
     }
 
 
-    public async Task<List<(string, Guid)>> Add(List<IFormFile> files)
+    public async Task<Dictionary<string, Guid>> Add(List<IFormFile> files)
     {
-        var results = new List<(string, Guid)>(files.Count);
+        // TODO: add validation and a count check
+
+        var results = new Dictionary<string, Guid>(files.Count);
         foreach (var file in files)
         {
-            var result = await Add(file);
-            results.Add(result);
+            var (clientFileName, id) = await Add(file);
+            results.Add(clientFileName, id);
         }
 
         return results;
     }
 
 
-    public async Task<(string, Guid)> Add(IFormFile file)
+    public void Attach(Guid entryId, TimeSpan relativeExpirationTime, List<Guid> imageIds)
     {
-        using var memoryStream = new MemoryStream();
-        await file.CopyToAsync(memoryStream);
+        if (imageIds.Count == 0)
+            return;
 
-        var entry = new ImageEntry
-        {
-            Id = Guid.NewGuid(),
-            Content = JsonSerializer.SerializeToUtf8Bytes(memoryStream)
-        };
-
-        var cacheKey = BuildEntryCacheKey(entry.Id);
-        _memoryCache.Set(cacheKey, entry, DateTimeOffset.Now.AddHours(1));
-
-        return (file.FileName, entry.Id);
-    }
-
-
-    public void Attach(Guid entryId, DateTimeOffset absoluteExpirationTime, List<Guid> imageIds)
-    {
         var imageEntries = new List<ImageEntry>(imageIds.Count);
         foreach (var imageId in imageIds)
         {
@@ -53,14 +42,8 @@ public class ImageService : IImageService
                 imageEntries.Add(value);
         }
 
-        var bucket = new ImageBucket
-        {
-            Id = Guid.NewGuid(),
-            Images = imageEntries
-        };
-
         var bucketCacheKey = BuildBucketCacheKey(entryId);
-        _memoryCache.Set(bucketCacheKey, bucket, absoluteExpirationTime);
+        _memoryCache.Set(bucketCacheKey, imageEntries, relativeExpirationTime);
 
         foreach (var entry in imageEntries)
         {
@@ -80,12 +63,42 @@ public class ImageService : IImageService
     }
 
 
+    public Result<ImageEntry, ProblemDetails> Get(Guid entryId, Guid imageId)
+    {
+        var images = Get(entryId);
+        var image = images.FirstOrDefault(x => x.Id == imageId);
+
+        return image != default
+            ? Result.Success<ImageEntry, ProblemDetails>(image)
+            : ResultHelper.NotFound<ImageEntry>();
+    }
+
+
     private static string BuildBucketCacheKey(Guid id)
-        => $"{nameof(ImageBucket)}::{id}";
+        => $"{nameof(List<ImageEntry>)}::{id}";
 
 
     private static string BuildEntryCacheKey(Guid id)
         => $"{nameof(ImageEntry)}::{id}";
+
+
+    private async Task<(string, Guid)> Add(IFormFile file)
+    {
+        using var memoryStream = new MemoryStream();
+        await file.CopyToAsync(memoryStream);
+
+        var entry = new ImageEntry
+        {
+            Id = Guid.NewGuid(),
+            Content = memoryStream.ToArray(),
+            ContentType = file.ContentType
+        };
+
+        var cacheKey = BuildEntryCacheKey(entry.Id);
+        _memoryCache.Set(cacheKey, entry, DateTimeOffset.Now.AddHours(1));
+
+        return (file.FileName, entry.Id);
+    }
 
 
     private readonly IMemoryCache _memoryCache;

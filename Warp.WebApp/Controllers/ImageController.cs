@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using CSharpFunctionalExtensions;
+using Microsoft.AspNetCore.Mvc;
 using Warp.WebApp.Services;
 
 namespace Warp.WebApp.Controllers;
@@ -11,6 +12,17 @@ public class ImageController : BaseController
     public ImageController(IImageService imageService)
     {
         _imageService = imageService;
+    }
+
+
+    [HttpGet("entry-id/{entryId:guid}/image-id/{imageId:guid}")]
+    public IActionResult Get([FromRoute] Guid entryId, [FromRoute] Guid imageId)
+    {
+        var (_, isFailure, value, error) = _imageService.Get(entryId, imageId);
+        if (isFailure)
+            return NotFound(error);
+
+        return new FileStreamResult(new MemoryStream(value.Content), value.ContentType);
     }
     
 

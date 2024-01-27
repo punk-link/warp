@@ -1,5 +1,4 @@
-﻿using System.Net;
-using CSharpFunctionalExtensions;
+﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Warp.WebApp.Helpers;
@@ -37,13 +36,13 @@ public class WarpContentService : IWarpContentService
     public Result<WarpEntry, ProblemDetails> Get(Guid id)
     {
         if (_reportService.Contains(id))
-            return Result.Failure<WarpEntry, ProblemDetails>(ProblemDetailsHelper.Create("Content not found.", HttpStatusCode.NotFound));
+            return ResultHelper.NotFound<WarpEntry>();
 
         var cacheKey = BuildCacheKey(id);
         if (_memoryCache.TryGetValue(cacheKey, out WarpEntry? entry))
             return Result.Success<WarpEntry, ProblemDetails>(entry!);
         
-        return Result.Failure<WarpEntry, ProblemDetails>(ProblemDetailsHelper.Create("Content not found.", HttpStatusCode.NotFound));
+        return ResultHelper.NotFound<WarpEntry>();
     }
 
 

@@ -9,8 +9,9 @@ namespace Warp.WebApp.Pages;
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 public class IndexModel : BasePageModel
 {
-    public IndexModel(ILoggerFactory loggerFactory, IWarpContentService warpContentService) : base(loggerFactory)
+    public IndexModel(ILoggerFactory loggerFactory, IWarpContentService warpContentService, IImageService imageService) : base(loggerFactory)
     {
+        _imageService = imageService;
         _warpContentService = warpContentService;
     }
     
@@ -23,11 +24,12 @@ public class IndexModel : BasePageModel
     {
         var expiresIn = GetExpirationPeriod(SelectedExpirationPeriod);
         var (_, isFailure, id, problemDetails) = _warpContentService.Add(TextContent, expiresIn);
-        if (!isFailure)
-            return RedirectToPage("./Entry", new { id });
+        if (isFailure)
+            return RedirectToError(problemDetails);
 
-        return RedirectToError(problemDetails);
+        _imageService.Attach(id, expiresIn, ImageIds);
 
+        return RedirectToPage("./Entry", new { id });
     }
 
 
@@ -44,7 +46,7 @@ public class IndexModel : BasePageModel
 
 
     [BindProperty]
-    public List<IFormFile> Images { get; set; } = [];
+    public List<Guid> ImageIds { get; set; } = [];
 
     [DisplayName("Expires in")]
     [BindProperty]
@@ -64,5 +66,6 @@ public class IndexModel : BasePageModel
         ];
     
         
+    private readonly IImageService _imageService;
     private readonly IWarpContentService _warpContentService;
 }

@@ -8,10 +8,11 @@ namespace Warp.WebApp.Pages;
 
 public class EntryModel : BasePageModel
 {
-    public EntryModel(ILoggerFactory loggerFactory, IWarpContentService warpContentService, IViewCountService viewCountService) : base(loggerFactory)
+    public EntryModel(ILoggerFactory loggerFactory, IWarpContentService warpContentService, IViewCountService viewCountService, IImageService imageService) : base(loggerFactory)
     {
-        _warpContentService = warpContentService;
+        _imageService = imageService;
         _viewCountService = viewCountService;
+        _warpContentService = warpContentService;
     }
     
     
@@ -30,6 +31,11 @@ public class EntryModel : BasePageModel
         TextContent = TextFormatter.Format(content.Content);
         ViewCount = _viewCountService.AddAndGet(id);
 
+        var imageIds = _imageService.Get(id)
+            .Select(image => image.Id)
+            .ToList();
+        ImageUrls = BuildImageUrls(id, imageIds);
+
         ModalWindowModel = new _ModalWindowModel
         {
             Action = "report",
@@ -39,6 +45,11 @@ public class EntryModel : BasePageModel
         
         return Page();
     }
+
+
+    private static List<string> BuildImageUrls(Guid id, List<Guid> imageIds)
+        => imageIds.Select(imageId => $"/api/images/entry-id/{id}/image-id/{imageId}")
+            .ToList();
 
 
     private static string GetExpirationMessage(DateTime expiresAt)
@@ -66,11 +77,13 @@ public class EntryModel : BasePageModel
 
     public string ExpiresIn { get; set; } = string.Empty;
     public Guid Id { get; set; }
+    public List<string> ImageUrls { get; set; } = [];
     public _ModalWindowModel ModalWindowModel { get; set; } = default!;
     public string TextContent { get; set; } = string.Empty;
     public int ViewCount { get; set; } = 1;
-
     
-    private readonly IWarpContentService _warpContentService;
+    
+    private readonly IImageService _imageService;
     private readonly IViewCountService _viewCountService;
+    private readonly IWarpContentService _warpContentService;
 }

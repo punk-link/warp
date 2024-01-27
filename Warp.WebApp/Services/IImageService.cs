@@ -1,14 +1,16 @@
-﻿using Warp.WebApp.Models;
+﻿using CSharpFunctionalExtensions;
+using Microsoft.AspNetCore.Mvc;
+using Warp.WebApp.Models;
 
 namespace Warp.WebApp.Services;
 
 public interface IImageService
 {
-    Task<List<(string, Guid)>> Add(List<IFormFile> files);
+    Task<Dictionary<string, Guid>> Add(List<IFormFile> files);
 
-    Task<(string, Guid)> Add(IFormFile file);
-
-    void Attach(Guid entryId, DateTimeOffset absoluteExpirationTime, List<Guid> imageIds);
+    void Attach(Guid entryId, TimeSpan relativeExpirationTime, List<Guid> imageIds);
 
     List<ImageEntry> Get(Guid entryId);
+
+    Result<ImageEntry, ProblemDetails> Get(Guid entryId, Guid imageId);
 }
