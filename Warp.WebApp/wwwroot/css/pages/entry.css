@@ -1,0 +1,15 @@
+﻿.expiration-message-container {
+    color: var(--text-60, #9F9F9F);
+    flex-shrink: 0;
+    height: 1.75rem;
+    margin: 0 2.5rem;
+}
+
+.warp-container {
+    height: 100%;
+    width: 100%;
+}
+
+.warp-content-container {
+    margin: 2.5rem;
+}

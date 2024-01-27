@@ -41,8 +41,6 @@ function appendPreview(files, uploadResults) {
         let reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onloadend = function () {
-            // TODO: add classes for image scaling
-
             let imageWrapper = document.createElement('div');
             imageWrapper.classList.add('image-wrapper');
             

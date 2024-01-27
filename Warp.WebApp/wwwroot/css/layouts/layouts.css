@@ -1,0 +1,21 @@
+﻿.container {
+    max-width: 976px;
+}
+
+.footer-grid {
+    padding: 2.5rem 0;
+    width: 100%;
+}
+
+.header-grid {
+    padding: 2.5rem 0;
+    width: 100%;
+}
+
+.secondary-grey-column {
+    background: var(--text-20, #D9D9D9);
+    color: var(--text-60, #9F9F9F);
+    font-size: 2.5rem;
+    padding: 2.5rem;
+}
+

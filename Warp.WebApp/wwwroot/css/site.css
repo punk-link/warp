@@ -1,13 +1,19 @@
-@import url(button.css);
-@import url(dimensions.css);
-@import url(drop-area.css);
-@import url(flex.css);
-@import url(form.css);
-@import url(grid.css);
-@import url(modal-window.css);
-@import url(select.css);
-@import url(textarea.css);
-@import url(variables.css);
+@import url(elements/button.css);
+@import url(elements/form.css);
+@import url(elements/select.css);
+@import url(elements/textarea.css);
+@import url(frames/flex.css);
+@import url(frames/grid.css);
+@import url(layouts/layouts.css);
+@import url(pages/entry.css);
+@import url(pages/index.css);
+@import url(sections/drop-area.css);
+@import url(sections/errors.css);
+@import url(sections/logo.css);
+@import url(sections/modal-window.css);
+@import url(sections/social.css);
+@import url(variables/colors.css);
+@import url(variables/dimensions.css);
 
 html {
     font-size: 14px;
@@ -35,131 +41,12 @@ body {
     width: 100%;
 }
 
-a {
-    text-decoration: none;
-}
-
 .back-button-container a {
     color: var(--text-60, #9F9F9F);
     font-size: 1rem;
     padding: 0.25rem 0rem;
 }
 
-.container {
-    max-width: 976px;
-}
-
-.copyright {
-    color: var(--text-40, #B9B9B9);
-}
-
 .empty-left-column-container {
     padding: 2.5rem 1rem 2.5rem 0;
 }
-
-.error-code-container {
-    margin: 15vh 0 1.5rem;
-    color: var(--text-10, #EFEFEF);
-    font-size: 10rem;
-}
-
-.error-message-container {
-    width: 23.75rem;
-    height: 6.125rem;
-    flex-shrink: 0;
-}
-
-    .error-message-container p:nth-of-type(1) {
-        line-height: 2.5rem;
-        margin-bottom: .25rem;
-    }
-
-    .error-message-container p:nth-of-type(2) {
-        font-size: 1rem;
-    }
-
-    .error-message-container .error-list p {
-        padding-left: 1rem 0 0 1rem;
-    }
-
-    .error-message-container .request-id {
-        font-size: 1rem;
-        margin: 1rem 0;
-    }
-
-    .error-message-container .request-id p {
-        line-height: 1.2rem;
-    }
-
-.expiration-message-container {
-    color: var(--text-60, #9F9F9F);
-    flex-shrink: 0;
-    height: 1.75rem;
-    margin: 0 2.5rem;
-}
-
-.footer-grid {
-    padding: 2.5rem 0;
-    width: 100%;
-}
-
-.header-grid {
-    padding: 2.5rem 0;
-    width: 100%;
-}
-
-.logo a {
-    font-family: Krona One;
-    font-size: 30px;
-    font-weight: 400;
-    line-height: 38px;
-    letter-spacing: 0em;
-    color: var(--primary-100, #A762FF);
-}
-
-.nav-container {
-    margin: .75rem 0;
-}
-
-    .nav-container a {
-        color: var(--text-60, #9F9F9F);
-        padding: 0.25rem 0rem;
-    }
-
-.secondary-grey-column {
-    background: var(--text-20, #D9D9D9);
-    color: var(--text-60, #9F9F9F);
-    font-size: 2.5rem;
-    padding: 2.5rem;
-}
-
-.social {
-    color: var(--text-60, #9F9F9F);
-    font-size: 0.625rem;
-    letter-spacing: 0.01875rem;
-    font-size: 0.625rem;
-}
-
-.warp-container {
-    height: 100%;
-    width: 100%;
-}
-
-.warp-content-container {
-    margin: 2.5rem;
-}
-
-.warp-input-container {
-    height: 100%;
-    width: 100%;
-}
-
-    .warp-input-container form {
-        margin: 0 2.5rem;
-    }
-
-    .warp-input-container textarea {
-        background: none;
-        box-sizing: border-box;
-        width: 100%;
-    }

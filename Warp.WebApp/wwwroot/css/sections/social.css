@@ -1,0 +1,19 @@
+﻿.copyright {
+    color: var(--text-40, #B9B9B9);
+}
+
+.nav-container {
+    margin: .75rem 0;
+}
+
+    .nav-container a {
+        color: var(--text-60, #9F9F9F);
+        padding: 0.25rem 0rem;
+    }
+
+.social {
+    color: var(--text-60, #9F9F9F);
+    font-size: 0.625rem;
+    letter-spacing: 0.01875rem;
+    font-size: 0.625rem;
+}

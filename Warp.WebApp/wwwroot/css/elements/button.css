@@ -1,4 +1,8 @@
-﻿button {
+﻿a {
+    text-decoration: none;
+}
+
+button {
     align-items: flex-start;
     border: none;
     border-radius: 0.3125rem;
