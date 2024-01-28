@@ -48,6 +48,11 @@ url("./fonts/icofont.woff") format("woff");
   content: "\eee7";
 }
 
+.icofont-close:before
+{
+  content: "\eee4";
+}
+
 [class^="icofont-"].icofont-duotone,
 	[class*=" icofont-"].icofont-duotone
 {
