@@ -1,3 +1,4 @@
+@import url(colors/colors.css);
 @import url(elements/button.css);
 @import url(elements/form.css);
 @import url(elements/select.css);
@@ -11,6 +12,7 @@
 @import url(sections/errors.css);
 @import url(sections/logo.css);
 @import url(sections/modal-window.css);
+@import url(sections/promo.css);
 @import url(sections/social.css);
 @import url(variables/colors.css);
 @import url(variables/dimensions.css);

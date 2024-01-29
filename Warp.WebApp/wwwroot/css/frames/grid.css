@@ -9,6 +9,10 @@
     grid-template-columns: 1fr 2fr;
 }
 
+.grid-v-2-eq {
+    grid-template-columns: 1fr 1fr;
+}
+
 .grid-v-3 {
     grid-template-columns: 2fr 2fr 1fr;
 }

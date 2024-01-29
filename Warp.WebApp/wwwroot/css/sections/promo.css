@@ -1,0 +1,36 @@
+﻿.big-logo-container {
+    margin: 10rem 0 0 6.25rem;
+}
+
+.brand-container {
+    overflow: hidden;
+}
+
+.promo-container {
+    margin-top: 1rem;
+}
+
+.promo-text {
+    color: var(--text-60, #9F9F9F);
+    font-family: Montserrat;
+    font-size: 2rem;
+    font-style: normal;
+    font-weight: 300;
+    line-height: normal;
+    margin: 15rem 1rem 5rem 5rem;
+}
+
+    .promo-text strong{
+        font-weight: 700;
+    }
+
+.warp-illustration-container {
+    position: relative;
+}
+
+    .warp-illustration-container img {
+        filter: invert(100%) sepia(100%) saturate(0%) hue-rotate(132deg) brightness(103%) contrast(103%);
+        left: 10vw;
+        overflow: hidden;
+        position: absolute;
+    }
