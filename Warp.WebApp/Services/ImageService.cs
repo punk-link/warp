@@ -1,6 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Memory;
+using Warp.WebApp.Data;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
 
@@ -8,9 +8,9 @@ namespace Warp.WebApp.Services;
 
 public class ImageService : IImageService
 {
-    public ImageService(IMemoryCache memoryCache)
+    public ImageService(IDataStorage dataStorage)
     {
-        _memoryCache = memoryCache;
+        _dataStorage = dataStorage;
     }
 
 
@@ -29,7 +29,7 @@ public class ImageService : IImageService
     }
 
 
-    public void Attach(Guid entryId, TimeSpan relativeExpirationTime, List<Guid> imageIds)
+    public async Task Attach(Guid entryId, TimeSpan relativeExpirationTime, List<Guid> imageIds)
     {
         if (imageIds.Count == 0)
             return;
@@ -38,34 +38,34 @@ public class ImageService : IImageService
         foreach (var imageId in imageIds)
         {
             var entryCacheKey = BuildEntryCacheKey(imageId);
-            if (_memoryCache.TryGetValue(entryCacheKey, out ImageEntry value))
+            var value = await _dataStorage.TryGet<ImageEntry>(entryCacheKey);
+            if (!value.Equals(default))
                 imageEntries.Add(value);
         }
 
         var bucketCacheKey = BuildBucketCacheKey(entryId);
-        _memoryCache.Set(bucketCacheKey, imageEntries, relativeExpirationTime);
+        await _dataStorage.Set(bucketCacheKey, imageEntries, relativeExpirationTime);
 
         foreach (var entry in imageEntries)
         {
             var entryCacheKey = BuildEntryCacheKey(entry.Id);
-            _memoryCache.Remove(entryCacheKey);
+            _dataStorage.Remove<List<ImageEntry>>(entryCacheKey);
         }
     }
 
 
-    public List<ImageEntry> Get(Guid entryId)
+    public async Task<List<ImageEntry>> Get(Guid entryId)
     {
         var bucketCacheKey = BuildBucketCacheKey(entryId);
-        if (_memoryCache.TryGetValue(bucketCacheKey, out List<ImageEntry>? values))
-            return values ?? Enumerable.Empty<ImageEntry>().ToList();
+        var values = await _dataStorage.TryGet<List<ImageEntry>>(bucketCacheKey);
 
-        return Enumerable.Empty<ImageEntry>().ToList();
+        return values ?? Enumerable.Empty<ImageEntry>().ToList();
     }
 
 
-    public Result<ImageEntry, ProblemDetails> Get(Guid entryId, Guid imageId)
+    public async Task<Result<ImageEntry, ProblemDetails>> Get(Guid entryId, Guid imageId)
     {
-        var images = Get(entryId);
+        var images = await Get(entryId);
         var image = images.FirstOrDefault(x => x.Id == imageId);
 
         return image != default
@@ -95,11 +95,11 @@ public class ImageService : IImageService
         };
 
         var cacheKey = BuildEntryCacheKey(entry.Id);
-        _memoryCache.Set(cacheKey, entry, DateTimeOffset.Now.AddHours(1));
+        await _dataStorage.Set(cacheKey, entry, TimeSpan.FromHours(1));
 
         return (file.FileName, entry.Id);
     }
 
 
-    private readonly IMemoryCache _memoryCache;
+    private readonly IDataStorage _dataStorage;
 }

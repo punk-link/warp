@@ -1,4 +1,4 @@
-﻿namespace Warp.WebApp.Utils;
+﻿namespace Warp.WebApp.Services;
 
 public static class TextFormatter
 {

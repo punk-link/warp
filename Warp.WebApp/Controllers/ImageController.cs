@@ -16,9 +16,9 @@ public class ImageController : BaseController
 
 
     [HttpGet("entry-id/{entryId:guid}/image-id/{imageId:guid}")]
-    public IActionResult Get([FromRoute] Guid entryId, [FromRoute] Guid imageId)
+    public async Task<IActionResult> Get([FromRoute] Guid entryId, [FromRoute] Guid imageId)
     {
-        var (_, isFailure, value, error) = _imageService.Get(entryId, imageId);
+        var (_, isFailure, value, error) = await _imageService.Get(entryId, imageId);
         if (isFailure)
             return NotFound(error);
 

@@ -8,9 +8,9 @@ public interface IImageService
 {
     Task<Dictionary<string, Guid>> Add(List<IFormFile> files);
 
-    void Attach(Guid entryId, TimeSpan relativeExpirationTime, List<Guid> imageIds);
+    Task Attach(Guid entryId, TimeSpan relativeExpirationTime, List<Guid> imageIds);
 
-    List<ImageEntry> Get(Guid entryId);
+    Task<List<ImageEntry>> Get(Guid entryId);
 
-    Result<ImageEntry, ProblemDetails> Get(Guid entryId, Guid imageId);
+    Task<Result<ImageEntry, ProblemDetails>> Get(Guid entryId, Guid imageId);
 }

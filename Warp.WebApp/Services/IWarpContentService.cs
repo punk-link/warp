@@ -6,7 +6,7 @@ namespace Warp.WebApp.Services;
 
 public interface IWarpContentService
 {
-    Result<Guid, ProblemDetails> Add(string content, TimeSpan expiresIn);
+    Task<Result<Guid, ProblemDetails>> Add(string content, TimeSpan expiresIn);
 
-    Result<WarpEntry, ProblemDetails> Get(Guid id);
+    Task<Result<WarpEntry, ProblemDetails>> Get(Guid id);
 }

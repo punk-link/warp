@@ -2,7 +2,6 @@ using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Warp.WebApp.Pages.Shared;
 using Warp.WebApp.Services;
-using Warp.WebApp.Utils;
 
 namespace Warp.WebApp.Pages;
 
@@ -16,9 +15,9 @@ public class EntryModel : BasePageModel
     }
     
     
-    public IActionResult OnGet(Guid id)
+    public async Task<IActionResult> OnGet(Guid id)
     {
-        var (_, isFailure, content, problemDetails) = _warpContentService.Get(id);
+        var (_, isFailure, content, problemDetails) = await _warpContentService.Get(id);
         if (isFailure)
         {
             return problemDetails.Status == StatusCodes.Status404NotFound 
@@ -31,7 +30,7 @@ public class EntryModel : BasePageModel
         TextContent = TextFormatter.Format(content.Content);
         ViewCount = _viewCountService.AddAndGet(id);
 
-        var imageIds = _imageService.Get(id)
+        var imageIds = (await _imageService.Get(id))
             .Select(image => image.Id)
             .ToList();
         ImageUrls = BuildImageUrls(id, imageIds);

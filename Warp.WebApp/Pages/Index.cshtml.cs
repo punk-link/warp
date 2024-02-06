@@ -20,14 +20,14 @@ public class IndexModel : BasePageModel
         => Page();
 
 
-    public IActionResult OnPost()
+    public async Task<IActionResult> OnPost()
     {
         var expiresIn = GetExpirationPeriod(SelectedExpirationPeriod);
-        var (_, isFailure, id, problemDetails) = _warpContentService.Add(TextContent, expiresIn);
+        var (_, isFailure, id, problemDetails) = await _warpContentService.Add(TextContent, expiresIn);
         if (isFailure)
             return RedirectToError(problemDetails);
 
-        _imageService.Attach(id, expiresIn, ImageIds);
+        await _imageService.Attach(id, expiresIn, ImageIds);
 
         return RedirectToPage("./Entry", new { id });
     }
