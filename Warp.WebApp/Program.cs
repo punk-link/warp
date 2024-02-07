@@ -12,6 +12,12 @@ using var loggerFactory = LoggerFactory.Create(loggerBuilder => loggerBuilder
 
 var logger = loggerFactory.CreateLogger<Program>();
 
+var secrets = VaultHelper.GetSecrets(builder.Configuration);
+var address = (string)secrets["consul-address"]!;
+var token = (string)secrets["consul-token"]!;
+
+builder.AddConsulConfiguration(address, token);
+
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 
@@ -51,3 +57,4 @@ app.MapControllers();
 app.MapRazorPages();
 
 app.Run();
+return;
