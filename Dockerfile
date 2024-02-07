@@ -18,6 +18,8 @@ ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "./Warp.WebApp.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
+ARG PNKL_VAULT_TOKEN
+ENV PNKL_VAULT_TOKEN=$PNKL_VAULT_TOKEN
 WORKDIR /app
 COPY --from=publish /app/publish .
 

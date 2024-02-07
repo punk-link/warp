@@ -41,6 +41,9 @@ steps:
       from_secret: DOCKER_LOGIN
     password:
       from_secret: DOCKER_PASSWORD
+    build_args_from_env:
+      - GITHUB_TOKEN
+      - PNKL_VAULT_TOKEN
  
 - name: Deploy to DEV
   image: pelotech/drone-helm3
