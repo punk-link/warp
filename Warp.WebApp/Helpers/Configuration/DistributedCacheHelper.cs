@@ -1,5 +1,4 @@
 ﻿using System.Globalization;
-using System.Net;
 using StackExchange.Redis;
 using Warp.WebApp.Extensions.Logging;
 
@@ -16,15 +15,13 @@ public static class DistributedCacheHelper
         if (!int.TryParse(configuration["Redis:Port"]!, NumberStyles.Integer, CultureInfo.InvariantCulture, out var port))
             logger.LogRedisPortUnspecified();
 
-        var endpoints = new EndPointCollection(new List<EndPoint>
-        {
-            new DnsEndPoint(host, port)
-        });
-
         var options = new ConfigurationOptions
         {
             AbortOnConnectFail = true,
-            EndPoints = endpoints,
+            EndPoints = 
+            {
+                { host, port }
+            },
             ReconnectRetryPolicy = new ExponentialRetry(5000),
             Ssl = false
         };
