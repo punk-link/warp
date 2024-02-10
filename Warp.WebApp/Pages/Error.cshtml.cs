@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using System.Net;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Models.ProblemDetails;
 
@@ -43,5 +44,5 @@ public class ErrorModel : BasePageModel
     public List<Error> Errors { get; set; } = Enumerable.Empty<Error>().ToList();
     public string? RequestId { get; set; }
     public int Status { get; set; } = 500;
-    public string? Title { get; set; } = "Error";
+    public string? Title { get; set; } = HttpStatusCode.InternalServerError.ToString();
 }
