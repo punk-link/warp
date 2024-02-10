@@ -40,7 +40,17 @@ builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
-if (!app.Environment.IsDevelopment() || !app.Environment.IsEnvironment("Local"))
+/*app.UseWhen(context => IsApiRequest(context.Request), appBuilder =>
+{
+    appBuilder.ConfigureApiExceptionHandler(app.Environment);
+});
+
+app.UseWhen(context => !IsApiRequest(context.Request), appBuilder =>
+{
+    appBuilder.UseExceptionHandler("/Error");
+});*/
+
+if (!app.Environment.IsDevelopmentOrLocal())
 {
     app.UseExceptionHandler("/Error");
     app.UseHsts();
@@ -71,3 +81,7 @@ ILogger<Program> GetProgramLogger(WebApplicationBuilder webApplicationBuilder)
 
     return loggerFactory.CreateLogger<Program>();
 }
+
+
+static bool IsApiRequest(HttpRequest request)
+    => request.Path.StartsWithSegments(new PathString("/api"), StringComparison.InvariantCultureIgnoreCase);

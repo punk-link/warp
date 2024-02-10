@@ -7,10 +7,8 @@ namespace Warp.WebApp.Helpers
 {
     public static class ProblemDetailsHelper
     {
-        public static ProblemDetails Create(string detail, HttpStatusCode status = HttpStatusCode.BadRequest, string? type = null)
+        public static ProblemDetails Create(string detail, HttpStatusCode status = HttpStatusCode.BadRequest, string? type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6")
         {
-            type ??= "about:blank";
-            
             return new ProblemDetails
             {
                 Detail = detail,
@@ -27,8 +25,20 @@ namespace Warp.WebApp.Helpers
         }
 
 
-        public static void AddTraceId(this ProblemDetails details, string traceId)
+        public static void AddStackTrace(this ProblemDetails details, string? stackTrace)
         {
+            if (string.IsNullOrWhiteSpace(stackTrace))
+                return;
+
+            details.Extensions[StackTraceExtensionToken] = stackTrace;
+        }
+
+
+        public static void AddTraceId(this ProblemDetails details, string? traceId)
+        {
+            if (string.IsNullOrWhiteSpace(traceId))
+                return;
+
             details.Extensions[TraceIdExtensionToken] = traceId;
         }
 
@@ -58,6 +68,7 @@ namespace Warp.WebApp.Helpers
 
 
         private const string ErrorsExtensionToken = "errors";
+        public const string StackTraceExtensionToken = "stack-trace";
         private const string TraceIdExtensionToken = "trace-id";
     }
 }
