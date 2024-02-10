@@ -9,6 +9,8 @@ public static class LoggingConstants
     public const int RedisHostUnspecified = 11_001;
     public const int RedisPortUnspecified = 11_002;
     public const int RedisConnectionException = 11_003;
+    public const int VaultConnectionException = 11_101;
+    public const int VaultSecretCastException = 11_102;
 
     // Infrastructure
     public const int DefaultCacheValueError = 12_001;

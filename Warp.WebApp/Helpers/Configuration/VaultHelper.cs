@@ -1,16 +1,37 @@
-﻿using Vault;
+﻿using Newtonsoft.Json.Linq;
+using Vault;
 using Vault.Client;
+using Vault.Model;
+using Warp.WebApp.Extensions.Logging;
 
 namespace Warp.WebApp.Helpers.Configuration;
 
 public static class VaultHelper
 {
-    public static dynamic GetSecrets(IConfiguration configuration)
+    public static T GetSecrets<T>(ILogger logger, IConfiguration configuration)
     {
         var vaultClient = GetVaultClient(configuration);
-        var response = vaultClient.Secrets.KvV2Read(configuration["ServiceName"], StorageName);
+        VaultResponse<KvV2ReadResponse>? response;
+        try
+        {
+            response = vaultClient.Secrets.KvV2Read(configuration["ServiceName"], StorageName);
+        }
+        catch (Exception ex)
+        {
+            logger.LogVaultConnectionException(ex.Message);
+            throw;
+        }
 
-        return response.Data.Data!;
+        try
+        {
+            var jObject = JObject.FromObject(response.Data.Data!);
+            return jObject.ToObject<T>()!;
+        }
+        catch (Exception ex)
+        {
+            logger.LogVaultSecretCastException(ex.Message);
+            throw;
+        }
     }
 
 

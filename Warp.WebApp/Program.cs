@@ -1,6 +1,7 @@
 using Warp.WebApp.Data;
 using Warp.WebApp.Data.Redis;
 using Warp.WebApp.Helpers.Configuration;
+using Warp.WebApp.Models.Options;
 using Warp.WebApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,11 +13,8 @@ using var loggerFactory = LoggerFactory.Create(loggerBuilder => loggerBuilder
 
 var logger = loggerFactory.CreateLogger<Program>();
 
-var secrets = VaultHelper.GetSecrets(builder.Configuration);
-var address = (string)secrets["consul-address"]!;
-var token = (string)secrets["consul-token"]!;
-
-builder.AddConsulConfiguration(address, token);
+var secrets = VaultHelper.GetSecrets<ProgramSecrets>(logger, builder.Configuration);
+builder.AddConsulConfiguration(secrets.ConsulAddress, secrets.ConsulToken);
 
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
