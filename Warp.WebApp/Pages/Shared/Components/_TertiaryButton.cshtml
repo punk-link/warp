@@ -1,0 +1,21 @@
+﻿@model _TertiaryButton
+@{
+}
+
+<button id="@Model.Id" class="btn-tertiary" type="button">
+    <div class="flex-container flex-direction-column align-center">
+        <div class="main-caption">
+            @if (!string.IsNullOrWhiteSpace(Model.IconName))
+            {
+                <i class="@Model.IconName"></i>
+            }
+            @Model.MainCaption
+        </div>
+        @if (!string.IsNullOrWhiteSpace(Model.SecondaryCaption))
+        {
+            <div class="secondary-caption">
+                @Model.SecondaryCaption
+            </div>
+        }
+    </div>
+</button>

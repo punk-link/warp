@@ -1,13 +1,15 @@
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Warp.WebApp.Pages.Shared;
+using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 
 namespace Warp.WebApp.Pages;
 
 public class EntryModel : BasePageModel
 {
-    public EntryModel(ILoggerFactory loggerFactory, IWarpContentService warpContentService, IViewCountService viewCountService, IImageService imageService) : base(loggerFactory)
+    public EntryModel(ILoggerFactory loggerFactory, IWarpContentService warpContentService, IViewCountService viewCountService, IImageService imageService) 
+        : base(loggerFactory)
     {
         _imageService = imageService;
         _viewCountService = viewCountService;
@@ -35,14 +37,32 @@ public class EntryModel : BasePageModel
             .ToList();
         ImageUrls = BuildImageUrls(id, imageIds);
 
-        ModalWindowModel = new _ModalWindowModel
+        return AddButtonModels();
+
+
+        IActionResult AddButtonModels()
         {
-            Action = "report",
-            Header = "report entry",
-            Prompt = "You are about to report this content. This action restricts an access to the content for all viewers. Are you sure?"
-        };
+            CopyButtonModel = new _TertiaryButton
+            {
+                Id = "copy-url-button",
+                IconName = "icofont-copy",
+                MainCaption = "copy link",
+                SecondaryCaption = "copied"
+            };
+            ModalWindowModel = new _ModalWindowModel
+            {
+                Action = "report",
+                Header = "report entry",
+                Prompt = "You are about to report this content. This action restricts an access to the content for all viewers. Are you sure?"
+            };
+            ReportButtonModel = new _TertiaryButton
+            {
+                Id = "report-button",
+                MainCaption = "report"
+            };
         
-        return Page();
+            return Page();
+        }
     }
 
 
@@ -73,11 +93,15 @@ public class EntryModel : BasePageModel
     private static TimeSpan GetExpirationTimeSpan(DateTime expiresAt)
         => expiresAt - DateTime.UtcNow;
 
+    
+    public _TertiaryButton CopyButtonModel { get; set; } = default!;
+    public _ModalWindowModel ModalWindowModel { get; set; } = default!;
+    public _TertiaryButton ReportButtonModel { get; set; } = default!;
+
 
     public string ExpiresIn { get; set; } = string.Empty;
     public Guid Id { get; set; }
     public List<string> ImageUrls { get; set; } = [];
-    public _ModalWindowModel ModalWindowModel { get; set; } = default!;
     public string TextContent { get; set; } = string.Empty;
     public int ViewCount { get; set; } = 1;
     

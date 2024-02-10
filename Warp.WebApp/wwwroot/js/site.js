@@ -4,10 +4,13 @@
 }
 
 
-function copyUrl() {
+function copyUrl(copyButton) {
     try {
         document.body.style.cursor = 'wait';
         navigator.clipboard.writeText(window.location.href);
+
+        let copiedCaption = copyButton.getElementsByClassName('secondary-caption')[0];
+        copiedCaption.style.display = 'block';
     } finally {
         document.body.style.cursor = 'auto';
     }

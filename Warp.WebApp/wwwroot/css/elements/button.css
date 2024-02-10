@@ -16,7 +16,7 @@ button {
     font-weight: 700;
     gap: 0.625rem;
     height: 3.5rem;
-    justify-content: center;
+    justify-content: flex-start;
     line-height: normal;
     outline: none;
     padding: 1rem 3.75rem;
@@ -55,7 +55,13 @@ button {
         color: var(--primary-60, #C99EFF);
     }
 
-    .btn-tertiary div i {
+    .btn-tertiary div div:nth-child(1) i {
         font-size: 1rem;
         padding-right: 0.625rem;
+    }
+
+    .btn-tertiary > div > div:nth-child(2) {
+        color: var(--primary-60, #C99EFF);
+        display: none;
+        font-size: 0.75rem;
     }
