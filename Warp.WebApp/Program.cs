@@ -6,18 +6,22 @@ using Warp.WebApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var logLevel = Enum.Parse<LogLevel>(builder.Configuration["Logging:LogLevel:Default"]!);
-using var loggerFactory = LoggerFactory.Create(loggerBuilder => loggerBuilder
-    .SetMinimumLevel(logLevel)
-    .AddConsole());
-
-var logger = loggerFactory.CreateLogger<Program>();
+var logger = GetProgramLogger(builder);
 
 var secrets = VaultHelper.GetSecrets<ProgramSecrets>(logger, builder.Configuration);
 builder.AddConsulConfiguration(secrets.ConsulAddress, secrets.ConsulToken);
 
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
+builder.Logging.AddSentry(o =>
+{
+    o.Dsn = builder.Configuration["SentryDsn"];
+    o.AttachStacktrace = true;
+});
+
+#if DEBUG
+builder.Logging.AddDebug();
+#endif
 
 builder.Services.AddSingleton(_ => DistributedCacheHelper.GetConnectionMultiplexer(logger, builder.Configuration));
 
@@ -56,3 +60,14 @@ app.MapRazorPages();
 
 app.Run();
 return;
+
+
+ILogger<Program> GetProgramLogger(WebApplicationBuilder webApplicationBuilder)
+{
+    var logLevel = Enum.Parse<LogLevel>(webApplicationBuilder.Configuration["Logging:LogLevel:Default"]!);
+    using var loggerFactory = LoggerFactory.Create(loggerBuilder => loggerBuilder
+        .SetMinimumLevel(logLevel)
+        .AddConsole());
+
+    return loggerFactory.CreateLogger<Program>();
+}

@@ -25,6 +25,7 @@
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.0" />
     <PackageReference Include="NuGet.Common" Version="6.8.0" />
     <PackageReference Include="NuGet.Protocol" Version="6.8.0" />
+    <PackageReference Include="Sentry.AspNetCore" Version="4.1.0" />
     <PackageReference Include="StackExchange.Redis" Version="2.7.17" />
   </ItemGroup>
 
