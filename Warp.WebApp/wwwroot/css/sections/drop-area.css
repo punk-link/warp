@@ -34,11 +34,6 @@
 
 .image-container p {
     color: var(--text-60, #9F9F9F);
-    font-family: Montserrat;
-    font-style: normal;
-    font-weight: 400;
-    line-height: normal;
-    letter-spacing: 0.015rem;
     display: block;
     padding-left: 0.625rem;
     text-align: center;

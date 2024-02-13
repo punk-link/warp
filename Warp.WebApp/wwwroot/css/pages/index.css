@@ -7,8 +7,9 @@
         margin: 0 2.5rem;
     }
 
-    .warp-input-container textarea {
-        background: none;
-        box-sizing: border-box;
-        width: 100%;
-    }
+#warp-content-textarea {
+    background: none;
+    border: none;
+    box-sizing: border-box;
+    width: 100%;
+}
