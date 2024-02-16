@@ -6,6 +6,15 @@
     }
 }
 
+
+function getContentLength(element) {
+    if (element.value !== undefined)
+        return element.value.length;
+
+    return element.innerText.length;
+}
+
+
 function getScalingIntervals(lowerBound, step, numberOfSteps, maxFontSize, fontSizeStep) {
     let initInterval = buildScalingInterval(0, lowerBound, maxFontSize);
         
@@ -31,10 +40,11 @@ function getScalingIntervals(lowerBound, step, numberOfSteps, maxFontSize, fontS
 
 
 export function applyFontScaling(element, lowerBound, step, numberOfSteps, maxFontSize, fontSizeStep) {
+    let scalingIntervals = getScalingIntervals(lowerBound, step, numberOfSteps, maxFontSize, fontSizeStep);
+    
     element.oninput = () => {
-        let len = element.value.length;
+        let len = getContentLength(element);
             
-        let scalingIntervals = getScalingIntervals(lowerBound, step, numberOfSteps, maxFontSize, fontSizeStep);
         scalingIntervals.forEach(interval => {
             if (interval.min <= len && len < interval.max) {
                 element.style.fontSize = interval.size;
@@ -43,5 +53,3 @@ export function applyFontScaling(element, lowerBound, step, numberOfSteps, maxFo
         });
     };
 }
-
-    

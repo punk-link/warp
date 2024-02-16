@@ -14,7 +14,13 @@
                 <input type="file" id="file" class="file-input" multiple="multiple" accept="image/*">
             </div>
             <div class="form-group">
-                <textarea id="warp-content-textarea" class="vh50" asp-for="TextContent" placeholder="Type or paste a text here"></textarea>
+                <div class="warp-content-textarea-container">
+                    <label>Type or paste text here</label>
+                    <div class="warp-content-textarea-span-container">
+                        <span id="warp-content-textarea-span" contenteditable></span>
+                    </div>
+                    <textarea id="warp-content-textarea" type="hidden" asp-for="TextContent"></textarea>
+                </div>
             </div>
             <div class="flex-container align-center justify-space-between">
                 <div class="form-group">
@@ -30,21 +36,12 @@
 </div>
 <partial name="Shared/_Promo" />
 <partial name="Shared/_Footer" />
-<script src="js/drop-area.js"></script>
-<script src="js/modules/font-scaler.js" type="module"></script>
 
+<script src="js/index.js" type="module"></script>
 <script type ="module">
-    import { applyFontScaling } from './js/modules/font-scaler.js';
+    import { addIndexEvents } from './js/index.js';
 
     document.addEventListener('DOMContentLoaded', () => {
-        document.body.addEventListener('keydown', async function (e) {
-            if (e.ctrlKey && (e.key === 'v' || e.key === 'V'))
-                await pasteImages();
-        });
-
-        addDropAreaEvents();
-
-        let warpContentTextarea = document.getElementById('warp-content-textarea');
-        applyFontScaling(warpContentTextarea, 1000, 250, 6, 1.25, 0.05);
+        addIndexEvents();
     });
 </script>

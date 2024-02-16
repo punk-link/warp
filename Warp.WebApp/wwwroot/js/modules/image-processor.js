@@ -1,38 +1,3 @@
-function addDropAreaEvents() {
-    let dropArea = document.getElementsByClassName('drop-area')[0];
-    
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropArea.addEventListener(eventName, function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        });
-    });
-
-    ['dragenter', 'dragover'].forEach(eventName => {
-        dropArea.addEventListener(eventName, function () {
-            dropArea.classList.add('highlighted');
-        });
-    });
-
-    ['dragleave', 'drop'].forEach(eventName => {
-        dropArea.addEventListener(eventName, function () {
-            dropArea.classList.remove('highlighted');
-        });
-    });
-
-    dropArea.addEventListener('drop', async (e) => await dropImages(e));
-
-    let fileInput = document.getElementById('file');
-    fileInput.onchange = (e) => {
-        let files = Array.from(e.target.files)
-        uploadFiles(files);
-    };
-
-    let uploadButton = document.getElementById('upload-button');
-    uploadButton.onclick = () => fileInput.click();
-}
-
-
 function appendPreview(files, uploadResults) {
     let gallery = document.getElementsByClassName('upload-gallery')[0];
     let imageContainer = document.getElementsByClassName('image-container')[0];
@@ -59,6 +24,15 @@ function appendPreview(files, uploadResults) {
             gallery.append(imageWrapper);
         }
     });
+}
+
+
+function dropImages(e) {
+    let transfer = e.dataTransfer;
+    let fileList = transfer.files;
+    let files = Array.from(fileList)
+    
+    uploadImages(files);
 }
 
 
@@ -89,39 +63,7 @@ function getInputToImageId(id) {
 }
 
 
-async function pasteImages() {
-    try {
-        await navigator.permissions.query({ name: 'clipboard-read' });
-
-        let clipboardItems = await navigator.clipboard.read();
-        let files = [];
-        for (let item of clipboardItems) {
-            let imageTypes = item.types
-                .filter(type => type.startsWith('image/'));
-            
-            for (let type of imageTypes) {
-                let blob = await item.getType(type);
-                files.push(blob);
-            }
-        }
-        
-        uploadFiles(files);
-    } catch(err) {
-        console.error(err);
-    }
-}
-
-
-function dropImages(e) {
-    let transfer = e.dataTransfer;
-    let fileList = transfer.files;
-    let files = Array.from(fileList)
-    
-    uploadFiles(files);
-}
-
-
-async function uploadFiles(files) {
+async function uploadImages(files) {
     let formData = new FormData();
     files.forEach(file => {
         formData.append('Images', file, file.name);
@@ -139,4 +81,58 @@ async function uploadFiles(files) {
         
     let responseContent = await response.json();
     appendPreview(files, responseContent);
+}
+
+
+export function addDropAreaEvents(dropArea, fileInput, uploadButton) {
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+    });
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropArea.addEventListener(eventName, function () {
+            dropArea.classList.add('highlighted');
+        });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, function () {
+            dropArea.classList.remove('highlighted');
+        });
+    });
+
+    dropArea.addEventListener('drop', async (e) => await dropImages(e));
+
+    fileInput.onchange = (e) => {
+        let files = Array.from(e.target.files)
+        uploadImages(files);
+    };
+
+    uploadButton.onclick = () => fileInput.click();
+}
+
+
+export async function pasteImages() {
+    try {
+        await navigator.permissions.query({ name: 'clipboard-read' });
+
+        let clipboardItems = await navigator.clipboard.read();
+        let files = [];
+        for (let item of clipboardItems) {
+            let imageTypes = item.types
+                .filter(type => type.startsWith('image/'));
+            
+            for (let type of imageTypes) {
+                let blob = await item.getType(type);
+                files.push(blob);
+            }
+        }
+        
+        uploadImages(files);
+    } catch(err) {
+        console.error(err);
+    }
 }

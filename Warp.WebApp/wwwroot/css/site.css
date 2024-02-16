@@ -18,6 +18,10 @@
 @import url(variables/colors.css);
 @import url(variables/dimensions.css);
 
+[contenteditable] {
+    outline: none;
+}
+
 html {
     font-size: 14px;
     min-height: 100%;

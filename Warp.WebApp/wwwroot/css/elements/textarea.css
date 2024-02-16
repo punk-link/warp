@@ -39,3 +39,8 @@
         text-align: center;
         padding-top: 20vh;
     }
+
+    .textarea[contenteditable]:empty::before {
+        content: "Placeholder still possible";
+        color: gray;
+    }

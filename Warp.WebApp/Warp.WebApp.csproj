@@ -17,6 +17,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="wwwroot\js\index.js" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Consul" Version="1.7.14.3" />
     <PackageReference Include="CSharpFunctionalExtensions" Version="2.40.3" />
     <PackageReference Include="FluentValidation" Version="11.9.0" />
@@ -35,6 +39,7 @@
 
   <ItemGroup>
     <_ContentIncludedByDefault Remove="Pages\Entry.cshtml" />
+    <_ContentIncludedByDefault Remove="wwwroot\js\index.js" />
   </ItemGroup>
 
   <ItemGroup>
@@ -43,6 +48,10 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\img\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\js\index.js" />
   </ItemGroup>
 
   <ItemGroup>
