@@ -9,9 +9,8 @@ namespace Warp.WebApp.Pages;
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 public class IndexModel : BasePageModel
 {
-    public IndexModel(ILoggerFactory loggerFactory, IEntryService entryService, IImageService imageService) : base(loggerFactory)
+    public IndexModel(ILoggerFactory loggerFactory, IEntryService entryService) : base(loggerFactory)
     {
-        _imageService = imageService;
         _entryService = entryService;
     }
     
@@ -24,12 +23,10 @@ public class IndexModel : BasePageModel
     {
         var expiresIn = GetExpirationPeriod(SelectedExpirationPeriod);
         var (_, isFailure, id, problemDetails) = await _entryService.Add(TextContent, expiresIn, ImageIds);
-        if (isFailure)
-            return RedirectToError(problemDetails);
-
-        await _imageService.Attach(id, expiresIn, ImageIds);
-
-        return RedirectToPage("./Entry", new { id });
+        
+        return isFailure 
+            ? RedirectToError(problemDetails) 
+            : RedirectToPage("./Entry", new { id });
     }
 
 
@@ -67,5 +64,4 @@ public class IndexModel : BasePageModel
     
         
     private readonly IEntryService _entryService;
-    private readonly IImageService _imageService;
 }

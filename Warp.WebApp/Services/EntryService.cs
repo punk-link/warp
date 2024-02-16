@@ -10,44 +10,57 @@ namespace Warp.WebApp.Services;
 
 public class EntryService : IEntryService
 {
-    public EntryService(IDataStorage dataStorage, IImageService imageService, IReportService reportService)
+    public EntryService(IDataStorage dataStorage, IImageService imageService, IReportService reportService, IViewCountService viewCountService)
     {
         _dataStorage = dataStorage;
         _imageService = imageService;
         _reportService = reportService;
+        _viewCountService = viewCountService;
     }
 
 
     public async Task<Result<Guid, ProblemDetails>> Add(string content, TimeSpan expiresIn, List<Guid> imageIds)
     {
         var now = DateTime.UtcNow;
-        var warpEntry = new Entry(Guid.NewGuid(), content, now, now + expiresIn);
+        var entry = new Entry(Guid.NewGuid(), content, now, now + expiresIn);
         
         var validator = new EntryValidator();
-        var validationResult = await validator.ValidateAsync(warpEntry);
+        var validationResult = await validator.ValidateAsync(entry);
         if (!validationResult.IsValid)
             return validationResult.ToFailure<Guid>();
         
-        var cacheKey = BuildCacheKey(warpEntry.Id);
-        var result = await _dataStorage.Set(cacheKey, warpEntry, expiresIn);
+        var cacheKey = BuildCacheKey(entry.Id);
+        var result = await _dataStorage.Set(cacheKey, entry, expiresIn);
+
+        await _imageService.Attach(entry.Id, expiresIn, imageIds);
         
         return result.IsFailure 
             ? result.ToFailure<Guid>() 
-            : Result.Success<Guid, ProblemDetails>(warpEntry.Id);
+            : Result.Success<Guid, ProblemDetails>(entry.Id);
     }
     
     
-    public async Task<Result<Entry, ProblemDetails>> Get(Guid id)
+    public async Task<Result<EntryInfo, ProblemDetails>> Get(Guid id)
     {
         if (_reportService.Contains(id))
-            return ResultHelper.NotFound<Entry>();
+            return ResultHelper.NotFound<EntryInfo>();
 
         var cacheKey = BuildCacheKey(id);
         var entry = await _dataStorage.TryGet<Entry>(cacheKey);
-        if (entry is not null && !entry.Equals(default))
-            return Result.Success<Entry, ProblemDetails>(entry);
-        
-        return ResultHelper.NotFound<Entry>();
+        if (entry is null || entry.Equals(default))
+            return ResultHelper.NotFound<EntryInfo>();
+
+        var viewCount = await _viewCountService.AddAndGet(id);
+        var imageIds = (await _imageService.Get(id))
+            .Select(image => image.Id)
+            .ToList();
+
+        return Result.Success<EntryInfo, ProblemDetails>(new EntryInfo
+        {
+            Entry = entry,
+            ImageIds = imageIds,
+            ViewCount = viewCount
+        });
     }
 
 
@@ -58,4 +71,5 @@ public class EntryService : IEntryService
     private readonly IDataStorage _dataStorage;
     private readonly IImageService _imageService;
     private readonly IReportService _reportService;
+    private readonly IViewCountService _viewCountService;
 }

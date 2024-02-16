@@ -1,5 +1,6 @@
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
+using Warp.WebApp.Models;
 using Warp.WebApp.Pages.Shared;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
@@ -8,37 +9,39 @@ namespace Warp.WebApp.Pages;
 
 public class EntryModel : BasePageModel
 {
-    public EntryModel(ILoggerFactory loggerFactory, IEntryService warpContentService, IViewCountService viewCountService, IImageService imageService) 
+    public EntryModel(ILoggerFactory loggerFactory, IEntryService entryService) 
         : base(loggerFactory)
     {
-        _imageService = imageService;
-        _viewCountService = viewCountService;
-        _warpContentService = warpContentService;
+        _entryService = entryService;
     }
     
     
     public async Task<IActionResult> OnGet(Guid id)
     {
-        var (_, isFailure, content, problemDetails) = await _warpContentService.Get(id);
+        var (_, isFailure, entry, problemDetails) = await _entryService.Get(id);
         if (isFailure)
             return problemDetails.Status == StatusCodes.Status404NotFound 
                 ? RedirectToPage("./NotFound") 
                 : RedirectToError(problemDetails);
 
-        Id = id;
-        ExpiresIn = GetExpirationMessage(content.ExpiresAt);
-        TextContent = TextFormatter.Format(content.Content);
-        ViewCount = await _viewCountService.AddAndGet(id);
-
-        var imageIds = (await _imageService.Get(id))
-            .Select(image => image.Id)
-            .ToList();
-        ImageUrls = BuildImageUrls(id, imageIds);
-
-        return AddButtonModels();
+        AddButtonModels();
+        return BuildModel(id, entry);
 
 
-        IActionResult AddButtonModels()
+        IActionResult BuildModel(Guid entryId, EntryInfo entryInfo)
+        {
+            Id = entryId;
+            ExpiresIn = GetExpirationMessage(entryInfo.Entry.ExpiresAt);
+            TextContent = TextFormatter.Format(entryInfo.Entry.Content);
+
+            ViewCount = entryInfo.ViewCount;
+            ImageUrls = BuildImageUrls(id, entryInfo.ImageIds);
+        
+            return Page();
+        }
+
+
+        void AddButtonModels()
         {
             CopyButtonModel = new _TertiaryButton
             {
@@ -47,19 +50,19 @@ public class EntryModel : BasePageModel
                 MainCaption = "copy link",
                 SecondaryCaption = "copied"
             };
+
             ModalWindowModel = new _ModalWindowModel
             {
                 Action = "report",
                 Header = "report entry",
                 Prompt = "You are about to report this content. This action restricts an access to the content for all viewers. Are you sure?"
             };
+
             ReportButtonModel = new _TertiaryButton
             {
                 Id = "report-button",
                 MainCaption = "report"
             };
-        
-            return Page();
         }
     }
 
@@ -104,7 +107,5 @@ public class EntryModel : BasePageModel
     public long ViewCount { get; set; } = 1;
     
     
-    private readonly IImageService _imageService;
-    private readonly IViewCountService _viewCountService;
-    private readonly IEntryService _warpContentService;
+    private readonly IEntryService _entryService;
 }
