@@ -2,9 +2,8 @@
 
 public interface IDistributedStorage
 {
-    void Remove<T>(string key);
-
-    Task Set<T>(string key, T value, TimeSpan expiresIn);
-
-    Task<T?> TryGet<T>(string key);
+    public Task<long> AddAndGetCounter(string key);
+    public void Remove<T>(string key);
+    public Task Set<T>(string key, T value, TimeSpan expiresIn);
+    public Task<T?> TryGet<T>(string key);
 }

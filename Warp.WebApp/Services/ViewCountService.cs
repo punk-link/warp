@@ -1,18 +1,27 @@
-﻿namespace Warp.WebApp.Services;
+﻿using Warp.WebApp.Data;
+using Warp.WebApp.Models;
+
+namespace Warp.WebApp.Services;
 
 public class ViewCountService : IViewCountService
 {
-    public int AddAndGet(Guid itemId)
+    public ViewCountService(IDataStorage dataStorage)
     {
-        lock (Counter)
-        {
-            if (!Counter.TryAdd(itemId, 1))
-                Counter[itemId] += 1;
-
-            return Counter[itemId];
-        }
+        _dataStorage = dataStorage;
     }
 
 
+    public Task<long> AddAndGet(Guid itemId)
+    {
+        var cacheKey = GetCacheKey(in itemId);
+        return _dataStorage.AddAndGetCounter(cacheKey);
+
+
+        static string GetCacheKey(in Guid id)
+            => $"{nameof(ViewCountService)}::{typeof(WarpEntry)}::{id}";
+    }
+
+
+    private readonly IDataStorage _dataStorage;
     private static readonly Dictionary<Guid, int> Counter = [];
 }

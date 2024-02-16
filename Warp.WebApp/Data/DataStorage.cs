@@ -15,6 +15,10 @@ public class DataStorage : IDataStorage
     }
 
 
+    public Task<long> AddAndGetCounter(string key)
+        => _distributedStorage.AddAndGetCounter(key);
+
+
     public void Remove<T>(string key)
     {
         _memoryCache.Remove(key);

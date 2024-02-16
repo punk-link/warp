@@ -4,11 +4,18 @@ using Warp.WebApp.Models;
 
 namespace Warp.WebApp.Data.Redis;
 
-public class RedisStorage : IDistributedStorage
+public class KeyDbStorage : IDistributedStorage
 {
-    public RedisStorage(IConnectionMultiplexer multiplexer)
+    public KeyDbStorage(IConnectionMultiplexer multiplexer)
     {
         _multiplexer = multiplexer;
+    }
+
+
+    public Task<long> AddAndGetCounter(string key)
+    {
+        var db = GetDatabase<object>();
+        return db.StringIncrementAsync(key);
     }
 
 

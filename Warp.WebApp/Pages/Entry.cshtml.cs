@@ -21,16 +21,14 @@ public class EntryModel : BasePageModel
     {
         var (_, isFailure, content, problemDetails) = await _warpContentService.Get(id);
         if (isFailure)
-        {
             return problemDetails.Status == StatusCodes.Status404NotFound 
                 ? RedirectToPage("./NotFound") 
                 : RedirectToError(problemDetails);
-        }
 
         Id = id;
         ExpiresIn = GetExpirationMessage(content.ExpiresAt);
         TextContent = TextFormatter.Format(content.Content);
-        ViewCount = _viewCountService.AddAndGet(id);
+        ViewCount = await _viewCountService.AddAndGet(id);
 
         var imageIds = (await _imageService.Get(id))
             .Select(image => image.Id)
@@ -103,7 +101,7 @@ public class EntryModel : BasePageModel
     public Guid Id { get; set; }
     public List<string> ImageUrls { get; set; } = [];
     public string TextContent { get; set; } = string.Empty;
-    public int ViewCount { get; set; } = 1;
+    public long ViewCount { get; set; } = 1;
     
     
     private readonly IImageService _imageService;

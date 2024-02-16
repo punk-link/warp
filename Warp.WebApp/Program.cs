@@ -27,7 +27,7 @@ builder.Services.AddSingleton(_ => DistributedCacheHelper.GetConnectionMultiplex
 
 builder.Services.AddSingleton<IImageService, ImageService>();
 builder.Services.AddSingleton<IReportStorage, ReportStorage>();
-builder.Services.AddSingleton<IDistributedStorage, RedisStorage>();
+builder.Services.AddSingleton<IDistributedStorage, KeyDbStorage>();
 builder.Services.AddSingleton<IDataStorage, DataStorage>();
 builder.Services.AddTransient<IReportService, ReportService>();
 builder.Services.AddTransient<IViewCountService, ViewCountService>();
