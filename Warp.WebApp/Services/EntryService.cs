@@ -8,21 +8,22 @@ using Warp.WebApp.Models.Validators;
 
 namespace Warp.WebApp.Services;
 
-public class WarpContentService : IWarpContentService
+public class EntryService : IEntryService
 {
-    public WarpContentService(IDataStorage dataStorage, IReportService reportService)
+    public EntryService(IDataStorage dataStorage, IImageService imageService, IReportService reportService)
     {
         _dataStorage = dataStorage;
+        _imageService = imageService;
         _reportService = reportService;
     }
 
 
-    public async Task<Result<Guid, ProblemDetails>> Add(string content, TimeSpan expiresIn)
+    public async Task<Result<Guid, ProblemDetails>> Add(string content, TimeSpan expiresIn, List<Guid> imageIds)
     {
         var now = DateTime.UtcNow;
-        var warpEntry = new WarpEntry(Guid.NewGuid(), content, now, now + expiresIn);
+        var warpEntry = new Entry(Guid.NewGuid(), content, now, now + expiresIn);
         
-        var validator = new WarpEntryValidator();
+        var validator = new EntryValidator();
         var validationResult = await validator.ValidateAsync(warpEntry);
         if (!validationResult.IsValid)
             return validationResult.ToFailure<Guid>();
@@ -36,24 +37,25 @@ public class WarpContentService : IWarpContentService
     }
     
     
-    public async Task<Result<WarpEntry, ProblemDetails>> Get(Guid id)
+    public async Task<Result<Entry, ProblemDetails>> Get(Guid id)
     {
         if (_reportService.Contains(id))
-            return ResultHelper.NotFound<WarpEntry>();
+            return ResultHelper.NotFound<Entry>();
 
         var cacheKey = BuildCacheKey(id);
-        var entry = await _dataStorage.TryGet<WarpEntry>(cacheKey);
+        var entry = await _dataStorage.TryGet<Entry>(cacheKey);
         if (entry is not null && !entry.Equals(default))
-            return Result.Success<WarpEntry, ProblemDetails>(entry);
+            return Result.Success<Entry, ProblemDetails>(entry);
         
-        return ResultHelper.NotFound<WarpEntry>();
+        return ResultHelper.NotFound<Entry>();
     }
 
 
     private static string BuildCacheKey(Guid id)
-        => $"{nameof(WarpEntry)}::{id}";
+        => $"{nameof(Entry)}::{id}";
 
     
     private readonly IDataStorage _dataStorage;
+    private readonly IImageService _imageService;
     private readonly IReportService _reportService;
 }

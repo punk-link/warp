@@ -1,8 +1,8 @@
 ﻿namespace Warp.WebApp.Models;
 
-public class WarpEntry
+public class Entry
 {
-    public WarpEntry(Guid id, string content, DateTime createdAt, DateTime expiresAt)
+    public Entry(Guid id, string content, DateTime createdAt, DateTime expiresAt)
     {
         Id = id;
         Content = content;

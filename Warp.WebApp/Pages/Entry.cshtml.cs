@@ -8,7 +8,7 @@ namespace Warp.WebApp.Pages;
 
 public class EntryModel : BasePageModel
 {
-    public EntryModel(ILoggerFactory loggerFactory, IWarpContentService warpContentService, IViewCountService viewCountService, IImageService imageService) 
+    public EntryModel(ILoggerFactory loggerFactory, IEntryService warpContentService, IViewCountService viewCountService, IImageService imageService) 
         : base(loggerFactory)
     {
         _imageService = imageService;
@@ -106,5 +106,5 @@ public class EntryModel : BasePageModel
     
     private readonly IImageService _imageService;
     private readonly IViewCountService _viewCountService;
-    private readonly IWarpContentService _warpContentService;
+    private readonly IEntryService _warpContentService;
 }

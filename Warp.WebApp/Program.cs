@@ -31,7 +31,7 @@ builder.Services.AddSingleton<IDistributedStorage, KeyDbStorage>();
 builder.Services.AddSingleton<IDataStorage, DataStorage>();
 builder.Services.AddTransient<IReportService, ReportService>();
 builder.Services.AddTransient<IViewCountService, ViewCountService>();
-builder.Services.AddTransient<IWarpContentService, WarpContentService>();
+builder.Services.AddTransient<IEntryService, EntryService>();
 
 builder.Services.AddMemoryCache();
 builder.Services.AddRazorPages();

@@ -34,52 +34,52 @@ public class ImageService : IImageService
         if (imageIds.Count == 0)
             return;
 
-        var imageEntries = new List<ImageEntry>(imageIds.Count);
+        var imageInfos = new List<ImageInfo>(imageIds.Count);
         foreach (var imageId in imageIds)
         {
             var entryCacheKey = BuildEntryCacheKey(imageId);
-            var value = await _dataStorage.TryGet<ImageEntry>(entryCacheKey);
+            var value = await _dataStorage.TryGet<ImageInfo>(entryCacheKey);
             if (!value.Equals(default))
-                imageEntries.Add(value);
+                imageInfos.Add(value);
         }
 
         var bucketCacheKey = BuildBucketCacheKey(entryId);
-        await _dataStorage.Set(bucketCacheKey, imageEntries, relativeExpirationTime);
+        await _dataStorage.Set(bucketCacheKey, imageInfos, relativeExpirationTime);
 
-        foreach (var entry in imageEntries)
+        foreach (var imageInfo in imageInfos)
         {
-            var entryCacheKey = BuildEntryCacheKey(entry.Id);
-            _dataStorage.Remove<List<ImageEntry>>(entryCacheKey);
+            var entryCacheKey = BuildEntryCacheKey(imageInfo.Id);
+            _dataStorage.Remove<List<ImageInfo>>(entryCacheKey);
         }
     }
 
 
-    public async Task<List<ImageEntry>> Get(Guid entryId)
+    public async Task<List<ImageInfo>> Get(Guid entryId)
     {
         var bucketCacheKey = BuildBucketCacheKey(entryId);
-        var values = await _dataStorage.TryGet<List<ImageEntry>>(bucketCacheKey);
+        var values = await _dataStorage.TryGet<List<ImageInfo>>(bucketCacheKey);
 
-        return values ?? Enumerable.Empty<ImageEntry>().ToList();
+        return values ?? Enumerable.Empty<ImageInfo>().ToList();
     }
 
 
-    public async Task<Result<ImageEntry, ProblemDetails>> Get(Guid entryId, Guid imageId)
+    public async Task<Result<ImageInfo, ProblemDetails>> Get(Guid entryId, Guid imageId)
     {
         var images = await Get(entryId);
         var image = images.FirstOrDefault(x => x.Id == imageId);
 
         return image != default
-            ? Result.Success<ImageEntry, ProblemDetails>(image)
-            : ResultHelper.NotFound<ImageEntry>();
+            ? Result.Success<ImageInfo, ProblemDetails>(image)
+            : ResultHelper.NotFound<ImageInfo>();
     }
 
 
     private static string BuildBucketCacheKey(Guid id)
-        => $"{nameof(List<ImageEntry>)}::{id}";
+        => $"{nameof(List<ImageInfo>)}::{id}";
 
 
     private static string BuildEntryCacheKey(Guid id)
-        => $"{nameof(ImageEntry)}::{id}";
+        => $"{nameof(ImageInfo)}::{id}";
 
 
     private async Task<(string, Guid)> Add(IFormFile file)
@@ -87,17 +87,17 @@ public class ImageService : IImageService
         using var memoryStream = new MemoryStream();
         await file.CopyToAsync(memoryStream);
 
-        var entry = new ImageEntry
+        var imageInfo = new ImageInfo
         {
             Id = Guid.NewGuid(),
             Content = memoryStream.ToArray(),
             ContentType = file.ContentType
         };
 
-        var cacheKey = BuildEntryCacheKey(entry.Id);
-        await _dataStorage.Set(cacheKey, entry, TimeSpan.FromHours(1));
+        var cacheKey = BuildEntryCacheKey(imageInfo.Id);
+        await _dataStorage.Set(cacheKey, imageInfo, TimeSpan.FromHours(1));
 
-        return (file.FileName, entry.Id);
+        return (file.FileName, imageInfo.Id);
     }
 
 

@@ -56,8 +56,8 @@ public class KeyDbStorage : IDistributedStorage
     private static int ToDatabaseIndex<T>(T type)
         => type switch
         {
-            WarpEntry => 1,
-            ImageEntry => 2,
+            Entry => 1,
+            ImageInfo => 2,
             _ => 0
         };
 

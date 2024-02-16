@@ -6,11 +6,8 @@ namespace Warp.WebApp.Services;
 
 public interface IImageService
 {
-    Task<Dictionary<string, Guid>> Add(List<IFormFile> files);
-
-    Task Attach(Guid entryId, TimeSpan relativeExpirationTime, List<Guid> imageIds);
-
-    Task<List<ImageEntry>> Get(Guid entryId);
-
-    Task<Result<ImageEntry, ProblemDetails>> Get(Guid entryId, Guid imageId);
+    public Task<Dictionary<string, Guid>> Add(List<IFormFile> files);
+    public Task Attach(Guid entryId, TimeSpan relativeExpirationTime, List<Guid> imageIds);
+    public Task<List<ImageInfo>> Get(Guid entryId);
+    public Task<Result<ImageInfo, ProblemDetails>> Get(Guid entryId, Guid imageId);
 }

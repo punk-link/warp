@@ -18,7 +18,7 @@ public class ViewCountService : IViewCountService
 
 
         static string GetCacheKey(in Guid id)
-            => $"{nameof(ViewCountService)}::{typeof(WarpEntry)}::{id}";
+            => $"{nameof(ViewCountService)}::{typeof(Entry)}::{id}";
     }
 
 
