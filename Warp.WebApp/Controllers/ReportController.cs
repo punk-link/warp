@@ -15,9 +15,9 @@ public class ReportController : BaseController
     
     
     [HttpPost("{id:guid}")]
-    public IActionResult Post([FromRoute] Guid id)
+    public async Task<IActionResult> Post([FromRoute] Guid id)
     {
-        _reportService.MarkAsReported(id);
+        await _reportService.MarkAsReported(id);
         return NoContent();
     }
 

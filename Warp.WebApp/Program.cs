@@ -9,21 +9,23 @@ var builder = WebApplication.CreateBuilder(args);
 var logger = GetProgramLogger(builder);
 
 var secrets = VaultHelper.GetSecrets<ProgramSecrets>(logger, builder.Configuration);
+
 builder.AddConsulConfiguration(secrets.ConsulAddress, secrets.ConsulToken);
 // Restores local setting for development purposes (e.g. local port forwarding)
 builder.Configuration.AddJsonFile($"appsettings.{builder.Configuration["ASPNETCORE_ENVIRONMENT"]}.json", optional: true, reloadOnChange: true);
 
 builder.Logging.ClearProviders();
+
+#if DEBUG
+builder.Logging.AddDebug();
+#endif
+
 builder.Logging.AddConsole();
 builder.Logging.AddSentry(o =>
 {
     o.Dsn = builder.Configuration["SentryDsn"];
     o.AttachStacktrace = true;
 });
-
-#if DEBUG
-builder.Logging.AddDebug();
-#endif
 
 builder.Services.AddSingleton(_ => DistributedCacheHelper.GetConnectionMultiplexer(logger, builder.Configuration));
 

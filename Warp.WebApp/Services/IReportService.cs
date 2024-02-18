@@ -2,7 +2,7 @@
 
 public interface IReportService
 {
-    public bool Contains(Guid id);
+    public ValueTask<bool> Contains(Guid id);
     
-    public void MarkAsReported(Guid id);
+    public Task MarkAsReported(Guid id);
 }

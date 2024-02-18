@@ -42,12 +42,12 @@ public class EntryService : IEntryService
     
     public async Task<Result<EntryInfo, ProblemDetails>> Get(Guid id)
     {
-        if (_reportService.Contains(id))
+        if (await _reportService.Contains(id))
             return ResultHelper.NotFound<EntryInfo>();
 
         var cacheKey = BuildCacheKey(id);
         var entry = await _dataStorage.TryGet<Entry>(cacheKey);
-        if (entry is null || entry.Equals(default))
+        if (entry.Equals(default))
             return ResultHelper.NotFound<EntryInfo>();
 
         var viewCount = await _viewCountService.AddAndGet(id);
@@ -55,12 +55,7 @@ public class EntryService : IEntryService
             .Select(image => image.Id)
             .ToList();
 
-        return Result.Success<EntryInfo, ProblemDetails>(new EntryInfo
-        {
-            Entry = entry,
-            ImageIds = imageIds,
-            ViewCount = viewCount
-        });
+        return Result.Success<EntryInfo, ProblemDetails>(new EntryInfo(entry, viewCount, imageIds));
     }
 
 

@@ -18,6 +18,14 @@ public class DataStorage : IDataStorage
     public Task<long> AddAndGetCounter(string key)
         => _distributedStorage.AddAndGetCounter(key);
 
+    public async ValueTask<bool> Contains<T>(string key)
+    {
+        if (_memoryCache.TryGetValue(key, out _))
+            return true;
+
+        return await _distributedStorage.Contains<T>(key);
+    }
+
 
     public void Remove<T>(string key)
     {

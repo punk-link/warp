@@ -19,6 +19,13 @@ public class KeyDbStorage : IDistributedStorage
     }
 
 
+    public Task<bool> Contains<T>(string key)
+    {
+        var db = GetDatabase<T>();
+        return db.KeyExistsAsync(key);
+    }
+
+
     public void Remove<T>(string key)
     {
         var db = GetDatabase<T>();
@@ -58,6 +65,7 @@ public class KeyDbStorage : IDistributedStorage
         {
             Entry => 1,
             ImageInfo => 2,
+            Report => 3,
             _ => 0
         };
 
