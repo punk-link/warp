@@ -1,8 +1,15 @@
 ﻿namespace Warp.WebApp.Models;
 
-public class EntryInfo
+public readonly record struct EntryInfo
 {
-    public Entry Entry { get; init; } = default!;
-    public List<Guid> ImageIds { get; init; } = default!;
+    public EntryInfo(Entry entry, long viewCount, List<Guid> imageIds)
+    {
+        Entry = entry;
+        ViewCount = viewCount;
+        ImageIds = imageIds;
+    }
+
+    public Entry Entry { get; init; }
+    public List<Guid> ImageIds { get; init; }
     public long ViewCount { get; init; }
 }

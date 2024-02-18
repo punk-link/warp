@@ -1,6 +1,6 @@
 ﻿namespace Warp.WebApp.Models;
 
-public class Entry
+public readonly record struct Entry
 {
     public Entry(Guid id, string content, DateTime createdAt, DateTime expiresAt)
     {
