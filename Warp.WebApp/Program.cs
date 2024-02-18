@@ -10,6 +10,8 @@ var logger = GetProgramLogger(builder);
 
 var secrets = VaultHelper.GetSecrets<ProgramSecrets>(logger, builder.Configuration);
 builder.AddConsulConfiguration(secrets.ConsulAddress, secrets.ConsulToken);
+// Restores local setting for development purposes (e.g. local port forwarding)
+builder.Configuration.AddJsonFile($"appsettings.{builder.Configuration["ASPNETCORE_ENVIRONMENT"]}.json", optional: true, reloadOnChange: true);
 
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
@@ -26,7 +28,6 @@ builder.Logging.AddDebug();
 builder.Services.AddSingleton(_ => DistributedCacheHelper.GetConnectionMultiplexer(logger, builder.Configuration));
 
 builder.Services.AddSingleton<IImageService, ImageService>();
-builder.Services.AddSingleton<IReportStorage, ReportStorage>();
 builder.Services.AddSingleton<IDistributedStorage, KeyDbStorage>();
 builder.Services.AddSingleton<IDataStorage, DataStorage>();
 builder.Services.AddTransient<IReportService, ReportService>();
