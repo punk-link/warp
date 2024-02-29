@@ -1,7 +1,10 @@
-﻿namespace Warp.WebApp.Models;
+﻿using System.Text.Json.Serialization;
+
+namespace Warp.WebApp.Models;
 
 public readonly record struct EntryInfo
 {
+    [JsonConstructor]
     public EntryInfo(Entry entry, long viewCount, List<Guid> imageIds)
     {
         Entry = entry;
@@ -9,7 +12,8 @@ public readonly record struct EntryInfo
         ImageIds = imageIds;
     }
 
-    public Entry Entry { get; init; }
-    public List<Guid> ImageIds { get; init; }
-    public long ViewCount { get; init; }
+
+    public Entry Entry { get; }
+    public List<Guid> ImageIds { get; }
+    public long ViewCount { get; }
 }
