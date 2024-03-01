@@ -14,10 +14,14 @@ public class ReportController : BaseController
     }
     
     
-    [HttpPost("{id:guid}")]
-    public async Task<IActionResult> Post([FromRoute] Guid id)
+    [HttpPost("{id}")]
+    public async Task<IActionResult> Post([FromRoute] string id)
     {
-        await _reportService.MarkAsReported(id);
+        var decodedId = IdCoder.Decode(id);
+        if (decodedId == Guid.Empty)
+            return ReturnIdDecodingBadRequest();
+
+        await _reportService.MarkAsReported(decodedId);
         return NoContent();
     }
 

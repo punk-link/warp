@@ -26,18 +26,18 @@ public class IndexModel : BasePageModel
         
         return isFailure 
             ? RedirectToError(problemDetails) 
-            : RedirectToPage("./Entry", new { id });
+            : RedirectToPage("./Entry", new { id = IdCoder.Encode(id) });
     }
 
 
-    private static TimeSpan GetExpirationPeriod(string selectedValue)
-        => selectedValue switch
+    private static TimeSpan GetExpirationPeriod(int selectedPeriod)
+        => selectedPeriod switch
         {
-            "1" => new TimeSpan(0, 5, 0),
-            "2" => new TimeSpan(0, 30, 0),
-            "3" => new TimeSpan(1, 0, 0),
-            "4" => new TimeSpan(8, 0, 0),
-            "5" => new TimeSpan(24, 0, 0),
+            1 => new TimeSpan(0, 5, 0),
+            2 => new TimeSpan(0, 30, 0),
+            3 => new TimeSpan(1, 0, 0),
+            4 => new TimeSpan(8, 0, 0),
+            5 => new TimeSpan(24, 0, 0),
             _ => new TimeSpan(0, 5, 0)
         };
 
@@ -47,19 +47,19 @@ public class IndexModel : BasePageModel
 
     [DisplayName("Expires in")]
     [BindProperty]
-    public string SelectedExpirationPeriod { get; set; } = string.Empty;
+    public int SelectedExpirationPeriod { get; set; }
 
     [BindProperty]
     public string TextContent { get; set; } = string.Empty;
     
-    public List<SelectListItem> ExpirationPeriodOptions
+    public static List<SelectListItem> ExpirationPeriodOptions
         =>
         [
-            new SelectListItem("5 minutes", "1"),
-            new SelectListItem("30 minutes", "2"),
-            new SelectListItem("1 hour", "3"),
-            new SelectListItem("8 hours", "4"),
-            new SelectListItem("1 day", "5")
+            new SelectListItem("5 minutes", 1.ToString()),
+            new SelectListItem("30 minutes", 2.ToString()),
+            new SelectListItem("1 hour", 3.ToString()),
+            new SelectListItem("8 hours", 4.ToString()),
+            new SelectListItem("1 day", 5.ToString())
         ];
     
         

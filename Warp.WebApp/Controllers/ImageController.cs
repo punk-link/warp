@@ -15,10 +15,18 @@ public class ImageController : BaseController
     }
 
 
-    [HttpGet("entry-id/{entryId:guid}/image-id/{imageId:guid}")]
-    public async Task<IActionResult> Get([FromRoute] Guid entryId, [FromRoute] Guid imageId)
+    [HttpGet("entry-id/{entryId}/image-id/{imageId}")]
+    public async Task<IActionResult> Get([FromRoute] string entryId, [FromRoute] string imageId)
     {
-        var (_, isFailure, value, error) = await _imageService.Get(entryId, imageId);
+        var decodedEntryId = IdCoder.Decode(entryId);
+        if (decodedEntryId == Guid.Empty)
+            return ReturnIdDecodingBadRequest();
+
+        var decodedImageId = IdCoder.Decode(imageId);
+        if (decodedImageId == Guid.Empty)
+            return ReturnIdDecodingBadRequest();
+
+        var (_, isFailure, value, error) = await _imageService.Get(decodedEntryId, decodedImageId);
         if (isFailure)
             return NotFound(error);
 
@@ -29,7 +37,10 @@ public class ImageController : BaseController
     [HttpPost]
     public async Task<IActionResult> Upload([FromForm] List<IFormFile> images)
     {
-        var results = await _imageService.Add(images);
+        var imageContainers = await _imageService.Add(images);
+        var results = imageContainers.Select(x => new KeyValuePair<string, string>(x.Key, IdCoder.Encode(x.Value)))
+            .ToList();
+
         return Ok(results);
     }
 

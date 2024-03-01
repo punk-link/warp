@@ -1,5 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
+using Warp.WebApp.Helpers;
 
 namespace Warp.WebApp.Controllers;
 
@@ -12,4 +13,8 @@ public class BaseController : ControllerBase
         
         return NoContent();
     }
+
+
+    protected IActionResult ReturnIdDecodingBadRequest(string detail = "Can't decode a provided ID.")
+        => BadRequest(ProblemDetailsHelper.Create(detail));
 }

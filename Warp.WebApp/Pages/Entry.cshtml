@@ -1,4 +1,4 @@
-﻿@page "/entry/{id:Guid}"
+﻿@page "/entry/{id}"
 @model EntryModel
 @{
     ViewData["Title"] = "Warp";
@@ -31,15 +31,11 @@
 <partial name="Shared/_Promo" />
 <partial name="Shared/_Footer" />
 <partial name="Shared/_ModalWindow" model="@Model.ModalWindowModel"/>
-<script>
+<script type="module">
+    import { addEntryEvents } from '/js/entry.js';
+
     document.addEventListener('DOMContentLoaded', () => {
-        let copyButton = document.getElementById('copy-url-button');
-        copyButton.onclick = () => copyUrl(copyButton);
-
-        let modalAction = document.getElementById('modal-action');
-        modalAction.onclick = () => report('@Model.Id');
-
-        let reportButton = document.getElementById('report-button');
-        reportButton.onclick = (e) => showModal(e);
+        addEntryEvents('@Model.Id');
     });
+
 </script>

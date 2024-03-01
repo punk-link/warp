@@ -25,7 +25,7 @@
             <div class="flex-container align-center justify-space-between">
                 <div class="form-group">
                     <label asp-for="SelectedExpirationPeriod"></label>
-                    <select asp-for="SelectedExpirationPeriod" asp-items="Model.ExpirationPeriodOptions"></select>
+                    <select asp-for="SelectedExpirationPeriod" asp-items="IndexModel.ExpirationPeriodOptions"></select>
                 </div>
                 <div>
                     <button class="btn-primary" type="submit">create</button>
@@ -37,9 +37,8 @@
 <partial name="Shared/_Promo" />
 <partial name="Shared/_Footer" />
 
-<script src="js/index.js" type="module"></script>
 <script type ="module">
-    import { addIndexEvents } from './js/index.js';
+    import { addIndexEvents } from '/js/index.js';
 
     document.addEventListener('DOMContentLoaded', () => {
         addIndexEvents();

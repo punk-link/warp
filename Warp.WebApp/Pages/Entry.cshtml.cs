@@ -1,5 +1,6 @@
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
+using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
 using Warp.WebApp.Pages.Shared;
 using Warp.WebApp.Pages.Shared.Components;
@@ -16,9 +17,13 @@ public class EntryModel : BasePageModel
     }
     
     
-    public async Task<IActionResult> OnGet(Guid id)
+    public async Task<IActionResult> OnGet(string id)
     {
-        var (_, isFailure, entry, problemDetails) = await _entryService.Get(id);
+        var decodedId = IdCoder.Decode(id);
+        if (decodedId == Guid.Empty)
+            return RedirectToError(ProblemDetailsHelper.Create("Can't decode a provided ID."));
+
+        var (_, isFailure, entry, problemDetails) = await _entryService.Get(decodedId);
         if (isFailure)
             return problemDetails.Status == StatusCodes.Status404NotFound 
                 ? RedirectToPage("./NotFound") 
@@ -28,14 +33,14 @@ public class EntryModel : BasePageModel
         return BuildModel(id, entry);
 
 
-        IActionResult BuildModel(Guid entryId, EntryInfo entryInfo)
+        IActionResult BuildModel(string entryId, EntryInfo entryInfo)
         {
             Id = entryId;
             ExpiresIn = GetExpirationMessage(entryInfo.Entry.ExpiresAt);
             TextContent = TextFormatter.Format(entryInfo.Entry.Content);
 
             ViewCount = entryInfo.ViewCount;
-            ImageUrls = BuildImageUrls(id, entryInfo.ImageIds);
+            ImageUrls = BuildImageUrls(decodedId, entryInfo.ImageIds);
         
             return Page();
         }
@@ -101,7 +106,7 @@ public class EntryModel : BasePageModel
 
 
     public string ExpiresIn { get; set; } = string.Empty;
-    public Guid Id { get; set; }
+    public string Id { get; set; }
     public List<string> ImageUrls { get; set; } = [];
     public string TextContent { get; set; } = string.Empty;
     public long ViewCount { get; set; } = 1;
