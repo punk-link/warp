@@ -30,7 +30,7 @@ public class MemoryBenchmarkDemo
 
 
     [Benchmark]
-    public void Pooled()
+    public void Stack()
     {
         foreach (var guid in _guids)
             _ = IdCoder.Decode1(guid);
