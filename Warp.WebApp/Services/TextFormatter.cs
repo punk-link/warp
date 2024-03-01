@@ -4,7 +4,8 @@ public static class TextFormatter
 {
     public static string Format(string text)
     {
-        var paragraphs = text.Split(LineBreakTokens);
+        var paragraphs = text.ReplaceLineEndings()
+            .Split(Environment.NewLine);
 
         var result = string.Empty;
         foreach (var paragraph in paragraphs)
@@ -17,7 +18,4 @@ public static class TextFormatter
 
         return result;
     }
-
-
-    private static readonly char[] LineBreakTokens = ['\r'];
 }

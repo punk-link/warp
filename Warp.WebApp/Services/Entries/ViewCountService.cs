@@ -1,9 +1,9 @@
 ﻿using Warp.WebApp.Data;
 using Warp.WebApp.Models;
 
-namespace Warp.WebApp.Services;
+namespace Warp.WebApp.Services.Entries;
 
-public class ViewCountService : IViewCountService
+public sealed class ViewCountService : IViewCountService
 {
     public ViewCountService(IDataStorage dataStorage)
     {

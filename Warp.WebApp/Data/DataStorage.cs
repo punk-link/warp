@@ -5,7 +5,7 @@ using Warp.WebApp.Extensions.Logging;
 
 namespace Warp.WebApp.Data;
 
-public class DataStorage : IDataStorage
+public sealed class DataStorage : IDataStorage
 {
     public DataStorage(ILoggerFactory loggerFactory, IMemoryCache memoryCache, IDistributedStorage distributedStorage)
     {

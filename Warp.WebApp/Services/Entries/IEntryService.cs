@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Warp.WebApp.Models;
 
-namespace Warp.WebApp.Services;
+namespace Warp.WebApp.Services.Entries;
 
 public interface IEntryService
 {

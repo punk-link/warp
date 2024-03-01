@@ -5,10 +5,11 @@ using Warp.WebApp.Extensions;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
 using Warp.WebApp.Models.Validators;
+using Warp.WebApp.Services.Images;
 
-namespace Warp.WebApp.Services;
+namespace Warp.WebApp.Services.Entries;
 
-public class EntryService : IEntryService
+public sealed class EntryService : IEntryService
 {
     public EntryService(IDataStorage dataStorage, IImageService imageService, IReportService reportService, IViewCountService viewCountService)
     {
@@ -23,23 +24,23 @@ public class EntryService : IEntryService
     {
         var now = DateTime.UtcNow;
         var entry = new Entry(Guid.NewGuid(), content, now, now + expiresIn);
-        
+
         var validator = new EntryValidator();
         var validationResult = await validator.ValidateAsync(entry);
         if (!validationResult.IsValid)
             return validationResult.ToFailure<Guid>();
-        
+
         var cacheKey = BuildCacheKey(entry.Id);
         var result = await _dataStorage.Set(cacheKey, entry, expiresIn);
 
         await _imageService.Attach(entry.Id, expiresIn, imageIds);
-        
-        return result.IsFailure 
-            ? result.ToFailure<Guid>() 
+
+        return result.IsFailure
+            ? result.ToFailure<Guid>()
             : Result.Success<Guid, ProblemDetails>(entry.Id);
     }
-    
-    
+
+
     public async Task<Result<EntryInfo, ProblemDetails>> Get(Guid id)
     {
         if (await _reportService.Contains(id))
@@ -62,7 +63,7 @@ public class EntryService : IEntryService
     private static string BuildCacheKey(Guid id)
         => $"{nameof(Entry)}::{id}";
 
-    
+
     private readonly IDataStorage _dataStorage;
     private readonly IImageService _imageService;
     private readonly IReportService _reportService;

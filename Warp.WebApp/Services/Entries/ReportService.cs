@@ -2,9 +2,9 @@
 using Warp.WebApp.Data;
 using Warp.WebApp.Models;
 
-namespace Warp.WebApp.Services;
+namespace Warp.WebApp.Services.Entries;
 
-public class ReportService : IReportService
+public sealed class ReportService : IReportService
 {
     public ReportService(IDataStorage dataStorage)
     {
@@ -17,8 +17,8 @@ public class ReportService : IReportService
         var cacheKey = GetCacheKey(in id);
         return _dataStorage.Contains<Report>(cacheKey);
     }
-    
-    
+
+
     public Task MarkAsReported(Guid id)
     {
         var cacheKey = GetCacheKey(in id);

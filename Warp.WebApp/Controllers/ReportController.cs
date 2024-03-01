@@ -1,12 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Warp.WebApp.Services;
+using Warp.WebApp.Services.Entries;
 
 namespace Warp.WebApp.Controllers;
 
 [ApiController]
 [Route("/api/reports")]
 
-public class ReportController : BaseController
+public sealed class ReportController : BaseController
 {
     public ReportController(IReportService reportService)
     {

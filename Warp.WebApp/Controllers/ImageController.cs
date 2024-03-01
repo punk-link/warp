@@ -1,13 +1,14 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Warp.WebApp.Services;
+using Warp.WebApp.Services.Images;
 
 namespace Warp.WebApp.Controllers;
 
 [ApiController]
 [Route("/api/images")]
 
-public class ImageController : BaseController
+public sealed class ImageController : BaseController
 {
     public ImageController(IImageService imageService)
     {

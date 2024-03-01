@@ -2,7 +2,8 @@ using Warp.WebApp.Data;
 using Warp.WebApp.Data.Redis;
 using Warp.WebApp.Helpers.Configuration;
 using Warp.WebApp.Models.Options;
-using Warp.WebApp.Services;
+using Warp.WebApp.Services.Entries;
+using Warp.WebApp.Services.Images;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -4,7 +4,7 @@ using Warp.WebApp.Data;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
 
-namespace Warp.WebApp.Services;
+namespace Warp.WebApp.Services.Images;
 
 public class ImageService : IImageService
 {

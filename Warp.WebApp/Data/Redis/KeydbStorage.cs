@@ -4,7 +4,7 @@ using Warp.WebApp.Models;
 
 namespace Warp.WebApp.Data.Redis;
 
-public class KeyDbStorage : IDistributedStorage
+public sealed class KeyDbStorage : IDistributedStorage
 {
     public KeyDbStorage(IConnectionMultiplexer multiplexer)
     {
