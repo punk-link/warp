@@ -11,27 +11,32 @@
 }
 
 .modal-window {
-    background: var(--secondary-05, #F5F5F5);
+    background: var(--secondary-color-05, #F5F5F5);
     border-radius: 0.625rem;
     padding: 1.5rem 2.5rem 3rem;
     width: 30vw;
 }
 
-    .modal-window div h1 {
-        color: var(--text-60, #9F9F9F);
-        font-family: Montserrat;
-        font-size: 2rem;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-    }
+.modal-window div h1 {
+    color: var(--text-color-60, #9F9F9F);
+    font-family: Montserrat;
+    font-size: 2rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
 
-    .modal-window div p {
-        color: var(--text-100, #484848);
-        font-family: Montserrat;
-        font-size: 1.5rem;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-        margin-bottom: 2.5rem;
+.modal-window div p {
+    color: var(--text-color-100, #484848);
+    font-family: Montserrat;
+    font-size: 1.5rem;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    margin-bottom: 2.5rem;
+}
+@media (max-width: 767px) {
+    .modal-window {
+        width: 90vw;
     }
+}

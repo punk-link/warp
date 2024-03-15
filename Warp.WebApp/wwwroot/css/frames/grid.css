@@ -25,6 +25,23 @@
     grid-area: 1 / 2 / 2 / 3;
 }
 
-.grid-v-col-3 {
-    grid-area: 1 / 3 / 2 / 4;
+@media (max-width: 767px) {
+    .grid-v-container {
+        grid-template-columns: 1fr;
+    }
+
+    .grid-v-2,
+    .grid-v-2-eq {
+        grid-template-columns: 1fr;
+    }
+
+    .grid-v-3 {
+        grid-template-columns: 1fr;
+    }
+
+    .grid-v-col-1,
+    .grid-v-col-2,
+    .grid-v-col-3 {
+        grid-area: auto;
+    }
 }

@@ -1,8 +1,10 @@
 @import url(colors/colors.css);
+@import url(elements/back-button.css);
 @import url(elements/button.css);
 @import url(elements/form.css);
 @import url(elements/select.css);
 @import url(elements/textarea.css);
+@import url(fonts/fonts.css);
 @import url(frames/flex.css);
 @import url(frames/grid.css);
 @import url(layouts/layouts.css);
@@ -24,36 +26,37 @@
 
 html {
     font-size: 14px;
-    min-height: 100%;
-    position: relative;
 }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
+:root {
+    color: var(--text-color-100, #484848);
+    font-family: var(--default-font-family, Montserrat);
+    font-size: var(--default-font-size, 1rem);
+    font-style: normal;
+    font-weight: normal;
+    line-height: normal;
 }
 
 body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    color: var(--text-100, #484848);
-    font-family: Montserrat;
-    font-size: 1rem;
-    font-style: normal;
-    font-weight: 400;
-    line-height: normal;
-    margin: 0;
+    min-height: 100%;
+    margin: .5rem;
+    position: relative;
     width: 100%;
-}
-
-.back-button-container a {
-    color: var(--text-60, #9F9F9F);
-    font-size: 1rem;
-    padding: 0.25rem 0rem;
 }
 
 .empty-left-column-container {
     padding: 2.5rem 1rem 2.5rem 0;
+}
+
+@media screen and (max-width: 767px) {
+    body {
+        font-size: 14px;
+    }
+  
+    .empty-left-column-container {
+        padding: 1.5rem .5rem;
+    }
 }

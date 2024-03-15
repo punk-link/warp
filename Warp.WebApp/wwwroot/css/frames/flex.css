@@ -37,3 +37,24 @@
 .wrapped {
     flex-wrap: wrap;
 }
+@media (max-width: 767px) {
+    .flex-container {
+        flex-direction: column;
+    }
+
+    .align-center,
+    .align-flex-end {
+        align-items: flex-start;
+    }
+
+    .justify-center,
+    .justify-evenly,
+    .justify-flex-end,
+    .justify-space-between {
+        justify-content: flex-start;
+    }
+
+    .wrapped {
+        flex-wrap: nowrap;
+    }
+}

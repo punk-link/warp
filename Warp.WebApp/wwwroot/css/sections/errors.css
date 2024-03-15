@@ -1,6 +1,6 @@
 ﻿.error-code-container {
     margin: 15vh 0 1.5rem;
-    color: var(--text-10, #EFEFEF);
+    color: var(--text-color-10, #EFEFEF);
     font-size: 10rem;
 }
 
@@ -10,24 +10,58 @@
     flex-shrink: 0;
 }
 
+.error-message-container p:nth-of-type(1) {
+    line-height: 2.5rem;
+    margin-bottom: .25rem;
+}
+
+.error-message-container p:nth-of-type(2) {
+    font-size: 1rem;
+}
+
+.error-message-container .error-list p {
+    padding-left: 1rem 0 0 1rem;
+}
+
+.error-message-container .request-id {
+    font-size: 1rem;
+    margin: 1rem 0;
+}
+
+.error-message-container .request-id p {
+    line-height: 1.2rem;
+}
+
+@media (max-width: 767px) {
+    .error-code-container {
+        margin: 10vh 0 1rem;
+        font-size: 6rem;
+    }
+
+    .error-message-container {
+        width: 100%;
+        height: auto;
+    }
+
     .error-message-container p:nth-of-type(1) {
-        line-height: 2.5rem;
-        margin-bottom: .25rem;
+        line-height: 2rem;
+        margin-bottom: .5rem;
     }
 
     .error-message-container p:nth-of-type(2) {
-        font-size: 1rem;
+        font-size: .8rem;
     }
 
     .error-message-container .error-list p {
-        padding-left: 1rem 0 0 1rem;
+        padding-left: .5rem 0 0 1rem;
     }
 
     .error-message-container .request-id {
-        font-size: 1rem;
-        margin: 1rem 0;
+        font-size: .8rem;
+        margin: .5rem 0;
     }
 
-        .error-message-container .request-id p {
-            line-height: 1.2rem;
-        }
+    .error-message-container .request-id p {
+        line-height: 1rem;
+    }
+}

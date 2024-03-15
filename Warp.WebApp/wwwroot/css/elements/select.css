@@ -1,22 +1,28 @@
 ﻿select {
     background: none;
     border: none;
-    color: var(--primary-100, #A762FF);
+    color: var(--primary-color-100, #A762FF);
     cursor: pointer;
     text-align: start;
-    font-family: Montserrat;
-    font-size: 1.125rem;
+    font-family: var(--default-font-family, Montserrat);
+    font-size: var(--bigger-font-size, 1.125rem);
     font-style: normal;
-    font-weight: 700;
+    font-weight: bold;
     line-height: normal;
 }
 
-    select:focus {
-        outline: none;
-    }
+select:focus {
+    outline: none;
+}
 
 option {
     border: none;
     box-shadow: none;
     outline: none;
+}
+
+@media (max-width: 767px) {
+    select {
+        font-size: var(--default-font-size, 1rem);
+    }
 }

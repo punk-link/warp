@@ -2,66 +2,79 @@
     text-decoration: none;
 }
 
-button {
+.btn-primary,
+.btn-tertiary {
     align-items: flex-start;
     border: none;
-    border-radius: 0.3125rem;
+    border-radius: .3125rem;
     cursor: pointer;
     display: inline-flex;
     flex-direction: column;
     flex-shrink: 0;
-    font-family: Montserrat;
-    font-size: 1.25rem;
-    font-style: normal;
-    font-weight: 700;
-    gap: 0.625rem;
-    height: 3.5rem;
+    gap: .625rem;
     justify-content: flex-start;
-    line-height: normal;
     outline: none;
     padding: 1rem 3.75rem;
+    font-family: var(--default-font-family, Montserrat);
+    font-size: var(--biggest-font-size, 1.25rem);
+    font-style: normal;
+    font-weight: bold;
+    height: 3.5rem;
+    line-height: normal;
     text-align: center;
 }
 
 .btn-primary {
-    background: var(--primary-100, #A762FF);
-    color: var(--white-100, #FFF);
+    background: var(--primary-color-100, #A762FF);
+    color: var(--white-color-100, #FFF);
 }
 
-    .btn-primary:hover {
-        background: var(--primary-100, #A762FF);
-    }
+.btn-primary:hover,
+.btn-primary:active,
+.btn-primary:focus {
+    background: var(--primary-color-100, #A762FF);
+}
 
-    .btn-primary:active {
-        background: var(--primary-120, #8C4EDA);
-        outline: none;
-    }
-
-    .btn-primary:focus {
-        background: var(--primary-120, #8C4EDA);
-        outline: none;
-    }
+.btn-primary:active,
+.btn-primary:focus {
+    background: var(--primary-color-120, #8C4EDA);
+    outline: none;
+}
 
 .btn-tertiary {
     background: none;
     border: none;
-    color: var(--primary-100, #A762FF);
+    color: var(--primary-color-100, #A762FF);
     cursor: pointer;
     margin: .5rem 3rem;
     padding: .5rem .75rem;
 }
 
-    .btn-tertiary:focus {
-        color: var(--primary-60, #C99EFF);
-    }
+.btn-tertiary:focus {
+    color: var(--primary-color-60, #C99EFF);
+}
 
-    .btn-tertiary div div:nth-child(1) i {
-        font-size: 1rem;
-        padding-right: 0.625rem;
+.btn-tertiary div div:nth-child(1) i {
+    font-size: var(--default-font-size, 1rem);
+    padding-right: .625rem;
+}
+
+.btn-tertiary > div > div:nth-child(2) {
+    color: var(--primary-color-60, #C99EFF);
+    display: none;
+    font-size: var(--smallest-font-size, .75rem);
+}
+
+@media (max-width: 767px) {
+    .btn-primary,
+    .btn-tertiary {
+        padding: .75rem 2.5rem;
+        font-size: var(--bigger-font-size, 1.15rem);
+        height: 2.5rem;
+        justify-content: center;
     }
 
     .btn-tertiary > div > div:nth-child(2) {
-        color: var(--primary-60, #C99EFF);
-        display: none;
-        font-size: 0.75rem;
+        font-size: var(--x-smallest-font-size, .625rem);
     }
+}

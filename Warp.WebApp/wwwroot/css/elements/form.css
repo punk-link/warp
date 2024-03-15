@@ -2,18 +2,29 @@
     margin: 1rem 0;
 }
 
-    .form-group label {
-        color: var(--text-60, #9F9F9F);
-        font-family: Montserrat;
-        font-size: 0.75rem;
-        font-style: normal;
-        font-weight: 400;
-        line-height: normal;
-        letter-spacing: 0.015rem;
-        display: block;
-        padding-left: 0.625rem;
+.form-group label {
+    color: var(--text-color-60, #9F9F9F);
+    font-family: var(--default-font-family, Montserrat);
+    font-size: var(--smallest-font-size, 0.75rem);
+    font-style: normal;
+    font-weight: normal;
+    line-height: normal;
+    letter-spacing: 0.015rem;
+    display: block;
+    padding-left: 0.625rem;
+}
+
+.form-group label:after {
+    content: ": ";
+}
+
+@media (max-width: 767px) {
+    .form-group {
+        margin: 0.5rem 0;
     }
 
-        .form-group label:after {
-            content: ": "
-        }
+    .form-group label {
+        font-size: var(--x-smallest-font-size, 0.625rem);
+        padding-left: 0.3125rem;
+    }
+}

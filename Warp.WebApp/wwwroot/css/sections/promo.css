@@ -11,7 +11,7 @@
 }
 
 .promo-text {
-    color: var(--text-60, #9F9F9F);
+    color: var(--text-color-60, #9F9F9F);
     font-family: Montserrat;
     font-size: 2rem;
     font-style: normal;
@@ -20,17 +20,31 @@
     margin: 15rem 1rem 5rem 5rem;
 }
 
-    .promo-text strong{
-        font-weight: 700;
-    }
+.promo-text strong {
+    font-weight: 700;
+}
 
 .warp-illustration-container {
     position: relative;
 }
 
-    .warp-illustration-container img {
-        filter: invert(100%) sepia(100%) saturate(0%) hue-rotate(132deg) brightness(103%) contrast(103%);
-        left: 10vw;
-        overflow: hidden;
-        position: absolute;
+.warp-illustration-container img {
+    filter: invert(100%) sepia(100%) saturate(0%) hue-rotate(132deg) brightness(103%) contrast(103%);
+    left: 10vw;
+    overflow: hidden;
+    position: absolute;
+}
+
+@media (max-width: 767px) {
+    .big-logo-container {
+        margin: 5rem 0 0 3.125rem;
     }
+
+    .promo-text {
+        margin: 10rem 1rem 3rem 3rem;
+    }
+
+    .warp-illustration-container img {
+        left: 5vw;
+    }
+}

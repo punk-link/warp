@@ -1,19 +1,37 @@
 ﻿.copyright {
-    color: var(--text-40, #B9B9B9);
+    color: var(--text-color-40);
 }
 
 .nav-container {
     margin: .75rem 0;
 }
 
-    .nav-container a {
-        color: var(--text-60, #9F9F9F);
-        padding: 0.25rem 0rem;
-    }
+.nav-container a {
+    color: var(--text-color-60);
+    padding: 0.25rem 0rem;
+}
 
 .social {
-    color: var(--text-60, #9F9F9F);
+    color: var(--text-color-60);
     font-size: 0.625rem;
     letter-spacing: 0.01875rem;
-    font-size: 0.625rem;
+}
+
+@media (max-width: 767px) {
+    .copyright {
+        font-size: 0.75rem;
+    }
+
+    .nav-container {
+        margin: 0.5rem 0;
+    }
+
+    .nav-container a {
+        padding: 0.2rem 0;
+    }
+
+    .social {
+        font-size: 0.5rem;
+        letter-spacing: 0.015rem;
+    }
 }
