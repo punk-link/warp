@@ -1,26 +1,28 @@
 ﻿.big-logo {
     font-family: Krona One;
     font-size: 4.375rem;
-    font-weight: 400;
-    line-height: normal;
-    letter-spacing: 0em;
+    letter-spacing: 0;
     color: var(--primary-color-100, #A762FF);
 }
 
 .logo a {
     font-family: Krona One;
     font-size: 1.875rem;
-    font-weight: 400;
-    line-height: normal;
-    letter-spacing: 0em;
+    letter-spacing: 0;
     color: var(--primary-color-100, #A762FF);
 }
-@media (max-width: 767px) {
+
+@media screen and (max-width: var(--viewport-treshold, 768px)) {
     .big-logo {
         font-size: 3rem;
+        visibility: hidden;
     }
 
-    .logo a {
-        font-size: 1.5rem;
+    .logo {
+        text-align: center;
     }
+
+        .logo a {
+            font-size: 1.5rem;
+        }
 }

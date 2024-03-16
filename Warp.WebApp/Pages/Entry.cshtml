@@ -23,8 +23,9 @@
     <div class="warp-content-container">
         @Html.Raw(Model.TextContent)
     </div>
-    <div class="button-bar flex-container flex-direction-row justify-flex-end">
+    <div class="button-bar flex-container justify-flex-end">
         <partial name="Shared/Components/_TertiaryButton" model="@Model.CopyButtonModel" />
+        <partial name="Shared/Components/_TertiaryButton" model="@Model.CopySilentButtonModel" />
         <partial name="Shared/Components/_TertiaryButton" model="@Model.ReportButtonModel" />
     </div>
 </div>

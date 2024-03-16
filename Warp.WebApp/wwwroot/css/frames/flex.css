@@ -37,8 +37,9 @@
 .wrapped {
     flex-wrap: wrap;
 }
-@media (max-width: 767px) {
-    .flex-container {
+
+@media screen and (max-width: var(--viewport-treshold, 768px)) {
+    .flex-direction-row {
         flex-direction: column;
     }
 

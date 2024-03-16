@@ -5,6 +5,14 @@
     margin: 0 2.5rem;
 }
 
+    .expiration-message-container > div:nth-child(1) {
+        order: 1;
+    }
+
+    .expiration-message-container > div:nth-child(2) {
+        order: 2;
+    }
+
 .warp-container {
     height: 100%;
     width: 100%;
@@ -12,4 +20,30 @@
 
 .warp-content-container {
     margin: 2.5rem;
+}
+
+#copy-url-button {
+    display: block;
+}
+
+#copy-url-silent-button {
+    display: none;
+}
+
+@media screen and (max-width: var(--viewport-treshold, 768px)) {
+    .expiration-message-container > div:nth-child(1) {
+        order: 2;
+    }
+
+    .expiration-message-container > div:nth-child(2) {
+        order: 1;
+    }
+
+    #copy-url-button {
+        display: none;
+    }
+
+    #copy-url-silent-button {
+        display: block;
+    }
 }

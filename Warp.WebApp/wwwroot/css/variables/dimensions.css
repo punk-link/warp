@@ -1,4 +1,8 @@
-﻿.vh50 {
+﻿:root {
+    --viewport-treshold: 768px;
+}
+
+.vh50 {
     height: 50vh;
 }
 

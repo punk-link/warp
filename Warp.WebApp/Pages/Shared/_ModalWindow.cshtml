@@ -2,7 +2,7 @@
 @{
 }
 
-<div class="modal-background flex-container flex-direction-column justify-center align-center">
+<div class="modal-background bg-secondary-transparent flex-container flex-direction-column justify-center align-center">
     <div class="modal-window">
         <div>
             <h1>@Model.Header</h1>
@@ -10,7 +10,7 @@
                 @Model.Prompt
             </p>
         </div>
-        <div class="button-bar flex-container flex-direction-row justify-flex-end align-center">
+        <div class="button-bar flex-container">
             <button id="modal-action" class="btn-primary" type="button">@Model.Action</button>
             <button id="modal-cancel" class="btn-tertiary" type="button">cancel</button>
         </div>

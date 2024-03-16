@@ -27,3 +27,10 @@
     padding: 0;
     visibility: hidden;
 }
+
+@media screen and (max-width: var(--viewport-treshold, 768px)) {
+    .warp-input-container form {
+        margin: 0 1rem;
+    }
+}
+

@@ -2,6 +2,7 @@
     --error-color: #FFA767;
     --secondary-color-05: #F5F5F5;
     --secondary-color-60: #F2FFE1;
+    --secondary-color-60-transperant-80: #F2FFE180;
     --primary-color-60: #C99EFF;
     --primary-color-100: #A762FF;
     --primary-color-120: #8C4EDA;
@@ -11,4 +12,12 @@
     --text-color-60: #9F9F9F;
     --text-color-100: #484848;
     --white-color-100: #FFF;
+}
+
+.bg-secondary {
+    background-color: var(--secondary-color-60, #F2FFE1);
+}
+
+.bg-secondary-transparent {
+    background: var(--secondary-color-60-transparent-80, #F2FFE180);
 }

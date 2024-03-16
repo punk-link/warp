@@ -8,30 +8,25 @@
 
 .nav-container a {
     color: var(--text-color-60);
-    padding: 0.25rem 0rem;
+    padding: .25rem 0rem;
 }
 
 .social {
     color: var(--text-color-60);
-    font-size: 0.625rem;
-    letter-spacing: 0.01875rem;
+    font-size: var(--x-smallest-font-size, .625rem);
+    letter-spacing: .01875rem;
 }
 
-@media (max-width: 767px) {
-    .copyright {
-        font-size: 0.75rem;
-    }
-
+@media screen and (max-width: var(--viewport-treshold, 768px)) {
     .nav-container {
-        margin: 0.5rem 0;
+        margin: .5rem 0;
     }
 
-    .nav-container a {
-        padding: 0.2rem 0;
-    }
+        .nav-container a {
+            padding: .2rem 0;
+        }
 
     .social {
-        font-size: 0.5rem;
-        letter-spacing: 0.015rem;
+        letter-spacing: .015rem;
     }
 }

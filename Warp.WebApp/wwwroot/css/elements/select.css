@@ -20,9 +20,3 @@ option {
     box-shadow: none;
     outline: none;
 }
-
-@media (max-width: 767px) {
-    select {
-        font-size: var(--default-font-size, 1rem);
-    }
-}

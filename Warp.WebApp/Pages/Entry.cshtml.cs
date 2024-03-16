@@ -57,6 +57,13 @@ public class EntryModel : BasePageModel
                 SecondaryCaption = "copied"
             };
 
+            CopySilentButtonModel = new _TertiaryButton
+            {
+                Id = "copy-url-silent-button",
+                IconName = "icofont-copy",
+                MainCaption = "copy link"
+            };
+
             ModalWindowModel = new _ModalWindowModel
             {
                 Action = "report",
@@ -102,6 +109,7 @@ public class EntryModel : BasePageModel
 
     
     public _TertiaryButton CopyButtonModel { get; set; } = default!;
+    public _TertiaryButton CopySilentButtonModel { get; set; } = default!;
     public _ModalWindowModel ModalWindowModel { get; set; } = default!;
     public _TertiaryButton ReportButtonModel { get; set; } = default!;
 

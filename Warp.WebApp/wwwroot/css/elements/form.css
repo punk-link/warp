@@ -5,26 +5,22 @@
 .form-group label {
     color: var(--text-color-60, #9F9F9F);
     font-family: var(--default-font-family, Montserrat);
-    font-size: var(--smallest-font-size, 0.75rem);
-    font-style: normal;
-    font-weight: normal;
-    line-height: normal;
-    letter-spacing: 0.015rem;
+    font-size: var(--smallest-font-size, .75rem);
+    letter-spacing: .015rem;
     display: block;
-    padding-left: 0.625rem;
+    padding-left: .625rem;
 }
 
 .form-group label:after {
     content: ": ";
 }
 
-@media (max-width: 767px) {
+@media screen and (max-width: var(--viewport-treshold, 768px)) {
     .form-group {
-        margin: 0.5rem 0;
+        margin: .5rem 0;
     }
 
-    .form-group label {
-        font-size: var(--x-smallest-font-size, 0.625rem);
-        padding-left: 0.3125rem;
-    }
+        .form-group label {
+            padding-left: .3125rem;
+        }
 }
