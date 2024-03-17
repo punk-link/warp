@@ -12,7 +12,7 @@
     --xx-smallest-font-size: .5rem;
 }
 
-@media screen and (max-width: var(--viewport-treshold, 768px)) {
+@media screen and (max-width: 768px) {
     :root {
         --xx-biggest-font-size: 2rem;
         --x-biggest-font-size: 1.25rem;

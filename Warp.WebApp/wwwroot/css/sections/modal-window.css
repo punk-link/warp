@@ -35,7 +35,7 @@
     margin-bottom: 2.5rem;
 }
 
-@media screen and (max-width: var(--viewport-treshold, 768px)) {
+@media screen and (max-width: 768px) {
     .modal-window {
         height: 100vh;
         width: 100vw;

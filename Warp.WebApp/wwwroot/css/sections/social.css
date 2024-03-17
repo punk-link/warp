@@ -17,7 +17,7 @@
     letter-spacing: .01875rem;
 }
 
-@media screen and (max-width: var(--viewport-treshold, 768px)) {
+@media screen and (max-width: 768px) {
     .nav-container {
         margin: .5rem 0;
     }

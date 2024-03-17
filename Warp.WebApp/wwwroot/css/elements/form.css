@@ -15,7 +15,7 @@
     content: ": ";
 }
 
-@media screen and (max-width: var(--viewport-treshold, 768px)) {
+@media screen and (max-width: 768px) {
     .form-group {
         margin: .5rem 0;
     }

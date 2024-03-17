@@ -75,7 +75,7 @@
     font-size: var(--smallest-font-size, .75rem);
 }
 
-@media screen and (max-width: var(--viewport-treshold, 768px)) {
+@media screen and (max-width: 768px) {
     .btn-primary,
     .btn-tertiary {
         height: 2.5rem;
