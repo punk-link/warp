@@ -1,0 +1,19 @@
+﻿div.grid-v-container.grid-v-3.vh100 > div.grid-v-col-1,
+div.grid-v-container.grid-v-3.vh100 > div.grid-v-col-3 {
+    display: block;
+}
+
+body > div > main > div.footer-grid.grid-v-container.grid-v-3 {
+    display: none;
+}
+
+@media screen and (max-width: 768px) {
+    div.grid-v-container.grid-v-3.vh100 > div.grid-v-col-1,
+    div.grid-v-container.grid-v-3.vh100 > div.grid-v-col-3 {
+        display: none;
+    }
+
+    body > div > main > div.footer-grid.grid-v-container.grid-v-3 {
+        display: block;
+    }
+}
