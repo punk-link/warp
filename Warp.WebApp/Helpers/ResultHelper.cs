@@ -1,6 +1,5 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
-using System.Net;
 using Warp.WebApp.Models;
 
 namespace Warp.WebApp.Helpers;
@@ -11,6 +10,6 @@ public static class ResultHelper
         => Result.Success<DummyObject, ProblemDetails>(DummyObject.Empty);
 
 
-    public static Result<T, ProblemDetails> NotFound<T>(string? detail = "Content not found.")
-        => Result.Failure<T, ProblemDetails>(ProblemDetailsHelper.Create(detail!, HttpStatusCode.NotFound));
+    public static Result<T, ProblemDetails> NotFound<T>()
+        => Result.Failure<T, ProblemDetails>(ProblemDetailsHelper.CreateNotFound());
 }

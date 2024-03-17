@@ -26,9 +26,7 @@ public class EntryModel : BasePageModel
 
         var (_, isFailure, entry, problemDetails) = await _entryService.Get(decodedId);
         if (isFailure)
-            return problemDetails.Status == StatusCodes.Status404NotFound 
-                ? RedirectToPage("./NotFound") 
-                : RedirectToError(problemDetails);
+            return RedirectToError(problemDetails);
 
         AddButtonModels();
         return BuildModel(id, entry);

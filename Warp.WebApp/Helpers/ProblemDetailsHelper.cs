@@ -7,18 +7,6 @@ namespace Warp.WebApp.Helpers
 {
     public static class ProblemDetailsHelper
     {
-        public static ProblemDetails Create(string detail, HttpStatusCode status = HttpStatusCode.BadRequest, string? type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6")
-        {
-            return new ProblemDetails
-            {
-                Detail = detail,
-                Status = (int) status,
-                Title = status.ToString(),
-                Type = type,
-            };
-        }
-
-
         public static void AddErrors(this ProblemDetails details, List<Error> errors)
         {
             details.Extensions[ErrorsExtensionToken] = errors;
@@ -41,6 +29,20 @@ namespace Warp.WebApp.Helpers
 
             details.Extensions[TraceIdExtensionToken] = traceId;
         }
+        
+        
+        public static ProblemDetails Create(string detail, HttpStatusCode status = HttpStatusCode.BadRequest, string? type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6")
+            => new()
+            {
+                Detail = detail,
+                Status = (int) status,
+                Title = status.ToString(),
+                Type = type,
+            };
+
+
+        public static ProblemDetails CreateNotFound()
+            => Create("The requested resource was not found.", HttpStatusCode.NotFound, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.4");
 
 
         public static List<Error> GetErrors(this ProblemDetails details)

@@ -1,7 +1,7 @@
 ﻿@page "/error"
 @model ErrorModel
 @{
-    ViewData["Title"] = $"Error {Model.Title}";
+    ViewData["Title"] = $"{Model.Title}";
 }
 
 <div class="grid-v-container grid-v-3 vh100">
@@ -41,3 +41,4 @@
     </div>
     <div class="grid-v-col-3"></div>
 </div>
+<partial name="Shared/_Footer" />

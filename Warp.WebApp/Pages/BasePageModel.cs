@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Net;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -40,7 +41,8 @@ public class BasePageModel : PageModel
         problemDetails = AddTracingData(problemDetails, traceId);
         AddProblemDetails(problemDetails);
 
-        LogErrors(problemDetails, traceId);
+        if (problemDetails.Status != (int) HttpStatusCode.NotFound)
+            LogErrors(problemDetails, traceId);
         
         return RedirectToPage("./Error");
     }
