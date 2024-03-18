@@ -14,4 +14,6 @@ public class _ModalWindowModel : PageModel
     public string Action { get; set; } = "ok";
     public string Header { get; init; } = default!;
     public string Prompt { get; init; } = default!;
+    public int TabIndex { get; init; }
+    public int CancelTabIndex { get; init; }
 }

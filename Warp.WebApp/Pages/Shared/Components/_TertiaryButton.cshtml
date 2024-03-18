@@ -2,7 +2,7 @@
 @{
 }
 
-<button id="@Model.Id" class="btn-tertiary" type="button">
+<button id="@Model.Id" class="btn-tertiary" type="button" tabindex="@Model.TabIndex">
     <div class="flex-container flex-direction-column align-center">
         <div class="main-caption">
             @if (!string.IsNullOrWhiteSpace(Model.IconName))

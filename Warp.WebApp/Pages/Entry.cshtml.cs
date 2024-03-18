@@ -52,27 +52,32 @@ public class EntryModel : BasePageModel
                 Id = "copy-url-button",
                 IconName = "icofont-copy",
                 MainCaption = "copy link",
-                SecondaryCaption = "copied"
+                SecondaryCaption = "copied",
+                TabIndex = 1
             };
 
             CopySilentButtonModel = new _TertiaryButton
             {
                 Id = "copy-url-silent-button",
                 IconName = "icofont-copy",
-                MainCaption = "copy link"
+                MainCaption = "copy link",
+                TabIndex = 2
+            };
+
+            ReportButtonModel = new _TertiaryButton
+            {
+                Id = "report-button",
+                MainCaption = "report",
+                TabIndex = 3
             };
 
             ModalWindowModel = new _ModalWindowModel
             {
                 Action = "report",
                 Header = "report entry",
-                Prompt = "You are about to report this content. This action restricts an access to the content for all viewers. Are you sure?"
-            };
-
-            ReportButtonModel = new _TertiaryButton
-            {
-                Id = "report-button",
-                MainCaption = "report"
+                Prompt = "You are about to report this content. This action restricts an access to the content for all viewers. Are you sure?",
+                TabIndex = 4,
+                CancelTabIndex = 5
             };
         }
     }

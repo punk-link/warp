@@ -2,7 +2,6 @@
     text-decoration: none;
 }
 .button-bar {
-    align-items: center;
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: space-evenly;

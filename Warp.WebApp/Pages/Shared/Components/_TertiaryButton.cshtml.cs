@@ -15,4 +15,5 @@ public class _TertiaryButton : PageModel
     public string? IconName { get; init; }
     public string MainCaption { get; init; } = default!;
     public string? SecondaryCaption { get; init; }
+    public int TabIndex { get; init; }
 }
