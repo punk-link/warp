@@ -65,12 +65,12 @@ namespace Warp.WebApp.Helpers
             if (!details.Extensions.TryGetValue(TraceIdExtensionToken, out var traceId))
                 return string.Empty;
             
-            return traceId as string ?? string.Empty;
+            return (string) traceId!;
         }
 
 
         private const string ErrorsExtensionToken = "errors";
-        public const string StackTraceExtensionToken = "stack-trace";
+        private const string StackTraceExtensionToken = "stack-trace";
         private const string TraceIdExtensionToken = "trace-id";
     }
 }
