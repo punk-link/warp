@@ -1,0 +1,6 @@
+User-agent: *
+Disallow: /api/
+Disallow: /entry/
+Disallow: /error
+Disallow: /health
+Allow: /

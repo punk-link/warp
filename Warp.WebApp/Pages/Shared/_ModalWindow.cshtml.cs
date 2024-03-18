@@ -12,6 +12,6 @@ public class _ModalWindowModel : PageModel
 
 
     public string Action { get; set; } = "ok";
-    public string Header { get; init; }
-    public string Prompt { get; init; }
+    public string Header { get; init; } = default!;
+    public string Prompt { get; init; } = default!;
 }

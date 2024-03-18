@@ -17,6 +17,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="robots.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Consul" Version="1.7.14.3" />
     <PackageReference Include="CSharpFunctionalExtensions" Version="2.40.3" />
     <PackageReference Include="FluentValidation" Version="11.9.0" />
@@ -40,6 +44,9 @@
 
   <ItemGroup>
     <Content Include="BinarySources\warp.xcf" />
+    <Content Include="robots.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

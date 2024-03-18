@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.ResponseCompression;
 using Warp.WebApp.Data;
 using Warp.WebApp.Data.Redis;
 using Warp.WebApp.Helpers.Configuration;
+using Warp.WebApp.Middlewares;
 using Warp.WebApp.Models.Options;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
@@ -42,17 +44,14 @@ builder.Services.AddRazorPages();
 builder.Services.AddControllers();
 builder.Services.AddHealthChecks();
 
-var app = builder.Build();
-
-/*app.UseWhen(context => IsApiRequest(context.Request), appBuilder =>
+builder.Services.AddResponseCompression(options =>
 {
-    appBuilder.ConfigureApiExceptionHandler(app.Environment);
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
 });
 
-app.UseWhen(context => !IsApiRequest(context.Request), appBuilder =>
-{
-    appBuilder.UseExceptionHandler("/Error");
-});*/
+var app = builder.Build();
 
 if (!app.Environment.IsDevelopmentOrLocal())
 {
@@ -61,9 +60,11 @@ if (!app.Environment.IsDevelopmentOrLocal())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
+app.UseResponseCompression();
 
 app.UseHealthChecks("/health");
+app.UseMiddleware(typeof(RobotsMiddleware));
+app.UseStaticFiles();
 
 app.UseRouting();
 
@@ -85,7 +86,3 @@ ILogger<Program> GetProgramLogger(WebApplicationBuilder webApplicationBuilder)
 
     return loggerFactory.CreateLogger<Program>();
 }
-
-
-static bool IsApiRequest(HttpRequest request)
-    => request.Path.StartsWithSegments(new PathString("/api"), StringComparison.InvariantCultureIgnoreCase);

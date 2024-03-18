@@ -113,7 +113,7 @@ public class EntryModel : BasePageModel
 
 
     public string ExpiresIn { get; set; } = string.Empty;
-    public string Id { get; set; }
+    public string Id { get; set; } = default!;
     public List<string> ImageUrls { get; set; } = [];
     public string TextContent { get; set; } = string.Empty;
     public long ViewCount { get; set; } = 1;
