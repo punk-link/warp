@@ -19,7 +19,7 @@
     border-right: none;
     border-radius: 0;
     box-sizing: border-box;
-    min-height: 1.25rem;
+    min-height: calc(var(--default-font-size, 1.25rem) * 4);
 }
 
 #warp-content-textarea {
