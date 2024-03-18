@@ -5,7 +5,7 @@
 }
 
 <partial name="Shared/_Header" />
-<div class="warp-container flex-container flex-direction-column vh100">
+<section class="warp-container flex-container flex-direction-column vh100">
     <div class="expiration-message-container flex-container flex-direction-row justify-space-between">
         <div>
             @Model.ExpiresIn
@@ -17,21 +17,24 @@
     <div class="gallery flex-container flex-direction-column align-center">
         @foreach (var url in Model.ImageUrls)
         {
-            <img src=@url/>
+            <figure>
+                <img src=@url />
+            </figure>
         }
     </div>
-    <div class="warp-content-container">
+    <article class="warp-content-container">
         @Html.Raw(Model.TextContent)
-    </div>
+    </article>
     <div class="button-bar flex-container justify-flex-end">
         <partial name="Shared/Components/_TertiaryButton" model="@Model.CopyButtonModel" />
         <partial name="Shared/Components/_TertiaryButton" model="@Model.CopySilentButtonModel" />
         <partial name="Shared/Components/_TertiaryButton" model="@Model.ReportButtonModel" />
     </div>
-</div>
+</section>
 <partial name="Shared/_Promo" />
 <partial name="Shared/_Footer" />
 <partial name="Shared/_ModalWindow" model="@Model.ModalWindowModel"/>
+
 <script type="module">
     import { addEntryEvents } from '/js/entry.js';
 

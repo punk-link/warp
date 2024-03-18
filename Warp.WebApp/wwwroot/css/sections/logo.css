@@ -8,6 +8,7 @@
 .logo a {
     font-family: Krona One;
     font-size: 1.875rem;
+    font-weight: normal;
     letter-spacing: 0;
     color: var(--primary-color-100, #A762FF);
 }
