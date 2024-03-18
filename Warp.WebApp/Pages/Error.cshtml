@@ -4,6 +4,10 @@
     ViewData["Title"] = $"Warp. {Model.Title}";
 }
 
+@section MetaTags {
+    <meta name="robots" content="noindex, noarchive" />
+}
+
 <div class="grid-v-container grid-v-3 vh100">
     <div class="grid-v-col-1">
         <partial name="Shared/_EmptyLeftGridColumn" />
