@@ -1,19 +1,62 @@
-﻿.grid-v-container.grid-v-3.vh100 > div.grid-v-col-1,
-.grid-v-container.grid-v-3.vh100 > div.grid-v-col-3 {
-    display: block;
+﻿.error-code-container {
+    margin: 15vh 0 1.5rem;
+    color: var(--text-color-10, #EFEFEF);
+    font-size: 10rem;
 }
 
-.footer-grid.grid-v-container.grid-v-3 {
-    display: none;
+.error-message-container {
+    width: 23.75rem;
+    height: auto;
+    flex-shrink: 0;
 }
+
+    .error-message-container p:nth-of-type(1) {
+        line-height: 2.5rem;
+        margin-bottom: .25rem;
+    }
+
+    .error-message-container p:nth-of-type(2) {
+        font-size: var(--default-font-size, 1rem);
+    }
+
+    .error-message-container .error-list p {
+        padding-left: 1rem 0 0 1rem;
+    }
+
+    .error-message-container .request-id {
+        font-size: var(--default-font-size, 1rem);
+        margin: 1rem 0;
+    }
+
+        .error-message-container .request-id p {
+            line-height: 1.2rem;
+        }
 
 @media screen and (max-width: 768px) {
-    .grid-v-container.grid-v-3.vh100 > div.grid-v-col-1,
-    .grid-v-container.grid-v-3.vh100 > div.grid-v-col-3 {
-        display: none;
+    .error-code-container {
+        margin: 10vh 0 1rem;
+        font-size: 6rem;
     }
 
-    .footer-grid.grid-v-container.grid-v-3 {
-        display: block;
+    .error-message-container {
+        width: 100%;
+        height: auto;
     }
+
+        .error-message-container p:nth-of-type(1) {
+            line-height: 2rem;
+            margin-bottom: .5rem;
+        }
+
+        .error-message-container .error-list p {
+            padding-left: .5rem 0 0 1rem;
+        }
+
+        .error-message-container .request-id {
+            margin: .5rem 0;
+        }
+
+            .error-message-container .request-id p {
+                line-height: 1rem;
+            }
 }

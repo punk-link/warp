@@ -22,7 +22,7 @@
                 <div class="warp-content-textarea-container">
                     <label for="warp-content-textarea">Type or paste text here</label>
                     <div class="warp-content-textarea-span-container">
-                        <span id="warp-content-textarea-span" contenteditable></span>
+                        <span id="warp-content-textarea-span" contenteditable tabindex="1"></span>
                     </div>
                     <textarea id="warp-content-textarea" type="hidden" asp-for="TextContent"></textarea>
                 </div>
@@ -30,10 +30,10 @@
             <div class="button-bar flex-container">
                 <div class="form-group">
                     <label asp-for="SelectedExpirationPeriod"></label>
-                    <select asp-for="SelectedExpirationPeriod" asp-items="IndexModel.ExpirationPeriodOptions"></select>
+                    <select asp-for="SelectedExpirationPeriod" asp-items="IndexModel.ExpirationPeriodOptions" tabindex="2"></select>
                 </div>
                 <div>
-                    <button class="btn-primary" type="submit">create</button>
+                    <button class="btn-primary" type="submit" tabindex="3">create</button>
                 </div>
             </div>
         </form>
