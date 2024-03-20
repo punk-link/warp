@@ -27,11 +27,16 @@ public class EntryModel : BasePageModel
         if (isFailure)
             return RedirectToError(problemDetails);
 
-        AddButtonModels();
-        return BuildModel(id, entry);
+        Result.Success()
+            .Tap(() => BuildModel(id, entry))
+            .Tap(AddButtonModels)
+            .Tap(AddModalWindowModel)
+            .Tap(AddOpenGraphModel);
+
+        return Page();
 
 
-        IActionResult BuildModel(string entryId, EntryInfo entryInfo)
+        void BuildModel(string entryId, EntryInfo entryInfo)
         {
             Id = entryId;
             ExpiresIn = GetExpirationMessage(entryInfo.Entry.ExpiresAt);
@@ -39,8 +44,6 @@ public class EntryModel : BasePageModel
 
             ViewCount = entryInfo.ViewCount;
             ImageUrls = BuildImageUrls(decodedId, entryInfo.ImageIds);
-        
-            return Page();
         }
 
 
@@ -69,7 +72,11 @@ public class EntryModel : BasePageModel
                 MainCaption = "report",
                 TabIndex = 3
             };
+        }
 
+
+        void AddModalWindowModel()
+        {
             ModalWindowModel = new ModalWindowModel
             {
                 Action = "report",
@@ -78,6 +85,12 @@ public class EntryModel : BasePageModel
                 TabIndex = 4,
                 CancelTabIndex = 5
             };
+        }
+
+
+        void AddOpenGraphModel()
+        {
+            OpenGraphModel = OpenGraphService.GetModel(TextContent, ImageUrls);
         }
     }
 
@@ -114,6 +127,7 @@ public class EntryModel : BasePageModel
     public SecondaryButtonModel CopySilentButtonModel { get; set; } = default!;
     public SecondaryButtonModel ReportButtonModel { get; set; } = default!;
     public ModalWindowModel ModalWindowModel { get; set; } = default!;
+    public OpenGraphModel OpenGraphModel { get; set; } = default!;
 
 
     public string ExpiresIn { get; set; } = string.Empty;

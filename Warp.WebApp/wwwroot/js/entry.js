@@ -1,4 +1,4 @@
-import { attachModalAction, showModal } from './modules/modal.js';
+import { attachModalAction, showModal } from './modules/components/modal-window.js';
 
 
 function copyUrl(copyButton) {

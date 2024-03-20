@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Warp.WebApp", "Warp.WebApp\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Warp.Measurements", "Warp.Measurements\Warp.Measurements.csproj", "{44D97F12-3213-427A-9F8E-64089ED5CF4F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Warp.WebApp.Tests", "Warp.WebApp.Tests\Warp.WebApp.Tests.csproj", "{8EF516C1-4E1A-4CB9-8928-CC34C996D442}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{44D97F12-3213-427A-9F8E-64089ED5CF4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{44D97F12-3213-427A-9F8E-64089ED5CF4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{44D97F12-3213-427A-9F8E-64089ED5CF4F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8EF516C1-4E1A-4CB9-8928-CC34C996D442}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8EF516C1-4E1A-4CB9-8928-CC34C996D442}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8EF516C1-4E1A-4CB9-8928-CC34C996D442}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8EF516C1-4E1A-4CB9-8928-CC34C996D442}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

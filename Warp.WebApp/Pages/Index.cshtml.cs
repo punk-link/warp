@@ -19,12 +19,7 @@ public class IndexModel : BasePageModel
     
     public IActionResult OnGet()
     {
-        OpenGraphModel = new OpenGraphModel
-        {
-            Title = "Warp",
-            Description = "Warp is a simple and secure way to share text and images.",
-            ImageUrl = "https://warp.sh/images/warp-logo.png"
-        };
+        OpenGraphModel = OpenGraphService.GetDefaultModel();
         return Page();
     }
 
