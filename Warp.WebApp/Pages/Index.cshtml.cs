@@ -2,6 +2,7 @@ using System.ComponentModel;
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Entries;
 
@@ -17,7 +18,15 @@ public class IndexModel : BasePageModel
     
     
     public IActionResult OnGet()
-        => Page();
+    {
+        OpenGraphModel = new OpenGraphModel
+        {
+            Title = "Warp",
+            Description = "Warp is a simple and secure way to share text and images.",
+            ImageUrl = "https://warp.sh/images/warp-logo.png"
+        };
+        return Page();
+    }
 
 
     public async Task<IActionResult> OnPost()
@@ -62,6 +71,9 @@ public class IndexModel : BasePageModel
             new SelectListItem("8 hours", 4.ToString()),
             new SelectListItem("1 day", 5.ToString())
         ];
+
+
+    public OpenGraphModel OpenGraphModel { get; set; } = default!;
     
         
     private readonly IEntryService _entryService;

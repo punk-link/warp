@@ -1,13 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Warp.WebApp.Pages.Shared.Components;
 
-public class _TertiaryButton : PageModel
+public class SecondaryButtonModel : PageModel
 {
-    public IActionResult OnGet()
+    public void OnGet()
     {
-        return Page();
     }
 
 

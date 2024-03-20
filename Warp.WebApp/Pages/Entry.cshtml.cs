@@ -2,7 +2,6 @@ using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
-using Warp.WebApp.Pages.Shared;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Entries;
@@ -47,7 +46,7 @@ public class EntryModel : BasePageModel
 
         void AddButtonModels()
         {
-            CopyButtonModel = new _TertiaryButton
+            CopyButtonModel = new SecondaryButtonModel
             {
                 Id = "copy-url-button",
                 IconName = "icofont-copy",
@@ -56,7 +55,7 @@ public class EntryModel : BasePageModel
                 TabIndex = 1
             };
 
-            CopySilentButtonModel = new _TertiaryButton
+            CopySilentButtonModel = new SecondaryButtonModel
             {
                 Id = "copy-url-silent-button",
                 IconName = "icofont-copy",
@@ -64,14 +63,14 @@ public class EntryModel : BasePageModel
                 TabIndex = 2
             };
 
-            ReportButtonModel = new _TertiaryButton
+            ReportButtonModel = new SecondaryButtonModel
             {
                 Id = "report-button",
                 MainCaption = "report",
                 TabIndex = 3
             };
 
-            ModalWindowModel = new _ModalWindowModel
+            ModalWindowModel = new ModalWindowModel
             {
                 Action = "report",
                 Header = "report entry",
@@ -111,10 +110,10 @@ public class EntryModel : BasePageModel
         => expiresAt - DateTime.UtcNow;
 
     
-    public _TertiaryButton CopyButtonModel { get; set; } = default!;
-    public _TertiaryButton CopySilentButtonModel { get; set; } = default!;
-    public _ModalWindowModel ModalWindowModel { get; set; } = default!;
-    public _TertiaryButton ReportButtonModel { get; set; } = default!;
+    public SecondaryButtonModel CopyButtonModel { get; set; } = default!;
+    public SecondaryButtonModel CopySilentButtonModel { get; set; } = default!;
+    public SecondaryButtonModel ReportButtonModel { get; set; } = default!;
+    public ModalWindowModel ModalWindowModel { get; set; } = default!;
 
 
     public string ExpiresIn { get; set; } = string.Empty;

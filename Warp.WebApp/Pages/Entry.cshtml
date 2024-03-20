@@ -8,6 +8,10 @@
     <meta name="robots" content="noindex, noarchive" />
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/pages/entry.css" asp-append-version="true" />
+}
+
 <partial name="Shared/_Header" />
 <section class="warp-container flex-container flex-direction-column vh100">
     <div class="expiration-message-container flex-container flex-direction-row justify-space-between">
@@ -30,14 +34,14 @@
         @Html.Raw(Model.TextContent)
     </article>
     <div class="button-bar flex-container justify-flex-end">
-        <partial name="Shared/Components/_TertiaryButton" model="@Model.CopyButtonModel" />
-        <partial name="Shared/Components/_TertiaryButton" model="@Model.CopySilentButtonModel" />
-        <partial name="Shared/Components/_TertiaryButton" model="@Model.ReportButtonModel" />
+        <partial name="Shared/Components/SecondaryButton" model="@Model.CopyButtonModel" />
+        <partial name="Shared/Components/SecondaryButton" model="@Model.CopySilentButtonModel" />
+        <partial name="Shared/Components/SecondaryButton" model="@Model.ReportButtonModel" />
     </div>
 </section>
 <partial name="Shared/_Promo" />
 <partial name="Shared/_Footer" />
-<partial name="Shared/_ModalWindow" model="@Model.ModalWindowModel"/>
+<partial name="Shared/Components/ModalWindow" model="@Model.ModalWindowModel"/>
 
 <script type="module">
     import { addEntryEvents } from '/js/entry.js';

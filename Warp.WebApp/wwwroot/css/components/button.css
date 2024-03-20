@@ -12,7 +12,7 @@
 }
 
 .btn-primary,
-.btn-tertiary {
+.btn-secondary {
     align-items: flex-start;
     border: none;
     border-radius: .3125rem;
@@ -50,7 +50,7 @@
     outline: none;
 }
 
-.btn-tertiary {
+.btn-secondary {
     background: none;
     border: none;
     color: var(--primary-color-100, #A762FF);
@@ -59,16 +59,16 @@
     padding: .5rem .75rem;
 }
 
-.btn-tertiary:focus {
+.btn-secondary:focus {
     color: var(--primary-color-60, #C99EFF);
 }
 
-.btn-tertiary div div:nth-child(1) i {
+.btn-secondary div div:nth-child(1) i {
     font-size: var(--default-font-size, 1rem);
     padding-right: .625rem;
 }
 
-.btn-tertiary > div > div:nth-child(2) {
+.btn-secondary > div > div:nth-child(2) {
     color: var(--primary-color-60, #C99EFF);
     display: none;
     font-size: var(--smallest-font-size, .75rem);
@@ -76,7 +76,7 @@
 
 @media screen and (max-width: 768px) {
     .btn-primary,
-    .btn-tertiary {
+    .btn-secondary {
         height: 2.5rem;
         justify-content: center;
         margin: .5rem .5rem;

@@ -1,13 +1,11 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace Warp.WebApp.Pages.Shared;
+namespace Warp.WebApp.Pages.Shared.Components;
 
-public class _ModalWindowModel : PageModel
+public class ModalWindowModel : PageModel
 {
-    public IActionResult OnGet()
+    public void OnGet()
     {
-        return Page();
     }
 
 

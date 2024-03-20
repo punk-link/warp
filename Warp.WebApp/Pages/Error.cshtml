@@ -8,10 +8,14 @@
     <meta name="robots" content="noindex, noarchive" />
 }
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/pages/error.css" asp-append-version="true" />
+}
+
 <div class="grid-v-container grid-v-3 vh100">
     <div class="grid-v-col-1"></div>
     <section class="grid-v-col-2 secondary-grey-column">
-        <partial name="Shared/_Logo" />
+        <partial name="Shared/Components/Logo" />
         <div class="error-code-container">
             @Model.Status
         </div>
