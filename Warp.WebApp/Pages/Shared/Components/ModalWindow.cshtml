@@ -1,16 +1,18 @@
 ﻿@model ModalWindowModel
 
-<div class="modal-background bg-secondary-transparent flex-container flex-direction-column justify-center align-center">
-    <div class="modal-window">
-        <div>
-            <h1>@Model.Header</h1>
-            <p>
-                @Model.Prompt
-            </p>
-        </div>
-        <div class="button-bar flex-container">
-            <button id="modal-action" class="btn-primary" type="button" tabindex="@Model.TabIndex">@Model.Action</button>
-            <button id="modal-cancel" class="btn-secondary" type="button" tabindex="@Model.CancelTabIndex)">cancel</button>
+<div class="modal-background bg-secondary-transparent justify-center">
+    <div class="flex-container align-center">
+        <div class="modal-window flex-direction-column justify-center align-center">
+            <div>
+                <h1>@Model.Header</h1>
+                <p>
+                    @Model.Prompt
+                </p>
+            </div>
+            <div class="button-bar flex-container">
+                <button id="modal-action" class="btn-primary" type="button" tabindex="@Model.TabIndex">@Model.Action</button>
+                <button id="modal-cancel" class="btn-secondary" type="button" tabindex="@Model.CancelTabIndex)">cancel</button>
+            </div>
         </div>
     </div>
 </div>

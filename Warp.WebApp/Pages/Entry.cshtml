@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="~/css/pages/entry.css" asp-append-version="true" />
 }
 
-<partial name="Shared/_Header" />
+<partial name="Shared/Header" />
 <section class="warp-container flex-container flex-direction-column vh100">
     <div class="expiration-message-container flex-container flex-direction-row justify-space-between">
         <div>
@@ -39,9 +39,9 @@
         <partial name="Shared/Components/SecondaryButton" model="@Model.ReportButtonModel" />
     </div>
 </section>
-<partial name="Shared/_Promo" />
-<partial name="Shared/_Footer" />
-<partial name="Shared/Components/ModalWindow" model="@Model.ModalWindowModel"/>
+<partial name="Shared/Promo" />
+<partial name="Shared/Footer" />
+<partial name="Shared/Components/ModalWindow" model="@Model.ModalWindowModel" />
 
 <script type="module">
     import { addEntryEvents } from '/js/entry.js';
