@@ -32,10 +32,16 @@ public static class OpenGraphService
             .TrimEnd();
 
         var dotIndex = doubleTrimmedDescription.LastIndexOf('.');
-        if (dotIndex == -1)
-            return doubleTrimmedDescription[..(maxDescriptionLength - 3)] + "...";
+        if (dotIndex != -1)
+            return doubleTrimmedDescription[..(dotIndex + 1)];
 
-        return doubleTrimmedDescription[..(dotIndex + 1)];
+        var spaceIndex = doubleTrimmedDescription.LastIndexOf(' ');
+        var descriptionWithoutLastWord = doubleTrimmedDescription[..spaceIndex];
+        if (descriptionWithoutLastWord.Length < maxDescriptionLength - 3)
+            return descriptionWithoutLastWord + "...";
+
+        spaceIndex = descriptionWithoutLastWord.LastIndexOf(' ');
+        return descriptionWithoutLastWord[..spaceIndex] + "...";
     }
 
 
