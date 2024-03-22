@@ -32,7 +32,7 @@ public static partial class OpenGraphService
             : decodedDescription, string.Empty);
 
         var trimmedDescription = descriptionWithoutTags.Trim();
-        if (trimmedDescription.Length <= maxDescriptionLength)
+        if (trimmedDescription.Length < maxDescriptionLength)
             return trimmedDescription;
 
         var doubleTrimmedDescription = trimmedDescription[..maxDescriptionLength]
