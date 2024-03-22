@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Warp.WebApp.Data;
 using Warp.WebApp.Data.Redis;
 using Warp.WebApp.Helpers.Configuration;
+using Warp.WebApp.Helpers.HealthChecks;
+using Warp.WebApp.Helpers.Warmups;
 using Warp.WebApp.Middlewares;
 using Warp.WebApp.Models.Options;
 using Warp.WebApp.Services.Entries;
@@ -39,10 +41,15 @@ builder.Services.AddTransient<IReportService, ReportService>();
 builder.Services.AddTransient<IViewCountService, ViewCountService>();
 builder.Services.AddTransient<IEntryService, EntryService>();
 
+
+builder.Services.AddSingleton(builder.Services);
+builder.Services.AddHostedService<WarmupService>();
+
 builder.Services.AddMemoryCache();
 builder.Services.AddRazorPages();
 builder.Services.AddControllers();
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecks()
+    .AddCheck<ControllerResolveHealthCheck>(nameof(ControllerResolveHealthCheck));
 
 builder.Services.AddResponseCompression(options =>
 {
@@ -50,6 +57,8 @@ builder.Services.AddResponseCompression(options =>
     options.Providers.Add<BrotliCompressionProvider>();
     options.Providers.Add<GzipCompressionProvider>();
 });
+
+builder.Services.AddResponseCaching();
 
 var app = builder.Build();
 
@@ -61,6 +70,7 @@ if (!app.Environment.IsDevelopmentOrLocal())
 
 app.UseHttpsRedirection();
 app.UseResponseCompression();
+app.UseResponseCaching();
 
 app.UseHealthChecks("/health");
 app.UseMiddleware<RobotsMiddleware>();
