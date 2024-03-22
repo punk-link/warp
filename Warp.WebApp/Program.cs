@@ -63,7 +63,7 @@ app.UseHttpsRedirection();
 app.UseResponseCompression();
 
 app.UseHealthChecks("/health");
-app.UseMiddleware(typeof(RobotsMiddleware));
+app.UseMiddleware<RobotsMiddleware>();
 app.UseStaticFiles();
 
 app.UseRouting();

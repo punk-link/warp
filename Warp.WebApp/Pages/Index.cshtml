@@ -5,13 +5,13 @@
 }
 
 @section MetaTags {
-    <meta description="Warp allows you to share short-lived massages and media with your friends, family and colleagues." />
-    <meta name="robots" content="all" />
+    <meta name="description" content= "Warp allows you to share short-lived massages and media with your friends, family and colleagues.">
+    <meta name="robots" content="all">
     <partial name="Shared/Components/OpenGraph" model="@Model.OpenGraphModel" />
 }
 
 @section Styles {
-    <link rel="stylesheet" href="~/css/pages/index.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/pages/index.css" asp-append-version="true">
 }
 
 <partial name="Shared/Header" />
@@ -29,7 +29,7 @@
                     <div class="warp-content-textarea-span-container">
                         <span id="warp-content-textarea-span" contenteditable tabindex="1"></span>
                     </div>
-                    <textarea id="warp-content-textarea" type="hidden" asp-for="TextContent"></textarea>
+                    <textarea id="warp-content-textarea" asp-for="TextContent"></textarea>
                 </div>
             </div>
             <div class="button-bar flex-container">

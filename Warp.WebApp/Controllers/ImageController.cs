@@ -7,7 +7,6 @@ namespace Warp.WebApp.Controllers;
 
 [ApiController]
 [Route("/api/images")]
-
 public sealed class ImageController : BaseController
 {
     public ImageController(IImageService imageService)

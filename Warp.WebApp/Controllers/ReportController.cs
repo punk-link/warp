@@ -6,7 +6,6 @@ namespace Warp.WebApp.Controllers;
 
 [ApiController]
 [Route("/api/reports")]
-
 public sealed class ReportController : BaseController
 {
     public ReportController(IReportService reportService)

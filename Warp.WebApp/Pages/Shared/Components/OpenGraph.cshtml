@@ -1,8 +1,8 @@
 ﻿@model OpenGraphModel
 
-<meta property="og:title" content="@Model.Title" />
-<meta property="og:description" content="@Model.Description" />
+<meta property="og:title" content="@Model.Title">
+<meta property="og:description" content="@Model.Description">
 @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
 {
-    <meta property="og:description" content="@Model.ImageUrl" />
+    <meta property="og:description" content="@Model.ImageUrl">
 }
