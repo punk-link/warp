@@ -2,6 +2,7 @@ using System.ComponentModel;
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.OutputCaching;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Entries;
@@ -15,8 +16,9 @@ public class IndexModel : BasePageModel
     {
         _entryService = entryService;
     }
-    
-    
+
+
+    [OutputCache(Duration = 3600)]
     public IActionResult OnGet()
     {
         OpenGraphModel = OpenGraphService.GetDefaultModel();

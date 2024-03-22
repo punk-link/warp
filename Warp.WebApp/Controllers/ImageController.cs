@@ -1,5 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Images;
 
@@ -16,6 +17,7 @@ public sealed class ImageController : BaseController
 
 
     [HttpGet("entry-id/{entryId}/image-id/{imageId}")]
+    [OutputCache(Duration = 10 * 60, VaryByRouteValueNames = ["entryId", "imageId"])]
     public async Task<IActionResult> Get([FromRoute] string entryId, [FromRoute] string imageId)
     {
         var decodedEntryId = IdCoder.Decode(entryId);
