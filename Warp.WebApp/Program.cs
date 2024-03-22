@@ -47,7 +47,8 @@ builder.Services.AddHostedService<WarmupService>();
 
 builder.Services.AddMemoryCache();
 builder.Services.AddRazorPages();
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddControllersAsServices();
 builder.Services.AddHealthChecks()
     .AddCheck<ControllerResolveHealthCheck>(nameof(ControllerResolveHealthCheck));
 
@@ -59,6 +60,7 @@ builder.Services.AddResponseCompression(options =>
 });
 
 builder.Services.AddResponseCaching();
+builder.Services.AddOutputCache();
 
 var app = builder.Build();
 
@@ -71,6 +73,7 @@ if (!app.Environment.IsDevelopmentOrLocal())
 app.UseHttpsRedirection();
 app.UseResponseCompression();
 app.UseResponseCaching();
+app.UseOutputCache();
 
 app.UseHealthChecks("/health");
 app.UseMiddleware<RobotsMiddleware>();
