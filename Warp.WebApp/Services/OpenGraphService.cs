@@ -1,8 +1,10 @@
-﻿using Warp.WebApp.Pages.Shared.Components;
+﻿using System.Net;
+using System.Text.RegularExpressions;
+using Warp.WebApp.Pages.Shared.Components;
 
 namespace Warp.WebApp.Services;
 
-public static class OpenGraphService
+public static partial class OpenGraphService
 {
     public static OpenGraphModel GetDefaultModel()
         => GetModel(DefaultDescription);
@@ -24,7 +26,12 @@ public static class OpenGraphService
         if (string.IsNullOrWhiteSpace(description))
             return DefaultDescription;
 
-        var trimmedDescription = description.Trim();
+        var decodedDescription = WebUtility.HtmlDecode(description);
+        var descriptionWithoutTags = HtmlTagsExpression().Replace(maxDescriptionLength <= decodedDescription.Length 
+            ? decodedDescription[..maxDescriptionLength] 
+            : decodedDescription, string.Empty);
+
+        var trimmedDescription = descriptionWithoutTags.Trim();
         if (trimmedDescription.Length <= maxDescriptionLength)
             return trimmedDescription;
 
@@ -57,4 +64,8 @@ public static class OpenGraphService
     private const string DefaultDescription = "Warp is a simple and secure way to share text and images.";
     private const string DefaultImageUrl = "https://warp.punk.link/favicon.ico";
     private const string Title = "Warp";
+
+
+    [GeneratedRegex("<.*?>")]
+    private static partial Regex HtmlTagsExpression();
 }
