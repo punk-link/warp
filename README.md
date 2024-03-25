@@ -5,12 +5,22 @@ Warp is a service where you can share short-lived texts and media with your frie
 
 ## How to Run
 
+
+### Environment Variables
+
 To run the service you have to pass the following environment variables:
 
 |Variable        |Description                        |
 |----------------|-----------------------------------|
 |PNKL_VAULT_ADDR |An address of a Vault instance     |
 |PNKL_VAULT_TOKEN|An access token of a Vault instance|
+
+### Docker Compose
+
+Run the compose file inside the root directory. It sets up external dependencies like a database etc.
+
+
+### Other
 
 :exclamation: You may use _appSettings.Local.json_ for local runs.
 
