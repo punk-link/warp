@@ -26,24 +26,17 @@ builder.Logging.AddDebug();
 #endif
 
 builder.Logging.AddConsole();
-builder.Logging.AddSentry(o =>
-{
-    o.Dsn = builder.Configuration["SentryDsn"];
-    o.AttachStacktrace = true;
-});
+if (!string.IsNullOrWhiteSpace(builder.Configuration["SentryDsn"]))
+    builder.Logging.AddSentry(o =>
+    {
+        o.Dsn = builder.Configuration["SentryDsn"];
+        o.AttachStacktrace = true;
+    });
+
 
 builder.Services.AddSingleton(_ => DistributedCacheHelper.GetConnectionMultiplexer(logger, builder.Configuration));
 
-builder.Services.AddSingleton<IImageService, ImageService>();
-builder.Services.AddSingleton<IDistributedStorage, KeyDbStorage>();
-builder.Services.AddSingleton<IDataStorage, DataStorage>();
-builder.Services.AddTransient<IReportService, ReportService>();
-builder.Services.AddTransient<IViewCountService, ViewCountService>();
-builder.Services.AddTransient<IEntryService, EntryService>();
-
-
-builder.Services.AddSingleton(builder.Services);
-builder.Services.AddHostedService<WarmupService>();
+AddServices(builder.Services);
 
 builder.Services.AddMemoryCache();
 builder.Services.AddRazorPages();
@@ -88,6 +81,23 @@ app.MapRazorPages();
 
 app.Run();
 return;
+
+
+IServiceCollection AddServices(IServiceCollection services)
+{
+    services.AddSingleton(services);
+
+    services.AddSingleton<IImageService, ImageService>();
+    services.AddSingleton<IDistributedStorage, KeyDbStorage>();
+    services.AddSingleton<IDataStorage, DataStorage>();
+    services.AddTransient<IReportService, ReportService>();
+    services.AddTransient<IViewCountService, ViewCountService>();
+    services.AddTransient<IEntryService, EntryService>();
+
+    services.AddHostedService<WarmupService>();
+
+    return services;
+}
 
 
 ILogger<Program> GetProgramLogger(WebApplicationBuilder webApplicationBuilder)
