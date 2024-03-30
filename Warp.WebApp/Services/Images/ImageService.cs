@@ -29,6 +29,13 @@ public class ImageService : IImageService
     }
 
 
+    public async Task Add(ImageInfo image)
+    {
+        var cacheKey = BuildEntryCacheKey(image.Id);
+        await _dataStorage.Set(cacheKey, image, TimeSpan.FromHours(1));
+    }
+
+
     public async Task Attach(Guid entryId, TimeSpan relativeExpirationTime, List<Guid> imageIds)
     {
         if (imageIds.Count == 0)
