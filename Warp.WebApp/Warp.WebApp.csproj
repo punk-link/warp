@@ -59,4 +59,8 @@
     </Content>
   </ItemGroup>
 
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="docker-compose up -d" />
+  </Target>
+
 </Project>

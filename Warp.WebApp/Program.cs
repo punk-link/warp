@@ -13,26 +13,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 var logger = GetProgramLogger(builder);
 
-var secrets = VaultHelper.GetSecrets<ProgramSecrets>(logger, builder.Configuration);
+AddConfiguration(logger, builder);
 
-builder.AddConsulConfiguration(secrets.ConsulAddress, secrets.ConsulToken);
-// Restores local setting for development purposes (e.g. local port forwarding)
-builder.Configuration.AddJsonFile($"appsettings.{builder.Configuration["ASPNETCORE_ENVIRONMENT"]}.json", optional: true, reloadOnChange: true);
-
-builder.Logging.ClearProviders();
-
-#if DEBUG
-builder.Logging.AddDebug();
-#endif
-
-builder.Logging.AddConsole();
-if (!string.IsNullOrWhiteSpace(builder.Configuration["SentryDsn"]))
-    builder.Logging.AddSentry(o =>
-    {
-        o.Dsn = builder.Configuration["SentryDsn"];
-        o.AttachStacktrace = true;
-    });
-
+AddLogging(builder);
 
 builder.Services.AddSingleton(_ => DistributedCacheHelper.GetConnectionMultiplexer(logger, builder.Configuration));
 
@@ -97,6 +80,37 @@ IServiceCollection AddServices(IServiceCollection services)
     services.AddHostedService<WarmupService>();
 
     return services;
+}
+
+
+void AddConfiguration(ILogger<Program> logger1, WebApplicationBuilder builder1)
+{
+    if (builder.Environment.IsLocal())
+    {
+        builder1.Configuration.AddJsonFile($"appsettings.{builder1.Configuration["ASPNETCORE_ENVIRONMENT"]}.json", optional: true, reloadOnChange: true);
+        return;
+    }
+
+    var secrets = VaultHelper.GetSecrets<ProgramSecrets>(logger1, builder1.Configuration);
+    builder1.AddConsulConfiguration(secrets.ConsulAddress, secrets.ConsulToken);
+}
+
+
+void AddLogging(WebApplicationBuilder webApplicationBuilder1)
+{
+    webApplicationBuilder1.Logging.ClearProviders();
+
+    #if DEBUG
+    builder.Logging.AddDebug();
+    #endif
+
+    webApplicationBuilder1.Logging.AddConsole();
+    if (!string.IsNullOrWhiteSpace(webApplicationBuilder1.Configuration["SentryDsn"]))
+        webApplicationBuilder1.Logging.AddSentry(o =>
+        {
+            o.Dsn = webApplicationBuilder1.Configuration["SentryDsn"];
+            o.AttachStacktrace = true;
+        });
 }
 
 
