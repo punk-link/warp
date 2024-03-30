@@ -59,8 +59,4 @@
     </Content>
   </ItemGroup>
 
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="if $(ConfigurationName) == Debug docker-compose up -d" />
-  </Target>
-
 </Project>
