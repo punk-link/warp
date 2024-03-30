@@ -1,0 +1,11 @@
+﻿@model TabButtonModel
+
+@{
+    var className = "btn-tab";
+    if (Model.IsDisabled)
+        className += " disabled";
+}
+
+<button id="@Model.Id" class="@className" type="button" tabindex="@Model.TabIndex">
+    @Model.Caption
+</button>
