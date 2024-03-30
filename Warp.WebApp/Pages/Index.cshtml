@@ -14,7 +14,23 @@
     <link rel="stylesheet" href="~/css/pages/index.css" asp-append-version="true">
 }
 
-<partial name="Shared/Header" />
+<div class="flex-row-important justify-between header">
+    <div class="flex-row">
+        <partial name="Shared/Components/Logo"/>
+    </div>
+    <div class="flex-row-important">
+        <partial name="Shared/Components/TabButton" model="@Model.TextModeButtonModel" view-data="ViewData" />
+        <partial name="Shared/Components/TabButton" model="@Model.AdvancedModeButtonModel" view-data="ViewData" />
+    </div>
+</div>
+<div id="text-mode">
+
+</div>
+<div id="advanced-mode">
+
+</div>
+
+@*
 <section class="warp-input-container flex-container flex-direction-column vh100">
     <div class="upload-gallery flex-container wrapped justify-evenly"></div>
     <div class="drop-area">
@@ -46,6 +62,7 @@
 </section>
 <partial name="Shared/Promo" />
 <partial name="Shared/Footer" />
+*@
 
 <script type ="module">
     import { addIndexEvents } from '/js/index.js';

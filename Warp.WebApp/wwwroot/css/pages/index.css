@@ -1,4 +1,14 @@
-﻿.warp-input-container {
+﻿.header {
+    width: 100vw;
+}
+
+    .header div {
+        margin: 0 1rem;
+    }
+
+/**/
+
+.warp-input-container {
     min-height: 100%;
     width: 100%;
 }
