@@ -13,11 +13,9 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true">
 </head>
 <body>
-    <div class="container">
-        <main class="flex-column align-center justify-between vh100">
-            @RenderBody()
-        </main>
-    </div>
+    <main class="flex-column align-center justify-between vh100">
+        @RenderBody()
+    </main>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

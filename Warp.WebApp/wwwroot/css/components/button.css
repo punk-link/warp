@@ -1,18 +1,9 @@
 ﻿a {
     text-decoration: none;
 }
-.button-bar {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-evenly;
-}
 
-.button-bar div {
-    margin: 0 .5rem;
-}
-
-.btn-primary,
-.btn-secondary {
+.button-primary,
+.button-secondary {
     align-items: flex-start;
     border: none;
     border-radius: .3125rem;
@@ -34,24 +25,24 @@
     text-transform: lowercase;
 }
 
-.btn-primary {
+.button-primary {
     background: var(--primary-color-100, #A762FF);
     color: var(--white-color-100, #FFF);
 }
 
-.btn-primary:hover,
-.btn-primary:active,
-.btn-primary:focus {
+.button-primary:hover,
+.button-primary:active,
+.button-primary:focus {
     background: var(--primary-color-100, #A762FF);
 }
 
-.btn-primary:active,
-.btn-primary:focus {
+.button-primary:active,
+.button-primary:focus {
     background: var(--primary-color-120, #8C4EDA);
     outline: none;
 }
 
-.btn-secondary {
+.button-secondary {
     background: none;
     border: none;
     color: var(--primary-color-100, #A762FF);
@@ -60,22 +51,22 @@
     padding: .5rem .75rem;
 }
 
-.btn-secondary:focus {
+.button-secondary:focus {
     color: var(--primary-color-60, #C99EFF);
 }
 
-.btn-secondary div div:nth-child(1) i {
+.button-secondary div div:nth-child(1) i {
     font-size: var(--default-font-size, 1rem);
     padding-right: .625rem;
 }
 
-.btn-secondary > div > div:nth-child(2) {
+.button-secondary > div > div:nth-child(2) {
     color: var(--primary-color-60, #C99EFF);
     display: none;
     font-size: var(--smallest-font-size, .75rem);
 }
 
-.btn-tab {
+.button-tab {
     background: none;
     border: none;
     color: var(--text-color-100, #484848);
@@ -87,25 +78,17 @@
     text-transform: lowercase;
 }
 
-    .btn-tab:hover,
-    .btn-tab:active,
-    .btn-tab:focus {
+    .button-tab.active {
         border-bottom: var(--secondary-color-100, #88D723) 0.2rem solid;
     }
 
-    .btn-tab.disabled {
+    .button-tab.disabled {
         color: var(--text-color-60, #9F9F9F);
         cursor: auto;
     }
 
-        .btn-tab.disabled:hover,
-        .btn-tab.disabled:active,
-        .btn-tab.disabled:focus {
-            border-bottom: none;
-        }
-
     @media screen and (max-width: 768px) {
-        .btn-primary, .btn-secondary {
+        .button-primary, .button-secondary {
         height: 2.5rem;
         justify-content: center;
         margin: .5rem .5rem;

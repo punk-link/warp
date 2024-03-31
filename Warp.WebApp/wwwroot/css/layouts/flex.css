@@ -13,11 +13,15 @@
     flex-direction: row;
 }
 
-    .align-center {
+.align-center {
     align-items: center;
 }
 
-.align-flex-end {
+.align-center-important {
+    align-items: center;
+}
+
+.align-end {
     align-items: flex-end;
 }
 
@@ -52,7 +56,7 @@
     }
 
     .align-center,
-    .align-flex-end {
+    .align-end {
         align-items: flex-start;
     }
 

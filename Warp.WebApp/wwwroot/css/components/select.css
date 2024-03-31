@@ -20,3 +20,11 @@ option {
     box-shadow: none;
     outline: none;
 }
+
+.select-container {
+    color: var(--primary-color-60, #C99EFF);
+}
+
+    .select-container i {
+        font-size: var(--x-biggest-font-size, 1.5rem);
+    }

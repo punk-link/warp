@@ -14,7 +14,7 @@
     <link rel="stylesheet" href="~/css/pages/index.css" asp-append-version="true">
 }
 
-<div class="flex-row-important justify-between header">
+<div class="flex-row-important justify-between header vw100">
     <div class="flex-row">
         <partial name="Shared/Components/Logo"/>
     </div>
@@ -23,12 +23,29 @@
         <partial name="Shared/Components/TabButton" model="@Model.AdvancedModeButtonModel" view-data="ViewData" />
     </div>
 </div>
-<div id="text-mode">
-
-</div>
-<div id="advanced-mode">
-
-</div>
+<section>
+    <form method="post" class="form-vertical flex-column justify-between vh75 vw100">
+        <div class="text-mode">
+            <div class="form-group">
+                Textarea
+            </div>
+        </div>
+        <div class="advanced-mode">
+        </div>
+        <div class="button-bar flex-row-important align-center justify-around wrapped">
+            <div class="select-container flex-row-important align-center-important">
+                <i class="icofont-duotone icofont-purge"></i>
+                <div class="form-group">
+                    <label asp-for="SelectedExpirationPeriod"></label>
+                    <select asp-for="SelectedExpirationPeriod" asp-items="IndexModel.ExpirationPeriodOptions" tabindex="4"></select>
+                </div>
+            </div>
+            <div>
+                <button class="button-primary" type="submit" tabindex="5">Create</button>
+            </div>
+        </div>
+    </form>
+</section>
 
 @*
 <section class="warp-input-container flex-container flex-direction-column vh100">

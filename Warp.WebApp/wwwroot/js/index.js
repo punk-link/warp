@@ -18,17 +18,20 @@ function overrideFormSubmitEvent(form, sourceSpan, targetTextbox) {
 
 
 export function addIndexEvents() {
-    addPasteImageEventListener();
+    let textModeButton = document.getElementById('text-mode-button');
+    textModeButton.classList.add('active');
 
-    let dropArea = document.getElementsByClassName('drop-area')[0];
-    let fileInput = document.getElementById('file');
-    let uploadButton = document.getElementById('upload-button');
-    addDropAreaEvents(dropArea, fileInput, uploadButton);
+    //addPasteImageEventListener();
 
-    let warpContentTextarea = document.getElementById('warp-content-textarea');
-    let warpContentForm = document.getElementsByTagName('form')[0];
-    let warpContentSpan = document.getElementById('warp-content-textarea-span');
+    //let dropArea = document.getElementsByClassName('drop-area')[0];
+    //let fileInput = document.getElementById('file');
+    //let uploadButton = document.getElementById('upload-button');
+    //addDropAreaEvents(dropArea, fileInput, uploadButton);
+
+    //let warpContentTextarea = document.getElementById('warp-content-textarea');
+    //let warpContentForm = document.getElementsByTagName('form')[0];
+    //let warpContentSpan = document.getElementById('warp-content-textarea-span');
     
-    overrideFormSubmitEvent(warpContentForm, warpContentSpan, warpContentTextarea);
-    applyFontScaling(warpContentSpan, 1000, 250, 6, 1.25, 0.05);
+    //overrideFormSubmitEvent(warpContentForm, warpContentSpan, warpContentTextarea);
+    //applyFontScaling(warpContentSpan, 1000, 250, 6, 1.25, 0.05);
 }
