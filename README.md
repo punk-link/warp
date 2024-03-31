@@ -25,3 +25,19 @@ Run the compose file inside the root directory. It sets up external dependencies
 :exclamation: You may use _appSettings.Local.json_ for local runs.
 
 Also you might need to override DB settings to run locally. Set up the _Redis_ section of your _appSettings.Local.json_.
+
+
+## Project Icons
+
+The project uses these [icofont](https://icofont.com) glyphs:
+
+- align-left
+- clock
+- close
+- eye
+- hill-sunny
+- link
+- pencil-alt-2
+- plus
+- purge
+- simple-left

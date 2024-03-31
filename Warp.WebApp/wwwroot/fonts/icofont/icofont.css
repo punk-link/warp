@@ -33,9 +33,29 @@ url("./fonts/icofont.woff") format("woff");
   -webkit-font-smoothing: antialiased;
 }
 
-.icofont-copy:before
+.icofont-clock-time:before
 {
-  content: "\edea";
+  content: "\eedc";
+}
+
+.icofont-link:before
+{
+  content: "\ef71";
+}
+
+.icofont-plus:before
+{
+  content: "\efc2";
+}
+
+.icofont-eye:before
+{
+  content: "\ef24";
+}
+
+.icofont-close:before
+{
+  content: "\eee4";
 }
 
 .icofont-simple-left:before
@@ -43,14 +63,29 @@ url("./fonts/icofont.woff") format("woff");
   content: "\eab5";
 }
 
-.icofont-cloud-upload:before
+.icofont-duotone.icofont-purge:before
 {
-  content: "\eee7";
+  content: "\13b95";
 }
 
-.icofont-close:before
+.icofont-duotone.icofont-purge:after
 {
-  content: "\eee4";
+  content: "\13b94";
+}
+
+.icofont-align-left:before
+{
+  content: "\ede0";
+}
+
+.icofont-hill-sunny:before
+{
+  content: "\ee63";
+}
+
+.icofont-pencil-alt-2:before
+{
+  content: "\ebf6";
 }
 
 [class^="icofont-"].icofont-duotone,
