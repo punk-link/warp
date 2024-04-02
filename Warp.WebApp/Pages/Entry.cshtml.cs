@@ -17,13 +17,13 @@ public class EntryModel : BasePageModel
     }
     
     
-    public async Task<IActionResult> OnGet(string id)
+    public async Task<IActionResult> OnGet(string id, CancellationToken cancellationToken)
     {
         var decodedId = IdCoder.Decode(id);
         if (decodedId == Guid.Empty)
             return RedirectToError(ProblemDetailsHelper.Create("Can't decode a provided ID."));
 
-        var (_, isFailure, entry, problemDetails) = await _entryService.Get(decodedId);
+        var (_, isFailure, entry, problemDetails) = await _entryService.Get(decodedId, cancellationToken);
         if (isFailure)
             return RedirectToError(problemDetails);
 

@@ -19,10 +19,10 @@ public sealed class ReportService : IReportService
     }
 
 
-    public Task MarkAsReported(Guid id)
+    public Task MarkAsReported(Guid id, CancellationToken cancellationToken)
     {
         var cacheKey = GetCacheKey(in id);
-        return _dataStorage.Set(cacheKey, new Report(id), CachingConstants.MaxSupportedCachingTime);
+        return _dataStorage.Set(cacheKey, new Report(id), CachingConstants.MaxSupportedCachingTime, cancellationToken);
     }
 
 

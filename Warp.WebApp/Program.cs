@@ -52,6 +52,7 @@ app.UseResponseCaching();
 app.UseOutputCache();
 
 app.UseHealthChecks("/health");
+app.UseMiddleware<CancellationExceptionHandlerMiddleware>();
 app.UseMiddleware<RobotsMiddleware>();
 app.UseStaticFiles();
 

@@ -33,23 +33,33 @@ public sealed class KeyDbStorage : IDistributedStorage
     }
 
 
-    public async Task Set<T>(string key, T value, TimeSpan expiresIn)
+    public async Task Set<T>(string key, T value, TimeSpan expiresIn, CancellationToken cancellationToken = default)
     {
         var db = GetDatabase<T>();
         var bytes = JsonSerializer.SerializeToUtf8Bytes(value);
         await db.StringSetAsync(key, bytes, expiresIn);
+        cancellationToken.ThrowIfCancellationRequested();
     }
 
 
-    public async Task<T?> TryGet<T>(string key)
+    public async Task<T?> TryGet<T>(string key, CancellationToken cancellationToken = default)
     {
         var db = GetDatabase<T>();
-        var redisValue = await db.StringGetAsync(key);
-        if (!redisValue.HasValue)
-            return default;
+        var redisValueTask = db.StringGetAsync(key);
 
-        var bytes = (byte[])redisValue!;
-        return JsonSerializer.Deserialize<T>(bytes)!;
+        var completedTask = await Task.WhenAny(redisValueTask, Task.Delay(Timeout.Infinite, cancellationToken));
+        if (completedTask == redisValueTask)
+        {
+            var redisValue = await redisValueTask;
+            if (!redisValue.HasValue)
+                return default;
+
+            var bytes = (byte[])redisValue!;
+            return JsonSerializer.Deserialize<T>(bytes)!;
+        }
+
+        cancellationToken.ThrowIfCancellationRequested();
+        return default;
     }
 
 

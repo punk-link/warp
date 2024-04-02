@@ -34,7 +34,7 @@ public sealed class DataStorage : IDataStorage
     }
 
 
-    public async Task<Result> Set<T>(string key, T value, TimeSpan expiresIn)
+    public async Task<Result> Set<T>(string key, T value, TimeSpan expiresIn, CancellationToken cancellationToken)
     {
         if (value is null || IsDefaultStruct(value))
         {
@@ -43,18 +43,18 @@ public sealed class DataStorage : IDataStorage
         }
 
         _memoryCache.Set(key, value, expiresIn);
-        await _distributedStorage.Set(key, value, expiresIn);
+        await _distributedStorage.Set(key, value, expiresIn, cancellationToken);
 
         return Result.Success();
     }
 
 
-    public async ValueTask<T?> TryGet<T>(string key)
+    public async ValueTask<T?> TryGet<T>(string key, CancellationToken cancellationToken)
     {
         if (_memoryCache.TryGetValue(key, out T? value))
             return value!;
 
-        return await _distributedStorage.TryGet<T>(key);
+        return await _distributedStorage.TryGet<T>(key, cancellationToken);
     }
 
 

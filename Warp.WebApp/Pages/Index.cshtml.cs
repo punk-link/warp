@@ -26,10 +26,10 @@ public class IndexModel : BasePageModel
     }
 
 
-    public async Task<IActionResult> OnPost()
+    public async Task<IActionResult> OnPost(CancellationToken cancellationToken)
     {
         var expiresIn = GetExpirationPeriod(SelectedExpirationPeriod);
-        var (_, isFailure, id, problemDetails) = await _entryService.Add(TextContent, expiresIn, ImageIds);
+        var (_, isFailure, id, problemDetails) = await _entryService.Add(TextContent, expiresIn, ImageIds, cancellationToken);
         
         return isFailure 
             ? RedirectToError(problemDetails) 

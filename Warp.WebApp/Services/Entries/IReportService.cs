@@ -4,5 +4,5 @@ public interface IReportService
 {
     public ValueTask<bool> Contains(Guid id);
 
-    public Task MarkAsReported(Guid id);
+    public Task MarkAsReported(Guid id, CancellationToken cancellationToken);
 }

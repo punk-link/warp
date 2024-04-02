@@ -20,7 +20,7 @@ public sealed class EntryService : IEntryService
     }
 
 
-    public async Task<Result<Guid, ProblemDetails>> Add(string content, TimeSpan expiresIn, List<Guid> imageIds)
+    public async Task<Result<Guid, ProblemDetails>> Add(string content, TimeSpan expiresIn, List<Guid> imageIds, CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;
         var entry = new Entry(Guid.NewGuid(), content, now, now + expiresIn);
@@ -31,9 +31,9 @@ public sealed class EntryService : IEntryService
             return validationResult.ToFailure<Guid>();
 
         var cacheKey = BuildCacheKey(entry.Id);
-        var result = await _dataStorage.Set(cacheKey, entry, expiresIn);
+        var result = await _dataStorage.Set(cacheKey, entry, expiresIn, cancellationToken);
 
-        await _imageService.Attach(entry.Id, expiresIn, imageIds);
+        await _imageService.Attach(entry.Id, expiresIn, imageIds, cancellationToken);
 
         return result.IsFailure
             ? result.ToFailure<Guid>()
@@ -41,18 +41,18 @@ public sealed class EntryService : IEntryService
     }
 
 
-    public async Task<Result<EntryInfo, ProblemDetails>> Get(Guid id)
+    public async Task<Result<EntryInfo, ProblemDetails>> Get(Guid id, CancellationToken cancellationToken)
     {
         if (await _reportService.Contains(id))
             return ResultHelper.NotFound<EntryInfo>();
 
         var cacheKey = BuildCacheKey(id);
-        var entry = await _dataStorage.TryGet<Entry>(cacheKey);
+        var entry = await _dataStorage.TryGet<Entry>(cacheKey,cancellationToken);
         if (entry.Equals(default))
             return ResultHelper.NotFound<EntryInfo>();
 
         var viewCount = await _viewCountService.AddAndGet(id);
-        var imageIds = (await _imageService.Get(id))
+        var imageIds = (await _imageService.Get(id, cancellationToken))
             .Select(image => image.Id)
             .ToList();
 
