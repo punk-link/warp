@@ -1,4 +1,9 @@
-﻿.header {
+﻿
+form {
+    margin-bottom: 2rem;
+}
+
+.header {
     margin-top: 5vh;
 }
 
@@ -30,12 +35,6 @@
     border-radius: 0;
     box-sizing: border-box;
     min-height: calc(var(--default-font-size, 1.25rem) * 4);
-}
-
-#warp-content-textarea {
-    height: 0;
-    padding: 0;
-    visibility: hidden;
 }
 
 @media screen and (max-width: 768px) {

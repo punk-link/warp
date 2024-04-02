@@ -27,15 +27,16 @@
     <form method="post" class="form-vertical flex-column justify-between vh75 vw100">
         <div class="text-mode">
             <div class="form-group">
-                Textarea
+                <label for="warp-content-textarea">Type or paste text here</label>
+                <textarea id="warp-content-textarea" asp-for="TextContent"></textarea>
             </div>
         </div>
         <div class="advanced-mode">
         </div>
         <div class="button-bar flex-row-important align-center justify-around wrapped">
-            <div class="select-container flex-row-important align-center-important">
+            <div class="form-group select-container flex-row-important align-center-important">
                 <i class="icofont-duotone icofont-purge"></i>
-                <div class="form-group">
+                <div>
                     <label asp-for="SelectedExpirationPeriod"></label>
                     <select asp-for="SelectedExpirationPeriod" asp-items="IndexModel.ExpirationPeriodOptions" tabindex="4"></select>
                 </div>

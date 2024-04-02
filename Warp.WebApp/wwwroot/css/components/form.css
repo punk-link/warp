@@ -1,5 +1,5 @@
 ﻿.form-group {
-    margin: 1rem 0;
+    margin: 1rem 1.5rem;
 }
 
 .form-group label {
@@ -13,7 +13,7 @@
 
 @media screen and (max-width: 768px) {
     .form-group {
-        margin: .5rem 0;
+        margin: .5rem 1.5rem;
     }
 
         .form-group label {

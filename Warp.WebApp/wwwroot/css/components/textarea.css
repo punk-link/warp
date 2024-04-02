@@ -2,18 +2,18 @@
 
 textarea {
     align-items: flex-start;
-    border-color: var(--primary-color-100, #A762FF);
-    border-radius: 0.75rem;
-    display: flex;
-    flex-direction: column;
+    border: none;
+    border-bottom: 2px solid var(--primary-color-60, #C99EFF);
+    border-radius: 0;
+    box-sizing: border-box;
     font-family: var(--default-font-family, Montserrat);
     font-size: var(--biggest-font-size, 1.25rem);
     font-style: normal;
     font-weight: normal;
-    line-height: normal;
     gap: 0.375rem;
-    padding: 0.625rem 1.25rem 0.875rem 1.25rem;
-    width: auto;
+    line-height: normal;
+    min-height: var(--default-font-size, 1.25rem);
+    width: 100%;
 }
 
 textarea:active,
