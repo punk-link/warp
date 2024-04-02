@@ -17,7 +17,7 @@ namespace Warp.WebApp.Middlewares
             }
             catch (Exception e) when (e is TaskCanceledException || e is OperationCanceledException) 
             {
-                context.Response.StatusCode = StatusCodes.Status499ClientClosedRequest;          
+                context.Response.StatusCode = StatusCodes.Status504GatewayTimeout;          
             }
         }
 
