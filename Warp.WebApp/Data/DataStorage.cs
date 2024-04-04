@@ -15,8 +15,8 @@ public sealed class DataStorage : IDataStorage
     }
 
 
-    public Task<long> AddAndGetCounter(string key)
-        => _distributedStorage.AddAndGetCounter(key);
+    public async Task<long> AddAndGetCounter(string key, CancellationToken cancellationToken)
+        => await _distributedStorage.AddAndGetCounter(key, cancellationToken);
 
     public async ValueTask<bool> Contains<T>(string key)
     {

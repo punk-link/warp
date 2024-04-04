@@ -12,10 +12,16 @@ public sealed class KeyDbStorage : IDistributedStorage
     }
 
 
-    public Task<long> AddAndGetCounter(string key)
+    public async Task<long> AddAndGetCounter(string key, CancellationToken cancellationToken)
     {
         var db = GetDatabase<object>();
-        return db.StringIncrementAsync(key);
+        var redisTaskValue = db.StringIncrementAsync(key);
+        var completedTask = await Task.WhenAny(redisTaskValue, Task.Delay(Timeout.Infinite, cancellationToken));
+        if (completedTask == redisTaskValue)
+            return await redisTaskValue;
+        
+        cancellationToken.ThrowIfCancellationRequested();
+        return default;
     }
 
 
@@ -33,16 +39,17 @@ public sealed class KeyDbStorage : IDistributedStorage
     }
 
 
-    public async Task Set<T>(string key, T value, TimeSpan expiresIn, CancellationToken cancellationToken = default)
+    public async Task Set<T>(string key, T value, TimeSpan expiresIn, CancellationToken cancellationToken)
     {
         var db = GetDatabase<T>();
         var bytes = JsonSerializer.SerializeToUtf8Bytes(value);
-        await db.StringSetAsync(key, bytes, expiresIn);
+        var redisTask = db.StringSetAsync(key, bytes, expiresIn);
+        await Task.WhenAny(redisTask, Task.Delay(Timeout.Infinite, cancellationToken));
         cancellationToken.ThrowIfCancellationRequested();
     }
 
 
-    public async Task<T?> TryGet<T>(string key, CancellationToken cancellationToken = default)
+    public async Task<T?> TryGet<T>(string key, CancellationToken cancellationToken)
     {
         var db = GetDatabase<T>();
         var redisValueTask = db.StringGetAsync(key);

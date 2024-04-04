@@ -2,5 +2,5 @@
 
 public interface IViewCountService
 {
-    public Task<long> AddAndGet(Guid itemId);
+    public Task<long> AddAndGet(Guid itemId, CancellationToken cancellationToken);
 }

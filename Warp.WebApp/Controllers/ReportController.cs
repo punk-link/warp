@@ -15,7 +15,7 @@ public sealed class ReportController : BaseController
     
     
     [HttpPost("{id}")]
-    public async Task<IActionResult> Post([FromRoute] string id, CancellationToken cancellationToken)
+    public async Task<IActionResult> Post([FromRoute] string id, CancellationToken cancellationToken = default)
     {
         var decodedId = IdCoder.Decode(id);
         if (decodedId == Guid.Empty)

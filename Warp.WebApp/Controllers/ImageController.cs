@@ -18,7 +18,7 @@ public sealed class ImageController : BaseController
 
     [HttpGet("entry-id/{entryId}/image-id/{imageId}")]
     [OutputCache(Duration = 10 * 60, VaryByRouteValueNames = ["entryId", "imageId"])]
-    public async Task<IActionResult> Get([FromRoute] string entryId, [FromRoute] string imageId, CancellationToken cancellationToken)
+    public async Task<IActionResult> Get([FromRoute] string entryId, [FromRoute] string imageId, CancellationToken cancellationToken = default)
     {
         var decodedEntryId = IdCoder.Decode(entryId);
         if (decodedEntryId == Guid.Empty)
@@ -37,7 +37,7 @@ public sealed class ImageController : BaseController
     
 
     [HttpPost]
-    public async Task<IActionResult> Upload([FromForm] List<IFormFile> images, CancellationToken cancellationToken)
+    public async Task<IActionResult> Upload([FromForm] List<IFormFile> images, CancellationToken cancellationToken = default)
     {
         var imageContainers = await _imageService.Add(images, cancellationToken);
         var results = imageContainers.Select(x => new KeyValuePair<string, string>(x.Key, IdCoder.Encode(x.Value)))

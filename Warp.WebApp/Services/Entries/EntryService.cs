@@ -51,7 +51,7 @@ public sealed class EntryService : IEntryService
         if (entry.Equals(default))
             return ResultHelper.NotFound<EntryInfo>();
 
-        var viewCount = await _viewCountService.AddAndGet(id);
+        var viewCount = await _viewCountService.AddAndGet(id, cancellationToken);
         var imageIds = (await _imageService.Get(id, cancellationToken))
             .Select(image => image.Id)
             .ToList();

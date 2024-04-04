@@ -363,5 +363,3 @@ MigrationBackup/
 FodyWeavers.xsd
 /Warp.WebApp/appsettings.Local.json
 /data
-/Warp.WebApp/appsettings.json
-/Warp.WebApp/Properties/launchSettings.json

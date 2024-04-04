@@ -1,6 +1,4 @@
-﻿
-
-namespace Warp.WebApp.Middlewares
+﻿namespace Warp.WebApp.Middlewares
 {
     public class CancellationExceptionHandlerMiddleware
     {
@@ -17,6 +15,7 @@ namespace Warp.WebApp.Middlewares
             }
             catch (Exception e) when (e is TaskCanceledException || e is OperationCanceledException) 
             {
+                // TODO: add ProblemDetails support. See #20.
                 context.Response.StatusCode = StatusCodes.Status504GatewayTimeout;          
             }
         }
