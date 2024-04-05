@@ -26,7 +26,7 @@ public sealed class EntryService : IEntryService
         var entry = new Entry(Guid.NewGuid(), content, now, now + expiresIn);
 
         var validator = new EntryValidator();
-        var validationResult = await validator.ValidateAsync(entry);
+        var validationResult = await validator.ValidateAsync(entry, cancellationToken);
         if (!validationResult.IsValid)
             return validationResult.ToFailure<Guid>();
 
@@ -43,7 +43,7 @@ public sealed class EntryService : IEntryService
 
     public async Task<Result<EntryInfo, ProblemDetails>> Get(Guid id, CancellationToken cancellationToken)
     {
-        if (await _reportService.Contains(id))
+        if (await _reportService.Contains(id, cancellationToken))
             return ResultHelper.NotFound<EntryInfo>();
 
         var cacheKey = BuildCacheKey(id);
