@@ -12,10 +12,10 @@ public sealed class ReportService : IReportService
     }
 
 
-    public ValueTask<bool> Contains(Guid id)
+    public ValueTask<bool> Contains(Guid id, CancellationToken cancellationToken)
     {
         var cacheKey = GetCacheKey(in id);
-        return _dataStorage.Contains<Report>(cacheKey);
+        return _dataStorage.Contains<Report>(cacheKey, cancellationToken);
     }
 
 

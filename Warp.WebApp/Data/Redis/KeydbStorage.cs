@@ -1,5 +1,5 @@
-﻿using System.Text.Json;
-using StackExchange.Redis;
+﻿using StackExchange.Redis;
+using System.Text.Json;
 using Warp.WebApp.Models;
 
 namespace Warp.WebApp.Data.Redis;
@@ -15,22 +15,17 @@ public sealed class KeyDbStorage : IDistributedStorage
     public async Task<long> AddAndGetCounter(string key, CancellationToken cancellationToken)
     {
         var db = GetDatabase<object>();
-        var redisTaskValue = db.StringIncrementAsync(key);
-        var completedTask = await Task.WhenAny(redisTaskValue, Task.Delay(Timeout.Infinite, cancellationToken));
-        if (completedTask == redisTaskValue)
-            return await redisTaskValue;
-        
-        cancellationToken.ThrowIfCancellationRequested();
-        return default;
+        var redisTask = db.StringIncrementAsync(key);
+        return await ExecuteOrCancel(redisTask, cancellationToken);
     }
 
 
-    public Task<bool> Contains<T>(string key)
+    public async Task<bool> Contains<T>(string key, CancellationToken cancellationToken)
     {
         var db = GetDatabase<T>();
-        return db.KeyExistsAsync(key);
+        var redisTask = db.KeyExistsAsync(key);
+        return await ExecuteOrCancel(redisTask, cancellationToken);
     }
-
 
     public void Remove<T>(string key)
     {
@@ -44,29 +39,21 @@ public sealed class KeyDbStorage : IDistributedStorage
         var db = GetDatabase<T>();
         var bytes = JsonSerializer.SerializeToUtf8Bytes(value);
         var redisTask = db.StringSetAsync(key, bytes, expiresIn);
-        await Task.WhenAny(redisTask, Task.Delay(Timeout.Infinite, cancellationToken));
-        cancellationToken.ThrowIfCancellationRequested();
+        await ExecuteOrCancel(redisTask, cancellationToken);
     }
 
 
     public async Task<T?> TryGet<T>(string key, CancellationToken cancellationToken)
     {
         var db = GetDatabase<T>();
-        var redisValueTask = db.StringGetAsync(key);
+        var redisTask = db.StringGetAsync(key);
+        var completedTask = await ExecuteOrCancel(redisTask, cancellationToken);
 
-        var completedTask = await Task.WhenAny(redisValueTask, Task.Delay(Timeout.Infinite, cancellationToken));
-        if (completedTask == redisValueTask)
-        {
-            var redisValue = await redisValueTask;
-            if (!redisValue.HasValue)
-                return default;
+        if (!completedTask.HasValue)
+            return default;
 
-            var bytes = (byte[])redisValue!;
-            return JsonSerializer.Deserialize<T>(bytes)!;
-        }
-
-        cancellationToken.ThrowIfCancellationRequested();
-        return default;
+        var bytes = (byte[])completedTask!;
+        return JsonSerializer.Deserialize<T>(bytes)!;
     }
 
 
@@ -76,6 +63,15 @@ public sealed class KeyDbStorage : IDistributedStorage
         return _multiplexer.GetDatabase(dbIndex);
     }
 
+    private async Task<T?> ExecuteOrCancel<T>(Task<T?> task, CancellationToken cancellationToken)
+    {
+        var completedTask = await Task.WhenAny(task, Task.Delay(Timeout.Infinite, cancellationToken));
+        if (completedTask == task)
+            return await task;
+
+        cancellationToken.ThrowIfCancellationRequested();
+        return default;
+    }
 
     private static int ToDatabaseIndex<T>(T type)
         => type switch
