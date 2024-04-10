@@ -27,16 +27,6 @@ public sealed class KeyDbStorage : IDistributedStorage
         return await ExecuteOrCancel(redisTask, cancellationToken);
     }
 
-    private async Task<T?> ExecuteOrCancel<T>(Task<T?> task, CancellationToken cancellationToken)
-    {
-        var completedTask = await Task.WhenAny(task, Task.Delay(Timeout.Infinite, cancellationToken));
-        if (completedTask == task)
-            return await task;
-
-        cancellationToken.ThrowIfCancellationRequested();
-        return default;
-    }
-
     public void Remove<T>(string key)
     {
         var db = GetDatabase<T>();
@@ -73,6 +63,15 @@ public sealed class KeyDbStorage : IDistributedStorage
         return _multiplexer.GetDatabase(dbIndex);
     }
 
+    private async Task<T?> ExecuteOrCancel<T>(Task<T?> task, CancellationToken cancellationToken)
+    {
+        var completedTask = await Task.WhenAny(task, Task.Delay(Timeout.Infinite, cancellationToken));
+        if (completedTask == task)
+            return await task;
+
+        cancellationToken.ThrowIfCancellationRequested();
+        return default;
+    }
 
     private static int ToDatabaseIndex<T>(T type)
         => type switch
