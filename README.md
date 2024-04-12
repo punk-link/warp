@@ -27,6 +27,15 @@ Run the compose file inside the root directory. It sets up external dependencies
 Also you might need to override DB settings to run locally. Set up the _Redis_ section of your _appSettings.Local.json_.
 
 
+## Styles
+
+The project uses Sass to build its styles. To compile the styles:
+1. Install Sass `npm install --global sass`
+2. Install Yarn `npm install --global yarn`
+3. Go to the root project folder and update project dependencies `yarn upgrade`
+4. Go to _Warp.WebApp/Styles_ folder and execute the following command `sass --style compressed main.scss ../wwwroot/css/main.min.css`
+
+
 ## Project Icons
 
 The project uses these [icofont](https://icofont.com) glyphs:

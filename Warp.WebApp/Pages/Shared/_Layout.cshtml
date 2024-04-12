@@ -10,11 +10,14 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Krona%20One">
     <link rel="stylesheet" href="~/fonts/icofont/icofont.min.css">
     @RenderSection("Styles", required: false)
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true">
+    <!--link rel="stylesheet" href="~/css/site.css" asp-append-version="true"-->
+    <link rel="stylesheet" href="~/css/main.min.css" asp-append-version="true">
 </head>
 <body>
-    <main class="flex-column align-center justify-between vh100">
-        @RenderBody()
+    <main>
+        <div class="container">
+            @RenderBody()
+        </div>
     </main>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

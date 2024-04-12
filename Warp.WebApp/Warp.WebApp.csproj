@@ -50,6 +50,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Styles\" />
     <Folder Include="wwwroot\img\" />
   </ItemGroup>
 
