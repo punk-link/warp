@@ -26,7 +26,8 @@ builder.Services.AddRazorPages();
 builder.Services.AddControllers()
     .AddControllersAsServices();
 builder.Services.AddHealthChecks()
-    .AddCheck<ControllerResolveHealthCheck>(nameof(ControllerResolveHealthCheck));
+    .AddCheck<ControllerResolveHealthCheck>(nameof(ControllerResolveHealthCheck))
+    .AddCheck<RedisHealthCheck>(nameof(RedisHealthCheck));
 
 builder.Services.AddResponseCompression(options =>
 {
