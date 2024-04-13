@@ -25,6 +25,10 @@
     align-items: flex-end;
 }
 
+.align-content-baseline {
+    align-content: baseline;
+}
+
 .justify-around {
     justify-content: space-around;
 }

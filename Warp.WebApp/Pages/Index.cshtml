@@ -14,16 +14,17 @@
     <link rel="stylesheet" href="~/css/pages/index.css" asp-append-version="true">
 }
 
-<div class="flex-row-important justify-between header vw100">
-    <div class="flex-row">
-        <partial name="Shared/Components/Logo"/>
+<div class="row align-items-baseline">
+    <div class="col-6">
+        <partial name="Shared/Components/Logo" />
     </div>
-    <div class="flex-row-important">
-        <partial name="Shared/Components/TabButton" model="@Model.TextModeButtonModel" view-data="ViewData" />
-        <partial name="Shared/Components/TabButton" model="@Model.AdvancedModeButtonModel" view-data="ViewData" />
+    <div class="col-6 d-flex justify-content-end">
+        <button id="mode-text" class="nav nav-tab active" tabindex="1">Text</button>
+        <button id="mode-advanced" class="nav nav-tab" tabindex="2" disabled>Advanced</button>
     </div>
 </div>
-<section>
+
+<!--section>
     <form method="post" class="form-vertical flex-column justify-between vh75 vw100">
         <div class="text-mode">
             <div class="form-group">
@@ -48,7 +49,6 @@
     </form>
 </section>
 
-@*
 <section class="warp-input-container flex-container flex-direction-column vh100">
     <div class="upload-gallery flex-container wrapped justify-evenly"></div>
     <div class="drop-area">
@@ -79,8 +79,7 @@
     </div>
 </section>
 <partial name="Shared/Promo" />
-<partial name="Shared/Footer" />
-*@
+<partial name="Shared/Footer" /-->
 
 <script type ="module">
     import { addIndexEvents } from '/js/index.js';

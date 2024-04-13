@@ -1,1 +1,15 @@
 @import "../../node_modules/bootstrap/scss/bootstrap-grid.scss";
+
+@import "colors.scss";
+@import "nav.scss";
+
+.logo {
+    a {
+        font-family: Krona One;
+        font-size: 1.875rem;
+        font-weight: normal;
+        letter-spacing: 0;
+        text-decoration: line-through;
+        text-transform: lowercase;
+    }
+}
