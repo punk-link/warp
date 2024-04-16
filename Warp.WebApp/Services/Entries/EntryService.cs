@@ -23,7 +23,7 @@ public sealed class EntryService : IEntryService
     public async Task<Result<Guid, ProblemDetails>> Add(string content, TimeSpan expiresIn, List<Guid> imageIds, CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;
-        var entry = new Entry(Guid.NewGuid(), content, now, now + expiresIn);
+        var entry = new Entry(Guid.NewGuid(), OpenGraphService.GetDescription(TextFormatter.Format(content)), now, now + expiresIn);
 
         var validator = new EntryValidator();
         var validationResult = await validator.ValidateAsync(entry, cancellationToken);

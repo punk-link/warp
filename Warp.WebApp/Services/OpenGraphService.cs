@@ -12,14 +12,13 @@ public static partial class OpenGraphService
 
     public static OpenGraphModel GetModel(string description, List<string>? urls = null)
     {
-        var processedDescription = GetDescription(description);
         var processedUrl = GetImageUrl(urls);
 
-        return new OpenGraphModel(Title, processedDescription, processedUrl);
+        return new OpenGraphModel(Title, description, processedUrl);
     }
 
 
-    private static string GetDescription(string description)
+    public static string GetDescription(string description)
     {
         const int maxDescriptionLength = 200;
 
