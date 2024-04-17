@@ -63,16 +63,6 @@ url("./fonts/icofont.woff") format("woff");
   content: "\eab5";
 }
 
-.icofont-duotone.icofont-purge:before
-{
-  content: "\13b95";
-}
-
-.icofont-duotone.icofont-purge:after
-{
-  content: "\13b94";
-}
-
 .icofont-align-left:before
 {
   content: "\ede0";
@@ -86,6 +76,26 @@ url("./fonts/icofont.woff") format("woff");
 .icofont-pencil-alt-2:before
 {
   content: "\ebf6";
+}
+
+.icofont-bin:before
+{
+  content: "\eebb";
+}
+
+.icofont-loop:before
+{
+  content: "\ef80";
+}
+
+.icofont-worried:before
+{
+  content: "\eb07";
+}
+
+.icofont-exclamation-tringle:before
+{
+  content: "\ef1b";
 }
 
 [class^="icofont-"].icofont-duotone,

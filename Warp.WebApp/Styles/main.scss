@@ -1,13 +1,37 @@
 @import "../../node_modules/bootstrap/scss/bootstrap-grid.scss";
 
+@import "buttons.scss";
 @import "colors.scss";
+@import "form.scss";
 @import "nav.scss";
+@import "texts.scss";
+
+
+root {
+    color: $text-100;
+}
+
+
+a {
+    text-decoration: none;
+}
+
+
+.countdown {
+    color: $text-100;
+    font-family: $font-family-sans-serif;
+    font-size: 1.875rem;
+    font-weight: $font-weight-bolder;
+    letter-spacing: 0;
+}
+
 
 .logo {
     a {
-        font-family: Krona One;
+        color: $primary;
+        font-family: $headings-font-family;
         font-size: 1.875rem;
-        font-weight: normal;
+        font-weight: $headings-font-weight;
         letter-spacing: 0;
         text-decoration: line-through;
         text-transform: lowercase;

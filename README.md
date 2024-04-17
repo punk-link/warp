@@ -41,12 +41,15 @@ The project uses Sass to build its styles. To compile the styles:
 The project uses these [icofont](https://icofont.com) glyphs:
 
 - align-left
+- bin
 - clock
 - close
+- exclamation-tringle
 - eye
 - hill-sunny
 - link
+- loop
 - pencil-alt-2
 - plus
-- purge
 - simple-left
+- worried
