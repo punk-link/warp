@@ -17,6 +17,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="wwwroot\js\modules\components\textarea.js" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="robots.txt" />
   </ItemGroup>
 
@@ -40,6 +44,7 @@
   <ItemGroup>
     <_ContentIncludedByDefault Remove="Pages\Entry.cshtml" />
     <_ContentIncludedByDefault Remove="wwwroot\js\index.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\js\modules\components\textarea.js" />
   </ItemGroup>
 
   <ItemGroup>
@@ -52,6 +57,10 @@
   <ItemGroup>
     <Folder Include="Styles\" />
     <Folder Include="wwwroot\img\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\js\modules\components\textarea.js" />
   </ItemGroup>
 
   <ItemGroup>

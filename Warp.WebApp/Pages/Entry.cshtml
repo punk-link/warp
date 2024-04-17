@@ -9,45 +9,33 @@
     <partial name="Shared/Components/OpenGraph" model="@Model.OpenGraphModel" />
 }
 
-@section Styles {
-    <link rel="stylesheet" href="~/css/pages/entry.css" asp-append-version="true">
-}
+<div class="row align-items-baseline">
+    <div class="col-12">
+        <partial name="Shared/Components/Logo" />
+    </div>
+</div>
 
-<partial name="Shared/Header" />
-<section class="warp-container flex-container flex-direction-column vh100">
-    <div class="expiration-message-container flex-container flex-direction-row justify-space-between">
-        <div>
-            @Model.ExpiresIn
+<section>
+    <div class="row">
+        <div class="row align-items-end">
+            <div class="col-6">
+                <i class="icofont-eye me-2 text-light"></i>@Model.ViewCount
+            </div>
+            <div class="col-6 d-flex flex-column">
+                <div class="text-right countdown"></div>
+                <div class="text-right text-light">the entry expires in</div>
+            </div>
         </div>
-        <div>
-            @Model.ViewCount
-        </div>
-    </div>
-    <div class="gallery flex-container flex-direction-column align-center">
-        @foreach (var url in Model.ImageUrls)
-        {
-            <figure>
-                <img src=@url />
-            </figure>
-        }
-    </div>
-    <article class="warp-content-container">
-        @Html.Raw(Model.TextContent)
-    </article>
-    <div class="button-bar flex-container justify-flex-end">
-        <partial name="Shared/Components/SecondaryButton" model="@Model.CopyButtonModel" />
-        <partial name="Shared/Components/SecondaryButton" model="@Model.CopySilentButtonModel" />
-        <partial name="Shared/Components/SecondaryButton" model="@Model.ReportButtonModel" />
+        <article class="warp-content-container">
+            @Html.Raw(Model.TextContent)
+        </article>
     </div>
 </section>
-<partial name="Shared/Promo" />
-<partial name="Shared/Footer" />
-<partial name="Shared/Components/ModalWindow" model="@Model.ModalWindowModel" />
 
 <script type="module">
     import { addEntryEvents } from '/js/entry.js';
 
     document.addEventListener('DOMContentLoaded', () => {
-        addEntryEvents('@Model.Id');
+        addEntryEvents('@Model.Id', '@Model.ExpiresIn');
     });
 </script>

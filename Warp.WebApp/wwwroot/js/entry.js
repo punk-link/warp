@@ -1,4 +1,5 @@
 import { attachModalAction, showModal } from './modules/components/modal-window.js';
+import { setCountdown } from './modules/countdown.js';
 
 
 function copyUrl(copyButton) {
@@ -24,12 +25,15 @@ async function report(id) {
 }
 
 
-export function addEntryEvents(entryId) {
-    let copyButton = document.getElementById('copy-url-button');
-    copyButton.onclick = () => copyUrl(copyButton);
+export function addEntryEvents(entryId, expirationDate) {
+    let countdownElement = document.getElementsByClassName('countdown')[0];
+    setCountdown(countdownElement, expirationDate);
 
-    attachModalAction(() => report(entryId));
+    //let copyButton = document.getElementById('copy-url-button');
+    //copyButton.onclick = () => copyUrl(copyButton);
 
-    let reportButton = document.getElementById('report-button');
-    reportButton.onclick = (e) => showModal(e);
+    //attachModalAction(() => report(entryId));
+
+    //let reportButton = document.getElementById('report-button');
+    //reportButton.onclick = (e) => showModal(e);
 }
