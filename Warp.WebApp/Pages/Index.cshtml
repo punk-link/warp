@@ -24,67 +24,37 @@
     </div>
 </div>
 
-<!--section>
-    <form method="post" class="form-vertical flex-column justify-between vh75 vw100">
-        <div class="text-mode">
-            <div class="form-group">
-                <label for="warp-content-textarea">Type or paste text here</label>
-                <textarea id="warp-content-textarea" asp-for="TextContent"></textarea>
+<section>
+    <form class="d-flex flex-column align-items-center" method="post">
+        <div id="text-mode" class="col-12 col-md-6 mb-5">
+            <div class="">
+                <label for="warp-text">Type or paste text here</label>
+                <textarea id="warp-text" asp-for="TextContent"></textarea>
             </div>
         </div>
-        <div class="advanced-mode">
-        </div>
-        <div class="button-bar flex-row-important align-center justify-around wrapped">
-            <div class="form-group select-container flex-row-important align-center-important">
-                <i class="icofont-duotone icofont-purge"></i>
-                <div>
-                    <label asp-for="SelectedExpirationPeriod"></label>
+        <div id="advanced-mode" class="d-none col-12 col-md-6 mb-5"></div>
+        <div class="d-flex justify-content-between col-12 col-md-6">
+            <div>
+                <label asp-for="SelectedExpirationPeriod"></label>
+                <div class="input-group">
+                    <span class="input-group-text primary">
+                        <i class="icofont-close"></i>
+                    </span>
                     <select asp-for="SelectedExpirationPeriod" asp-items="IndexModel.ExpirationPeriodOptions" tabindex="4"></select>
                 </div>
             </div>
             <div>
-                <button class="button-primary" type="submit" tabindex="5">Create</button>
+                <button id="create-button" class="btn btn-primary" tabindex="5" type="submit" disabled="true">Create</button>
             </div>
         </div>
     </form>
 </section>
 
-<section class="warp-input-container flex-container flex-direction-column vh100">
-    <div class="upload-gallery flex-container wrapped justify-evenly"></div>
-    <div class="drop-area">
-        <form method="post" class="form-vertical">
-            <div class="image-container form-group">
-                <p>Drag & drop photos here or <button id="upload-button" class="btn-secondary" type="button">browse</button></p>
-                <input type="file" id="file" class="file-input" multiple="multiple" accept="image/*">
-            </div>
-            <div class="form-group">
-                <div class="warp-content-textarea-container">
-                    <label for="warp-content-textarea">Type or paste text here</label>
-                    <div class="warp-content-textarea-span-container">
-                        <span id="warp-content-textarea-span" contenteditable tabindex="1"></span>
-                    </div>
-                    <textarea id="warp-content-textarea" asp-for="TextContent"></textarea>
-                </div>
-            </div>
-            <div class="button-bar flex-container">
-                <div class="form-group">
-                    <label asp-for="SelectedExpirationPeriod"></label>
-                    <select asp-for="SelectedExpirationPeriod" asp-items="IndexModel.ExpirationPeriodOptions" tabindex="2"></select>
-                </div>
-                <div>
-                    <button class="btn-primary" type="submit" tabindex="3">create</button>
-                </div>
-            </div>
-        </form>
-    </div>
-</section>
-<partial name="Shared/Promo" />
-<partial name="Shared/Footer" /-->
-
-<script type ="module">
+<script type="module">
     import { addIndexEvents } from '/js/index.js';
 
     document.addEventListener('DOMContentLoaded', () => {
         addIndexEvents();
     });
+
 </script>

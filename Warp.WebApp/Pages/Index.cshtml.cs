@@ -23,21 +23,6 @@ public class IndexModel : BasePageModel
     {
         OpenGraphModel = OpenGraphService.GetDefaultModel();
 
-        AdvancedModeButtonModel = new TabButtonModel
-        {
-            Id = "advanced-mode-button",
-            Caption = "Advanced",
-            IsDisabled = true,
-            TabIndex = -1
-        };
-
-        TextModeButtonModel = new TabButtonModel
-        {
-            Id = "text-mode-button",
-            Caption = "Text",
-            TabIndex = 1
-        };
-
         return Page();
     }
 
@@ -85,12 +70,7 @@ public class IndexModel : BasePageModel
             new SelectListItem("1 day", 5.ToString())
         ];
 
-    
-    public TabButtonModel AdvancedModeButtonModel { get; set; } = default!;
-
     public OpenGraphModel OpenGraphModel { get; set; } = default!;
-
-    public TabButtonModel TextModeButtonModel { get; set; } = default!;
     
         
     private readonly IEntryService _entryService;

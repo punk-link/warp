@@ -1,12 +1,25 @@
 import { applyFontScaling } from './modules/font-scaler.js';
 import { addDropAreaEvents, pasteImages } from './modules/image-processor.js';
-
+import { addTextareaEvents } from './modules/components/textarea.js';
+    
 
 function addPasteImageEventListener() {
     document.body.addEventListener('keydown', async function (e) {
     if (e.ctrlKey && (e.key === 'v' || e.key === 'V'))
         await pasteImages();
     });
+}
+
+
+function disableCreateButton() {
+    let sendButton = document.getElementById('create-button');
+    sendButton.disabled = true;
+}
+
+
+function enableCreateButton() {
+    let sendButton = document.getElementById('create-button');
+    sendButton.disabled = false;
 }
 
 
@@ -18,8 +31,19 @@ function overrideFormSubmitEvent(form, sourceSpan, targetTextbox) {
 
 
 export function addIndexEvents() {
-    let textModeButton = document.getElementById('text-mode-button');
+    addTextareaEvents();
+        
+    let textModeButton = document.getElementById('warp-text');
     textModeButton.classList.add('active');
+
+    let textModeTextarea = document.getElementById('warp-text');
+    textModeTextarea.addEventListener('input', () => {
+        if (textModeTextarea.value == '') {
+            disableCreateButton();
+        } else {
+            enableCreateButton();
+        }
+    }, false);
 
     //addPasteImageEventListener();
 
