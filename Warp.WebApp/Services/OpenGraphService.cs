@@ -23,7 +23,7 @@ public static partial class OpenGraphService
         const int maxDescriptionLength = 200;
 
         if (string.IsNullOrWhiteSpace(description))
-            return DefaultDescription;
+            return description;
 
         var decodedDescription = WebUtility.HtmlDecode(description);
         var descriptionWithoutTags = HtmlTagsExpression().Replace(maxDescriptionLength <= decodedDescription.Length 
