@@ -2,49 +2,44 @@
 @model ErrorModel
 @{
     ViewData["Title"] = $"Warp. {Model.Title}";
+    Layout = "_LayoutDark";
 }
 
 @section MetaTags {
     <meta name="robots" content="noindex, noarchive">
 }
 
-@section Styles {
-    <link rel="stylesheet" href="~/css/pages/error.css" asp-append-version="true">
-}
-
-<div class="grid-v-container grid-v-3 vh100">
-    <div class="grid-v-col-1"></div>
-    <section class="grid-v-col-2 secondary-grey-column">
-        <partial name="Shared/Components/Logo" />
-        <div class="error-code-container">
-            @Model.Status
-        </div>
-        <div class="error-message-container">
-            <p>@Model.Detail</p>
-            <div class="request-id">
-                @if (Model.ShowRequestId)
-                {
-                    <p>
-                        <strong>Request ID:</strong> <code>@Model.RequestId</code>
-                    </p>
-                }
-            </div>
-            <div class="error-list">
-                @if (Model.ShowErrors)
-                {
-                    <h3>Errors:</h3>
-                    <p>
-                        @foreach(var error in Model.Errors)
-                        {
-                            <p>
-                                <strong>@error.Code.</strong> @error.Message
-                            </p>
-                        }
-                    </p>
-                }
-            </div>
-        </div>
-    </section>
-    <div class="grid-v-col-3"></div>
+<div class="row align-items-baseline">
+    <div class="col-12 text-secondary">
+        <h1 class="logo">
+            <a class="text-lighter" asp-area="" asp-page="/Index">warp</a>
+        </h1>
+    </div>
 </div>
-<partial name="Shared/Footer" />
+
+<section>
+    <div class="error-code text-lighter">
+        @Model.Status
+    </div>
+    <div class="error-message text-body">
+        <p class="text-lighter mb-5">@Model.Detail</p>
+        <div class="request-id">
+        @if (Model.ShowRequestId)
+        {
+            <strong>Request ID:</strong> <code>@Model.RequestId</code>
+        }
+        </div>
+        <div class="error-list">
+        @if (Model.ShowErrors)
+        {
+            <h3 class="mb-3">Errors:</h3>
+            @foreach(var error in Model.Errors)
+            {
+                <p class="mb-2">
+                    <strong>@error.Code.</strong> @error.Message
+                </p>
+            }
+        }
+        </div>
+    </div>
+</section>

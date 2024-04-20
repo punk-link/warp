@@ -3,16 +3,12 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    @RenderSection("MetaTags", required: false)
     <title>@ViewData["Title"]</title>
-    <link rel="icon" type="image/x-icon" href="@Url.Content("~/favicon.ico")">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Krona%20One">
-    <link rel="stylesheet" href="~/fonts/icofont/icofont.min.css">
+    @RenderSection("MetaTags", required: false)
+    <partial name="_Head"/>
     @RenderSection("Styles", required: false)
-    <link rel="stylesheet" href="~/css/main.min.css" asp-append-version="true">
 </head>
-<body>
+<body class="m-0">
     <main>
         <div class="container">
             @RenderBody()
