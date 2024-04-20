@@ -10,13 +10,11 @@
     <partial name="Shared/Components/OpenGraph" model="@Model.OpenGraphModel" />
 }
 
-@section Styles {
-    <link rel="stylesheet" href="~/css/pages/index.css" asp-append-version="true">
-}
-
 <div class="row align-items-baseline">
     <div class="col-6">
-        <partial name="Shared/Components/Logo" />
+        <h1 class="logo">
+            <a class="text-primary" asp-area="" asp-page="/Index">warp</a>
+        </h1>
     </div>
     <div class="col-6 d-flex justify-content-end">
         <button id="mode-text" class="nav nav-tab active" tabindex="1">Text</button>
@@ -24,7 +22,7 @@
     </div>
 </div>
 
-<section>
+<section class="mb-5">
     <form class="d-flex flex-column align-items-center" method="post">
         <div id="text-mode" class="col-12 col-md-6 mb-5">
             <div class="">

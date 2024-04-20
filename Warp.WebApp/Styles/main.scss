@@ -3,6 +3,7 @@
 @import "buttons.scss";
 @import "colors.scss";
 @import "form.scss";
+@import "modal.scss";
 @import "nav.scss";
 @import "sizing.scss";
 @import "texts.scss";
@@ -17,6 +18,10 @@ root {
 
 a {
     text-decoration: none;
+}
+
+p {
+    font-family: $font-family-sans-serif;
 }
 
 .countdown {
@@ -51,6 +56,12 @@ a {
 
 .error-list p {
     font-size: $font-size-base;
+}
+
+.illustration-icon {
+    i {
+        font-size: 5 * $font-size-base;
+    }
 }
 
 .request-id {

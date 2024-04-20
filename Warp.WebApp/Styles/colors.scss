@@ -1,6 +1,7 @@
 @import "functions.scss";
 
 
+$danger-100: #FFA767;
 $primary-100: #A762FF;
 $secondary-100: #88D723;
 $text-100: #484848;
@@ -12,6 +13,7 @@ $secondary: $secondary-100;
 
 $theme-colors: (
     "body": $text-100,
+    "danger": $danger-100,
     "light":tint-color($text-100, 40),
     "lighter":tint-color($text-100, 80),
     "primary": $primary,

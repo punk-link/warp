@@ -10,12 +10,12 @@
 }
 
 <div class="row align-items-baseline">
-    <div class="col-12">
-        <partial name="Shared/Components/Logo" />
-    </div>
+    <h1 class="logo">
+        <a class="text-primary" asp-area="" asp-page="/Index">warp</a>
+    </h1>
 </div>
 
-<section>
+<section class="mb-5">
     <div class="row">
         <div class="row align-items-end">
             <div class="col-6">
@@ -26,11 +26,48 @@
                 <div class="text-right text-light">the entry expires in</div>
             </div>
         </div>
-        <article class="warp-content-container">
-            @Html.Raw(Model.TextContent)
-        </article>
+    </div>
+    <article class="warp-content-container mb-5">
+        @Html.Raw(Model.TextContent)
+    </article>
+    <div class="d-flex justify-content-between align-items-center col-12 offset-md-3 col-md-6">
+        <div>
+            <a class="btn btn-link" tabindex="1">
+                <i class="icofont-exclamation-tringle text-light"></i>
+            </a>
+        </div>
+        <div>
+            <button class="btn btn-light" tabindex="2" >Close</button>
+        </div>
+        <div>
+            <a class="btn btn-link" tabindex="3">
+                <i class="icofont-link text-light"></i>
+            </a>
+        </div>
     </div>
 </section>
+
+<div class="modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="d-flex flex-column align-items-center mb-3 text-danger illustration-icon">
+                    <i class="icofont-exclamation-tringle"></i>
+                </div>
+                <div class="offset-1 col-10 offset-md-3 col-md-6">
+                    <p>
+                        You are about to report this content. Use the feature in case of inappropriate content only. 
+                        This action restricts access to the content for all viewers. Are you sure?
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light">Cancel</button>
+                <button type="button" class="btn btn-primary">Report</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script type="module">
     import { addEntryEvents } from '/js/entry.js';

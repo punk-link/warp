@@ -1,0 +1,19 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    @RenderSection("MetaTags", required: false)
+    <partial name="_Head"/>
+    @RenderSection("Styles", required: false)
+</head>
+<body class="bg-light m-0">
+    <main class="min-vh-100">
+        <div class="container">
+            @RenderBody()
+        </div>
+    </main>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
