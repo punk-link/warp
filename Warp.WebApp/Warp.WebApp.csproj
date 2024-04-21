@@ -17,7 +17,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="wwwroot\js\modules\components\textarea.js" />
+    <Content Remove="wwwroot\js\components\textarea.js" />
+    <Content Remove="wwwroot\js\functions\copier.js" />
   </ItemGroup>
 
   <ItemGroup>
@@ -44,7 +45,8 @@
   <ItemGroup>
     <_ContentIncludedByDefault Remove="Pages\Entry.cshtml" />
     <_ContentIncludedByDefault Remove="wwwroot\js\index.js" />
-    <_ContentIncludedByDefault Remove="wwwroot\js\modules\components\textarea.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\js\components\textarea.js" />
+    <_ContentIncludedByDefault Remove="wwwroot\js\functions\copier.js" />
   </ItemGroup>
 
   <ItemGroup>
@@ -60,7 +62,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="wwwroot\js\modules\components\textarea.js" />
+    <None Include="wwwroot\js\components\textarea.js" />
+    <None Include="wwwroot\js\functions\copier.js" />
   </ItemGroup>
 
   <ItemGroup>
