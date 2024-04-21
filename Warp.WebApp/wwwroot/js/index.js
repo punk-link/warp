@@ -1,6 +1,4 @@
-import { applyFontScaling } from './modules/font-scaler.js';
 import { addDropAreaEvents, pasteImages } from './modules/image-processor.js';
-import { addTextareaEvents } from './modules/components/textarea.js';
     
 
 function addPasteImageEventListener() {
@@ -31,8 +29,6 @@ function overrideFormSubmitEvent(form, sourceSpan, targetTextbox) {
 
 
 export function addIndexEvents() {
-    addTextareaEvents();
-        
     let textModeButton = document.getElementById('warp-text');
     textModeButton.classList.add('active');
 
@@ -57,5 +53,4 @@ export function addIndexEvents() {
     //let warpContentSpan = document.getElementById('warp-content-textarea-span');
     
     //overrideFormSubmitEvent(warpContentForm, warpContentSpan, warpContentTextarea);
-    //applyFontScaling(warpContentSpan, 1000, 250, 6, 1.25, 0.05);
 }

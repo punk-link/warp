@@ -15,32 +15,44 @@ function getContentLength(element) {
 }
 
 
-function getScalingIntervals(lowerBound, step, numberOfSteps, maxFontSize, fontSizeStep) {
-    let initInterval = buildScalingInterval(0, lowerBound, maxFontSize);
+function getScalingIntervals(config) {
+    let initInterval = buildScalingInterval(0, config.lowerBound, config.maxFontSize);
         
     let results = [];
     results.push(initInterval);
 
-    let currentValue = lowerBound;
-    let currentSize = maxFontSize;
-    for (let i = 0; i < numberOfSteps; i++) {
-        let stepUpperBound = currentValue + step;
-        if (i + 1 == numberOfSteps) 
+    let currentValue = config.lowerBound;
+    let currentSize = config.maxFontSize;
+    for (let i = 0; i < config.numberOfSteps; i++) {
+        let stepUpperBound = currentValue + config.step;
+        if (i + 1 == config.numberOfSteps) 
             stepUpperBound = Number.MAX_SAFE_INTEGER;
             
         let interval = buildScalingInterval(currentValue, stepUpperBound, currentSize);
         results.push(interval);
 
-        currentValue = currentValue + step;
-        currentSize = currentSize - fontSizeStep;
+        currentValue = currentValue + config.step;
+        currentSize = currentSize - config.fontSizeStep;
     }
 
     return results;
 }
 
 
-export function applyFontScaling(element, lowerBound, step, numberOfSteps, maxFontSize, fontSizeStep) {
-    let scalingIntervals = getScalingIntervals(lowerBound, step, numberOfSteps, maxFontSize, fontSizeStep);
+export const FontScalerConfig = {
+    lowerBound: 1000,
+    step: 250,
+    numberOfSteps: 6,
+    maxFontSize: 1.25,
+    fontSizeStep: 0.05
+}
+
+
+export function applyFontScaling(element, config) {
+    if (config === undefined || config === null)
+        config = FontScalerConfig;
+
+    let scalingIntervals = getScalingIntervals(config);
     
     element.oninput = () => {
         let len = getContentLength(element);

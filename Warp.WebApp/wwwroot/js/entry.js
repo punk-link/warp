@@ -1,18 +1,5 @@
-import { attachModalAction, showModal } from './modules/components/modal-window.js';
-import { setCountdown } from './modules/countdown.js';
-
-
-function copyUrl(copyButton) {
-    try {
-        document.body.style.cursor = 'wait';
-        navigator.clipboard.writeText(window.location.href);
-
-        let copiedCaption = copyButton.getElementsByClassName('secondary-caption')[0];
-        copiedCaption.style.display = 'block';
-    } finally {
-        document.body.style.cursor = 'auto';
-    }
-}
+import Countdown from '/js/components/countdown.js';
+import { copyUrl } from '/js/functions/copier.js';
 
 
 async function report(id) {
@@ -27,13 +14,11 @@ async function report(id) {
 
 export function addEntryEvents(entryId, expirationDate) {
     let countdownElement = document.getElementsByClassName('countdown')[0];
-    setCountdown(countdownElement, expirationDate);
+    let countdown = new Countdown(countdownElement, expirationDate);
 
-    //let copyButton = document.getElementById('copy-url-button');
-    //copyButton.onclick = () => copyUrl(copyButton);
+    let copyButton = document.getElementById('copy-url-button');
+    copyButton.onclick = () => copyUrl();
 
-    //attachModalAction(() => report(entryId));
-
-    //let reportButton = document.getElementById('report-button');
-    //reportButton.onclick = (e) => showModal(e);
+    let reportButton = document.getElementById('report-button');
+    reportButton.onclick = async () => await report(entryId);
 }

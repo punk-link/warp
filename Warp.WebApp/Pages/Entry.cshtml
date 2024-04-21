@@ -9,6 +9,18 @@
     <partial name="Shared/Components/OpenGraph" model="@Model.OpenGraphModel" />
 }
 
+@section Scripts {
+    <script type="module" src="~/js/components/modal.js" defer></script>
+    <script type="module" defer>
+        import { addEntryEvents } from '/js/entry.js';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            addEntryEvents('@Model.Id', '@Model.ExpiresIn');
+        });
+    
+    </script>
+}
+
 <div class="row align-items-baseline">
     <h1 class="logo">
         <a class="text-primary" asp-area="" asp-page="/Index">warp</a>
@@ -32,7 +44,7 @@
     </article>
     <div class="d-flex justify-content-between align-items-center col-12 offset-md-3 col-md-6">
         <div>
-            <a class="btn btn-link" tabindex="1">
+            <a class="btn btn-link" data-toggle="modal" data-target="#report-modal" tabindex="1" type="button">
                 <i class="icofont-exclamation-tringle text-light"></i>
             </a>
         </div>
@@ -40,14 +52,14 @@
             <button class="btn btn-light" tabindex="2" >Close</button>
         </div>
         <div>
-            <a class="btn btn-link" tabindex="3">
+            <a id="copy-url-button" class="btn btn-link" tabindex="3" type="button">
                 <i class="icofont-link text-light"></i>
             </a>
         </div>
     </div>
 </section>
 
-<div class="modal">
+<div id="report-modal" class="modal fade">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-body">
@@ -62,17 +74,9 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-light">Cancel</button>
-                <button type="button" class="btn btn-primary">Report</button>
+                <button class="btn btn-light" data-dismiss="modal" tabindex="5" type="button">Cancel</button>
+                <button id="report-button" class="btn btn-primary" tabindex="4" type="button">Report</button>
             </div>
         </div>
     </div>
 </div>
-
-<script type="module">
-    import { addEntryEvents } from '/js/entry.js';
-
-    document.addEventListener('DOMContentLoaded', () => {
-        addEntryEvents('@Model.Id', '@Model.ExpiresIn');
-    });
-</script>

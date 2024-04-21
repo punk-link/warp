@@ -10,6 +10,17 @@
     <partial name="Shared/Components/OpenGraph" model="@Model.OpenGraphModel" />
 }
 
+@section Scripts {
+    <script type="module" src="~/js/components/textarea.js" defer></script>
+    <script type="module" defer>
+        import { addIndexEvents } from '/js/index.js';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            addIndexEvents();
+        });
+    </script>
+}
+
 <div class="row align-items-baseline">
     <div class="col-6">
         <h1 class="logo">
@@ -47,12 +58,3 @@
         </div>
     </form>
 </section>
-
-<script type="module">
-    import { addIndexEvents } from '/js/index.js';
-
-    document.addEventListener('DOMContentLoaded', () => {
-        addIndexEvents();
-    });
-
-</script>
