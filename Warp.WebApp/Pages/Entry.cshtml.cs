@@ -40,7 +40,7 @@ public class EntryModel : BasePageModel
         {
             Id = entryId;
             ExpiresIn = GetExpirationMessage(entryInfo.Entry.ExpiresAt);
-            TextContent = TextFormatter.Format(entryInfo.Entry.Content);
+            TextContent = entryInfo.Entry.Content;
 
             ViewCount = entryInfo.ViewCount;
             ImageUrls = BuildImageUrls(decodedId, entryInfo.ImageIds);
