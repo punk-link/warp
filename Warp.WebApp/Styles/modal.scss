@@ -2,9 +2,8 @@
 @import "functions.scss";
 @import "variables.scss";
 
+
 .modal {
-    //background-color: tint-color($text-100, 90);
-    //display: none;
     align-items: center;
     display: flex;
     flex-direction: column;
@@ -16,16 +15,28 @@
     top: 0;
     width: 100%;
     z-index: 100;
+
+    &.fade {
+        animation: fade 0.5s;
+        display: none;
+    }
+
+    &.show {
+        display: flex;
+    }
 }
+
 
 .modal-dialog {
     background-color: tint-color($text-100, 90);
     min-width: 50vw;
 }
 
+
 .modal-content {
     padding: 2 * $spacer;
 }
+
 
 .modal-body {
     display: flex;
@@ -34,6 +45,7 @@
     padding: 1 * $spacer;
     margin-bottom: 1 * $spacer;
 }
+
 
 .modal-footer {
     display: flex;
