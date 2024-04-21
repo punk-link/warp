@@ -4,6 +4,9 @@ public static class TextFormatter
 {
     public static string Format(string text)
     {
+        if (string.IsNullOrWhiteSpace(text))
+            return text;
+
         var paragraphs = text.ReplaceLineEndings()
             .Split(Environment.NewLine);
 
