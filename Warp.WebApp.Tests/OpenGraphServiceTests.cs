@@ -34,7 +34,7 @@ public class OpenGraphServiceTests
     [InlineData("This is a very long description that exceeds the maximum length allowed, it should be trimmed and end with ellipsis, very long description that exceeds the maximum length allowed, it should be trimmed and end with ellipsis.", "This is a very long description that exceeds the maximum length allowed, it should be trimmed and end with ellipsis, very long description that exceeds the maximum length allowed, it should be...")]
     public void GetModel_WithLongDescription_ReturnsModelWithProcessedDescription(string description, string expected)
     {
-        var result = OpenGraphService.GetModel(description);
+        var result = OpenGraphService.GetModel(OpenGraphService.GetDescription(description));
 
         Assert.NotNull(result);
         Assert.Equal(expected, result.Description);
