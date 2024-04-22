@@ -12,19 +12,18 @@ public static partial class OpenGraphService
 
     public static OpenGraphModel GetModel(string description, List<string>? urls = null)
     {
-        var processedDescription = GetDescription(description);
         var processedUrl = GetImageUrl(urls);
 
-        return new OpenGraphModel(Title, processedDescription, processedUrl);
+        return new OpenGraphModel(Title, description, processedUrl);
     }
 
 
-    private static string GetDescription(string description)
+    public static string GetDescription(string description)
     {
         const int maxDescriptionLength = 200;
 
         if (string.IsNullOrWhiteSpace(description))
-            return DefaultDescription;
+            return description;
 
         var decodedDescription = WebUtility.HtmlDecode(description);
         var descriptionWithoutTags = HtmlTagsExpression().Replace(maxDescriptionLength <= decodedDescription.Length 

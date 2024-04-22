@@ -1,5 +1,5 @@
-﻿using System.Text.Json;
-using StackExchange.Redis;
+﻿using StackExchange.Redis;
+using System.Text.Json;
 using Warp.WebApp.Models;
 
 namespace Warp.WebApp.Data.Redis;
@@ -12,19 +12,20 @@ public sealed class KeyDbStorage : IDistributedStorage
     }
 
 
-    public Task<long> AddAndGetCounter(string key)
+    public async Task<long> AddAndGetCounter(string key, CancellationToken cancellationToken)
     {
         var db = GetDatabase<object>();
-        return db.StringIncrementAsync(key);
+        var redisTask = db.StringIncrementAsync(key);
+        return await ExecuteOrCancel(redisTask, cancellationToken);
     }
 
 
-    public Task<bool> Contains<T>(string key)
+    public async Task<bool> Contains<T>(string key, CancellationToken cancellationToken)
     {
         var db = GetDatabase<T>();
-        return db.KeyExistsAsync(key);
+        var redisTask = db.KeyExistsAsync(key);
+        return await ExecuteOrCancel(redisTask, cancellationToken);
     }
-
 
     public void Remove<T>(string key)
     {
@@ -33,22 +34,25 @@ public sealed class KeyDbStorage : IDistributedStorage
     }
 
 
-    public async Task Set<T>(string key, T value, TimeSpan expiresIn)
+    public async Task Set<T>(string key, T value, TimeSpan expiresIn, CancellationToken cancellationToken)
     {
         var db = GetDatabase<T>();
         var bytes = JsonSerializer.SerializeToUtf8Bytes(value);
-        await db.StringSetAsync(key, bytes, expiresIn);
+        var redisTask = db.StringSetAsync(key, bytes, expiresIn);
+        await ExecuteOrCancel(redisTask, cancellationToken);
     }
 
 
-    public async Task<T?> TryGet<T>(string key)
+    public async Task<T?> TryGet<T>(string key, CancellationToken cancellationToken)
     {
         var db = GetDatabase<T>();
-        var redisValue = await db.StringGetAsync(key);
-        if (!redisValue.HasValue)
+        var redisTask = db.StringGetAsync(key);
+        var completedTask = await ExecuteOrCancel(redisTask, cancellationToken);
+
+        if (!completedTask.HasValue)
             return default;
 
-        var bytes = (byte[])redisValue!;
+        var bytes = (byte[])completedTask!;
         return JsonSerializer.Deserialize<T>(bytes)!;
     }
 
@@ -59,6 +63,15 @@ public sealed class KeyDbStorage : IDistributedStorage
         return _multiplexer.GetDatabase(dbIndex);
     }
 
+    private async Task<T?> ExecuteOrCancel<T>(Task<T?> task, CancellationToken cancellationToken)
+    {
+        var completedTask = await Task.WhenAny(task, Task.Delay(Timeout.Infinite, cancellationToken));
+        if (completedTask == task)
+            return await task;
+
+        cancellationToken.ThrowIfCancellationRequested();
+        return default;
+    }
 
     private static int ToDatabaseIndex<T>(T type)
         => type switch

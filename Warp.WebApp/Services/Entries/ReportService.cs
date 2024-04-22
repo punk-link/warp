@@ -12,17 +12,17 @@ public sealed class ReportService : IReportService
     }
 
 
-    public ValueTask<bool> Contains(Guid id)
+    public ValueTask<bool> Contains(Guid id, CancellationToken cancellationToken)
     {
         var cacheKey = GetCacheKey(in id);
-        return _dataStorage.Contains<Report>(cacheKey);
+        return _dataStorage.Contains<Report>(cacheKey, cancellationToken);
     }
 
 
-    public Task MarkAsReported(Guid id)
+    public Task MarkAsReported(Guid id, CancellationToken cancellationToken)
     {
         var cacheKey = GetCacheKey(in id);
-        return _dataStorage.Set(cacheKey, new Report(id), CachingConstants.MaxSupportedCachingTime);
+        return _dataStorage.Set(cacheKey, new Report(id), CachingConstants.MaxSupportedCachingTime, cancellationToken);
     }
 
 

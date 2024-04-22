@@ -4,10 +4,28 @@
       "commandName": "Project",
       "launchBrowser": false,
       "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "https://localhost:8001;http://localhost:8000"
+    },
+    "kirillta": {
+      "commandName": "Project",
+      "launchBrowser": false,
+      "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Local"
       },
       "dotnetRunMessages": true,
       "applicationUrl": "https://localhost:8001;http://localhost:8000"
+    },
+    "skirata": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Local"
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "https://localhost:54357;http://localhost:54358"
     }
   },
   "$schema": "http://json.schemastore.org/launchsettings.json"
