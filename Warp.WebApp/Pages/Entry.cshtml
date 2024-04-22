@@ -9,45 +9,74 @@
     <partial name="Shared/Components/OpenGraph" model="@Model.OpenGraphModel" />
 }
 
-@section Styles {
-    <link rel="stylesheet" href="~/css/pages/entry.css" asp-append-version="true">
+@section Scripts {
+    <script type="module" src="~/js/components/modal.js" defer></script>
+    <script type="module" defer>
+        import { addEntryEvents } from '/js/entry.js';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            addEntryEvents('@Model.Id', '@Model.ExpiresIn');
+        });
+    
+    </script>
 }
 
-<partial name="Shared/Header" />
-<section class="warp-container flex-container flex-direction-column vh100">
-    <div class="expiration-message-container flex-container flex-direction-row justify-space-between">
-        <div>
-            @Model.ExpiresIn
-        </div>
-        <div>
-            @Model.ViewCount
+<div class="row align-items-baseline">
+    <h1 class="logo">
+        <a class="text-primary" asp-area="" asp-page="/Index">warp</a>
+    </h1>
+</div>
+
+<section class="mb-5">
+    <div class="row">
+        <div class="row align-items-end">
+            <div class="col-6">
+                <i class="icofont-eye me-2 text-light"></i>@Model.ViewCount
+            </div>
+            <div class="col-6 d-flex flex-column">
+                <div class="text-right countdown"></div>
+                <div class="text-right text-light">the entry expires in</div>
+            </div>
         </div>
     </div>
-    <div class="gallery flex-container flex-direction-column align-center">
-        @foreach (var url in Model.ImageUrls)
-        {
-            <figure>
-                <img src=@url />
-            </figure>
-        }
-    </div>
-    <article class="warp-content-container">
+    <article class="warp-content-container mb-5">
         @Html.Raw(Model.TextContent)
     </article>
-    <div class="button-bar flex-container justify-flex-end">
-        <partial name="Shared/Components/SecondaryButton" model="@Model.CopyButtonModel" />
-        <partial name="Shared/Components/SecondaryButton" model="@Model.CopySilentButtonModel" />
-        <partial name="Shared/Components/SecondaryButton" model="@Model.ReportButtonModel" />
+    <div class="d-flex justify-content-between align-items-center col-12 offset-md-3 col-md-6">
+        <div>
+            <a class="btn btn-link" data-toggle="modal" data-target="#report-modal" tabindex="1" type="button">
+                <i class="icofont-exclamation-tringle text-light"></i>
+            </a>
+        </div>
+        <div>
+            <button class="btn btn-light" tabindex="2" >Close</button>
+        </div>
+        <div>
+            <a id="copy-url-button" class="btn btn-link" tabindex="3" type="button">
+                <i class="icofont-link text-light"></i>
+            </a>
+        </div>
     </div>
 </section>
-<partial name="Shared/Promo" />
-<partial name="Shared/Footer" />
-<partial name="Shared/Components/ModalWindow" model="@Model.ModalWindowModel" />
 
-<script type="module">
-    import { addEntryEvents } from '/js/entry.js';
-
-    document.addEventListener('DOMContentLoaded', () => {
-        addEntryEvents('@Model.Id');
-    });
-</script>
+<div id="report-modal" class="modal fade">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="d-flex flex-column align-items-center mb-3 text-danger illustration-icon">
+                    <i class="icofont-exclamation-tringle"></i>
+                </div>
+                <div class="offset-1 col-10 offset-md-3 col-md-6">
+                    <p>
+                        You are about to report this content. Use the feature in case of inappropriate content only. 
+                        This action restricts access to the content for all viewers. Are you sure?
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-light" data-dismiss="modal" tabindex="5" type="button">Cancel</button>
+                <button id="report-button" class="btn btn-primary" tabindex="4" type="button">Report</button>
+            </div>
+        </div>
+    </div>
+</div>

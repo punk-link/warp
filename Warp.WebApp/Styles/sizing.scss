@@ -1,0 +1,71 @@
+$theme-sizes: ( 
+    "25": 25%, 
+    "50": 50%, 
+    "75": 75%, 
+    "100": 100%,
+    "auto": auto
+);
+
+
+$theme-sizes-dimensionless: ( 
+    "25": 25, 
+    "50": 50, 
+    "75": 75, 
+    "100": 100
+);
+
+
+@each $size, $value in $theme-sizes {
+    .h-#{$size} {
+        height: #{$value};
+    }
+}
+
+
+@each $size, $value in $theme-sizes {
+    .mh-#{$size} {
+        max-height: #{$value};
+    }
+}
+
+
+@each $size, $value in $theme-sizes-dimensionless {
+    .vh-#{$size} {
+        height: #{$value}vh;
+    }
+}
+
+
+@each $size, $value in $theme-sizes-dimensionless {
+    .min-vh-#{$size} {
+        min-height: #{$value}vh;
+    }
+}
+
+
+@each $size, $value in $theme-sizes {
+    .w-#{$size} {
+        width: #{$value};
+    }
+}
+
+
+@each $size, $value in $theme-sizes {
+    .mw-#{$size} {
+        max-width: #{$value};
+    }
+}
+
+
+@each $size, $value in $theme-sizes-dimensionless {
+    .vw-#{$size} {
+        width: #{$value}vw;
+    }
+}
+
+
+@each $size, $value in $theme-sizes-dimensionless {
+    .min-vw-#{$size} {
+        min-width: #{$value}vw;
+    }
+}

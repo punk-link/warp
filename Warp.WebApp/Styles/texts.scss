@@ -1,0 +1,18 @@
+@import "colors.scss";
+
+
+.text-center {
+    text-align: center;
+}
+
+
+.text-right {
+    text-align: right;
+}
+
+
+@each $color, $value in $theme-colors {
+    .text-#{$color} {
+        color: $value;
+    }
+}

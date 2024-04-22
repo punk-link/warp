@@ -22,6 +22,7 @@ public class IndexModel : BasePageModel
     public IActionResult OnGet()
     {
         OpenGraphModel = OpenGraphService.GetDefaultModel();
+
         return Page();
     }
 
@@ -68,7 +69,6 @@ public class IndexModel : BasePageModel
             new SelectListItem("8 hours", 4.ToString()),
             new SelectListItem("1 day", 5.ToString())
         ];
-
 
     public OpenGraphModel OpenGraphModel { get; set; } = default!;
     

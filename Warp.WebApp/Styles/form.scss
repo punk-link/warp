@@ -1,0 +1,80 @@
+@import "colors.scss";
+@import "fonts.scss";
+@import "functions.scss";
+@import "variables.scss";
+
+%no-outline-variant {
+    outline: none;
+}
+
+
+form {
+    label {
+        color: tint-color($text-100, 40);
+        font-family: $font-family-sans-serif;
+        font-size: $font-size-sm;
+        font-weight: $font-weight-normal;
+        letter-spacing: .015rem;
+        display: block;
+        padding-left: .25 * $spacer;
+        margin-bottom: .25 * $spacer;
+    }
+
+    select {
+        background: none;
+        border: none;
+        color: $primary;
+        cursor: pointer;
+        text-align: start;
+        font-family: $font-family-sans-serif;
+        font-size: $input-font-size;
+        font-style: normal;
+        font-weight: $font-weight-bold;
+        line-height: $input-line-height;
+
+        &:focus {
+            @extend %no-outline-variant;
+        }
+    }
+
+    option {
+        @extend %no-outline-variant;
+        border: none;
+        box-shadow: none;
+    }
+
+    textarea {
+        border: none;
+        border-bottom: 2px solid $primary;
+        border-radius: 0;
+        box-sizing: border-box;
+        font-family: $font-family-sans-serif;
+        font-size: $input-font-size;
+        font-style: normal;
+        font-weight: $font-weight-normal;
+        line-height: $input-line-height;
+        width: 100%;
+
+        &:active,
+        &:focus {
+            @extend %no-outline-variant;
+            border-color: shade-color($primary, 20);
+        }
+    }
+}
+
+.input-group {
+    display: flex;
+    align-items: stretch;
+}
+
+.input-group-text {
+    display: flex;
+    align-items: center;
+    padding-right: .25 * $spacer;
+    font-size: $input-font-size; // Match inputs
+    font-weight: $font-weight-normal;
+    line-height: $input-line-height;
+    text-align: center;
+    white-space: nowrap;
+}
