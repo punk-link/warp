@@ -20,7 +20,7 @@
     border-radius: $radius;
     cursor: pointer;
     display: inline-flex;
-    flex-direction: column;
+    flex-direction: row;
     flex-shrink: 0;
     gap: .625 * $spacer;
     justify-content: flex-start;

@@ -2,7 +2,7 @@ import { applyFontScaling } from '../functions/font-scaler.js';
 import { remToPx } from '../functions/utils.js';
 
 
-const DEFAULT_HEIGHT_REMS = 3;
+const DEFAULT_HEIGHT_REMS = 2;
 
 
 function adjustInputHeight(textarea) {

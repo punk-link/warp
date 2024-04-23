@@ -18,28 +18,34 @@
 </div>
 
 <section class="mb-5">
-    <div class="error-code text-lighter">
+    <div>
+        <a class="btn btn-link align-items-center ps-0 text-white" asp-area="" asp-page="/Index">
+            <i class="icofont-simple-left"></i>Create Entry
+        </a>
+    </div>
+    <div class="error-code text-white">
         @Model.Status
     </div>
     <div class="error-message text-body">
-        <p class="text-lighter mb-5">@Model.Detail</p>
+        <p class="text-white mt-0 mb-5">@Model.Detail</p>
         <div class="request-id">
-        @if (Model.ShowRequestId)
-        {
-            <strong>Request ID:</strong> <code>@Model.RequestId</code>
-        }
+            @if (Model.ShowRequestId)
+            {
+                <strong>Request ID:</strong>
+                <code>@Model.RequestId</code>
+            }
         </div>
         <div class="error-list">
-        @if (Model.ShowErrors)
-        {
-            <h3 class="mb-3">Errors:</h3>
-            @foreach(var error in Model.Errors)
+            @if (Model.ShowErrors)
             {
-                <p class="mb-2">
-                    <strong>@error.Code.</strong> @error.Message
-                </p>
+                <h3 class="mb-3">Errors:</h3>
+                @foreach (var error in Model.Errors)
+                {
+                    <p class="mb-2">
+                        <strong>@error.Code.</strong> @error.Message
+                    </p>
+                }
             }
-        }
         </div>
     </div>
 </section>

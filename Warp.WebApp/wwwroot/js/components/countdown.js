@@ -20,7 +20,7 @@
 
     #buildDisplayDigits(hours, minutes, seconds) {
         if (hours < 0 || minutes < 0 || seconds < 0) 
-            return '<span class="text-light">00:00:00<span>';
+            return '<span class="text-lighter">00:00:00<span>';
 
         let timeString = `${this.#pad(hours)}:${this.#pad(minutes)}:${this.#pad(seconds)}`;
         let valuableIndex = this.#getValuableIndex(timeString);
@@ -28,7 +28,7 @@
         let valuableText = timeString.substring(valuableIndex);
         valuableText = valuableText.replace(/:/g, '<span class="text-secondary">:</span>');
 
-        return `<span class="text-light">${timeString.substring(0, valuableIndex)}</span>${valuableText}`;
+        return `<span class="text-lighter">${timeString.substring(0, valuableIndex)}</span>${valuableText}`;
     }
 
 

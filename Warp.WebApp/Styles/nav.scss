@@ -16,7 +16,8 @@
     font-family: $font-family-sans-serif;
     font-size: $font-size-lg;
     font-weight: $font-weight-bold;
-    margin: $spacer .5 * $spacer;
+    margin: $spacer $spacer;
+    padding: 0;
     text-transform: lowercase;
 
     &:active,

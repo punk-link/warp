@@ -78,3 +78,66 @@ form {
     text-align: center;
     white-space: nowrap;
 }
+
+$transition-base: all .2s ease-in-out !default;
+$enable-transitions: true !default;
+$enable-reduced-motion: true !default;
+
+$form-floating-transition: opacity .1s ease-in-out, transform .1s ease-in-out !default;
+
+
+@mixin transition($transition...) {
+    @if length($transition) == 0 {
+        $transition: $transition-base;
+    }
+
+    @if length($transition) > 1 {
+        @each $value in $transition {
+            @if $value == null or $value == none {
+                @warn "The keyword 'none' or 'null' must be used as a single argument.";
+            }
+        }
+    }
+
+    @if $enable-transitions {
+        @if nth($transition, 1) != null {
+            transition: $transition;
+        }
+
+        @if $enable-reduced-motion and nth($transition, 1) != null and nth($transition, 1) != none {
+            @media (prefers-reduced-motion: reduce) {
+                transition: none;
+            }
+        }
+    }
+}
+
+
+.form-floating {
+    position: relative;
+
+
+    .form-control {
+        height: 3.5 * $spacer;
+        min-height: 3.5 * $spacer;
+        line-height: 1.25 * $spacer;
+    }
+
+
+    label {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 2;
+        height: 100%;
+        padding: .75 * $spacer 1 * $spacer;
+        overflow: hidden;
+        text-align: start;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        pointer-events: none;
+        border: 1px solid transparent; // Required for aligning label's text with the input as it affects inner box model
+        transform-origin: 0 0;
+        @include transition($form-floating-transition);
+    }
+}
