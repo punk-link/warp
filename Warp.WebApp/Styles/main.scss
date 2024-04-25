@@ -20,6 +20,10 @@ a {
     text-decoration: none;
 }
 
+div {
+    font-family: $font-family-sans-serif;
+}
+
 p {
     font-family: $font-family-sans-serif;
 }
@@ -28,7 +32,7 @@ p {
     color: $text-100;
     font-family: $font-family-sans-serif;
     font-size: 1.875rem;
-    font-weight: $font-weight-bolder;
+    font-weight: $font-weight-semibold;
     letter-spacing: 0;
 }
 

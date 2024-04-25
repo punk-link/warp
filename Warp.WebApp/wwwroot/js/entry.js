@@ -19,6 +19,9 @@ export function addEntryEvents(entryId, expirationDate) {
     let copyButton = document.getElementById('copy-url-button');
     copyButton.onclick = () => copyUrl();
 
+    let pageCloseButton = document.getElementById('page-close-button');
+    pageCloseButton.onclick = () => location.href = '/';
+
     let reportButton = document.getElementById('report-button');
     reportButton.onclick = async () => await report(entryId);
 }
