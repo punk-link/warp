@@ -21,3 +21,17 @@ $line-height-lg: 2 !default;
 
 $input-font-size: $font-size-lg;
 $input-line-height: $line-height-base;
+
+$font-sizes: (
+    1: $font-size-base * 1.5,
+    2: $font-size-lg,
+    3: $font-size-base,
+    4: $font-size-sm,
+    5: $font-size-base * .75
+);
+
+@each $key, $value in $font-sizes {
+    .fs-#{$key} {
+        font-size: $value;
+    }
+}

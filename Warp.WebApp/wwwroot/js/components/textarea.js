@@ -19,7 +19,7 @@ function setInitialHeight(textarea) {
     else 
         targetHeight = textarea.scrollHeight;
 
-    textarea.setAttribute('style', 'height:' + (targetHeight) + 'px;overflow-y:hidden;');
+    textarea.setAttribute('style', 'height:' + (targetHeight + 8) + 'px;overflow-y:hidden;');
 }
 
 

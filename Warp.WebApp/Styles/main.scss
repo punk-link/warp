@@ -71,3 +71,8 @@ p {
 .request-id {
     font-size: $font-size-base;
 }
+
+.sticky-bottom {
+    position: sticky;
+    bottom: 0;
+}
