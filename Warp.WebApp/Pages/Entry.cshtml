@@ -39,10 +39,10 @@
             </div>
         </div>
     </div>
-    <article class="warp-content-container my-5">
+    <article class="min-vh-75 my-5">
         @Html.Raw(Model.TextContent)
     </article>
-    <div class="d-flex justify-content-between align-items-center col-12 offset-md-3 col-md-6 sticky-bottom bg-white p-3">
+    <div class="d-flex justify-content-between align-items-center col-12 offset-md-3 col-md-6 sticky-bottom bg-transparent p-3">
         <div>
             <a class="btn btn-link" data-toggle="modal" data-target="#report-modal" tabindex="1" type="button" title="Report">
                 <i class="icofont-exclamation-tringle text-danger"></i>
@@ -80,3 +80,5 @@
         </div>
     </div>
 </div>
+
+<partial name="Shared/Footer" />

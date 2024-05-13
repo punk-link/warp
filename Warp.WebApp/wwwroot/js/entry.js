@@ -1,5 +1,6 @@
 import Countdown from '/js/components/countdown.js';
 import { copyUrl } from '/js/functions/copier.js';
+import { repositionBackgroundImage } from '/js/functions/image-positioner.js';
 
 
 async function report(id) {
@@ -13,6 +14,9 @@ async function report(id) {
 
 
 export function addEntryEvents(entryId, expirationDate) {
+    let backgroundImageContainer = document.getElementById('roaming-image');
+    repositionBackgroundImage(backgroundImageContainer);
+
     let countdownElement = document.getElementsByClassName('countdown')[0];
     let countdown = new Countdown(countdownElement, expirationDate);
 
