@@ -1,12 +1,24 @@
-﻿<footer class="footer-grid grid-v-container grid-v-3">
-    <div class="grid-v-col-1">
-        <div class="grid-v-container grid-v-2">
-            <div class="grid-v-col-1"></div>
-            <div class="grid-v-col-2 nav-block flex-container flex-direction-column justify-flex-end">
-                <partial name="Shared/NavBlock" />
-            </div>
+﻿<footer class="mb-5">
+    <div id="roaming-image" class="background-image-container d-none">
+        <div>
+            <img src="~/img/warp.svg" alt="background illustration">
         </div>
     </div>
-    <div class="grid-v-col-2"></div>
-    <div class="grid-v-col-3"></div>
+    <h1 class="logo text-lighter hs-1 mb-1">
+        warp
+    </h1>
+    <p class="hs-2 text-body mt-1">
+        <strong>
+            snap, share <wbr>and say goodbye <br>
+        </strong>
+        share the moments instantly, knowing they'll disappear in no time
+    </p>
+    <nav class="text-light fs-5">
+        <a asp-page="/Index">home</a> |
+        <a asp-page="/Privacy">privacy</a> |
+        <a href="https://github.com/punk-link/warp">sources</a>
+    </nav>
+    <p class="text-light fs-5">
+        © synononym.fans 2024 | all rights reserved
+    </p>
 </footer>

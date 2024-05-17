@@ -19,11 +19,15 @@
 
 
     #buildDisplayDigits(hours, minutes, seconds) {
-        if (hours < 0 || minutes < 0 || seconds < 0) 
-            return '<span class="text-lighter">00:00:00<span>';
+        const emptyCountdown = '<span class="text-lighter">00:00:00<span>';
+        
+        if (hours <= 0 && minutes <= 0 && seconds <= 0) 
+            return emptyCountdown;
 
         let timeString = `${this.#pad(hours)}:${this.#pad(minutes)}:${this.#pad(seconds)}`;
         let valuableIndex = this.#getValuableIndex(timeString);
+        if (valuableIndex === 0) 
+            return emptyCountdown;
 
         let valuableText = timeString.substring(valuableIndex);
         valuableText = valuableText.replace(/:/g, '<span class="text-secondary">:</span>');

@@ -1,4 +1,5 @@
 import { addDropAreaEvents, pasteImages } from './modules/image-processor.js';
+import { repositionBackgroundImage } from '/js/functions/image-positioner.js';
     
 
 function addPasteImageEventListener() {
@@ -29,6 +30,9 @@ function overrideFormSubmitEvent(form, sourceSpan, targetTextbox) {
 
 
 export function addIndexEvents() {
+    let backgroundImageContainer = document.getElementById('roaming-image');
+    repositionBackgroundImage(backgroundImageContainer);
+
     let textModeButton = document.getElementById('warp-text');
     textModeButton.classList.add('active');
 

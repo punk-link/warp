@@ -18,6 +18,7 @@ form {
         display: block;
         padding-left: .25 * $spacer;
         margin-bottom: .25 * $spacer;
+        text-transform: lowercase;
     }
 
     select {
@@ -60,6 +61,21 @@ form {
             @extend %no-outline-variant;
             border-color: shade-color($primary, 20);
         }
+
+        &:placeholder-shown + label {
+            cursor: text;
+            max-width: 66.66%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transform-origin: left bottom;
+            transform: translate(0, 2.125rem) scale(1.5);
+        }
+    }
+
+    label, textarea {
+        transition: all 0.2s;
+        touch-action: manipulation;
     }
 }
 

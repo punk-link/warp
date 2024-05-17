@@ -7,6 +7,8 @@ $font-size-base: 1rem !default;
 $font-size-sm: $font-size-base * .875 !default;
 $font-size-lg: $font-size-base * 1.25 !default;
 
+$heading-font-size-base: 2rem !default;
+
 $font-weight-lighter: lighter !default;
 $font-weight-light: 300 !default;
 $font-weight-normal: 400 !default;
@@ -21,3 +23,31 @@ $line-height-lg: 2 !default;
 
 $input-font-size: $font-size-lg;
 $input-line-height: $line-height-base;
+
+$font-sizes: (
+    1: $font-size-base * 1.5,
+    2: $font-size-lg,
+    3: $font-size-base,
+    4: $font-size-sm,
+    5: $font-size-base * .75
+);
+
+@each $key, $value in $font-sizes {
+    .fs-#{$key} {
+        font-size: $value;
+    }
+}
+
+$heading-font-sizes: (
+    1: $heading-font-size-base * 1.5,
+    2: $heading-font-size-base * 1.25,
+    3: $heading-font-size-base,
+    4: $heading-font-size-base * .85,
+    5: $heading-font-size-base * .75
+);
+
+@each $key, $value in $heading-font-sizes {
+    .hs-#{$key} {
+        font-size: $value;
+    }
+}

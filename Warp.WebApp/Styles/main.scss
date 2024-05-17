@@ -1,5 +1,6 @@
 @import "../../node_modules/bootstrap/scss/bootstrap-grid.scss";
 
+@import "animations.scss";
 @import "buttons.scss";
 @import "colors.scss";
 @import "form.scss";
@@ -28,6 +29,25 @@ p {
     font-family: $font-family-sans-serif;
 }
 
+.background-image-container {
+    height: 0;
+    left: 50vw;
+    position: fixed;
+    top: 60vh;
+    width: 0;
+    z-index: -1;
+
+    div {
+        height: 75vh;
+        position: absolute;
+
+        img {
+            filter: invert(97%) sepia(3%) saturate(2195%) hue-rotate(344deg) brightness(106%) contrast(102%);
+            animation: fade-in 3s ease-in-out;
+        }
+    }
+}
+
 .countdown {
     color: $text-100;
     font-family: $font-family-sans-serif;
@@ -38,6 +58,12 @@ p {
 
 
 .logo {
+    font-family: $headings-font-family;
+    font-weight: $headings-font-weight;
+    letter-spacing: 0;
+    text-decoration: line-through;
+    text-transform: lowercase;
+
     a {
         font-family: $headings-font-family;
         font-size: 1.875rem;
@@ -70,4 +96,9 @@ p {
 
 .request-id {
     font-size: $font-size-base;
+}
+
+.sticky-bottom {
+    position: sticky;
+    bottom: 0;
 }
