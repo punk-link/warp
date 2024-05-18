@@ -54,7 +54,7 @@ let defaultScalingIntervals = getScalingIntervals(FontScalerConfig);
 export function applyFontScaling(element, config) {
     let scalingIntervals = defaultScalingIntervals;
     if (config !== undefined && config !== null)
-        scalingIntervals = getScalingIntervals(FontScalerConfig);
+        scalingIntervals = getScalingIntervals(config);
     
     element.oninput = () => {
         let len = getContentLength(element);
