@@ -26,11 +26,11 @@ function setInitialHeight(textarea) {
 
 document.addEventListener('DOMContentLoaded', () => {
     let textareas = document.getElementsByTagName('textarea');
-    for(let textarea of textareas) {
+    for (let textarea of textareas) {
+        applyFontScaling(textarea);
         setInitialHeight(textarea);
 
         textarea.addEventListener('input', function () {
-            applyFontScaling(textarea);
             adjustInputHeight(textarea);
         }, false);
     }

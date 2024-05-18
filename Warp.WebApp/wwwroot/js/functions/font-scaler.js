@@ -48,11 +48,13 @@ export const FontScalerConfig = {
 }
 
 
-export function applyFontScaling(element, config) {
-    if (config === undefined || config === null)
-        config = FontScalerConfig;
+let defaultScalingIntervals = getScalingIntervals(FontScalerConfig);
 
-    let scalingIntervals = getScalingIntervals(config);
+
+export function applyFontScaling(element, config) {
+    let scalingIntervals = defaultScalingIntervals;
+    if (config !== undefined && config !== null)
+        scalingIntervals = getScalingIntervals(FontScalerConfig);
     
     element.oninput = () => {
         let len = getContentLength(element);
