@@ -1,0 +1,55 @@
+﻿@page "/preview/{id}"
+@model Warp.WebApp.Pages.PreviewModel
+@{
+    ViewData["Title"] = "Warp. Share the moments instantly, knowing they'll disappear in no time.";
+}
+
+@section MetaTags {
+    <meta name="robots" content="noindex, noarchive">
+    <partial name="Shared/Components/OpenGraph" model="@Model.OpenGraphModel" />
+}
+
+@section Scripts {
+    <script type="module" src="~/js/components/modal.js" defer></script>
+    <script type="module" defer>
+        import { addEntryEvents } from '/js/entry.js';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            addEntryEvents('@Model.Id', '@Model.ExpiresIn');
+        });
+
+    </script>
+}
+
+<div class="row align-items-baseline px-3">
+    <h1 class="logo">
+        <a class="text-primary" asp-area="" asp-page="/Index">warp</a>
+    </h1>
+</div>
+
+<section class="px-3 mb-5">
+    <div class="row">
+        <div class="row align-items-end">
+            <div class="col-6 d-flex flex-column">
+                <div class="text-right countdown"></div>
+                <div class="text-right text-light fs-4">the entry expires in</div>
+            </div>
+        </div>
+    </div>
+    <article class="min-vh-75 my-5">
+        @Html.Raw(Model.TextContent)
+    </article>
+    <div class="d-flex justify-content-between align-items-center col-12 offset-md-3 col-md-6 sticky-bottom bg-transparent p-3">
+        <div>
+            <button id="page-close-button" class="btn btn-light" tabindex="2">Delete</button>
+        </div>
+        <div>
+            <button id="page-close-button" class="btn btn-light" tabindex="2">Edit</button>
+        </div>
+        <div>
+            <button id="page-close-button" class="btn btn-light" tabindex="2">Copy page</button>
+        </div>
+    </div>
+</section>
+
+<partial name="Shared/Footer" />

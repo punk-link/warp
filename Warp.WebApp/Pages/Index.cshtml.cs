@@ -31,10 +31,16 @@ public class IndexModel : BasePageModel
     {
         var expiresIn = GetExpirationPeriod(SelectedExpirationPeriod);
         var (_, isFailure, id, problemDetails) = await _entryService.Add(TextContent, expiresIn, ImageIds, cancellationToken);
-        
+
+        var authCookieName = "AuthCookie";
+        var authCookieValue = Guid.NewGuid().ToString();
+        var cookieOptions = new CookieOptions();
+        cookieOptions.Expires = DateTime.Now + expiresIn;
+        Response.Cookies.Append(authCookieName, authCookieValue, cookieOptions);
+
         return isFailure 
             ? RedirectToError(problemDetails) 
-            : RedirectToPage("./Entry", new { id = IdCoder.Encode(id) });
+            : RedirectToPage("./Preview", new { id = IdCoder.Encode(id) });
     }
 
 
