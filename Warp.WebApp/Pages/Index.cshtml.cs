@@ -1,8 +1,13 @@
-using System.ComponentModel;
 using CSharpFunctionalExtensions;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.OutputCaching;
+using System.ComponentModel;
+using System.Security.Claims;
+using Warp.WebApp.Helpers;
+using Warp.WebApp.Models;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Entries;
@@ -19,11 +24,33 @@ public class IndexModel : BasePageModel
 
 
     [OutputCache(Duration = 3600)]
-    public IActionResult OnGet()
+    public async Task<IActionResult> OnGet(string? id, CancellationToken cancellationToken)
     {
-        OpenGraphModel = OpenGraphService.GetDefaultModel();
+        if (!string.IsNullOrEmpty(id))
+        {
+            var decodedId = IdCoder.Decode(id);
+            if (decodedId == Guid.Empty)
+                return RedirectToError(ProblemDetailsHelper.Create("Can't decode a provided ID."));
 
+            if (this.HttpContext.User.Claims.FirstOrDefault(x => x.ValueType == ClaimTypes.UserData && x.Value == decodedId.ToString()) != null)
+            {
+                var (_, isFailure, entry, problemDetails) = await _entryService.Get(decodedId, cancellationToken);
+                if (isFailure)
+                    return RedirectToError(problemDetails);
+                BuildModel(id, entry);
+                return Page();
+            }
+        }
+
+        OpenGraphModel = OpenGraphService.GetDefaultModel();
         return Page();
+
+
+        void BuildModel(string entryId, EntryInfo entryInfo)
+        {
+            TextContent = entryInfo.Entry.Content;
+            ImageIds = entryInfo.ImageIds;
+        }
     }
 
 
@@ -32,15 +59,23 @@ public class IndexModel : BasePageModel
         var expiresIn = GetExpirationPeriod(SelectedExpirationPeriod);
         var (_, isFailure, id, problemDetails) = await _entryService.Add(TextContent, expiresIn, ImageIds, cancellationToken);
 
-        var authCookieName = "AuthCookie";
-        var authCookieValue = Guid.NewGuid().ToString();
-        var cookieOptions = new CookieOptions();
-        cookieOptions.Expires = DateTime.Now + expiresIn;
-        Response.Cookies.Append(authCookieName, authCookieValue, cookieOptions);
+        if (isFailure)
+            return RedirectToError(problemDetails);
+        else
+        {
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.UserData, id.ToString())
+            };
+            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+            await Response.HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, new AuthenticationProperties
+            {
+                IsPersistent = true
+            });
 
-        return isFailure 
-            ? RedirectToError(problemDetails) 
-            : RedirectToPage("./Preview", new { id = IdCoder.Encode(id) });
+            return RedirectToPage("./Preview", new { id = IdCoder.Encode(id) });
+        }
     }
 
 
@@ -55,7 +90,6 @@ public class IndexModel : BasePageModel
             _ => new TimeSpan(0, 5, 0)
         };
 
-
     [BindProperty]
     public List<Guid> ImageIds { get; set; } = [];
 
@@ -65,7 +99,7 @@ public class IndexModel : BasePageModel
 
     [BindProperty]
     public string TextContent { get; set; } = string.Empty;
-    
+
     public static List<SelectListItem> ExpirationPeriodOptions
         =>
         [
@@ -77,7 +111,7 @@ public class IndexModel : BasePageModel
         ];
 
     public OpenGraphModel OpenGraphModel { get; set; } = default!;
-    
-        
+
+
     private readonly IEntryService _entryService;
 }

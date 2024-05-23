@@ -1,3 +1,7 @@
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.ResponseCompression;
 using Warp.WebApp.Data;
 using Warp.WebApp.Data.Redis;
@@ -39,6 +43,11 @@ builder.Services.AddResponseCompression(options =>
 builder.Services.AddResponseCaching();
 builder.Services.AddOutputCache();
 
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
+builder.Services.AddAuthorization();
+
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopmentOrLocal())
@@ -59,6 +68,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
