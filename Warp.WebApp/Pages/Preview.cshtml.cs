@@ -1,4 +1,5 @@
 using CSharpFunctionalExtensions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Warp.WebApp.Helpers;
@@ -9,6 +10,7 @@ using Warp.WebApp.Services.Entries;
 
 namespace Warp.WebApp.Pages
 {
+    [Authorize]
     public class PreviewModel : BasePageModel
     {
         public PreviewModel(ILoggerFactory loggerFactory, IEntryService previewEntryService) : base(loggerFactory)
