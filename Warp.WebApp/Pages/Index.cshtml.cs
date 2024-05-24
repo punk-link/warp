@@ -35,12 +35,13 @@ public class IndexModel : BasePageModel
             if (decodedId == Guid.Empty)
                 return RedirectToError(ProblemDetailsHelper.Create("Can't decode a provided ID."));
 
-            if (this.HttpContext.User.Claims.FirstOrDefault(x => x.ValueType == ClaimTypes.UserData && x.Value == decodedId.ToString()) != null)
+            if (this.HttpContext.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.UserData && x.Value == decodedId.ToString()) != null)
             {
                 var (_, isFailure, entry, problemDetails) = await _entryService.Get(decodedId, cancellationToken);
                 if (isFailure)
                     return RedirectToError(problemDetails);
                 BuildModel(id, entry);
+                AddOpenGraphModel();
                 return Page();
             }
         }
@@ -55,6 +56,11 @@ public class IndexModel : BasePageModel
             TextContent = entryInfo.Entry.Content;
             ImageIds = entryInfo.ImageIds;
         }
+
+        void AddOpenGraphModel()
+        {
+            OpenGraphModel = OpenGraphService.GetModel(TextContent);//, ImageUrls);
+        }
     }
 
 
@@ -67,17 +73,20 @@ public class IndexModel : BasePageModel
             return RedirectToError(problemDetails);
         else
         {
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.UserData, id.ToString())
-            };
+            List<Claim> claims = null;
+
+            if (this.HttpContext.User.Claims.Any())
+                claims = this.HttpContext.User.Claims.ToList();
+            else
+                claims = new List<Claim>();
+
+            claims.Add(new Claim(ClaimTypes.UserData, id.ToString()));
             var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
             await Response.HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, new AuthenticationProperties
             {
                 IsPersistent = true
             });
-
             return RedirectToPage("./Preview", new { id = IdCoder.Encode(id) });
         }
     }
