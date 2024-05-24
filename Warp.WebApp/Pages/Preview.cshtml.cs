@@ -1,7 +1,6 @@
 using CSharpFunctionalExtensions;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Security.Claims;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
 using Warp.WebApp.Pages.Shared.Components;
@@ -10,7 +9,6 @@ using Warp.WebApp.Services.Entries;
 
 namespace Warp.WebApp.Pages
 {
-    [Authorize]
     public class PreviewModel : BasePageModel
     {
         public PreviewModel(ILoggerFactory loggerFactory, IEntryService previewEntryService) : base(loggerFactory)
@@ -23,6 +21,9 @@ namespace Warp.WebApp.Pages
             var decodedId = IdCoder.Decode(id);
             if (decodedId == Guid.Empty)
                 return RedirectToError(ProblemDetailsHelper.Create("Can't decode a provided ID."));
+
+            if (this.HttpContext.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.UserData && x.Value == decodedId.ToString()) == null)
+                return RedirectToError(ProblemDetailsHelper.Create("Can`t open preview page cause of no permission."));
 
             var (_, isFailure, entry, problemDetails) = await _entryService.Get(decodedId, cancellationToken);
             if (isFailure)
@@ -49,6 +50,16 @@ namespace Warp.WebApp.Pages
                 OpenGraphModel = OpenGraphService.GetModel(TextContent, ImageUrls);
             }
         }
+
+        public IActionResult OnPostEdit(string id)
+        {
+            return RedirectToPage("./Index", new { id });
+        }
+
+        //public async Task<IActionResult> OnPostDelete(CancellationToken cancellationToken)
+        //{
+
+        //}
 
 
         private static List<string> BuildImageUrls(Guid id, List<Guid> imageIds)

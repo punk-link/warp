@@ -23,7 +23,7 @@
 
 <div class="row align-items-baseline px-3">
     <h1 class="logo">
-        <a class="text-primary" asp-area="" asp-page="/Index">warp</a>
+        <a class="text-primary" asp-area="" asp-page="./Index">warp</a>
     </h1>
 </div>
 
@@ -41,10 +41,14 @@
     </article>
     <div class="d-flex justify-content-between align-items-center col-12 offset-md-3 col-md-6 sticky-bottom bg-transparent p-3">
         <div>
-            <button id="page-close-button" class="btn btn-light" tabindex="2">Delete</button>
+            <form method="post" asp-page-handler="delete">
+                <button id="page-close-button" class="btn btn-light" tabindex="2">Delete</button>
+            </form>
         </div>
         <div>
-            <button id="page-close-button" class="btn btn-light" tabindex="2">Edit</button>
+            <form method="post" asp-page-handler="edit" asp-route-id="@Model.Id">
+                <button class="btn btn-light">Edit</button>
+            </form>
         </div>
         <div>
             <button id="page-close-button" class="btn btn-light" tabindex="2">Copy page</button>
