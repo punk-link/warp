@@ -1,6 +1,11 @@
 ﻿@page
+@model Warp.WebApp.Pages.PrivacyModel
 @{
     ViewData["Title"] = "Warp. Privacy Policy";
+}
+
+@section Analytics {
+        <partial name="Shared/Components/Analytics" model="@Model.AnalyticsModel" />
 }
 
 @section MetaTags {
