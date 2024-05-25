@@ -27,10 +27,10 @@ public sealed class DataStorage : IDataStorage
     }
 
 
-    public void Remove<T>(string key)
+    public async Task Remove<T>(string key, CancellationToken cancellationToken)
     {
         _memoryCache.Remove(key);
-        _distributedStorage.Remove<T>(key);
+        await _distributedStorage.Remove<T>(key, cancellationToken);
     }
 
 

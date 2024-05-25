@@ -1,4 +1,5 @@
 using CSharpFunctionalExtensions;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Warp.WebApp.Helpers;
@@ -56,10 +57,25 @@ namespace Warp.WebApp.Pages
             return RedirectToPage("./Index", new { id });
         }
 
-        //public async Task<IActionResult> OnPostDelete(CancellationToken cancellationToken)
-        //{
+        public async Task<IActionResult> OnPostDelete(string id, CancellationToken cancellationToken)
+        {
+            var decodedId = IdCoder.Decode(id);
+            if (decodedId == Guid.Empty)
+                return RedirectToError(ProblemDetailsHelper.Create("Can't decode a provided ID."));
 
-        //}
+            var (_, isFailure, _, problemDetails) = await _entryService.Delete(decodedId, cancellationToken);
+
+            if (isFailure)
+                return RedirectToError(problemDetails);
+
+            //var claims = HttpContext.User.Claims.ToList();
+            //var claim = claims.FirstOrDefault(x => x.Type == ClaimTypes.UserData && x.Value == decodedId.ToString());
+
+            //if (claim != null)
+                await Response.HttpContext.SignOutAsync();
+
+            return RedirectToPage("./Index");
+        }
 
 
         private static List<string> BuildImageUrls(Guid id, List<Guid> imageIds)
