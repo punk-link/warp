@@ -61,6 +61,16 @@ public sealed class EntryService : IEntryService
         return Result.Success<EntryInfo, ProblemDetails>(new EntryInfo(entry, viewCount, imageIds));
     }
 
+    public async Task<Result<DummyObject, ProblemDetails>> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        if (await _reportService.Contains(id, cancellationToken))
+            return ResultHelper.NotFound<DummyObject>();
+
+        var cacheKey = BuildCacheKey(id);
+        await _dataStorage.Remove<EntryInfo>(cacheKey, cancellationToken);
+        return Result.Success<DummyObject, ProblemDetails>(DummyObject.Empty);
+    }
+
 
     private static string BuildCacheKey(Guid id)
         => $"{nameof(Entry)}::{id}";

@@ -49,7 +49,7 @@ public class ImageService : IImageService
         foreach (var imageInfo in imageInfos)
         {
             var entryCacheKey = BuildEntryCacheKey(imageInfo.Id);
-            _dataStorage.Remove<List<ImageInfo>>(entryCacheKey);
+            await _dataStorage.Remove<List<ImageInfo>>(entryCacheKey, cancellationToken);
         }
     }
 

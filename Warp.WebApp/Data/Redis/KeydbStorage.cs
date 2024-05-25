@@ -27,10 +27,11 @@ public sealed class KeyDbStorage : IDistributedStorage
         return await ExecuteOrCancel(redisTask, cancellationToken);
     }
 
-    public void Remove<T>(string key)
+    public async Task Remove<T>(string key, CancellationToken cancellationToken)
     {
         var db = GetDatabase<T>();
-        db.StringGetDelete(key, CommandFlags.FireAndForget);
+        var redisTask = db.StringGetDeleteAsync(key, CommandFlags.FireAndForget);
+        await ExecuteOrCancel(redisTask, cancellationToken);
     }
 
 

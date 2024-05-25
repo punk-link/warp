@@ -41,7 +41,7 @@
     </article>
     <div class="d-flex justify-content-between align-items-center col-12 offset-md-3 col-md-6 sticky-bottom bg-transparent p-3">
         <div>
-            <form method="post" asp-page-handler="delete">
+            <form method="post" asp-page-handler="delete" asp-route-id="@Model.Id">
                 <button id="page-close-button" class="btn btn-light" tabindex="2">Delete</button>
             </form>
         </div>
@@ -51,7 +51,9 @@
             </form>
         </div>
         <div>
-            <button id="page-close-button" class="btn btn-light" tabindex="2">Copy page</button>
+            <form method="post" asp-page-handler="edit" asp-route-id="@Model.Id">
+                <button id="page-close-button" class="btn btn-light" tabindex="2">Copy page</button>
+            </form>
         </div>
     </div>
 </section>
