@@ -8,6 +8,7 @@ public class AnalyticsModel : PageModel
     public AnalyticsModel(AnalyticsOptions options)
     {
         GTag = options.GoogleGTag;
+        YandexMetrikaNumber = options.YandexMetrikaNumber;
     }
 
 
@@ -17,4 +18,5 @@ public class AnalyticsModel : PageModel
 
 
     public string GTag { get; init; }
+    public string YandexMetrikaNumber { get; init; }
 }
