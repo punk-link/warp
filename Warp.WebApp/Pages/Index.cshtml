@@ -4,6 +4,10 @@
     ViewData["Title"] = "Warp. Share the moments instantly, knowing they'll disappear in no time.";
 }
 
+@section Analytics {
+    <partial name="Shared/Components/Analytics" model="@Model.AnalyticsModel" />
+}
+
 @section MetaTags {
     <meta name="description" content= "Warp allows you to share short-lived massages and media with your friends, family and colleagues.">
     <meta name="robots" content="all">
