@@ -20,7 +20,7 @@ public sealed class EntryService : IEntryService
     }
 
 
-    public async Task<Result<Guid, ProblemDetails>> Add(string content, TimeSpan expiresIn, List<Guid> imageIds, CancellationToken cancellationToken)
+    public async Task<Result<Guid, ProblemDetails>> Add(Guid userId, string content, TimeSpan expiresIn, List<Guid> imageIds, CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;
         var formattedText = TextFormatter.Format(content);
@@ -60,6 +60,7 @@ public sealed class EntryService : IEntryService
 
         return Result.Success<EntryInfo, ProblemDetails>(new EntryInfo(entry, viewCount, imageIds));
     }
+
 
     public async Task<Result<DummyObject, ProblemDetails>> Remove(Guid id, CancellationToken cancellationToken)
     {

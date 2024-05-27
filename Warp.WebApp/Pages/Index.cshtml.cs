@@ -1,14 +1,15 @@
+using Consul;
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.OutputCaching;
+using Microsoft.Extensions.Options;
 using System.ComponentModel;
 using System.Security.Claims;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
-using Microsoft.Extensions.Options;
 using Warp.WebApp.Models.Options;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
@@ -35,7 +36,7 @@ public class IndexModel : BasePageModel
             if (decodedId == Guid.Empty)
                 return RedirectToError(ProblemDetailsHelper.Create("Can't decode a provided ID."));
 
-            var claim = this.HttpContext.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.UserData && Guid.TryParse(x.Value, out var valueGuid) ? valueGuid == decodedId : false);
+            var claim = this.HttpContext.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Name && Guid.TryParse(x.Value, out var valueGuid) ? valueGuid == decodedId : false);
             if (claim != null)
             {
                 var (_, isFailure, entry, problemDetails) = await _entryService.Get(decodedId, cancellationToken);
@@ -69,31 +70,40 @@ public class IndexModel : BasePageModel
     public async Task<IActionResult> OnPost(CancellationToken cancellationToken)
     {
         var expiresIn = GetExpirationPeriod(SelectedExpirationPeriod);
-        var (_, isFailure, id, problemDetails) = await _entryService.Add(TextContent, expiresIn, ImageIds, cancellationToken);
+        var userId = await ConfigureCookie();
+        var (_, isFailure, id, problemDetails) = await _entryService.Add(userId, TextContent, expiresIn, ImageIds, cancellationToken);
 
         if (isFailure)
             return RedirectToError(problemDetails);
-        else
-        {
-            await ConfigureCookie(id);
-            return RedirectToPage("./Preview", new { id = IdCoder.Encode(id) });
-        }
+
+        return RedirectToPage("./Preview", new { id = IdCoder.Encode(id) });
     }
 
 
-    private async Task ConfigureCookie(Guid entryId)
+    private async Task<Guid> ConfigureCookie()
     {
         List<Claim> claims = new List<Claim>();
-        if (this.HttpContext.User.Claims.Any())
-            claims = this.HttpContext.User.Claims.ToList();
+        Claim claim;
 
-        claims.Add(new Claim(ClaimTypes.UserData, entryId.ToString()));
+        if (this.HttpContext.User.Claims != null && this.HttpContext.User.Claims.Any())
+        {
+            claims = this.HttpContext.User.Claims.ToList();
+            Guid.TryParse(claims.FirstOrDefault(x => x.ValueType == ClaimTypes.Name)!.Value, out var foundUserId);
+            return foundUserId;
+        }
+        else
+            claim = new Claim(ClaimTypes.Name, Guid.NewGuid().ToString());
+
+        Guid.TryParse(claim!.Value, out var userId);
+        claims.Add(claim);
         var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
         await Response.HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, new AuthenticationProperties
         {
             IsPersistent = true
         });
+
+        return userId;
     }
 
 
@@ -132,8 +142,8 @@ public class IndexModel : BasePageModel
 
     public AnalyticsModel AnalyticsModel { get; set; } = default!;
     public OpenGraphModel OpenGraphModel { get; set; } = default!;
-    
-    
+
+
     private readonly AnalyticsOptions _analyticsOptions;
     private readonly IEntryService _entryService;
 }
