@@ -42,7 +42,6 @@ public sealed class DataStorage : IDataStorage
             return Result.Failure("Can't store a default value.");
         }
 
-        _memoryCache.Set(key, value, expiresIn);
         await _distributedStorage.Set(key, value, expiresIn, cancellationToken);
 
         return Result.Success();

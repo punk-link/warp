@@ -11,12 +11,13 @@ namespace Warp.WebApp.Services.Entries;
 
 public sealed class EntryService : IEntryService
 {
-    public EntryService(IDataStorage dataStorage, IImageService imageService, IReportService reportService, IViewCountService viewCountService)
+    public EntryService(IDataStorage dataStorage, IImageService imageService, IReportService reportService, IViewCountService viewCountService, IUserService userService)
     {
         _dataStorage = dataStorage;
         _imageService = imageService;
         _reportService = reportService;
         _viewCountService = viewCountService;
+        _userService = userService;
     }
 
 
@@ -32,8 +33,10 @@ public sealed class EntryService : IEntryService
         if (!validationResult.IsValid)
             return validationResult.ToFailure<Guid>();
 
-        var cacheKey = BuildCacheKey(entry.Id);
-        var result = await _dataStorage.Set(cacheKey, entry, expiresIn, cancellationToken);
+        var cacheKey = BuildCacheKey(userId);
+        var result = await _userService.Set<Entry>(cacheKey, entry, expiresIn, cancellationToken);
+
+        //var result = await _dataStorage.Set(cacheKey, entry, expiresIn, cancellationToken);
 
         await _imageService.Attach(entry.Id, expiresIn, imageIds, cancellationToken);
 
@@ -76,9 +79,9 @@ public sealed class EntryService : IEntryService
     private static string BuildCacheKey(Guid id)
         => $"{nameof(Entry)}::{id}";
 
-
     private readonly IDataStorage _dataStorage;
     private readonly IImageService _imageService;
     private readonly IReportService _reportService;
     private readonly IViewCountService _viewCountService;
+    private readonly IUserService _userService;
 }
