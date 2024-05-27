@@ -44,9 +44,7 @@ builder.Services.AddResponseCompression(options =>
 builder.Services.AddResponseCaching();
 builder.Services.AddOutputCache();
 
-
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
-builder.Services.AddAuthorization();
 
 
 var app = builder.Build();

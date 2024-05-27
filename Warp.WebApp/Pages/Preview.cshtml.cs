@@ -23,7 +23,8 @@ namespace Warp.WebApp.Pages
             if (decodedId == Guid.Empty)
                 return RedirectToError(ProblemDetailsHelper.Create("Can't decode a provided ID."));
 
-            if (this.HttpContext.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.UserData && x.Value == decodedId.ToString()) == null)
+            var claim = this.HttpContext.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.UserData && Guid.TryParse(x.Value, out var valueGuid) ? valueGuid == decodedId : false);
+            if (claim == null)
                 return RedirectToError(ProblemDetailsHelper.Create("Can`t open preview page cause of no permission."));
 
             var (_, isFailure, entry, problemDetails) = await _entryService.Get(decodedId, cancellationToken);
@@ -63,7 +64,7 @@ namespace Warp.WebApp.Pages
             if (decodedId == Guid.Empty)
                 return RedirectToError(ProblemDetailsHelper.Create("Can't decode a provided ID."));
 
-            var (_, isFailure, _, problemDetails) = await _entryService.Delete(decodedId, cancellationToken);
+            var (_, isFailure, _, problemDetails) = await _entryService.Remove(decodedId, cancellationToken);
 
             if (isFailure)
                 return RedirectToError(problemDetails);

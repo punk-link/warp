@@ -30,7 +30,7 @@ public sealed class KeyDbStorage : IDistributedStorage
     public async Task Remove<T>(string key, CancellationToken cancellationToken)
     {
         var db = GetDatabase<T>();
-        var redisTask = db.StringGetDeleteAsync(key, CommandFlags.FireAndForget);
+        var redisTask = db.StringGetDeleteAsync(key);
         await ExecuteOrCancel(redisTask, cancellationToken);
     }
 

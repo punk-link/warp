@@ -35,11 +35,13 @@ public class IndexModel : BasePageModel
             if (decodedId == Guid.Empty)
                 return RedirectToError(ProblemDetailsHelper.Create("Can't decode a provided ID."));
 
-            if (this.HttpContext.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.UserData && x.Value == decodedId.ToString()) != null)
+            var claim = this.HttpContext.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.UserData && Guid.TryParse(x.Value, out var valueGuid) ? valueGuid == decodedId : false);
+            if (claim != null)
             {
                 var (_, isFailure, entry, problemDetails) = await _entryService.Get(decodedId, cancellationToken);
                 if (isFailure)
                     return RedirectToError(problemDetails);
+
                 BuildModel(id, entry);
                 AddOpenGraphModel();
                 return Page();
@@ -73,22 +75,25 @@ public class IndexModel : BasePageModel
             return RedirectToError(problemDetails);
         else
         {
-            List<Claim> claims = null;
-
-            if (this.HttpContext.User.Claims.Any())
-                claims = this.HttpContext.User.Claims.ToList();
-            else
-                claims = new List<Claim>();
-
-            claims.Add(new Claim(ClaimTypes.UserData, id.ToString()));
-            var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
-            await Response.HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, new AuthenticationProperties
-            {
-                IsPersistent = true
-            });
+            await ConfigureCookie(id);
             return RedirectToPage("./Preview", new { id = IdCoder.Encode(id) });
         }
+    }
+
+
+    private async Task ConfigureCookie(Guid entryId)
+    {
+        List<Claim> claims = new List<Claim>();
+        if (this.HttpContext.User.Claims.Any())
+            claims = this.HttpContext.User.Claims.ToList();
+
+        claims.Add(new Claim(ClaimTypes.UserData, entryId.ToString()));
+        var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+        await Response.HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, new AuthenticationProperties
+        {
+            IsPersistent = true
+        });
     }
 
 
@@ -102,6 +107,7 @@ public class IndexModel : BasePageModel
             5 => new TimeSpan(24, 0, 0),
             _ => new TimeSpan(0, 5, 0)
         };
+
 
     [BindProperty]
     public List<Guid> ImageIds { get; set; } = [];
