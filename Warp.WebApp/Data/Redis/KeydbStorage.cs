@@ -39,14 +39,21 @@ public sealed class KeyDbStorage : IDistributedStorage
     {
         var db = GetDatabase<T>();
         var bytes = JsonSerializer.SerializeToUtf8Bytes(value);
+        var redisTask = db.StringSetAsync(key, bytes, expiresIn);
+        await ExecuteOrCancel(redisTask, cancellationToken);
+    }
+
+
+    public async Task SetToList<T>(string key, T value, TimeSpan expiresIn, CancellationToken cancellationToken)
+    {
+        var db = GetDatabase<T>();
+        var bytes = JsonSerializer.SerializeToUtf8Bytes(value);
 
         var redisTransaction = db.CreateTransaction();
-        var redisTaskPush = redisTransaction.ListRightPushAsync(key, bytes);
-        await ExecuteOrCancel(redisTaskPush, cancellationToken);
-        var redisTaskSetExpirationTime = redisTransaction.KeyExpireTimeAsync(key);
-        await ExecuteOrCancel(redisTaskSetExpirationTime, cancellationToken);
-        await redisTransaction.ExecuteAsync(CommandFlags.FireAndForget);
+        await redisTransaction.ListRightPushAsync(key, bytes)
+            .ContinueWith(_ => redisTransaction.KeyExpireAsync(key, expiresIn), cancellationToken);
 
+        await redisTransaction.ExecuteAsync();
     }
 
 

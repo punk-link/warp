@@ -7,6 +7,6 @@ public interface IDataStorage
     public Task<long> AddAndGetCounter(string key, CancellationToken cancellationToken);
     public ValueTask<bool> Contains<T>(string key, CancellationToken cancellationToken);
     public Task Remove<T>(string key, CancellationToken cancellationToken);
-    public Task<Result> Set<T>(string key, T value, TimeSpan expiresIn, CancellationToken cancellationToken);
+    public Task<Result> Set<T>(string key, T value, TimeSpan expiresIn, CancellationToken cancellationToken, bool isSetToListRequired = false);
     public ValueTask<T?> TryGet<T>(string key, CancellationToken cancellationToken);
 }

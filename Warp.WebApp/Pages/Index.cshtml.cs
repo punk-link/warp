@@ -14,16 +14,18 @@ using Warp.WebApp.Models.Options;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Entries;
+using Warp.WebApp.Services.User;
 
 namespace Warp.WebApp.Pages;
 
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 public class IndexModel : BasePageModel
 {
-    public IndexModel(IOptionsSnapshot<AnalyticsOptions> analyticsOptions, ILoggerFactory loggerFactory, IEntryService entryService) : base(loggerFactory)
+    public IndexModel(IOptionsSnapshot<AnalyticsOptions> analyticsOptions, ILoggerFactory loggerFactory, IEntryService entryService, ICookieService cookieService) : base(loggerFactory)
     {
         _analyticsOptions = analyticsOptions.Value;
         _entryService = entryService;
+        _cookieService = cookieService;
     }
 
 
@@ -70,40 +72,13 @@ public class IndexModel : BasePageModel
     public async Task<IActionResult> OnPost(CancellationToken cancellationToken)
     {
         var expiresIn = GetExpirationPeriod(SelectedExpirationPeriod);
-        var userId = await ConfigureCookie();
+        var userId = await _cookieService.ConfigureCookie(HttpContext, Response);
         var (_, isFailure, id, problemDetails) = await _entryService.Add(userId, TextContent, expiresIn, ImageIds, cancellationToken);
 
         if (isFailure)
             return RedirectToError(problemDetails);
 
         return RedirectToPage("./Preview", new { id = IdCoder.Encode(id) });
-    }
-
-
-    private async Task<Guid> ConfigureCookie()
-    {
-        List<Claim> claims = new List<Claim>();
-        Claim claim;
-
-        if (this.HttpContext.User.Claims != null && this.HttpContext.User.Claims.Any())
-        {
-            claims = this.HttpContext.User.Claims.ToList();
-            Guid.TryParse(claims.FirstOrDefault(x => x.ValueType == ClaimTypes.Name)!.Value, out var foundUserId);
-            return foundUserId;
-        }
-        else
-            claim = new Claim(ClaimTypes.Name, Guid.NewGuid().ToString());
-
-        Guid.TryParse(claim!.Value, out var userId);
-        claims.Add(claim);
-        var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
-        await Response.HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, new AuthenticationProperties
-        {
-            IsPersistent = true
-        });
-
-        return userId;
     }
 
 
@@ -146,4 +121,5 @@ public class IndexModel : BasePageModel
 
     private readonly AnalyticsOptions _analyticsOptions;
     private readonly IEntryService _entryService;
+    private readonly ICookieService _cookieService;
 }

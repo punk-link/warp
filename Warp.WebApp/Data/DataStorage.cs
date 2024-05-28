@@ -34,7 +34,7 @@ public sealed class DataStorage : IDataStorage
     }
 
 
-    public async Task<Result> Set<T>(string key, T value, TimeSpan expiresIn, CancellationToken cancellationToken)
+    public async Task<Result> Set<T>(string key, T value, TimeSpan expiresIn, CancellationToken cancellationToken, bool isSetToListRequired = false)
     {
         if (value is null || IsDefaultStruct(value))
         {
@@ -42,7 +42,10 @@ public sealed class DataStorage : IDataStorage
             return Result.Failure("Can't store a default value.");
         }
 
-        await _distributedStorage.Set(key, value, expiresIn, cancellationToken);
+        if(isSetToListRequired)
+            await _distributedStorage.SetToList(key, value, expiresIn, cancellationToken);
+        else
+            await _distributedStorage.Set(key, value, expiresIn, cancellationToken);
 
         return Result.Success();
     }

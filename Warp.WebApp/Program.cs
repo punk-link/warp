@@ -12,6 +12,7 @@ using Warp.WebApp.Middlewares;
 using Warp.WebApp.Models.Options;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
+using Warp.WebApp.Services.User;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -95,6 +96,8 @@ IServiceCollection AddServices(IServiceCollection services)
     services.AddTransient<IReportService, ReportService>();
     services.AddTransient<IViewCountService, ViewCountService>();
     services.AddTransient<IEntryService, EntryService>();
+    services.AddTransient<IUserService, UserService>();
+    services.AddTransient<ICookieService, CookieService>();
 
     services.AddHostedService<WarmupService>();
 

@@ -6,6 +6,7 @@ using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
 using Warp.WebApp.Models.Validators;
 using Warp.WebApp.Services.Images;
+using Warp.WebApp.Services.User;
 
 namespace Warp.WebApp.Services.Entries;
 
@@ -34,7 +35,7 @@ public sealed class EntryService : IEntryService
             return validationResult.ToFailure<Guid>();
 
         var cacheKey = BuildCacheKey(userId);
-        var result = await _userService.Set<Entry>(cacheKey, entry, expiresIn, cancellationToken);
+        var result = await _userService.AttachEntryToUser(cacheKey, entry, expiresIn, cancellationToken);
 
         //var result = await _dataStorage.Set(cacheKey, entry, expiresIn, cancellationToken);
 
