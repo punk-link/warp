@@ -47,7 +47,7 @@ public sealed class EntryService : IEntryService
     }
 
 
-    public async Task<Result<EntryInfo, ProblemDetails>> Get(Guid id, CancellationToken cancellationToken)
+    public async Task<Result<EntryInfo, ProblemDetails>> Get(Guid id, string? entryId, CancellationToken cancellationToken)
     {
         if (await _reportService.Contains(id, cancellationToken))
             return ResultHelper.NotFound<EntryInfo>();

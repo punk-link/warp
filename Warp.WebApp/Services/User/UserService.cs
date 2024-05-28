@@ -29,5 +29,12 @@ public class UserService : IUserService
         return await _dataStorage.Set(userId, value, listExpiresIn, cancellationToken, true);
     }
 
+
+    public async Task<List<Entry>> TryGetUserEntry(string userId, string entryId, CancellationToken cancellationToken)
+    {
+        return null;
+    }
+
+
     private readonly IDataStorage _dataStorage;
 }
