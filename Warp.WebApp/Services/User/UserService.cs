@@ -30,9 +30,14 @@ public class UserService : IUserService
     }
 
 
-    public async Task<List<Entry>> TryGetUserEntry(string userId, string entryId, CancellationToken cancellationToken)
+    public async Task<Result> TryGetUserEntry(string userId, Guid entryId, CancellationToken cancellationToken)
     {
-        return null;
+        var entryList = await _dataStorage.TryGet<List<Entry>>(userId, cancellationToken);
+        var foundEntry = entryList != null ? entryList?.FirstOrDefault(x => x.Id == entryId) : null;
+
+        return foundEntry != null 
+            ? Result.Success(foundEntry) 
+            : Result.Failure("Selected entry is not found for this user.");
     }
 
 

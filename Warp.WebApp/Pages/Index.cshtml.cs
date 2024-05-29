@@ -42,7 +42,7 @@ public class IndexModel : BasePageModel
             if (claim != null)
             {
                 var userId = Guid.Parse(claim.Value);
-                var (_, isFailure, entry, problemDetails) = await _entryService.Get(userId, id, cancellationToken);
+                var (_, isFailure, entry, problemDetails) = await _entryService.Get(userId, decodedId, cancellationToken);
                 if (isFailure)
                     return RedirectToError(problemDetails);
 

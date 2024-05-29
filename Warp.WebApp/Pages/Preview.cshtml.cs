@@ -23,20 +23,22 @@ namespace Warp.WebApp.Pages
             if (decodedId == Guid.Empty)
                 return RedirectToError(ProblemDetailsHelper.Create("Can't decode a provided ID."));
 
-            var claim = this.HttpContext.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Name && Guid.TryParse(x.Value, out var valueGuid) ? valueGuid == decodedId : false);
-            if (claim == null)
-                return RedirectToError(ProblemDetailsHelper.Create("Can`t open preview page cause of no permission."));
+            var claim = this.HttpContext.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Name && Guid.TryParse(x.Value, out _));
+            if (claim != null)
+            {
+                var userGuid = Guid.Parse(claim.Value);
+                var (_, isFailure, entry, problemDetails) = await _entryService.Get(userGuid, decodedId, cancellationToken);
+                if (isFailure)
+                    return RedirectToError(problemDetails);
 
-            var (_, isFailure, entry, problemDetails) = await _entryService.Get(decodedId, id, cancellationToken);
-            if (isFailure)
-                return RedirectToError(problemDetails);
+                Result.Success()
+                    .Tap(() => BuildModel(id, entry))
+                    .Tap(AddOpenGraphModel);
 
-            Result.Success()
-                .Tap(() => BuildModel(id, entry))
-                .Tap(AddOpenGraphModel);
+                return Page();
+            }
 
-            return Page();
-
+            return RedirectToError(ProblemDetailsHelper.Create("Can`t open preview page cause of no permission."));
 
             void BuildModel(string entryId, EntryInfo entryInfo)
             {

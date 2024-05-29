@@ -42,7 +42,7 @@ public sealed class DataStorage : IDataStorage
             return Result.Failure("Can't store a default value.");
         }
 
-        if(isSetToListRequired)
+        if (isSetToListRequired)
             await _distributedStorage.SetToList(key, value, expiresIn, cancellationToken);
         else
             await _distributedStorage.Set(key, value, expiresIn, cancellationToken);
@@ -64,10 +64,11 @@ public sealed class DataStorage : IDataStorage
         => IsUserDefinedStruct(typeof(T)) && value!.Equals(default(T));
 
 
-    private static bool IsUserDefinedStruct(Type type) 
-        => type is { 
-            IsValueType: true, 
-            IsEnum: false, 
+    private static bool IsUserDefinedStruct(Type type)
+        => type is
+        {
+            IsValueType: true,
+            IsEnum: false,
             IsPrimitive: false
         };
 

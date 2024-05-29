@@ -23,7 +23,7 @@ public class EntryModel : BasePageModel
         if (decodedId == Guid.Empty)
             return RedirectToError(ProblemDetailsHelper.Create("Can't decode a provided ID."));
 
-        var (_, isFailure, entry, problemDetails) = await _entryService.Get(decodedId, null, cancellationToken);
+        var (_, isFailure, entry, problemDetails) = await _entryService.Get(Guid.Empty, decodedId, cancellationToken);
         if (isFailure)
             return RedirectToError(problemDetails);
 
