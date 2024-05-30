@@ -9,4 +9,5 @@ public interface IDataStorage
     public Task Remove<T>(string key, CancellationToken cancellationToken);
     public Task<Result> Set<T>(string key, T value, TimeSpan expiresIn, CancellationToken cancellationToken, bool isSetToListRequired = false);
     public ValueTask<T?> TryGet<T>(string key, CancellationToken cancellationToken);
+    public Task<Result> CrossValueSet<K, V>(string keyK, K valueK, TimeSpan expiresInK, string keyV, V valueV, TimeSpan expiresInV, CancellationToken cancellationToken);
 }

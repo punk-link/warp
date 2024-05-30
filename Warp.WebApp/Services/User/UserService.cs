@@ -17,16 +17,20 @@ public class UserService : IUserService
     {
         var listExpiresIn = expiresIn;
 
-        var entryList = await _dataStorage.TryGet<List<Entry>>(userId, cancellationToken);
-        if (entryList != null && entryList.Count > 0)
+        var entryIdList = await _dataStorage.TryGet<List<string>>(userId, cancellationToken);
+        var entryList = new List<Entry>();
+        if (entryIdList != null && entryIdList.Count > 0)
         {
+            foreach (var entryId in entryIdList)
+                entryList.Add(await _dataStorage.TryGet<Entry>(entryId, cancellationToken));
+
             var maxExpirationDate = entryList.Max(x => x.ExpiresAt);
             listExpiresIn = maxExpirationDate > value.ExpiresAt
                 ? maxExpirationDate - value.ExpiresAt
                 : value.ExpiresAt - maxExpirationDate;
         }
-
-        return await _dataStorage.Set(userId, value, listExpiresIn, cancellationToken, true);
+        
+        return await _dataStorage.CrossValueSet(userId, value.Id.ToString(), listExpiresIn, value.Id.ToString(), value, expiresIn, cancellationToken);
     }
 
 
@@ -35,8 +39,8 @@ public class UserService : IUserService
         var entryList = await _dataStorage.TryGet<List<Entry>>(userId, cancellationToken);
         var foundEntry = entryList != null ? entryList?.FirstOrDefault(x => x.Id == entryId) : null;
 
-        return foundEntry != null 
-            ? Result.Success(foundEntry) 
+        return foundEntry != null
+            ? Result.Success(foundEntry)
             : Result.Failure("Selected entry is not found for this user.");
     }
 

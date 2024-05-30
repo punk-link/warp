@@ -1,5 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Caching.Memory;
+using Newtonsoft.Json.Linq;
 using Warp.WebApp.Data.Redis;
 using Warp.WebApp.Extensions.Logging;
 
@@ -46,6 +47,24 @@ public sealed class DataStorage : IDataStorage
             await _distributedStorage.SetToList(key, value, expiresIn, cancellationToken);
         else
             await _distributedStorage.Set(key, value, expiresIn, cancellationToken);
+
+        return Result.Success();
+    }
+
+    public async Task<Result> CrossValueSet<K, V>(string keyK, K valueK, TimeSpan expiresInK, string keyV, V valueV, TimeSpan expiresInV, CancellationToken cancellationToken)
+    {
+        if (valueK is null || IsDefaultStruct(valueK))
+        {
+            _logger.LogSetDefaultCacheValueError(valueK?.ToString());
+            return Result.Failure("Can't store a default value.");
+        }
+        if (valueV is null || IsDefaultStruct(valueV))
+        {
+            _logger.LogSetDefaultCacheValueError(valueV?.ToString());
+            return Result.Failure("Can't store a default value.");
+        }
+
+        await _distributedStorage.CrossValueSet(keyK, valueK, expiresInK, keyV, valueV, expiresInV, cancellationToken);
 
         return Result.Success();
     }

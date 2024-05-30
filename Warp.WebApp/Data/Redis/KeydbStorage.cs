@@ -1,4 +1,5 @@
-﻿using StackExchange.Redis;
+﻿using Microsoft.AspNetCore.DataProtection.KeyManagement;
+using StackExchange.Redis;
 using System.Text.Json;
 using Warp.WebApp.Models;
 
@@ -56,6 +57,19 @@ public sealed class KeyDbStorage : IDistributedStorage
         await redisTransaction.ExecuteAsync();
     }
 
+    public async Task CrossValueSet<K, V>(string keyK, K valueK, TimeSpan expiresInK, string keyV, V valueV, TimeSpan expiresInV, CancellationToken cancellationToken)
+    {
+        var db = GetDatabase<K>();
+        var bytesK = JsonSerializer.SerializeToUtf8Bytes(valueK);
+        var bytesV = JsonSerializer.SerializeToUtf8Bytes(valueV);
+        var redisTransaction = db.CreateTransaction();
+        await redisTransaction.ListRightPushAsync(keyK, bytesK)
+             .ContinueWith(_ => redisTransaction.KeyExpireAsync(keyK, expiresInK), cancellationToken)
+             .ContinueWith(_ => redisTransaction.StringSetAsync(keyV, bytesV, expiresInV), cancellationToken);
+
+        await redisTransaction.ExecuteAsync();
+    }
+
 
     public async Task<T?> TryGet<T>(string key, CancellationToken cancellationToken)
     {
@@ -93,6 +107,7 @@ public sealed class KeyDbStorage : IDistributedStorage
             Entry => 1,
             ImageInfo => 2,
             Report => 3,
+            string => 4,
             _ => 0
         };
 
