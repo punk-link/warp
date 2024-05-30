@@ -13,11 +13,11 @@ public class UserService : IUserService
     }
 
 
-    public async Task<Result> AttachEntryToUser(string userId, Entry value, TimeSpan expiresIn, CancellationToken cancellationToken)
+    public async Task<Result> AttachEntryToUser(string userIdCacheKey, string entryCacheKey, Entry value, TimeSpan expiresIn, CancellationToken cancellationToken)
     {
         var listExpiresIn = expiresIn;
 
-        var entryIdList = await _dataStorage.TryGet<List<string>>(userId, cancellationToken);
+        var entryIdList = await _dataStorage.TryGet<List<string>>(userIdCacheKey, cancellationToken);
         var entryList = new List<Entry>();
         if (entryIdList != null && entryIdList.Count > 0)
         {
@@ -30,7 +30,7 @@ public class UserService : IUserService
                 : value.ExpiresAt - maxExpirationDate;
         }
         
-        return await _dataStorage.CrossValueSet(userId, value.Id.ToString(), listExpiresIn, value.Id.ToString(), value, expiresIn, cancellationToken);
+        return await _dataStorage.CrossValueSet(userIdCacheKey, value.Id.ToString(), listExpiresIn, entryCacheKey, value, expiresIn, cancellationToken);
     }
 
 

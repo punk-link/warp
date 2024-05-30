@@ -34,10 +34,9 @@ public sealed class EntryService : IEntryService
         if (!validationResult.IsValid)
             return validationResult.ToFailure<Guid>();
 
-        var cacheKey = BuildCacheKey(userId);
-        var result = await _userService.AttachEntryToUser(cacheKey, entry, expiresIn, cancellationToken);
-
-        //var result = await _dataStorage.Set(cacheKey, entry, expiresIn, cancellationToken);
+        var userIdCacheKey = BuildStringCacheKey(userId);
+        var entryIdCacheKey = BuildEntryCacheKey(entry.Id);
+        var result = await _userService.AttachEntryToUser(userIdCacheKey, entryIdCacheKey, entry, expiresIn, cancellationToken);
 
         await _imageService.Attach(entry.Id, expiresIn, imageIds, cancellationToken);
 
@@ -52,7 +51,7 @@ public sealed class EntryService : IEntryService
         if (await _reportService.Contains(id, cancellationToken))
             return ResultHelper.NotFound<EntryInfo>();
 
-        var cacheKey = BuildCacheKey(id);
+        var cacheKey = BuildEntryCacheKey(id);
         var entry = await _dataStorage.TryGet<Entry>(cacheKey,cancellationToken);
         if (entry.Equals(default))
             return ResultHelper.NotFound<EntryInfo>();
@@ -71,14 +70,17 @@ public sealed class EntryService : IEntryService
         if (await _reportService.Contains(id, cancellationToken))
             return ResultHelper.NotFound<DummyObject>();
 
-        var cacheKey = BuildCacheKey(id);
+        var cacheKey = BuildEntryCacheKey(id);
         await _dataStorage.Remove<EntryInfo>(cacheKey, cancellationToken);
         return Result.Success<DummyObject, ProblemDetails>(DummyObject.Empty);
     }
 
 
-    private static string BuildCacheKey(Guid id)
+    private static string BuildEntryCacheKey(Guid id)
         => $"{nameof(Entry)}::{id}";
+
+    private static string BuildStringCacheKey(Guid id)
+    => $"{"string"}::{id}";
 
     private readonly IDataStorage _dataStorage;
     private readonly IImageService _imageService;
