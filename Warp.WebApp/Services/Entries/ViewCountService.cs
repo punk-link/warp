@@ -13,12 +13,8 @@ public sealed class ViewCountService : IViewCountService
 
     public async Task<long> AddAndGet(Guid itemId, CancellationToken cancellationToken)
     {
-        var cacheKey = GetCacheKey(in itemId);
+        var cacheKey = CacheKeyBuilder.BuildViewCountServiceCacheKey(in itemId);
         return await _dataStorage.AddAndGetCounter(cacheKey, cancellationToken);
-
-
-        static string GetCacheKey(in Guid id)
-            => $"{nameof(ViewCountService)}::{typeof(Entry)}::{id}";
     }
 
 

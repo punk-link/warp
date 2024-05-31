@@ -1,4 +1,5 @@
 ﻿using CSharpFunctionalExtensions;
+using Newtonsoft.Json.Linq;
 using Warp.WebApp.Data;
 using Warp.WebApp.Models;
 
@@ -16,14 +17,9 @@ public class UserService : IUserService
     public async Task<Result> AttachEntryToUser(string userIdCacheKey, string entryCacheKey, Entry value, TimeSpan expiresIn, CancellationToken cancellationToken)
     {
         var listExpiresIn = expiresIn;
-
-        var entryIdList = await _dataStorage.TryGet<List<string>>(userIdCacheKey, cancellationToken);
-        var entryList = new List<Entry>();
-        if (entryIdList != null && entryIdList.Count > 0)
+        var entryList = await GetUserEntries(userIdCacheKey, cancellationToken);
+        if (entryList.Count > 0)
         {
-            foreach (var entryId in entryIdList)
-                entryList.Add(await _dataStorage.TryGet<Entry>(entryId, cancellationToken));
-
             var maxExpirationDate = entryList.Max(x => x.ExpiresAt);
             listExpiresIn = maxExpirationDate > value.ExpiresAt
                 ? maxExpirationDate - value.ExpiresAt
@@ -34,14 +30,30 @@ public class UserService : IUserService
     }
 
 
-    public async Task<Result> TryGetUserEntry(string userId, Guid entryId, CancellationToken cancellationToken)
+    public async Task<Entry?> TryGetUserEntry(string userIdCacheKey, Guid entryId, CancellationToken cancellationToken)
     {
-        var entryList = await _dataStorage.TryGet<List<Entry>>(userId, cancellationToken);
-        var foundEntry = entryList != null ? entryList?.FirstOrDefault(x => x.Id == entryId) : null;
+        var entryList = await GetUserEntries(userIdCacheKey, cancellationToken);
+        var foundEntry = entryList != null ? entryList?.FirstOrDefault(x => x.Id == entryId) : default;
 
-        return foundEntry != null
-            ? Result.Success(foundEntry)
-            : Result.Failure("Selected entry is not found for this user.");
+        return foundEntry;
+    }
+
+
+    private async Task<List<Entry>> GetUserEntries(string userIdCacheKey, CancellationToken cancellationToken)
+    {
+        var entryIdList = await _dataStorage.TryGet<List<string>>(userIdCacheKey, cancellationToken);
+        var entryList = new List<Entry>();
+        if (entryIdList != null && entryIdList.Count > 0)
+        {
+            foreach (var entryId in entryIdList)
+            {
+                Guid.TryParse(entryId, out var entryGuid);
+                var entryIdCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entryGuid);
+                entryList.Add(await _dataStorage.TryGet<Entry>(entryIdCacheKey, cancellationToken));
+            }
+        }
+
+        return entryList;
     }
 
 

@@ -59,7 +59,7 @@ public sealed class KeyDbStorage : IDistributedStorage
 
     public async Task CrossValueSet<K, V>(string keyK, K valueK, TimeSpan expiresInK, string keyV, V valueV, TimeSpan expiresInV, CancellationToken cancellationToken)
     {
-        var db = GetDatabase<K>();
+        var db = _multiplexer.GetDatabase();
         var bytesK = JsonSerializer.SerializeToUtf8Bytes(valueK);
         var bytesV = JsonSerializer.SerializeToUtf8Bytes(valueV);
         var redisTransaction = db.CreateTransaction();

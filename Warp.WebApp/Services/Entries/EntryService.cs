@@ -34,8 +34,8 @@ public sealed class EntryService : IEntryService
         if (!validationResult.IsValid)
             return validationResult.ToFailure<Guid>();
 
-        var userIdCacheKey = BuildStringCacheKey(userId);
-        var entryIdCacheKey = BuildEntryCacheKey(entry.Id);
+        var userIdCacheKey = CacheKeyBuilder.BuildStringCacheKey(userId);
+        var entryIdCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entry.Id);
         var result = await _userService.AttachEntryToUser(userIdCacheKey, entryIdCacheKey, entry, expiresIn, cancellationToken);
 
         await _imageService.Attach(entry.Id, expiresIn, imageIds, cancellationToken);
@@ -46,22 +46,27 @@ public sealed class EntryService : IEntryService
     }
 
 
-    public async Task<Result<EntryInfo, ProblemDetails>> Get(Guid id, Guid entryId, CancellationToken cancellationToken)
+    public async Task<Result<EntryInfo, ProblemDetails>> Get(Guid userId, Guid entryId, CancellationToken cancellationToken)
     {
-        if (await _reportService.Contains(id, cancellationToken))
+        if (await _reportService.Contains(entryId, cancellationToken))
             return ResultHelper.NotFound<EntryInfo>();
 
-        var cacheKey = BuildEntryCacheKey(id);
-        var entry = await _dataStorage.TryGet<Entry>(cacheKey,cancellationToken);
+        var entryIdCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entryId);
+        var userIdCacheKey = CacheKeyBuilder.BuildStringCacheKey(userId);
+
+        var entry = userId != Guid.Empty
+            ? await _userService.TryGetUserEntry(userIdCacheKey, entryId, cancellationToken)
+            : await _dataStorage.TryGet<Entry>(entryIdCacheKey, cancellationToken);
+
         if (entry.Equals(default))
             return ResultHelper.NotFound<EntryInfo>();
 
-        var viewCount = await _viewCountService.AddAndGet(id, cancellationToken);
-        var imageIds = (await _imageService.Get(id, cancellationToken))
+        var viewCount = await _viewCountService.AddAndGet(entryId, cancellationToken);
+        var imageIds = (await _imageService.Get(entryId, cancellationToken))
             .Select(image => image.Id)
             .ToList();
 
-        return Result.Success<EntryInfo, ProblemDetails>(new EntryInfo(entry, viewCount, imageIds));
+        return Result.Success<EntryInfo, ProblemDetails>(new EntryInfo((Entry)entry, viewCount, imageIds));
     }
 
 
@@ -70,17 +75,11 @@ public sealed class EntryService : IEntryService
         if (await _reportService.Contains(id, cancellationToken))
             return ResultHelper.NotFound<DummyObject>();
 
-        var cacheKey = BuildEntryCacheKey(id);
+        var cacheKey = CacheKeyBuilder.BuildEntryCacheKey(id);
         await _dataStorage.Remove<EntryInfo>(cacheKey, cancellationToken);
         return Result.Success<DummyObject, ProblemDetails>(DummyObject.Empty);
     }
 
-
-    private static string BuildEntryCacheKey(Guid id)
-        => $"{nameof(Entry)}::{id}";
-
-    private static string BuildStringCacheKey(Guid id)
-    => $"{"string"}::{id}";
 
     private readonly IDataStorage _dataStorage;
     private readonly IImageService _imageService;
