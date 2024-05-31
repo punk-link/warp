@@ -1,4 +1,5 @@
 ﻿using CSharpFunctionalExtensions;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json.Linq;
 using Warp.WebApp.Data.Redis;
@@ -43,6 +44,8 @@ public sealed class DataStorage : IDataStorage
             return Result.Failure("Can't store a default value.");
         }
 
+        _memoryCache.Set(key, value, expiresIn);
+
         await _distributedStorage.Set(key, value, expiresIn, cancellationToken);
 
         return Result.Success();
@@ -60,6 +63,8 @@ public sealed class DataStorage : IDataStorage
             _logger.LogSetDefaultCacheValueError(valueV?.ToString());
             return Result.Failure("Can't store a default value.");
         }
+
+        _memoryCache.Set(keyV, valueV, expiresInV);
 
         await _distributedStorage.CrossValueSet(keyK, valueK, expiresInK, keyV, valueV, expiresInV, cancellationToken);
 
