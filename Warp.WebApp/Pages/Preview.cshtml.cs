@@ -46,6 +46,7 @@ namespace Warp.WebApp.Pages
                 ExpiresIn = new DateTimeOffset(entryInfo.Entry.ExpiresAt).ToUnixTimeMilliseconds();
                 TextContent = entryInfo.Entry.Content;
                 ImageUrls = BuildImageUrls(decodedId, entryInfo.ImageIds);
+                EntryInfo = entryInfo;
             }
 
 
@@ -80,6 +81,22 @@ namespace Warp.WebApp.Pages
             return RedirectToPage("./Index");
         }
 
+        public async Task<IActionResult> OnPostCopy(EntryInfo entryInfo, CancellationToken cancellationToken)
+        {
+            var claim = this.HttpContext.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Name && Guid.TryParse(x.Value, out _));
+            if (claim != null)
+            {
+                var userGuid = Guid.Parse(claim.Value);
+                var (_, isFailure, id, problemDetails) = await _entryService.Add(userGuid, entryInfo.Entry.Content, entryInfo.Entry.ExpiresAt - entryInfo.Entry.CreatedAt, entryInfo.ImageIds, cancellationToken);
+                if(isFailure)
+                    return RedirectToError(problemDetails);
+
+                return RedirectToPage("./Index", new { id = IdCoder.Encode(id) });
+            }
+
+            return RedirectToError(ProblemDetailsHelper.Create("Can`t copy entry cause of no permission."));
+        }
+
 
         private static List<string> BuildImageUrls(Guid id, List<Guid> imageIds)
             => imageIds.Select(imageId => $"/api/images/entry-id/{id}/image-id/{imageId}")
@@ -93,6 +110,7 @@ namespace Warp.WebApp.Pages
         public string Id { get; set; } = default!;
         public List<string> ImageUrls { get; set; } = [];
         public string TextContent { get; set; } = string.Empty;
+        public EntryInfo EntryInfo { get; set; } = default;
 
 
         private readonly IEntryService _entryService;
