@@ -1,7 +1,9 @@
 ﻿@page "/entry/{id}"
 @model EntryModel
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+
 @{
-    ViewData["Title"] = "Warp. Share the moments instantly, knowing they'll disappear in no time.";
+    ViewData["Title"] = @Localizer["Title"];
 }
 
 @section MetaTags {
@@ -21,43 +23,47 @@
     </script>
 }
 
-<div class="row align-items-baseline px-3">
-    <h1 class="logo">
-        <a class="text-primary" asp-area="" asp-page="/Index">warp</a>
-    </h1>
-</div>
+<div class="min-vh-100">
+    <div class="row align-items-baseline px-3">
+        <h1 class="logo">
+            <a class="text-primary" asp-area="" asp-page="/Index">warp</a>
+        </h1>
+    </div>
 
-<section class="px-3 mb-5">
-    <div class="row">
-        <div class="row align-items-end">
-            <div class="col-6">
-                <i class="icofont-eye me-2 text-light"></i>@Model.ViewCount
+    <section class="min-vh-75 px-3 mb-5 d-flex flex-column justify-content-between">
+        <div>
+            <div class="row">
+                <div class="row align-items-end">
+                    <div class="col-6">
+                        <i class="icofont-eye me-2 text-light"></i>@Model.ViewCount
+                    </div>
+                    <div class="col-6 d-flex flex-column">
+                        <div class="text-right countdown">&nbsp;</div>
+                        <div class="text-right text-light fs-4">@Localizer["the entry expires in"]</div>
+                    </div>
+                </div>
             </div>
-            <div class="col-6 d-flex flex-column">
-                <div class="text-right countdown"></div>
-                <div class="text-right text-light fs-4">the entry expires in</div>
+            <article class="my-5">
+                @Html.Raw(Model.TextContent)
+            </article>
+        </div>
+        <div class="d-flex justify-content-between align-items-center col-12 offset-md-3 col-md-6 sticky-bottom bg-transparent p-3">
+            <div>
+                <a class="btn btn-link" data-toggle="modal" data-target="#report-modal" tabindex="1" type="button" title="@Localizer["ReportButton"]">
+                    <i class="icofont-exclamation-tringle text-danger"></i>
+                </a>
+            </div>
+            <div>
+                <button id="page-close-button" class="btn btn-light" tabindex="2">@Localizer["CloseButton"]</button>
+            </div>
+            <div>
+                <a id="copy-url-button" class="btn btn-link" tabindex="3" type="button" title="@Localizer["CopyUrlButton"]">
+                    <i class="icofont-link text-light"></i>
+                </a>
             </div>
         </div>
-    </div>
-    <article class="min-vh-75 my-5">
-        @Html.Raw(Model.TextContent)
-    </article>
-    <div class="d-flex justify-content-between align-items-center col-12 offset-md-3 col-md-6 sticky-bottom bg-transparent p-3">
-        <div>
-            <a class="btn btn-link" data-toggle="modal" data-target="#report-modal" tabindex="1" type="button" title="Report">
-                <i class="icofont-exclamation-tringle text-danger"></i>
-            </a>
-        </div>
-        <div>
-            <button id="page-close-button" class="btn btn-light" tabindex="2" >Close</button>
-        </div>
-        <div>
-            <a id="copy-url-button" class="btn btn-link" tabindex="3" type="button" title="Copy URL">
-                <i class="icofont-link text-light"></i>
-            </a>
-        </div>
-    </div>
-</section>
+    </section>
+</div>
 
 <div id="report-modal" class="modal fade">
     <div class="modal-dialog">
@@ -68,14 +74,13 @@
                 </div>
                 <div class="offset-1 col-10 offset-md-3 col-md-6">
                     <p>
-                        You are about to report this content. Use the feature in case of inappropriate content only. 
-                        This action restricts access to the content for all viewers. Are you sure?
+                        @Localizer["You are about to report this content. Use the feature in case of inappropriate content only. This action restricts access to the content for all viewers. Are you sure?"]
                     </p>
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-light" data-dismiss="modal" tabindex="5" type="button">Cancel</button>
-                <button id="report-button" class="btn btn-primary" tabindex="4" type="button">Report</button>
+                <button class="btn btn-light" data-dismiss="modal" tabindex="5" type="button">@Localizer["CancelButton"]</button>
+                <button id="report-button" class="btn btn-primary" tabindex="4" type="button">@Localizer["ReportButton"]</button>
             </div>
         </div>
     </div>

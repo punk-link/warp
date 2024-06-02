@@ -1,10 +1,12 @@
 ﻿@page
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+
 @{
-    ViewData["Title"] = "Warp. Privacy Policy";
+    ViewData["Title"] = Localizer["Title"];
 }
 
 @section MetaTags {
-    <meta description="This privacy notice describes how and why we might collect, store, use, and/or share your information when you use our services.">
+    <meta name="description" description="@Localizer["MetaDescription"]">
 }
 
 @section Styles {
