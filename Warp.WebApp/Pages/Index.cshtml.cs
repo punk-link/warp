@@ -2,6 +2,8 @@ using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.OutputCaching;
+using Microsoft.Extensions.Options;
+using Warp.WebApp.Models.Options;
 using Microsoft.Extensions.Localization;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
@@ -12,8 +14,10 @@ namespace Warp.WebApp.Pages;
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 public class IndexModel : BasePageModel
 {
-    public IndexModel(ILoggerFactory loggerFactory, IStringLocalizer<IndexModel> localizer, IEntryService entryService) : base(loggerFactory)
+    public IndexModel(IOptionsSnapshot<AnalyticsOptions> analyticsOptions, ILoggerFactory loggerFactory, IStringLocalizer<IndexModel> localizer, IEntryService entryService) 
+        : base(loggerFactory)
     {
+        _analyticsOptions = analyticsOptions.Value;
         _entryService = entryService;
         _localizer = localizer;
     }
@@ -22,6 +26,7 @@ public class IndexModel : BasePageModel
     [OutputCache(Duration = 3600)]
     public IActionResult OnGet()
     {
+        AnalyticsModel = new AnalyticsModel(_analyticsOptions);
         OpenGraphModel = OpenGraphService.GetDefaultModel();
 
         return Page();
@@ -70,9 +75,12 @@ public class IndexModel : BasePageModel
             new SelectListItem(_localizer["1 day"], 5.ToString())
         ];
 
+
+    public AnalyticsModel AnalyticsModel { get; set; } = default!;
     public OpenGraphModel OpenGraphModel { get; set; } = default!;
-
-
+    
+    
+    private readonly AnalyticsOptions _analyticsOptions;
     private readonly IEntryService _entryService;
     private readonly IStringLocalizer<IndexModel> _localizer;
 }

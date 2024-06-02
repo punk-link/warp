@@ -1,8 +1,13 @@
 ﻿@page
+@model Warp.WebApp.Pages.PrivacyModel
 @inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
 
 @{
     ViewData["Title"] = Localizer["Title"];
+}
+
+@section Analytics {
+    <partial name="Shared/Components/Analytics" model="@Model.AnalyticsModel" />
 }
 
 @section MetaTags {

@@ -25,7 +25,7 @@ public sealed class EntryService : IEntryService
         var now = DateTime.UtcNow;
         var formattedText = TextFormatter.Format(content);
         var description = OpenGraphService.GetDescription(formattedText);
-        var entry = new Entry(Guid.NewGuid(), description, now, now + expiresIn);
+        var entry = new Entry(Guid.NewGuid(), formattedText, description, now, now + expiresIn);
 
         var validator = new EntryValidator();
         var validationResult = await validator.ValidateAsync(entry, cancellationToken);

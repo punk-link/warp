@@ -22,6 +22,7 @@ AddLogging(builder);
 
 builder.Services.AddSingleton(_ => DistributedCacheHelper.GetConnectionMultiplexer(logger, builder.Configuration));
 
+AddOptions(builder.Services, builder.Configuration);
 AddServices(builder.Services);
 
 builder.Services.AddLocalization(o => o.ResourcesPath = "Resources");
@@ -81,6 +82,14 @@ app.MapRazorPages();
 
 app.Run();
 return;
+
+
+IServiceCollection AddOptions(IServiceCollection services, IConfiguration configuration)
+{
+    services.Configure<AnalyticsOptions>(configuration.GetSection(nameof(AnalyticsOptions)));
+        
+    return services;
+}
 
 
 IServiceCollection AddServices(IServiceCollection services)
