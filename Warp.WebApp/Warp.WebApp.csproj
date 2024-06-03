@@ -72,4 +72,10 @@
     </Content>
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\IndexModel.en-US.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+
 </Project>

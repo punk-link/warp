@@ -1,4 +1,6 @@
-﻿<footer class="mb-5">
+﻿@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+
+<footer class="mb-5">
     <div id="roaming-image" class="background-image-container d-none">
         <div>
             <img src="~/img/warp.svg" alt="background illustration">
@@ -9,16 +11,22 @@
     </h1>
     <p class="hs-2 text-body mt-1">
         <strong>
-            snap, share <wbr>and say goodbye <br>
+            @Localizer["snap, share and say goodbye"] <br>
         </strong>
-        share the moments instantly, knowing they'll disappear in no time
+        @Localizer["share the moments instantly, knowing they'll disappear in no time"]
     </p>
     <nav class="text-light fs-5">
-        <a asp-page="/Index">home</a> |
-        <a asp-page="/Privacy">privacy</a> |
-        <a href="https://github.com/punk-link/warp">sources</a>
+        <a asp-page="/Index">
+            @Localizer["IndexLink"]
+        </a> |
+        <a asp-page="/Privacy">
+            @Localizer["PrivacyLink"]
+        </a> |
+        <a href="https://github.com/punk-link/warp" target="_blank">
+            @Localizer["SourcesLink"]
+        </a>
     </nav>
     <p class="text-light fs-5">
-        © synononym.fans 2024 | all rights reserved
+        © synonym.fans 2024 | @Localizer["all rights reserved"]
     </p>
 </footer>

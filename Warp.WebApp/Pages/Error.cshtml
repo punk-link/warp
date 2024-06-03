@@ -1,5 +1,7 @@
 ﻿@page "/error"
 @model ErrorModel
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+
 @{
     ViewData["Title"] = $"Warp. {Model.Title}";
     Layout = "_LayoutDark";
@@ -20,7 +22,7 @@
 <section class="mb-5">
     <div>
         <a class="btn btn-link align-items-center ps-0 text-white" asp-area="" asp-page="/Index">
-            <i class="icofont-simple-left"></i>Create Entry
+            <i class="icofont-simple-left"></i>@Localizer["Create Entry"]
         </a>
     </div>
     <div class="error-code text-white">
@@ -31,7 +33,7 @@
         <div class="request-id">
             @if (Model.ShowRequestId)
             {
-                <strong>Request ID:</strong>
+                <strong>@Localizer["Request ID"]:</strong>
                 <code>@Model.RequestId</code>
             }
         </div>

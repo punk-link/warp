@@ -1,8 +1,11 @@
+using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.ResponseCompression;
+using System.Globalization;
 using Warp.WebApp.Data;
 using Warp.WebApp.Data.Redis;
 using Warp.WebApp.Helpers.Configuration;
@@ -27,8 +30,12 @@ builder.Services.AddSingleton(_ => DistributedCacheHelper.GetConnectionMultiplex
 AddOptions(builder.Services, builder.Configuration);
 AddServices(builder.Services);
 
+builder.Services.AddLocalization(o => o.ResourcesPath = "Resources");
+
 builder.Services.AddMemoryCache();
-builder.Services.AddRazorPages();
+builder.Services.AddRazorPages()
+    .AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix)
+    .AddDataAnnotationsLocalization();
 builder.Services.AddControllers()
     .AddControllersAsServices();
 builder.Services.AddHealthChecks()
@@ -49,6 +56,14 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 
 var app = builder.Build();
+
+var supportedCultures = new[] { new CultureInfo("en-US") };
+app.UseRequestLocalization(new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture("en-US"),
+    SupportedCultures = supportedCultures,
+    SupportedUICultures = supportedCultures
+});
 
 if (!app.Environment.IsDevelopmentOrLocal())
 {
