@@ -72,12 +72,6 @@ namespace Warp.WebApp.Pages
             if (isFailure)
                 return RedirectToError(problemDetails);
 
-            //var claims = HttpContext.User.Claims.ToList();
-            //var claim = claims.FirstOrDefault(x => x.Type == ClaimTypes.UserData && x.Value == decodedId.ToString());
-
-            //if (claim != null)
-                await Response.HttpContext.SignOutAsync();
-
             return RedirectToPage("./Index");
         }
 

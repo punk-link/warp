@@ -34,7 +34,7 @@ public sealed class EntryService : IEntryService
         if (!validationResult.IsValid)
             return validationResult.ToFailure<Guid>();
 
-        var userIdCacheKey = CacheKeyBuilder.BuildStringCacheKey(userId);
+        var userIdCacheKey = CacheKeyBuilder.BuildListStringCacheKey(userId);
         var entryIdCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entry.Id);
         var result = await _userService.AttachEntryToUser(userIdCacheKey, entryIdCacheKey, entry, expiresIn, cancellationToken);
 
@@ -52,7 +52,7 @@ public sealed class EntryService : IEntryService
             return ResultHelper.NotFound<EntryInfo>();
 
         var entryIdCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entryId);
-        var userIdCacheKey = CacheKeyBuilder.BuildStringCacheKey(userId);
+        var userIdCacheKey = CacheKeyBuilder.BuildListStringCacheKey(userId);
 
         var entry = userId != Guid.Empty
             ? await _userService.TryGetUserEntry(userIdCacheKey, entryId, cancellationToken)

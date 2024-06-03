@@ -16,7 +16,7 @@ public class CookieService : ICookieService
         if (httpContext.User.Claims != null && httpContext.User.Claims.Any())
         {
             claims = httpContext.User.Claims.ToList();
-            Guid.TryParse(claims.FirstOrDefault(x => x.ValueType == ClaimTypes.Name)!.Value, out var foundUserId);
+            Guid.TryParse(claims.FirstOrDefault(x => x.Type == ClaimTypes.Name)?.Value, out var foundUserId);
             return foundUserId;
         }
         else
@@ -25,10 +25,11 @@ public class CookieService : ICookieService
         Guid.TryParse(claim!.Value, out var userId);
         claims.Add(claim);
         var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);   
+        var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
         await response.HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, new AuthenticationProperties
         {
-            IsPersistent = true
+            IsPersistent = true,
+            ExpiresUtc = DateTimeOffset.UtcNow.AddHours(24)
         });
 
         return userId;

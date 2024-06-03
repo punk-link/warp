@@ -80,6 +80,11 @@ public sealed class DataStorage : IDataStorage
         return await _distributedStorage.TryGet<T>(key, cancellationToken);
     }
 
+    public async ValueTask<List<T>> TryGetList<T>(string key, CancellationToken cancellationToken)
+    {
+        return await _distributedStorage.TryGetList<T>(key, cancellationToken);
+    }
+
 
     private static bool IsDefaultStruct<T>(T value)
         => IsUserDefinedStruct(typeof(T)) && value!.Equals(default(T));

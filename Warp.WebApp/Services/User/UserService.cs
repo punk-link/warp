@@ -33,7 +33,7 @@ public class UserService : IUserService
     public async Task<Entry?> TryGetUserEntry(string userIdCacheKey, Guid entryId, CancellationToken cancellationToken)
     {
         var entryList = await GetUserEntries(userIdCacheKey, cancellationToken);
-        var foundEntry = entryList != null ? entryList?.FirstOrDefault(x => x.Id == entryId) : default;
+        var foundEntry = entryList.FirstOrDefault(x => x.Id == entryId);
 
         return foundEntry;
     }
@@ -41,7 +41,7 @@ public class UserService : IUserService
 
     private async Task<List<Entry>> GetUserEntries(string userIdCacheKey, CancellationToken cancellationToken)
     {
-        var entryIdList = await _dataStorage.TryGet<List<string>>(userIdCacheKey, cancellationToken);
+        var entryIdList = await _dataStorage.TryGetList<string>(userIdCacheKey, cancellationToken);
         var entryList = new List<Entry>();
         if (entryIdList != null && entryIdList.Count > 0)
         {

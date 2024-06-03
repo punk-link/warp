@@ -63,11 +63,24 @@ public sealed class KeyDbStorage : IDistributedStorage
         var bytesK = JsonSerializer.SerializeToUtf8Bytes(valueK);
         var bytesV = JsonSerializer.SerializeToUtf8Bytes(valueV);
         var redisTransaction = db.CreateTransaction();
-        await redisTransaction.ListRightPushAsync(keyK, bytesK)
-             .ContinueWith(_ => redisTransaction.KeyExpireAsync(keyK, expiresInK), cancellationToken)
-             .ContinueWith(_ => redisTransaction.StringSetAsync(keyV, bytesV, expiresInV), cancellationToken);
 
-        await redisTransaction.ExecuteAsync();
+        var transactionalTask = Task.WhenAll(redisTransaction.ListRightPushAsync(keyK, bytesK), redisTransaction.KeyExpireAsync(keyK, expiresInK),
+            redisTransaction.StringSetAsync(keyV, bytesV, expiresInV));
+
+        var isExecuted = await ExecuteOrCancel(redisTransaction.ExecuteAsync(), cancellationToken);
+        if (isExecuted)
+            await transactionalTask;
+    }
+
+
+    public async Task<List<T>> TryGetList<T>(string key, CancellationToken cancellationToken)
+    {
+        var db = GetDatabase<T>();
+        var redisTask = db.ListRangeAsync(key);
+
+        var completedTask = await ExecuteOrCancel(redisTask!, cancellationToken);
+
+        return completedTask.Select(d => JsonSerializer.Deserialize<T>(d)).ToList();
     }
 
 
@@ -75,6 +88,7 @@ public sealed class KeyDbStorage : IDistributedStorage
     {
         var db = GetDatabase<T>();
         var redisTask = db.StringGetAsync(key);
+
         var completedTask = await ExecuteOrCancel(redisTask, cancellationToken);
 
         if (!completedTask.HasValue)
