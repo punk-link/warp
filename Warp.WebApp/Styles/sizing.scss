@@ -69,3 +69,34 @@ $theme-sizes-dimensionless: (
         min-width: #{$value}vw;
     }
 }
+
+$border-radius: .375rem;
+$border-radius-sm: .25rem;
+$border-radius-lg: .5rem;
+$border-radius-xl: 1rem;
+$border-radius-xxl: 2rem;
+$border-radius-pill: 50rem;
+
+.border-radius {
+    border-radius: $border-radius;
+}
+
+.border-radius-sm {
+    border-radius: $border-radius-sm;
+}
+
+.border-radius-lg {
+    border-radius: $border-radius-lg;
+}
+
+.border-radius-xl {
+    border-radius: $border-radius-xl;
+}
+
+.border-radius-xxl {
+    border-radius: $border-radius-xxl;
+}
+
+.border-radius-pill {
+    border-radius: $border-radius-pill;
+}

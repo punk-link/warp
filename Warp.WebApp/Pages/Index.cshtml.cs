@@ -1,10 +1,10 @@
-using System.ComponentModel;
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.Extensions.Options;
 using Warp.WebApp.Models.Options;
+using Microsoft.Extensions.Localization;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Entries;
@@ -14,10 +14,12 @@ namespace Warp.WebApp.Pages;
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 public class IndexModel : BasePageModel
 {
-    public IndexModel(IOptionsSnapshot<AnalyticsOptions> analyticsOptions, ILoggerFactory loggerFactory, IEntryService entryService) : base(loggerFactory)
+    public IndexModel(IOptionsSnapshot<AnalyticsOptions> analyticsOptions, ILoggerFactory loggerFactory, IStringLocalizer<IndexModel> localizer, IEntryService entryService) 
+        : base(loggerFactory)
     {
         _analyticsOptions = analyticsOptions.Value;
         _entryService = entryService;
+        _localizer = localizer;
     }
 
 
@@ -57,21 +59,20 @@ public class IndexModel : BasePageModel
     [BindProperty]
     public List<Guid> ImageIds { get; set; } = [];
 
-    [DisplayName("Expires in")]
     [BindProperty]
     public int SelectedExpirationPeriod { get; set; }
 
     [BindProperty]
     public string TextContent { get; set; } = string.Empty;
     
-    public static List<SelectListItem> ExpirationPeriodOptions
+    public List<SelectListItem> ExpirationPeriodOptions
         =>
         [
-            new SelectListItem("5 minutes", 1.ToString()),
-            new SelectListItem("30 minutes", 2.ToString()),
-            new SelectListItem("1 hour", 3.ToString()),
-            new SelectListItem("8 hours", 4.ToString()),
-            new SelectListItem("1 day", 5.ToString())
+            new SelectListItem(_localizer["5 minutes"], 1.ToString()),
+            new SelectListItem(_localizer["30 minutes"], 2.ToString()),
+            new SelectListItem(_localizer["1 hour"], 3.ToString()),
+            new SelectListItem(_localizer["8 hours"], 4.ToString()),
+            new SelectListItem(_localizer["1 day"], 5.ToString())
         ];
 
 
@@ -81,4 +82,5 @@ public class IndexModel : BasePageModel
     
     private readonly AnalyticsOptions _analyticsOptions;
     private readonly IEntryService _entryService;
+    private readonly IStringLocalizer<IndexModel> _localizer;
 }
