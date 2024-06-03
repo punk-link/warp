@@ -1,6 +1,6 @@
 ﻿@model AnalyticsModel
 
-@if (!string.IsNullOrEmpty(Model.GTag))
+@if (!string.IsNullOrEmpty(Model?.GTag))
 {
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=@Model.GTag"></script>
@@ -12,7 +12,7 @@
     gtag('config', '@Model.GTag');
 </script>
 }
-@if (!string.IsNullOrEmpty(Model.YandexMetrikaNumber))
+@if (!string.IsNullOrEmpty(Model?.YandexMetrikaNumber))
 {
     <!-- Yandex.Metrika counter -->
     <script type="text/javascript" >

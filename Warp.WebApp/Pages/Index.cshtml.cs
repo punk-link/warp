@@ -50,7 +50,7 @@ public class IndexModel : BasePageModel
                 if (isFailure)
                     return RedirectToError(problemDetails);
 
-                BuildModel(id, entry);
+                BuildModel(entry);
                 AddOpenGraphModel();
                 return Page();
             }
@@ -61,9 +61,10 @@ public class IndexModel : BasePageModel
         return Page();
 
 
-        void BuildModel(string entryId, EntryInfo entryInfo)
+        void BuildModel(EntryInfo entryInfo)
         {
-            TextContent = entryInfo.Entry.Content;
+            EntryId = entryInfo.Entry.Id;
+            TextContent = TextFormatter.GetCleanString(entryInfo.Entry.Content);
             ImageIds = entryInfo.ImageIds;
         }
 
@@ -74,11 +75,11 @@ public class IndexModel : BasePageModel
     }
 
 
-    public async Task<IActionResult> OnPost(CancellationToken cancellationToken)
+    public async Task<IActionResult> OnPost(Guid entryId, CancellationToken cancellationToken)
     {
         var expiresIn = GetExpirationPeriod(SelectedExpirationPeriod);
         var userId = await _cookieService.ConfigureCookie(HttpContext, Response);
-        var (_, isFailure, id, problemDetails) = await _entryService.Add(userId, TextContent, expiresIn, ImageIds, cancellationToken);
+        var (_, isFailure, id, problemDetails) = await _entryService.Add(entryId, userId, TextContent, expiresIn, ImageIds, cancellationToken);
 
         if (isFailure)
             return RedirectToError(problemDetails);
@@ -107,6 +108,8 @@ public class IndexModel : BasePageModel
 
     [BindProperty]
     public string TextContent { get; set; } = string.Empty;
+    [BindProperty]
+    public Guid EntryId { get; set; } = Guid.Empty;
     
     public List<SelectListItem> ExpirationPeriodOptions
         =>

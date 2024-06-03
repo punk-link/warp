@@ -1,4 +1,8 @@
-﻿namespace Warp.WebApp.Services;
+﻿using Microsoft.AspNetCore.Html;
+using System.Net;
+using System.Text.RegularExpressions;
+
+namespace Warp.WebApp.Services;
 
 public static class TextFormatter
 {
@@ -20,5 +24,15 @@ public static class TextFormatter
         }
 
         return result;
+    }
+
+    public static string GetCleanString(string htmlText)
+    {
+        if(string.IsNullOrWhiteSpace(htmlText))
+            return string.Empty;
+
+        string pattern = @"<(.|\n)*?>";
+
+        return Regex.Replace(htmlText, pattern, string.Empty);
     }
 }

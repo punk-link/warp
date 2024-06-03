@@ -25,5 +25,5 @@ public static class CacheKeyBuilder
         => $"{nameof(ReportService)}::{typeof(Entry)}::{id}";
 
     public static string BuildViewCountServiceCacheKey(in Guid id)
-        => $"{nameof(ReportService)}::{typeof(Entry)}::{id}";
+        => $"{nameof(ViewCountService)}::{typeof(Entry)}::{id}";
 }

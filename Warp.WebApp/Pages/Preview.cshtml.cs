@@ -81,7 +81,7 @@ namespace Warp.WebApp.Pages
             if (claim != null)
             {
                 var userGuid = Guid.Parse(claim.Value);
-                var (_, isFailure, id, problemDetails) = await _entryService.Add(userGuid, entryInfo.Entry.Content, entryInfo.Entry.ExpiresAt - entryInfo.Entry.CreatedAt, entryInfo.ImageIds, cancellationToken);
+                var (_, isFailure, id, problemDetails) = await _entryService.Add(Guid.Empty, userGuid, entryInfo.Entry.Content, entryInfo.Entry.ExpiresAt - entryInfo.Entry.CreatedAt, entryInfo.ImageIds, cancellationToken);
                 if(isFailure)
                     return RedirectToError(problemDetails);
 
