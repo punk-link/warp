@@ -22,14 +22,12 @@ public sealed class EntryService : IEntryService
     }
 
 
-    public async Task<Result<Guid, ProblemDetails>> Add(Guid entryId, Guid userId, string content, TimeSpan expiresIn, List<Guid> imageIds, CancellationToken cancellationToken)
+    public async Task<Result<Guid, ProblemDetails>> Add(Guid userId, string content, TimeSpan expiresIn, List<Guid> imageIds, CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;
         var formattedText = TextFormatter.Format(content);
         var description = OpenGraphService.GetDescription(formattedText);
-        entryId = entryId == Guid.Empty ? Guid.NewGuid() : entryId;
-
-        var entry = new Entry(entryId, formattedText, description, now, now + expiresIn);
+        var entry = new Entry(Guid.NewGuid(), formattedText, description, now, now + expiresIn);
 
         var validator = new EntryValidator();
         var validationResult = await validator.ValidateAsync(entry, cancellationToken);
@@ -72,14 +70,10 @@ public sealed class EntryService : IEntryService
     }
 
 
-    public async Task<Result<DummyObject, ProblemDetails>> Remove(Guid id, CancellationToken cancellationToken)
+    public void Remove(Guid id, CancellationToken cancellationToken)
     {
-        if (await _reportService.Contains(id, cancellationToken))
-            return ResultHelper.NotFound<DummyObject>();
-
         var cacheKey = CacheKeyBuilder.BuildEntryCacheKey(id);
-        await _dataStorage.Remove<EntryInfo>(cacheKey, cancellationToken);
-        return Result.Success<DummyObject, ProblemDetails>(DummyObject.Empty);
+        _dataStorage.Remove<EntryInfo>(cacheKey, cancellationToken);
     }
 
 

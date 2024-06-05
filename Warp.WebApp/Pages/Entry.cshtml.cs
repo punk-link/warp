@@ -5,6 +5,7 @@ using Warp.WebApp.Models;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Entries;
+using Warp.WebApp.Services.Images;
 
 namespace Warp.WebApp.Pages;
 
@@ -41,7 +42,7 @@ public class EntryModel : BasePageModel
             TextContent = entryInfo.Entry.Content;
             Description = entryInfo.Entry.Description;
             ViewCount = entryInfo.ViewCount;
-            ImageUrls = BuildImageUrls(decodedId, entryInfo.ImageIds);
+            ImageUrls = ImageService.BuildImageUrls(decodedId, entryInfo.ImageIds);
         }
 
 
@@ -50,11 +51,6 @@ public class EntryModel : BasePageModel
             OpenGraphModel = OpenGraphService.GetModel(TextContent, ImageUrls);
         }
     }
-
-
-    private static List<string> BuildImageUrls(Guid id, List<Guid> imageIds)
-        => imageIds.Select(imageId => $"/api/images/entry-id/{id}/image-id/{imageId}")
-            .ToList();
 
     
     public OpenGraphModel OpenGraphModel { get; set; } = default!;

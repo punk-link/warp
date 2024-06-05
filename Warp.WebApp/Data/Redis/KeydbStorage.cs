@@ -28,11 +28,10 @@ public sealed class KeyDbStorage : IDistributedStorage
         return await ExecuteOrCancel(redisTask, cancellationToken);
     }
 
-    public async Task Remove<T>(string key, CancellationToken cancellationToken)
+    public void Remove<T>(string key, CancellationToken cancellationToken)
     {
         var db = GetDatabase<T>();
-        var redisTask = db.StringGetDeleteAsync(key);
-        await ExecuteOrCancel(redisTask, cancellationToken);
+        var redisTask = db.StringGetDelete(key, CommandFlags.FireAndForget);
     }
 
 
@@ -45,17 +44,17 @@ public sealed class KeyDbStorage : IDistributedStorage
     }
 
 
-    public async Task SetToList<T>(string key, T value, TimeSpan expiresIn, CancellationToken cancellationToken)
-    {
-        var db = GetDatabase<T>();
-        var bytes = JsonSerializer.SerializeToUtf8Bytes(value);
+    //public async Task SetToList<T>(string key, T value, TimeSpan expiresIn, CancellationToken cancellationToken)
+    //{
+    //    var db = GetDatabase<T>();
+    //    var bytes = JsonSerializer.SerializeToUtf8Bytes(value);
 
-        var redisTransaction = db.CreateTransaction();
-        await redisTransaction.ListRightPushAsync(key, bytes)
-            .ContinueWith(_ => redisTransaction.KeyExpireAsync(key, expiresIn), cancellationToken);
+    //    var redisTransaction = db.CreateTransaction();
+    //    await redisTransaction.ListRightPushAsync(key, bytes)
+    //        .ContinueWith(_ => redisTransaction.KeyExpireAsync(key, expiresIn), cancellationToken);
 
-        await redisTransaction.ExecuteAsync();
-    }
+    //    await redisTransaction.ExecuteAsync();
+    //}
 
     public async Task CrossValueSet<K, V>(string keyK, K valueK, TimeSpan expiresInK, string keyV, V valueV, TimeSpan expiresInV, CancellationToken cancellationToken)
     {

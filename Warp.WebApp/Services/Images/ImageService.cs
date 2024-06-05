@@ -49,7 +49,7 @@ public class ImageService : IImageService
         foreach (var imageInfo in imageInfos)
         {
             var entryCacheKey = CacheKeyBuilder.BuildImageInfoCacheKey(imageInfo.Id);
-            await _dataStorage.Remove<List<ImageInfo>>(entryCacheKey, cancellationToken);
+            _dataStorage.Remove<List<ImageInfo>>(entryCacheKey, cancellationToken);
         }
     }
 
@@ -91,6 +91,12 @@ public class ImageService : IImageService
 
         return (file.FileName, imageInfo.Id);
     }
+
+
+    public static List<string> BuildImageUrls(Guid id, List<Guid> imageIds)
+    => imageIds.Select(imageId => $"/api/images/entry-id/{id}/image-id/{imageId}")
+        .ToList();
+
 
 
     private readonly IDataStorage _dataStorage;
