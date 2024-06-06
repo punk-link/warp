@@ -46,7 +46,7 @@ public sealed class EntryService : IEntryService
     }
 
 
-    public async Task<Result<EntryInfo, ProblemDetails>> Get(Guid userId, Guid entryId, CancellationToken cancellationToken)
+    public async Task<Result<EntryInfo, ProblemDetails>> Get(Guid userId, Guid entryId, CancellationToken cancellationToken, bool isReceivedForCustomer = false)
     {
         if (await _reportService.Contains(entryId, cancellationToken))
             return ResultHelper.NotFound<EntryInfo>();
@@ -61,7 +61,11 @@ public sealed class EntryService : IEntryService
         if (entry.Equals(default))
             return ResultHelper.NotFound<EntryInfo>();
 
-        var viewCount = await _viewCountService.AddAndGet(entryId, cancellationToken);
+        var viewCount = isReceivedForCustomer
+            ? await _viewCountService.AddAndGet(entryId, cancellationToken)
+            : await _viewCountService.Get(entryId, cancellationToken);
+                
+
         var imageIds = (await _imageService.Get(entryId, cancellationToken))
             .Select(image => image.Id)
             .ToList();

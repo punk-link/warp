@@ -18,6 +18,13 @@ public sealed class ViewCountService : IViewCountService
     }
 
 
+    public async Task<long> Get(Guid itemId, CancellationToken cancellationToken)
+    {
+        var cacheKey = CacheKeyBuilder.BuildViewCountServiceCacheKey(in itemId);
+        return await _dataStorage.TryGet<long>(cacheKey, cancellationToken);
+    }
+
+
     private readonly IDataStorage _dataStorage;
     private static readonly Dictionary<Guid, int> Counter = [];
 }

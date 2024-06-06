@@ -65,6 +65,7 @@ public class IndexModel : BasePageModel
         {
             TextContent = TextFormatter.GetCleanString(entryInfo.Entry.Content);
             ImageIds = entryInfo.ImageIds;
+            SelectedExpirationPeriod = GetExpirationPeriodId(entryInfo.Entry.ExpiresAt - entryInfo.Entry.CreatedAt);
         }
 
         void AddOpenGraphModel()
@@ -97,6 +98,26 @@ public class IndexModel : BasePageModel
             5 => new TimeSpan(24, 0, 0),
             _ => new TimeSpan(0, 5, 0)
         };
+
+
+    private static int GetExpirationPeriodId(TimeSpan expirationPeriod)
+    {
+        var ts5min = new TimeSpan(0, 5, 0);
+        var ts30min = new TimeSpan(0, 30, 0);
+        var ts1hour = new TimeSpan(1, 0, 0);
+        var ts8hours = new TimeSpan(8, 0, 0);
+
+        if (expirationPeriod <= ts5min)
+            return 1;
+        if (expirationPeriod <= ts30min && expirationPeriod > ts5min)
+            return 2;
+        if (expirationPeriod <= ts1hour && expirationPeriod > ts30min)
+            return 3;
+        if (expirationPeriod <= ts8hours && expirationPeriod > ts1hour)
+            return 4;
+
+        return 5;
+    }
 
 
     [BindProperty]
