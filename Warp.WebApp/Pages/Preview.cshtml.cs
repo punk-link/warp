@@ -8,6 +8,7 @@ using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
+using Warp.WebApp.Services.User;
 
 namespace Warp.WebApp.Pages
 {
@@ -24,7 +25,7 @@ namespace Warp.WebApp.Pages
             if (decodedId == Guid.Empty)
                 return RedirectToError(ProblemDetailsHelper.Create("Can't decode a provided ID."));
 
-            var claim = this.HttpContext.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Name && Guid.TryParse(x.Value, out _));
+            var claim = CookieService.GetClaim(HttpContext);
             if (claim != null)
             {
                 var userGuid = Guid.Parse(claim.Value);
@@ -67,14 +68,18 @@ namespace Warp.WebApp.Pages
             if (decodedId == Guid.Empty)
                 return RedirectToError(ProblemDetailsHelper.Create("Can't decode a provided ID."));
 
-            _entryService.Remove(decodedId, cancellationToken);
+            var claim = CookieService.GetClaim(HttpContext);
+            if (claim != null)
+            {
+                _entryService.Remove(decodedId, cancellationToken);
+            }
 
             return RedirectToPage("./Index");
         }
 
         public async Task<IActionResult> OnPostCopy(string id, CancellationToken cancellationToken)
         {
-            var claim = this.HttpContext.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Name && Guid.TryParse(x.Value, out _));
+            var claim = CookieService.GetClaim(HttpContext);
             if (claim != null)
             {
                 var decodedId = IdCoder.Decode(id);

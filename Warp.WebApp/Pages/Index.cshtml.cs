@@ -42,7 +42,7 @@ public class IndexModel : BasePageModel
             if (decodedId == Guid.Empty)
                 return RedirectToError(ProblemDetailsHelper.Create("Can't decode a provided ID."));
 
-            var claim = this.HttpContext.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Name && Guid.TryParse(x.Value, out _));
+            var claim = CookieService.GetClaim(HttpContext);
             if (claim != null)
             {
                 var userId = Guid.Parse(claim.Value);

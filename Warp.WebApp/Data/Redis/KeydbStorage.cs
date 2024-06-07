@@ -31,7 +31,7 @@ public sealed class KeyDbStorage : IDistributedStorage
     public void Remove<T>(string key, CancellationToken cancellationToken)
     {
         var db = GetDatabase<T>();
-        var redisTask = db.StringGetDelete(key, CommandFlags.FireAndForget);
+        db.StringGetDelete(key, CommandFlags.FireAndForget);
     }
 
 

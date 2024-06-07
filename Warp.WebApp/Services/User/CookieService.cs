@@ -34,4 +34,10 @@ public class CookieService : ICookieService
 
         return userId;
     }
+    
+    public static Claim? GetClaim(HttpContext httpContext)
+    {
+        var claim = httpContext.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Name && Guid.TryParse(x.Value, out _));
+        return claim;
+    }
 }
