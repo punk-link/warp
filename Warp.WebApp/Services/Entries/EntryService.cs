@@ -58,7 +58,7 @@ public sealed class EntryService : IEntryService
             ? await _userService.TryGetUserEntry(userIdCacheKey, entryId, cancellationToken)
             : await _dataStorage.TryGet<Entry>(entryIdCacheKey, cancellationToken);
 
-        if (entry.Equals(default))
+        if (!entry.HasValue || entry.Value.Equals(default))
             return ResultHelper.NotFound<EntryInfo>();
 
         var viewCount = isReceivedForCustomer

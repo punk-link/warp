@@ -1,7 +1,9 @@
 ﻿@page "/preview/{id}"
 @model Warp.WebApp.Pages.PreviewModel
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+
 @{
-    ViewData["Title"] = "Warp. Share the moments instantly, knowing they'll disappear in no time.";
+    ViewData["Title"] = Localizer["Title"];
 }
 
 @section MetaTags {
@@ -13,49 +15,63 @@
     <script type="module" src="~/js/components/modal.js" defer></script>
     <script type="module" defer>
         import { addEntryEvents } from '/js/entry.js';
+        import { addPreviewEvents } from '/js/preview.js';
 
         document.addEventListener('DOMContentLoaded', () => {
+            addPreviewEvents();
             addEntryEvents('@Model.Id', '@Model.ExpiresIn');
         });
 
     </script>
 }
 
-<div class="row align-items-baseline px-3">
-    <h1 class="logo">
-        <a class="text-primary" asp-area="" asp-page="./Index">warp</a>
-    </h1>
-</div>
-
-<section class="px-3 mb-5">
-    <div class="row">
-        <div class="row align-items-end">
-            <div class="col-6 d-flex flex-column">
-                <div class="text-right countdown"></div>
-                <div class="text-right text-light fs-4">the entry expires in</div>
+<div class="min-vh-100">
+    <div class="row align-items-baseline px-3">
+        <h1 class="logo">
+            <a class="text-primary" asp-area="" asp-page="./Index">warp</a>
+        </h1>
+    </div>
+    
+    <section class="min-vh-75 px-3 mb-5 d-flex flex-column justify-content-between">
+        <div>
+            <div class="row">
+                <div class="row align-items-end">
+                    <div class="col-6">
+                    </div>
+                    <div class="col-6 d-flex flex-column">
+                        <div class="text-right countdown">&nbsp;</div>
+                        <div class="text-right text-light fs-4">@Localizer["the entry expires in"]</div>
+                    </div>
+                </div>
+            </div>
+            <article class="bg-light-secondary p-3 my-5">
+                @Html.Raw(Model.TextContent)
+            </article>
+        </div>
+        <div class="d-flex justify-content-between align-items-center col-12 offset-md-3 col-md-6 sticky-bottom bg-transparent pb-3">
+            <div class="bg-white border-radius-sm">
+                <form method="post" asp-page-handler="delete" asp-route-id="@Model.Id">
+                    <a id="delete-button" class="btn btn-link" tabindex="3" title="@Localizer["DeleteButton"]">
+                        <i class="icofont-bin text-lighter"></i>
+                    </a>
+                </form>
+            </div>
+            <div class="bg-white border-radius-sm">
+                <form method="post" asp-page-handler="edit" asp-route-id="@Model.Id" title="@Localizer["CopyButton"]">
+                    <a id="edit-button" class="btn btn-link d-none" tabindex="2">
+                        <i class="icofont-loop text-lighter"></i>
+                    </a>
+                </form>
+            </div>
+            <div>
+                <form method="post" asp-page-handler="copy" asp-route-id="@Model.Id">
+                    <a id="copy-link-button" class="btn btn-primary align-items-center" tabindex="1">
+                        <i class="icofont-link text-lighter"></i>@Localizer["CopyLinkButton"]
+                    </a>
+                </form>
             </div>
         </div>
-    </div>
-    <article class="min-vh-75 my-5">
-        @Html.Raw(Model.TextContent)
-    </article>
-    <div class="d-flex justify-content-between align-items-center col-12 offset-md-3 col-md-6 sticky-bottom bg-transparent p-3">
-        <div>
-            <form method="post" asp-page-handler="delete" asp-route-id="@Model.Id">
-                <button id="page-close-button" class="btn btn-light" tabindex="2">Delete</button>
-            </form>
-        </div>
-        <div>
-            <form method="post" asp-page-handler="edit" asp-route-id="@Model.Id">
-                <button class="btn btn-light">Edit</button>
-            </form>
-        </div>
-        <div>
-            <form method="post" asp-page-handler="copy" asp-route-id="@Model.Id">
-                <button id="page-close-button" class="btn btn-light" tabindex="2">Copy page</button>
-            </form>
-        </div>
-    </div>
-</section>
+    </section>
+</div>
 
 <partial name="Shared/Footer" />
