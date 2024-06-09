@@ -123,8 +123,8 @@
   <data name="CloseButton" xml:space="preserve">
     <value>Close</value>
   </data>
-  <data name="CopyUrlButton" xml:space="preserve">
-    <value>Copy URL</value>
+  <data name="CopyLinkButton" xml:space="preserve">
+    <value>Copy Link</value>
   </data>
   <data name="ReportButton" xml:space="preserve">
     <value>Report</value>
