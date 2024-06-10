@@ -22,6 +22,20 @@
             addEntryEvents('@Model.Id', '@Model.ExpiresIn');
         });
 
+        document.addEventListener('DOMContentLoaded', () => {
+            let editButton = document.getElementById('copy-link-button');
+            editButton.addEventListener('click', () => {
+                window.location.href = '/Index' + '@Model.Id';
+            });
+        })
+
+        document.addEventListener('DOMContentLoaded', () => {
+            let editButton = document.getElementById('edit-button');
+            editButton.addEventListener('click', () => {
+                window.location.href = '/Index' + '@Model.Id';
+            });
+        })
+
     </script>
 }
 
@@ -31,7 +45,7 @@
             <a class="text-primary" asp-area="" asp-page="./Index">warp</a>
         </h1>
     </div>
-    
+
     <section class="min-vh-75 px-3 mb-5 d-flex flex-column justify-content-between">
         <div>
             <div class="row">
@@ -57,18 +71,14 @@
                 </form>
             </div>
             <div class="bg-white border-radius-sm">
-                <form method="post" asp-page-handler="edit" asp-route-id="@Model.Id" title="@Localizer["CopyButton"]">
-                    <a id="edit-button" class="btn btn-link d-none" tabindex="2">
-                        <i class="icofont-loop text-lighter"></i>
-                    </a>
-                </form>
+                <a id="edit-button" class="btn btn-link d-none" tabindex="2" title="@Localizer["CopyButton"]">
+                    <i class="icofont-loop text-lighter"></i>
+                </a>
             </div>
             <div>
-                <form method="post" asp-page-handler="copy" asp-route-id="@Model.Id">
-                    <a id="copy-link-button" class="btn btn-primary align-items-center" tabindex="1">
-                        <i class="icofont-link text-lighter"></i>@Localizer["CopyLinkButton"]
-                    </a>
-                </form>
+                <a id="copy-link-button" class="btn btn-primary align-items-center" tabindex="1">
+                    <i class="icofont-link text-lighter"></i>@Localizer["CopyLinkButton"]
+                </a>
             </div>
         </div>
     </section>
