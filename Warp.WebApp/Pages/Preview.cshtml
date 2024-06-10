@@ -23,19 +23,11 @@
         });
 
         document.addEventListener('DOMContentLoaded', () => {
-            let editButton = document.getElementById('copy-link-button');
-            editButton.addEventListener('click', () => {
-                window.location.href = '/Index' + '@Model.Id';
-            });
-        })
-
-        document.addEventListener('DOMContentLoaded', () => {
             let editButton = document.getElementById('edit-button');
             editButton.addEventListener('click', () => {
-                window.location.href = '/Index' + '@Model.Id';
+                window.location.href = '/?id=' + '@Model.Id';
             });
         })
-
     </script>
 }
 

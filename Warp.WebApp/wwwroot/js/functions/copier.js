@@ -1,7 +1,8 @@
-export function copyUrl() {
+export function copyUrl(url) {
     try {
         document.body.style.cursor = 'wait';
-        navigator.clipboard.writeText(window.location.href);
+        let href = url ? url : window.location.href;
+        navigator.clipboard.writeText(href);
     } finally {
         document.body.style.cursor = 'auto';
     }

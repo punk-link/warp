@@ -57,25 +57,20 @@ namespace Warp.WebApp.Pages
             }
         }
 
-        public IActionResult OnPostEdit(string id)
-        {
-            return RedirectToPage("./Index", new { id });
-        }
+        //public IActionResult OnPostDelete(string id, CancellationToken cancellationToken)
+        //{
+        //    var decodedId = IdCoder.Decode(id);
+        //    if (decodedId == Guid.Empty)
+        //        return RedirectToError(ProblemDetailsHelper.Create("Can't decode a provided ID."));
 
-        public IActionResult OnPostDelete(string id, CancellationToken cancellationToken)
-        {
-            var decodedId = IdCoder.Decode(id);
-            if (decodedId == Guid.Empty)
-                return RedirectToError(ProblemDetailsHelper.Create("Can't decode a provided ID."));
+        //    var claim = CookieService.GetClaim(HttpContext);
+        //    if (claim != null)
+        //    {
+        //        _entryService.Remove(decodedId, cancellationToken);
+        //    }
 
-            var claim = CookieService.GetClaim(HttpContext);
-            if (claim != null)
-            {
-                _entryService.Remove(decodedId, cancellationToken);
-            }
-
-            return RedirectToPage("./Index");
-        }
+        //    return RedirectToPage("./Index");
+        //}
 
         public async Task<IActionResult> OnPostCopy(string id, CancellationToken cancellationToken)
         {
