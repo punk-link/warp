@@ -7,7 +7,7 @@ namespace Warp.WebApp.Pages;
 [IgnoreAntiforgeryToken]
 public class DeletedModel : PageModel
 {
-    public IActionResult OnGet()
+    public IActionResult OnGet(string id, CancellationToken cancellationToken)
     {
         return Page();
     }

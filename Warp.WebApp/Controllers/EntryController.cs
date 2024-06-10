@@ -17,8 +17,8 @@ public class EntryController : BaseController
     }
 
 
-    [HttpDelete]
-    public IActionResult DeleteEntry([FromForm] string id, CancellationToken cancellationToken = default)
+    [HttpDelete("delete")]
+    public IActionResult DeleteEntry([FromBody] string id, CancellationToken cancellationToken = default)
     {
         var decodedId = IdCoder.Decode(id);
         if (decodedId == Guid.Empty)
@@ -30,7 +30,7 @@ public class EntryController : BaseController
             _entryService.Remove(decodedId, cancellationToken);
         }
 
-        return RedirectToPage("./Index");
+        return RedirectToPage("./Deleted");
     }
 
 
