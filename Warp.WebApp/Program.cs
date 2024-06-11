@@ -1,5 +1,9 @@
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Razor;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.ResponseCompression;
 using System.Globalization;
 using Warp.WebApp.Data;
@@ -11,6 +15,7 @@ using Warp.WebApp.Middlewares;
 using Warp.WebApp.Models.Options;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
+using Warp.WebApp.Services.User;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,6 +52,9 @@ builder.Services.AddResponseCompression(options =>
 builder.Services.AddResponseCaching();
 builder.Services.AddOutputCache();
 
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
+
+
 var app = builder.Build();
 
 var supportedCultures = new[] { new CultureInfo("en-US") };
@@ -75,6 +83,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
@@ -102,6 +111,8 @@ IServiceCollection AddServices(IServiceCollection services)
     services.AddTransient<IReportService, ReportService>();
     services.AddTransient<IViewCountService, ViewCountService>();
     services.AddTransient<IEntryService, EntryService>();
+    services.AddTransient<IUserService, UserService>();
+    services.AddTransient<ICookieService, CookieService>();
 
     services.AddHostedService<WarmupService>();
 

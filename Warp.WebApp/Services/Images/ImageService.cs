@@ -37,26 +37,26 @@ public class ImageService : IImageService
         var imageInfos = new List<ImageInfo>(imageIds.Count);
         foreach (var imageId in imageIds)
         {
-            var entryCacheKey = BuildEntryCacheKey(imageId);
+            var entryCacheKey = CacheKeyBuilder.BuildImageInfoCacheKey(imageId);
             var value = await _dataStorage.TryGet<ImageInfo>(entryCacheKey, cancellationToken);
             if (!value.Equals(default))
                 imageInfos.Add(value);
         }
 
-        var bucketCacheKey = BuildBucketCacheKey(entryId);
+        var bucketCacheKey = CacheKeyBuilder.BuildImageInfoListCacheKey(entryId);
         await _dataStorage.Set(bucketCacheKey, imageInfos, relativeExpirationTime, cancellationToken);
 
         foreach (var imageInfo in imageInfos)
         {
-            var entryCacheKey = BuildEntryCacheKey(imageInfo.Id);
-            _dataStorage.Remove<List<ImageInfo>>(entryCacheKey);
+            var entryCacheKey = CacheKeyBuilder.BuildImageInfoCacheKey(imageInfo.Id);
+            _dataStorage.Remove<List<ImageInfo>>(entryCacheKey, cancellationToken);
         }
     }
 
 
     public async Task<List<ImageInfo>> Get(Guid entryId, CancellationToken cancellationToken)
     {
-        var bucketCacheKey = BuildBucketCacheKey(entryId);
+        var bucketCacheKey = CacheKeyBuilder.BuildImageInfoListCacheKey(entryId);
         var values = await _dataStorage.TryGet<List<ImageInfo>>(bucketCacheKey, cancellationToken);
 
         return values ?? Enumerable.Empty<ImageInfo>().ToList();
@@ -74,14 +74,6 @@ public class ImageService : IImageService
     }
 
 
-    private static string BuildBucketCacheKey(Guid id)
-        => $"{nameof(List<ImageInfo>)}::{id}";
-
-
-    private static string BuildEntryCacheKey(Guid id)
-        => $"{nameof(ImageInfo)}::{id}";
-
-
     private async Task<(string, Guid)> Add(IFormFile file, CancellationToken cancellationToken)
     {
         using var memoryStream = new MemoryStream();
@@ -94,11 +86,17 @@ public class ImageService : IImageService
             ContentType = file.ContentType
         };
 
-        var cacheKey = BuildEntryCacheKey(imageInfo.Id);
+        var cacheKey = CacheKeyBuilder.BuildImageInfoCacheKey(imageInfo.Id);
         await _dataStorage.Set(cacheKey, imageInfo, TimeSpan.FromHours(1), cancellationToken);
 
         return (file.FileName, imageInfo.Id);
     }
+
+
+    public static List<string> BuildImageUrls(Guid id, List<Guid> imageIds)
+    => imageIds.Select(imageId => $"/api/images/entry-id/{id}/image-id/{imageId}")
+        .ToList();
+
 
 
     private readonly IDataStorage _dataStorage;

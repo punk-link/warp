@@ -14,20 +14,16 @@ public sealed class ReportService : IReportService
 
     public ValueTask<bool> Contains(Guid id, CancellationToken cancellationToken)
     {
-        var cacheKey = GetCacheKey(in id);
+        var cacheKey = CacheKeyBuilder.BuildReportServiceCacheKey(in id);
         return _dataStorage.Contains<Report>(cacheKey, cancellationToken);
     }
 
 
     public Task MarkAsReported(Guid id, CancellationToken cancellationToken)
     {
-        var cacheKey = GetCacheKey(in id);
+        var cacheKey = CacheKeyBuilder.BuildReportServiceCacheKey(in id);
         return _dataStorage.Set(cacheKey, new Report(id), CachingConstants.MaxSupportedCachingTime, cancellationToken);
     }
-
-
-    private static string GetCacheKey(in Guid id)
-        => $"{nameof(ReportService)}::{typeof(Entry)}::{id}";
 
 
     private readonly IDataStorage _dataStorage;

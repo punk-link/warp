@@ -1,4 +1,5 @@
-﻿using StackExchange.Redis;
+﻿using Microsoft.AspNetCore.DataProtection.KeyManagement;
+using StackExchange.Redis;
 using System.Text.Json;
 using Warp.WebApp.Models;
 
@@ -27,7 +28,7 @@ public sealed class KeyDbStorage : IDistributedStorage
         return await ExecuteOrCancel(redisTask, cancellationToken);
     }
 
-    public void Remove<T>(string key)
+    public void Remove<T>(string key, CancellationToken cancellationToken)
     {
         var db = GetDatabase<T>();
         db.StringGetDelete(key, CommandFlags.FireAndForget);
@@ -43,10 +44,50 @@ public sealed class KeyDbStorage : IDistributedStorage
     }
 
 
+    //public async Task SetToList<T>(string key, T value, TimeSpan expiresIn, CancellationToken cancellationToken)
+    //{
+    //    var db = GetDatabase<T>();
+    //    var bytes = JsonSerializer.SerializeToUtf8Bytes(value);
+
+    //    var redisTransaction = db.CreateTransaction();
+    //    await redisTransaction.ListRightPushAsync(key, bytes)
+    //        .ContinueWith(_ => redisTransaction.KeyExpireAsync(key, expiresIn), cancellationToken);
+
+    //    await redisTransaction.ExecuteAsync();
+    //}
+
+    public async Task CrossValueSet<K, V>(string keyK, K valueK, TimeSpan expiresInK, string keyV, V valueV, TimeSpan expiresInV, CancellationToken cancellationToken)
+    {
+        var db = _multiplexer.GetDatabase();
+        var bytesK = JsonSerializer.SerializeToUtf8Bytes(valueK);
+        var bytesV = JsonSerializer.SerializeToUtf8Bytes(valueV);
+        var redisTransaction = db.CreateTransaction();
+
+        var transactionalTask = Task.WhenAll(redisTransaction.ListRightPushAsync(keyK, bytesK), redisTransaction.KeyExpireAsync(keyK, expiresInK),
+            redisTransaction.StringSetAsync(keyV, bytesV, expiresInV));
+
+        var isExecuted = await ExecuteOrCancel(redisTransaction.ExecuteAsync(), cancellationToken);
+        if (isExecuted)
+            await transactionalTask;
+    }
+
+
+    public async Task<List<T>> TryGetList<T>(string key, CancellationToken cancellationToken)
+    {
+        var db = GetDatabase<T>();
+        var redisTask = db.ListRangeAsync(key);
+
+        var completedTask = await ExecuteOrCancel(redisTask!, cancellationToken);
+
+        return completedTask.Select(d => JsonSerializer.Deserialize<T>(d)).ToList();
+    }
+
+
     public async Task<T?> TryGet<T>(string key, CancellationToken cancellationToken)
     {
         var db = GetDatabase<T>();
         var redisTask = db.StringGetAsync(key);
+
         var completedTask = await ExecuteOrCancel(redisTask, cancellationToken);
 
         if (!completedTask.HasValue)
@@ -79,9 +120,9 @@ public sealed class KeyDbStorage : IDistributedStorage
             Entry => 1,
             ImageInfo => 2,
             Report => 3,
+            string => 4,
             _ => 0
         };
-
 
     private readonly IConnectionMultiplexer _multiplexer;
 }

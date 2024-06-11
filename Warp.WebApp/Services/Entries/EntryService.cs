@@ -6,21 +6,23 @@ using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
 using Warp.WebApp.Models.Validators;
 using Warp.WebApp.Services.Images;
+using Warp.WebApp.Services.User;
 
 namespace Warp.WebApp.Services.Entries;
 
 public sealed class EntryService : IEntryService
 {
-    public EntryService(IDataStorage dataStorage, IImageService imageService, IReportService reportService, IViewCountService viewCountService)
+    public EntryService(IDataStorage dataStorage, IImageService imageService, IReportService reportService, IViewCountService viewCountService, IUserService userService)
     {
         _dataStorage = dataStorage;
         _imageService = imageService;
         _reportService = reportService;
         _viewCountService = viewCountService;
+        _userService = userService;
     }
 
 
-    public async Task<Result<Guid, ProblemDetails>> Add(string content, TimeSpan expiresIn, List<Guid> imageIds, CancellationToken cancellationToken)
+    public async Task<Result<Guid, ProblemDetails>> Add(Guid userId, string content, TimeSpan expiresIn, List<Guid> imageIds, CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;
         var formattedText = TextFormatter.Format(content);
@@ -32,8 +34,9 @@ public sealed class EntryService : IEntryService
         if (!validationResult.IsValid)
             return validationResult.ToFailure<Guid>();
 
-        var cacheKey = BuildCacheKey(entry.Id);
-        var result = await _dataStorage.Set(cacheKey, entry, expiresIn, cancellationToken);
+        var userIdCacheKey = CacheKeyBuilder.BuildListStringCacheKey(userId);
+        var entryIdCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entry.Id);
+        var result = await _userService.AttachEntryToUser(userIdCacheKey, entryIdCacheKey, entry, expiresIn, cancellationToken);
 
         await _imageService.Attach(entry.Id, expiresIn, imageIds, cancellationToken);
 
@@ -43,31 +46,44 @@ public sealed class EntryService : IEntryService
     }
 
 
-    public async Task<Result<EntryInfo, ProblemDetails>> Get(Guid id, CancellationToken cancellationToken)
+    public async Task<Result<EntryInfo, ProblemDetails>> Get(Guid userId, Guid entryId, CancellationToken cancellationToken, bool isReceivedForCustomer = false)
     {
-        if (await _reportService.Contains(id, cancellationToken))
+        if (await _reportService.Contains(entryId, cancellationToken))
             return ResultHelper.NotFound<EntryInfo>();
 
-        var cacheKey = BuildCacheKey(id);
-        var entry = await _dataStorage.TryGet<Entry>(cacheKey,cancellationToken);
-        if (entry.Equals(default))
+        var entryIdCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entryId);
+        var userIdCacheKey = CacheKeyBuilder.BuildListStringCacheKey(userId);
+
+        var entry = userId != Guid.Empty
+            ? await _userService.TryGetUserEntry(userIdCacheKey, entryId, cancellationToken)
+            : await _dataStorage.TryGet<Entry>(entryIdCacheKey, cancellationToken);
+
+        if (!entry.HasValue || entry.Value.Equals(default))
             return ResultHelper.NotFound<EntryInfo>();
 
-        var viewCount = await _viewCountService.AddAndGet(id, cancellationToken);
-        var imageIds = (await _imageService.Get(id, cancellationToken))
+        var viewCount = isReceivedForCustomer
+            ? await _viewCountService.AddAndGet(entryId, cancellationToken)
+            : await _viewCountService.Get(entryId, cancellationToken);
+                
+
+        var imageIds = (await _imageService.Get(entryId, cancellationToken))
             .Select(image => image.Id)
             .ToList();
 
-        return Result.Success<EntryInfo, ProblemDetails>(new EntryInfo(entry, viewCount, imageIds));
+        return Result.Success<EntryInfo, ProblemDetails>(new EntryInfo((Entry)entry, viewCount, imageIds));
     }
 
 
-    private static string BuildCacheKey(Guid id)
-        => $"{nameof(Entry)}::{id}";
+    public void Remove(Guid id, CancellationToken cancellationToken)
+    {
+        var cacheKey = CacheKeyBuilder.BuildEntryCacheKey(id);
+        _dataStorage.Remove<EntryInfo>(cacheKey, cancellationToken);
+    }
 
 
     private readonly IDataStorage _dataStorage;
     private readonly IImageService _imageService;
     private readonly IReportService _reportService;
     private readonly IViewCountService _viewCountService;
+    private readonly IUserService _userService;
 }

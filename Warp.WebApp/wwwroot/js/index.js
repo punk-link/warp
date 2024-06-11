@@ -10,14 +10,12 @@ function addPasteImageEventListener() {
 }
 
 
-function disableCreateButton() {
-    let sendButton = document.getElementById('create-button');
+function disableCreateButton(sendButton) {
     sendButton.disabled = true;
 }
 
 
-function enableCreateButton() {
-    let sendButton = document.getElementById('create-button');
+function enableCreateButton(sendButton) {
     sendButton.disabled = false;
 }
 
@@ -37,11 +35,16 @@ export function addIndexEvents() {
     textModeButton.classList.add('active');
 
     let textModeTextarea = document.getElementById('warp-text');
+    let sendButton = document.getElementById('create-button');
+    if (textModeTextarea.value !== '') {
+        sendButton.disabled = false;
+    }
+
     textModeTextarea.addEventListener('input', () => {
-        if (textModeTextarea.value == '') {
-            disableCreateButton();
+        if (textModeTextarea.value === '') {
+            disableCreateButton(sendButton);
         } else {
-            enableCreateButton();
+            enableCreateButton(sendButton);
         }
     }, false);
 

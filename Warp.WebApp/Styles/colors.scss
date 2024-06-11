@@ -3,6 +3,7 @@
 
 $danger-100: #FFA767;
 $primary-100: #A762FF;
+$light-secondary: #F2FFE1 ;
 $secondary-100: #88D723;
 $text-100: #484848;
 $warning-100: #FFA767;
@@ -18,6 +19,7 @@ $theme-colors: (
     "lighter":tint-color($text-100, 80),
     "primary": $primary,
     "secondary": $secondary,
+    "light-secondary": $light-secondary,
     "transparent": transparent,
     "white": white,
 );

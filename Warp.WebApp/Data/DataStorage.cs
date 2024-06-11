@@ -1,5 +1,7 @@
 ﻿using CSharpFunctionalExtensions;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.Extensions.Caching.Memory;
+using Newtonsoft.Json.Linq;
 using Warp.WebApp.Data.Redis;
 using Warp.WebApp.Extensions.Logging;
 
@@ -27,10 +29,10 @@ public sealed class DataStorage : IDataStorage
     }
 
 
-    public void Remove<T>(string key)
+    public void Remove<T>(string key, CancellationToken cancellationToken)
     {
         _memoryCache.Remove(key);
-        _distributedStorage.Remove<T>(key);
+        _distributedStorage.Remove<T>(key, cancellationToken);
     }
 
 
@@ -43,7 +45,28 @@ public sealed class DataStorage : IDataStorage
         }
 
         _memoryCache.Set(key, value, expiresIn);
+
         await _distributedStorage.Set(key, value, expiresIn, cancellationToken);
+
+        return Result.Success();
+    }
+
+    public async Task<Result> CrossValueSet<K, V>(string keyK, K valueK, TimeSpan expiresInK, string keyV, V valueV, TimeSpan expiresInV, CancellationToken cancellationToken)
+    {
+        if (valueK is null || IsDefaultStruct(valueK))
+        {
+            _logger.LogSetDefaultCacheValueError(valueK?.ToString());
+            return Result.Failure("Can't store a default value.");
+        }
+        if (valueV is null || IsDefaultStruct(valueV))
+        {
+            _logger.LogSetDefaultCacheValueError(valueV?.ToString());
+            return Result.Failure("Can't store a default value.");
+        }
+
+        _memoryCache.Set(keyV, valueV, expiresInV);
+
+        await _distributedStorage.CrossValueSet(keyK, valueK, expiresInK, keyV, valueV, expiresInV, cancellationToken);
 
         return Result.Success();
     }
@@ -57,15 +80,21 @@ public sealed class DataStorage : IDataStorage
         return await _distributedStorage.TryGet<T>(key, cancellationToken);
     }
 
+    public async ValueTask<List<T>> TryGetList<T>(string key, CancellationToken cancellationToken)
+    {
+        return await _distributedStorage.TryGetList<T>(key, cancellationToken);
+    }
+
 
     private static bool IsDefaultStruct<T>(T value)
         => IsUserDefinedStruct(typeof(T)) && value!.Equals(default(T));
 
 
-    private static bool IsUserDefinedStruct(Type type) 
-        => type is { 
-            IsValueType: true, 
-            IsEnum: false, 
+    private static bool IsUserDefinedStruct(Type type)
+        => type is
+        {
+            IsValueType: true,
+            IsEnum: false,
             IsPrimitive: false
         };
 

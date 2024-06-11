@@ -6,4 +6,5 @@ export function repositionBackgroundImage(element) {
     element.style.left = randomX + 'vw';
 
     element.classList.remove('d-none');
+    element.classList.add('slow-fade-in');
 }

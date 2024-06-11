@@ -1,0 +1,70 @@
+﻿@page "/preview/{id}"
+@model Warp.WebApp.Pages.PreviewModel
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+
+@{
+    ViewData["Title"] = Localizer["Title"];
+}
+
+@section MetaTags {
+    <meta name="robots" content="noindex, noarchive">
+    <partial name="Shared/Components/OpenGraph" model="@Model.OpenGraphModel" />
+}
+
+@section Scripts {
+    <script type="module" src="~/js/components/modal.js" defer></script>
+    <script type="module" defer>
+        import { addEntryEvents } from '/js/entry.js';
+        import { addPreviewEvents } from '/js/preview.js';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            addPreviewEvents('@Model.Id');
+            addEntryEvents('@Model.Id', '@Model.ExpiresIn');
+        });
+    </script>
+}
+
+<div class="min-vh-100">
+    <div class="row align-items-baseline px-3">
+        <h1 class="logo">
+            <a class="text-primary" asp-area="" asp-page="./Index">warp</a>
+        </h1>
+    </div>
+
+    <section class="min-vh-75 px-3 mb-5 d-flex flex-column justify-content-between">
+        <div>
+            <div class="row">
+                <div class="row align-items-end">
+                    <div class="col-6">
+                    </div>
+                    <div class="col-6 d-flex flex-column">
+                        <div class="text-right countdown">&nbsp;</div>
+                        <div class="text-right text-light fs-4">@Localizer["the entry expires in"]</div>
+                    </div>
+                </div>
+            </div>
+            <article class="bg-light-secondary p-3 my-5">
+                @Html.Raw(Model.TextContent)
+            </article>
+        </div>
+        <div class="d-flex justify-content-between align-items-center col-12 offset-md-3 col-md-6 sticky-bottom bg-transparent pb-3">
+            <div class="bg-white border-radius-sm">
+                    <a id="delete-button" class="btn btn-link" tabindex="3" title="@Localizer["DeleteButton"]">
+                        <i class="icofont-bin text-lighter"></i>
+                    </a>
+            </div>
+            <div class="bg-white border-radius-sm">
+                <a id="edit-button" class="btn btn-link d-none" tabindex="2" title="@Localizer["CopyButton"]">
+                    <i class="icofont-loop text-lighter"></i>
+                </a>
+            </div>
+            <div>
+                <a id="copy-link-button" class="btn btn-primary align-items-center" tabindex="1">
+                    <i class="icofont-link text-lighter"></i>@Localizer["CopyLinkButton"]
+                </a>
+            </div>
+        </div>
+    </section>
+</div>
+
+<partial name="Shared/Footer" />
