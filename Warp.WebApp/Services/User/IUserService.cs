@@ -8,4 +8,5 @@ public interface IUserService
 {
     public Task<Result> AttachEntryToUser(string userIdCacheKey, string entryCacheKey, Entry value, TimeSpan expiresIn, CancellationToken cancellationToken);
     public Task<Entry?> TryGetUserEntry(string userIdCacheKey, Guid entryId, CancellationToken cancellationToken);
+    public Task<Result> TryToRemoveUserEntry(string userIdCacheKey, string entryIdCacheKey, CancellationToken cancellationToken);
 }

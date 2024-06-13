@@ -86,6 +86,12 @@ public sealed class DataStorage : IDataStorage
     }
 
 
+    public async Task<bool> IsValueContainsInList<T>(string key, T value, CancellationToken cancellationToken)
+    {
+        return await _distributedStorage.IsValueContainsInList<T>(key, value, cancellationToken);
+    }
+
+
     private static bool IsDefaultStruct<T>(T value)
         => IsUserDefinedStruct(typeof(T)) && value!.Equals(default(T));
 

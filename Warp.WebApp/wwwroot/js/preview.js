@@ -1,10 +1,17 @@
 import { copyUrl } from '/js/functions/copier.js';
 
-async function deleteEntry(id) {
-    let responce = await fetch('/api/entry/delete', {
+async function deleteEntry(entryId) {
+    let responce = await fetch('/api/entry', {
         method: 'DELETE',
-        body: id
+        body: JSON.stringify({ id: entryId }),
+        headers: {
+            'Accept': 'application/json; charset=utf-8',
+            'Content-Type': 'application/json; charset=utf-8'
+        },
     });
+
+    if (responce.ok)
+        location.href = '/deleted';
 }
 
 export function addPreviewEvents(entryId) {

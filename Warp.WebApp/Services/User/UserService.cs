@@ -26,7 +26,7 @@ public class UserService : IUserService
                 : value.ExpiresAt - maxExpirationDate;
         }
         
-        return await _dataStorage.CrossValueSet(userIdCacheKey, value.Id.ToString(), listExpiresIn, entryCacheKey, value, expiresIn, cancellationToken);
+        return await _dataStorage.CrossValueSet(userIdCacheKey, entryCacheKey, listExpiresIn, entryCacheKey, value, expiresIn, cancellationToken);
     }
 
 
@@ -36,6 +36,17 @@ public class UserService : IUserService
         var foundEntry = entryList.FirstOrDefault(x => x.Id == entryId);
 
         return foundEntry;
+    }
+
+
+    public async Task<Result> TryToRemoveUserEntry(string userIdCacheKey, Guid entryId, CancellationToken cancellationToken)
+    {
+        if (!await _dataStorage.IsValueContainsInList(userIdCacheKey, entryId.ToString(), cancellationToken))
+            return Result.Failure("Can`t remove entry cause of no permission.");
+
+        var entryIdCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entryId);
+        _dataStorage.Remove<EntryInfo>(entryIdCacheKey, cancellationToken);
+        return Result.Success();
     }
 
 
@@ -55,7 +66,6 @@ public class UserService : IUserService
 
         return entryList;
     }
-
 
     private readonly IDataStorage _dataStorage;
 }

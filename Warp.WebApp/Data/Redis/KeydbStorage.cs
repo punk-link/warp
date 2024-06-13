@@ -63,7 +63,7 @@ public sealed class KeyDbStorage : IDistributedStorage
         var bytesV = JsonSerializer.SerializeToUtf8Bytes(valueV);
         var redisTransaction = db.CreateTransaction();
 
-        var transactionalTask = Task.WhenAll(redisTransaction.ListRightPushAsync(keyK, bytesK), redisTransaction.KeyExpireAsync(keyK, expiresInK),
+        var transactionalTask = Task.WhenAll(redisTransaction.SetAddAsync(keyK, bytesK), redisTransaction.KeyExpireAsync(keyK, expiresInK),
             redisTransaction.StringSetAsync(keyV, bytesV, expiresInV));
 
         var isExecuted = await ExecuteOrCancel(redisTransaction.ExecuteAsync(), cancellationToken);
@@ -75,7 +75,7 @@ public sealed class KeyDbStorage : IDistributedStorage
     public async Task<List<T>> TryGetList<T>(string key, CancellationToken cancellationToken)
     {
         var db = GetDatabase<T>();
-        var redisTask = db.ListRangeAsync(key);
+        var redisTask = db.SetMembersAsync(key);
 
         var completedTask = await ExecuteOrCancel(redisTask!, cancellationToken);
 
@@ -95,6 +95,16 @@ public sealed class KeyDbStorage : IDistributedStorage
 
         var bytes = (byte[])completedTask!;
         return JsonSerializer.Deserialize<T>(bytes)!;
+    }
+
+
+    public async Task<bool> IsValueContainsInList<T>(string key, T value, CancellationToken cancellationToken)
+    {
+        var db = GetDatabase<T>();
+        var valueBytes = JsonSerializer.SerializeToUtf8Bytes(value);
+        var redisTask = db.SetContainsAsync(key, valueBytes);
+
+        return await ExecuteOrCancel(redisTask, cancellationToken);
     }
 
 

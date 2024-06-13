@@ -11,4 +11,5 @@ public interface IDistributedStorage
     //public Task SetToList<T>(string key, T value, TimeSpan expiresIn, CancellationToken cancellationToken);
     public Task<T?> TryGet<T>(string key, CancellationToken cancellationToken);
     public Task<List<T>> TryGetList<T>(string key, CancellationToken cancellationToken);
+    public Task<bool> IsValueContainsInList<T>(string key, T value, CancellationToken cancellationToken);
 }

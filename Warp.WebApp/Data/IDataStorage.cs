@@ -11,4 +11,5 @@ public interface IDataStorage
     public ValueTask<T?> TryGet<T>(string key, CancellationToken cancellationToken);
     public ValueTask<List<T>> TryGetList<T>(string key, CancellationToken cancellationToken);
     public Task<Result> CrossValueSet<K, V>(string keyK, K valueK, TimeSpan expiresInK, string keyV, V valueV, TimeSpan expiresInV, CancellationToken cancellationToken);
+    public Task<bool> IsValueContainsInList<T>(string key, T value, CancellationToken cancellationToken);
 }
