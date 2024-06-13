@@ -14,10 +14,10 @@ public class UserService : IUserService
     }
 
 
-    public async Task<Result> AttachEntryToUser(string userIdCacheKey, string entryCacheKey, Entry value, TimeSpan expiresIn, CancellationToken cancellationToken)
+    public async Task<Result> AttachEntryToUser(Guid userId, Entry value, TimeSpan expiresIn, CancellationToken cancellationToken)
     {
         var listExpiresIn = expiresIn;
-        var entryList = await GetUserEntries(userIdCacheKey, cancellationToken);
+        var entryList = await GetUserEntries(userId, cancellationToken);
         if (entryList.Count > 0)
         {
             var maxExpirationDate = entryList.Max(x => x.ExpiresAt);
@@ -25,34 +25,42 @@ public class UserService : IUserService
                 ? maxExpirationDate - value.ExpiresAt
                 : value.ExpiresAt - maxExpirationDate;
         }
-        
-        return await _dataStorage.CrossValueSet(userIdCacheKey, entryCacheKey, listExpiresIn, entryCacheKey, value, expiresIn, cancellationToken);
+        var userIdCacheKey = CacheKeyBuilder.BuildSetGuidCacheKey(userId);
+        var entryCacheKey = CacheKeyBuilder.BuildEntryCacheKey(value.Id);
+
+        return await _dataStorage.CrossValueSet(userIdCacheKey, value.Id, listExpiresIn, entryCacheKey, value, expiresIn, cancellationToken);
     }
 
 
-    public async Task<Entry?> TryGetUserEntry(string userIdCacheKey, Guid entryId, CancellationToken cancellationToken)
+    public async Task<Entry?> TryGetUserEntry(Guid userId, Guid entryId, CancellationToken cancellationToken)
     {
-        var entryList = await GetUserEntries(userIdCacheKey, cancellationToken);
+        var userIdCacheKey = CacheKeyBuilder.BuildSetGuidCacheKey(userId);
+        if (!await _dataStorage.IsValueContainsInSet(userIdCacheKey, entryId, cancellationToken))
+            return default;
+
+        var entryList = await GetUserEntries(userId, cancellationToken);
         var foundEntry = entryList.FirstOrDefault(x => x.Id == entryId);
 
         return foundEntry;
     }
 
 
-    public async Task<Result> TryToRemoveUserEntry(string userIdCacheKey, Guid entryId, CancellationToken cancellationToken)
+    public async Task<Result> TryToRemoveUserEntry(Guid userId, Guid entryId, CancellationToken cancellationToken)
     {
-        if (!await _dataStorage.IsValueContainsInList(userIdCacheKey, entryId.ToString(), cancellationToken))
+        var userIdCacheKey = CacheKeyBuilder.BuildSetGuidCacheKey(userId);
+        if (!await _dataStorage.IsValueContainsInSet(userIdCacheKey, entryId, cancellationToken))
             return Result.Failure("Can`t remove entry cause of no permission.");
 
         var entryIdCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entryId);
-        _dataStorage.Remove<EntryInfo>(entryIdCacheKey, cancellationToken);
+        await _dataStorage.Remove<EntryInfo>(entryIdCacheKey, cancellationToken);
         return Result.Success();
     }
 
 
-    private async Task<List<Entry>> GetUserEntries(string userIdCacheKey, CancellationToken cancellationToken)
+    private async Task<List<Entry>> GetUserEntries(Guid userId, CancellationToken cancellationToken)
     {
-        var entryIdList = await _dataStorage.TryGetList<string>(userIdCacheKey, cancellationToken);
+        var userIdCacheKey = CacheKeyBuilder.BuildSetGuidCacheKey(userId);
+        var entryIdList = await _dataStorage.TryGetSet<string>(userIdCacheKey, cancellationToken);
         var entryList = new List<Entry>();
         if (entryIdList != null && entryIdList.Count > 0)
         {

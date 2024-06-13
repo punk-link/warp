@@ -28,10 +28,11 @@ public sealed class KeyDbStorage : IDistributedStorage
         return await ExecuteOrCancel(redisTask, cancellationToken);
     }
 
-    public void Remove<T>(string key, CancellationToken cancellationToken)
+    public async Task Remove<T>(string key, CancellationToken cancellationToken)
     {
         var db = GetDatabase<T>();
-        db.StringGetDelete(key, CommandFlags.FireAndForget);
+        var redisTask = db.StringGetDeleteAsync(key);
+        await ExecuteOrCancel(redisTask, cancellationToken);
     }
 
 
@@ -43,18 +44,6 @@ public sealed class KeyDbStorage : IDistributedStorage
         await ExecuteOrCancel(redisTask, cancellationToken);
     }
 
-
-    //public async Task SetToList<T>(string key, T value, TimeSpan expiresIn, CancellationToken cancellationToken)
-    //{
-    //    var db = GetDatabase<T>();
-    //    var bytes = JsonSerializer.SerializeToUtf8Bytes(value);
-
-    //    var redisTransaction = db.CreateTransaction();
-    //    await redisTransaction.ListRightPushAsync(key, bytes)
-    //        .ContinueWith(_ => redisTransaction.KeyExpireAsync(key, expiresIn), cancellationToken);
-
-    //    await redisTransaction.ExecuteAsync();
-    //}
 
     public async Task CrossValueSet<K, V>(string keyK, K valueK, TimeSpan expiresInK, string keyV, V valueV, TimeSpan expiresInV, CancellationToken cancellationToken)
     {
@@ -72,14 +61,14 @@ public sealed class KeyDbStorage : IDistributedStorage
     }
 
 
-    public async Task<List<T>> TryGetList<T>(string key, CancellationToken cancellationToken)
+    public async Task<HashSet<T>> TryGetSet<T>(string key, CancellationToken cancellationToken)
     {
         var db = GetDatabase<T>();
         var redisTask = db.SetMembersAsync(key);
 
         var completedTask = await ExecuteOrCancel(redisTask!, cancellationToken);
 
-        return completedTask.Select(d => JsonSerializer.Deserialize<T>(d)).ToList();
+        return completedTask.Select(d => JsonSerializer.Deserialize<T>(d)).ToHashSet();
     }
 
 
@@ -98,7 +87,7 @@ public sealed class KeyDbStorage : IDistributedStorage
     }
 
 
-    public async Task<bool> IsValueContainsInList<T>(string key, T value, CancellationToken cancellationToken)
+    public async Task<bool> IsValueContainsInSet<T>(string key, T value, CancellationToken cancellationToken)
     {
         var db = GetDatabase<T>();
         var valueBytes = JsonSerializer.SerializeToUtf8Bytes(value);
@@ -131,6 +120,7 @@ public sealed class KeyDbStorage : IDistributedStorage
             ImageInfo => 2,
             Report => 3,
             string => 4,
+            Guid => 5,
             _ => 0
         };
 

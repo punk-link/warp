@@ -34,9 +34,7 @@ public sealed class EntryService : IEntryService
         if (!validationResult.IsValid)
             return validationResult.ToFailure<Guid>();
 
-        var userIdCacheKey = CacheKeyBuilder.BuildSetStringCacheKey(userId);
-        var entryIdCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entry.Id);
-        var result = await _userService.AttachEntryToUser(userIdCacheKey, entry.Id.ToString(), entry, expiresIn, cancellationToken);
+        var result = await _userService.AttachEntryToUser(userId, entry, expiresIn, cancellationToken);
 
         await _imageService.Attach(entry.Id, expiresIn, imageIds, cancellationToken);
 
@@ -52,10 +50,9 @@ public sealed class EntryService : IEntryService
             return ResultHelper.NotFound<EntryInfo>();
 
         var entryIdCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entryId);
-        var userIdCacheKey = CacheKeyBuilder.BuildSetStringCacheKey(userId);
 
         var entry = userId != Guid.Empty
-            ? await _userService.TryGetUserEntry(userIdCacheKey, entryId, cancellationToken)
+            ? await _userService.TryGetUserEntry(userId, entryId, cancellationToken)
             : await _dataStorage.TryGet<Entry>(entryIdCacheKey, cancellationToken);
 
         if (!entry.HasValue || entry.Value.Equals(default))
@@ -76,9 +73,7 @@ public sealed class EntryService : IEntryService
 
     public async Task<Result> Remove(Guid userId, Guid entryId, CancellationToken cancellationToken)
     {
-        var entryCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entryId);
-        var userIdCacheKey = CacheKeyBuilder.BuildSetStringCacheKey(userId);
-        return await _userService.TryToRemoveUserEntry(userIdCacheKey, entryCacheKey, cancellationToken);
+        return await _userService.TryToRemoveUserEntry(userId, entryId, cancellationToken);
     }
 
 

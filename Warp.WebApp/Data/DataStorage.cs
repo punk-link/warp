@@ -29,10 +29,10 @@ public sealed class DataStorage : IDataStorage
     }
 
 
-    public void Remove<T>(string key, CancellationToken cancellationToken)
+    public async Task Remove<T>(string key, CancellationToken cancellationToken)
     {
         _memoryCache.Remove(key);
-        _distributedStorage.Remove<T>(key, cancellationToken);
+        await _distributedStorage.Remove<T>(key, cancellationToken);
     }
 
 
@@ -80,15 +80,15 @@ public sealed class DataStorage : IDataStorage
         return await _distributedStorage.TryGet<T>(key, cancellationToken);
     }
 
-    public async ValueTask<List<T>> TryGetList<T>(string key, CancellationToken cancellationToken)
+    public async ValueTask<HashSet<T>> TryGetSet<T>(string key, CancellationToken cancellationToken)
     {
-        return await _distributedStorage.TryGetList<T>(key, cancellationToken);
+        return await _distributedStorage.TryGetSet<T>(key, cancellationToken);
     }
 
 
-    public async Task<bool> IsValueContainsInList<T>(string key, T value, CancellationToken cancellationToken)
+    public async Task<bool> IsValueContainsInSet<T>(string key, T value, CancellationToken cancellationToken)
     {
-        return await _distributedStorage.IsValueContainsInList<T>(key, value, cancellationToken);
+        return await _distributedStorage.IsValueContainsInSet<T>(key, value, cancellationToken);
     }
 
 
