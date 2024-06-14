@@ -4,6 +4,10 @@ using Warp.WebApp.Helpers;
 using Warp.WebApp.Services.User;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Entries;
+using Newtonsoft.Json.Linq;
+using System.Text.Json;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using CSharpFunctionalExtensions;
 
 namespace Warp.WebApp.Controllers;
 
@@ -17,20 +21,24 @@ public class EntryController : BaseController
     }
 
 
-    [HttpDelete("delete")]
-    public IActionResult DeleteEntry([FromBody] string id, CancellationToken cancellationToken = default)
+    [HttpDelete]
+    public async Task<IActionResult> DeleteEntry([FromBody] JsonElement id, CancellationToken cancellationToken = default)
     {
-        var decodedId = IdCoder.Decode(id);
-        if (decodedId == Guid.Empty)
-            return RedirectToPage("./Error");
+        id.TryGetProperty("id", out var value);
+        var decodedEntryId = IdCoder.Decode(value.ToString());
+        if (decodedEntryId == Guid.Empty)
+            return ReturnIdDecodingBadRequest();
 
         var claim = CookieService.GetClaim(HttpContext);
         if (claim != null)
         {
-            _entryService.Remove(decodedId, cancellationToken);
+            var userId = Guid.Parse(claim.Value);
+            var result = await _entryService.Remove(userId, decodedEntryId, cancellationToken);
+            if (result.IsFailure)
+                return Forbid();
         }
 
-        return RedirectToPage("./Deleted");
+        return Ok();
     }
 
 

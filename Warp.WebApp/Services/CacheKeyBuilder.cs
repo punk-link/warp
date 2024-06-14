@@ -5,8 +5,8 @@ namespace Warp.WebApp.Services;
 
 public static class CacheKeyBuilder
 {
-    public static string BuildListStringCacheKey(Guid id)
-        => $"{nameof(List<string>)}::{id}";
+    public static string BuildSetGuidCacheKey(Guid id)
+        => $"{nameof(HashSet<Guid>)}::{id}";
 
 
     public static string BuildEntryCacheKey(Guid id)

@@ -8,5 +8,5 @@ public interface IEntryService
 {
     public Task<Result<Guid, ProblemDetails>> Add(Guid userId, string content, TimeSpan expiresIn, List<Guid> imageIds, CancellationToken cancellationToken);
     public Task<Result<EntryInfo, ProblemDetails>> Get(Guid userId, Guid entryId, CancellationToken cancellationToken, bool isReceivedForCustomer = false);
-    public void Remove (Guid id, CancellationToken cancellationToken);
+    public Task<Result> Remove (Guid userId, Guid entryId, CancellationToken cancellationToken);
 }
