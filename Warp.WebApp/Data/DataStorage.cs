@@ -1,6 +1,7 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Localization;
 using Newtonsoft.Json.Linq;
 using Warp.WebApp.Data.Redis;
 using Warp.WebApp.Extensions.Logging;
@@ -9,9 +10,10 @@ namespace Warp.WebApp.Data;
 
 public sealed class DataStorage : IDataStorage
 {
-    public DataStorage(ILoggerFactory loggerFactory, IMemoryCache memoryCache, IDistributedStorage distributedStorage)
+    public DataStorage(ILoggerFactory loggerFactory, IStringLocalizer<ServerResources> localizer, IMemoryCache memoryCache, IDistributedStorage distributedStorage)
     {
         _logger = loggerFactory.CreateLogger<DataStorage>();
+        _localizer = localizer;
         _memoryCache = memoryCache;
         _distributedStorage = distributedStorage;
     }
@@ -41,7 +43,7 @@ public sealed class DataStorage : IDataStorage
         if (value is null || IsDefaultStruct(value))
         {
             _logger.LogSetDefaultCacheValueError(value?.ToString());
-            return Result.Failure("Can't store a default value.");
+            return Result.Failure(_localizer["StoringDefaultStructureErrorMessage"]);
         }
 
         _memoryCache.Set(key, value, expiresIn);
@@ -56,12 +58,12 @@ public sealed class DataStorage : IDataStorage
         if (valueK is null || IsDefaultStruct(valueK))
         {
             _logger.LogSetDefaultCacheValueError(valueK?.ToString());
-            return Result.Failure("Can't store a default value.");
+            return Result.Failure(_localizer["StoringDefaultStructureErrorMessage"]);
         }
         if (valueV is null || IsDefaultStruct(valueV))
         {
             _logger.LogSetDefaultCacheValueError(valueV?.ToString());
-            return Result.Failure("Can't store a default value.");
+            return Result.Failure(_localizer["StoringDefaultStructureErrorMessage"]);
         }
 
         _memoryCache.Set(keyV, valueV, expiresInV);
@@ -106,6 +108,7 @@ public sealed class DataStorage : IDataStorage
 
 
     private readonly ILogger<DataStorage> _logger;
+    private readonly IStringLocalizer<ServerResources> _localizer;
     private readonly IMemoryCache _memoryCache;
     private readonly IDistributedStorage _distributedStorage;
 }

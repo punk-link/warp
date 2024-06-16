@@ -1,5 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using Warp.WebApp.Data;
 using Warp.WebApp.Extensions;
 using Warp.WebApp.Helpers;
@@ -12,10 +13,12 @@ namespace Warp.WebApp.Services.Entries;
 
 public sealed class EntryService : IEntryService
 {
-    public EntryService(IDataStorage dataStorage, IImageService imageService, IReportService reportService, IViewCountService viewCountService, IUserService userService)
+    public EntryService(IStringLocalizer<ServerResources> localizer, IDataStorage dataStorage, IImageService imageService, IReportService reportService,
+        IViewCountService viewCountService, IUserService userService)
     {
         _dataStorage = dataStorage;
         _imageService = imageService;
+        _localizer = localizer;
         _reportService = reportService;
         _viewCountService = viewCountService;
         _userService = userService;
@@ -29,10 +32,10 @@ public sealed class EntryService : IEntryService
         var description = OpenGraphService.GetDescription(formattedText);
         var entry = new Entry(Guid.NewGuid(), formattedText, description, now, now + expiresIn);
 
-        var validator = new EntryValidator();
+        var validator = new EntryValidator(_localizer);
         var validationResult = await validator.ValidateAsync(entry, cancellationToken);
         if (!validationResult.IsValid)
-            return validationResult.ToFailure<Guid>();
+            return validationResult.ToFailure<Guid>(_localizer);
 
         var result = await _userService.AttachEntryToUser(userId, entry, expiresIn, cancellationToken);
 
@@ -79,6 +82,7 @@ public sealed class EntryService : IEntryService
 
     private readonly IDataStorage _dataStorage;
     private readonly IImageService _imageService;
+    private readonly IStringLocalizer<ServerResources> _localizer;
     private readonly IReportService _reportService;
     private readonly IViewCountService _viewCountService;
     private readonly IUserService _userService;

@@ -7,11 +7,10 @@ public class OpenGraphServiceTests
     [Fact]
     public void GetDefaultModel_ReturnsDefaultModel()
     {
-        var result = OpenGraphService.GetDefaultModel();
+        var result = OpenGraphService.GetDefaultModel(Description);
 
         Assert.NotNull(result);
         Assert.NotEmpty(result.Title);
-        Assert.NotEmpty(result.Description);
         Assert.NotEmpty(result.ImageUrl);
     }
 

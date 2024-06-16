@@ -1,4 +1,5 @@
 ﻿using CSharpFunctionalExtensions;
+using Microsoft.Extensions.Localization;
 using Newtonsoft.Json.Linq;
 using Warp.WebApp.Data;
 using Warp.WebApp.Models;
@@ -8,9 +9,10 @@ namespace Warp.WebApp.Services.User;
 
 public class UserService : IUserService
 {
-    public UserService(IDataStorage dataStorage)
+    public UserService(IStringLocalizer<ServerResources> localizer, IDataStorage dataStorage)
     {
         _dataStorage = dataStorage;
+        _localizer = localizer;
     }
 
 
@@ -49,7 +51,7 @@ public class UserService : IUserService
     {
         var userIdCacheKey = CacheKeyBuilder.BuildSetGuidCacheKey(userId);
         if (!await _dataStorage.IsValueContainsInSet(userIdCacheKey, entryId, cancellationToken))
-            return Result.Failure("Can`t remove entry cause of no permission.");
+            return Result.Failure(_localizer["NoEntryRemovePermissionsErrorMessage"]);
 
         var entryIdCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entryId);
         await _dataStorage.Remove<EntryInfo>(entryIdCacheKey, cancellationToken);
@@ -75,5 +77,7 @@ public class UserService : IUserService
         return entryList;
     }
 
+
     private readonly IDataStorage _dataStorage;
+    private readonly IStringLocalizer<ServerResources> _localizer;
 }
