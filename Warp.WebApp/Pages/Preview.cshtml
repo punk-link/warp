@@ -1,9 +1,11 @@
 ﻿@page "/preview/{id}"
+@using Microsoft.Extensions.Localization
 @model Warp.WebApp.Pages.PreviewModel
 @inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+@inject IStringLocalizer<SharedResources> SharedLocalizer
 
 @{
-    ViewData["Title"] = Localizer["Title"];
+    ViewData["Title"] = SharedLocalizer["Title"];
 }
 
 @section MetaTags {
@@ -60,7 +62,7 @@
             </div>
             <div>
                 <a id="copy-link-button" class="btn btn-primary align-items-center" tabindex="1">
-                    <i class="icofont-link text-lighter"></i>@Localizer["CopyLinkButton"]
+                    <i class="icofont-link text-lighter"></i>@SharedLocalizer["CopyLinkButton"]
                 </a>
             </div>
         </div>
