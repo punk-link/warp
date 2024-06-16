@@ -1,9 +1,11 @@
 ﻿@page
+@using Microsoft.Extensions.Localization
 @model Warp.WebApp.Pages.PrivacyModel
 @inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+@inject IStringLocalizer<SharedResources> SharedLocalizer
 
 @{
-    ViewData["Title"] = Localizer["Title"];
+    ViewData["Title"] = SharedLocalizer["Title"];
 }
 
 @section Analytics {

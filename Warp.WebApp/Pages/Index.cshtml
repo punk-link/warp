@@ -1,9 +1,12 @@
 ﻿@page 
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using Microsoft.Extensions.Localization
 @model IndexModel
 @inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+@inject IStringLocalizer<SharedResources> SharedLocalizer
 
 @{
-    ViewData["Title"] = Localizer["Title"];
+    ViewData["Title"] = SharedLocalizer["Title"];
 }
 
 @section Analytics {
