@@ -8,6 +8,7 @@ using Newtonsoft.Json.Linq;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using CSharpFunctionalExtensions;
+using Microsoft.Extensions.Localization;
 
 namespace Warp.WebApp.Controllers;
 
@@ -15,7 +16,7 @@ namespace Warp.WebApp.Controllers;
 [Route("/api/entry")]
 public class EntryController : BaseController
 {
-    public EntryController(IEntryService entryService)
+    public EntryController(IStringLocalizer<ServerResources> localizer, IEntryService entryService) : base(localizer)
     {
         _entryService = entryService;
     }

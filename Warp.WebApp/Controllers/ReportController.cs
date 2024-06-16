@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Entries;
 
@@ -8,7 +9,7 @@ namespace Warp.WebApp.Controllers;
 [Route("/api/reports")]
 public sealed class ReportController : BaseController
 {
-    public ReportController(IReportService reportService)
+    public ReportController(IStringLocalizer<ServerResources> localizer, IReportService reportService) : base(localizer)
     {
         _reportService = reportService;
     }

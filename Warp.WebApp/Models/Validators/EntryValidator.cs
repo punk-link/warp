@@ -1,18 +1,19 @@
 ﻿using FluentValidation;
+using Microsoft.Extensions.Localization;
 using Warp.WebApp.Constants.Logging;
 
 namespace Warp.WebApp.Models.Validators;
 
 public class EntryValidator : AbstractValidator<Entry>
 {
-    public EntryValidator()
+    public EntryValidator(IStringLocalizer<ServerResources> localizer)
     {
         RuleFor(x => x.Content).NotEmpty()
             .WithErrorCode(LoggingConstants.WarpContentEmpty.ToString())
-            .WithMessage("Can't add the content. The body is empty.");
+            .WithMessage(localizer["EntryBodyEmptyErrorMessage"]);
         
         RuleFor(x => x.ExpiresAt).GreaterThan(default(DateTime))
             .WithErrorCode(LoggingConstants.WarpExpirationPeriodEmpty.ToString())
-            .WithMessage("Can't add the content. The expiration period is empty.");
+            .WithMessage(localizer["EntryExpirationPeriodEmptyErrorMessage"]);
     }
 }

@@ -6,8 +6,8 @@ namespace Warp.WebApp.Services;
 
 public static partial class OpenGraphService
 {
-    public static OpenGraphModel GetDefaultModel()
-        => GetModel(DefaultDescription);
+    public static OpenGraphModel GetDefaultModel(string defaultDescription)
+        => GetModel(defaultDescription);
 
 
     public static OpenGraphModel GetModel(string description, List<string>? urls = null)
@@ -60,7 +60,6 @@ public static partial class OpenGraphService
     }
 
 
-    private const string DefaultDescription = "Warp is a simple and secure way to share text and images.";
     private const string DefaultImageUrl = "https://warp.punk.link/favicon.ico";
     private const string Title = "Warp";
 

@@ -23,13 +23,15 @@ namespace Warp.WebApp.Pages;
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 public class IndexModel : BasePageModel
 {
-    public IndexModel(IOptionsSnapshot<AnalyticsOptions> analyticsOptions, ILoggerFactory loggerFactory, IStringLocalizer<IndexModel> localizer, IEntryService entryService, ICookieService cookieService) 
+    public IndexModel(IOptionsSnapshot<AnalyticsOptions> analyticsOptions, ILoggerFactory loggerFactory, IStringLocalizer<IndexModel> localizer,
+        IStringLocalizer<ServerResources> serverLocalizer, IEntryService entryService, ICookieService cookieService)
         : base(loggerFactory)
     {
         _analyticsOptions = analyticsOptions.Value;
+        _cookieService = cookieService;
         _entryService = entryService;
         _localizer = localizer;
-        _cookieService = cookieService;
+        _serverLocalizer = serverLocalizer;
     }
 
 
@@ -57,7 +59,7 @@ public class IndexModel : BasePageModel
         }
 
         AnalyticsModel = new AnalyticsModel(_analyticsOptions);
-        OpenGraphModel = OpenGraphService.GetDefaultModel();
+        OpenGraphModel = OpenGraphService.GetDefaultModel(_serverLocalizer["DefaultOpenGraphDescriptionText"]);
         return Page();
 
 
@@ -145,7 +147,8 @@ public class IndexModel : BasePageModel
 
 
     private readonly AnalyticsOptions _analyticsOptions;
+    private readonly ICookieService _cookieService;
     private readonly IEntryService _entryService;
     private readonly IStringLocalizer<IndexModel> _localizer;
-    private readonly ICookieService _cookieService;
+    private readonly IStringLocalizer<ServerResources> _serverLocalizer;
 }

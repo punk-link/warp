@@ -1,6 +1,7 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
+using Microsoft.Extensions.Localization;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Images;
 
@@ -10,7 +11,7 @@ namespace Warp.WebApp.Controllers;
 [Route("/api/images")]
 public sealed class ImageController : BaseController
 {
-    public ImageController(IImageService imageService)
+    public ImageController(IStringLocalizer<ServerResources> localizer, IImageService imageService) : base(localizer)
     {
         _imageService = imageService;
     }
