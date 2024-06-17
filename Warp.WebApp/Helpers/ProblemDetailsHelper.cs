@@ -42,8 +42,8 @@ public static class ProblemDetailsHelper
         };
 
 
-    public static ProblemDetails CreateNotFound()
-        => Create("The requested resource was not found.", HttpStatusCode.NotFound, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.4");
+    public static ProblemDetails CreateNotFound(IStringLocalizer<ServerResources> localizer)
+        => Create(localizer["NotFoundErrorMessage"], HttpStatusCode.NotFound, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.4");
 
 
     public static ProblemDetails CreateServiceUnavailable(IStringLocalizer<ServerResources> localizer)

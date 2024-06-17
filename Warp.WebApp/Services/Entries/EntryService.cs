@@ -50,7 +50,7 @@ public sealed class EntryService : IEntryService
     public async Task<Result<EntryInfo, ProblemDetails>> Get(Guid userId, Guid entryId, CancellationToken cancellationToken, bool isReceivedForCustomer = false)
     {
         if (await _reportService.Contains(entryId, cancellationToken))
-            return ResultHelper.NotFound<EntryInfo>();
+            return ResultHelper.NotFound<EntryInfo>(_localizer);
 
         var entryIdCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entryId);
 
@@ -59,7 +59,7 @@ public sealed class EntryService : IEntryService
             : await _dataStorage.TryGet<Entry>(entryIdCacheKey, cancellationToken);
 
         if (!entry.HasValue || entry.Value.Equals(default))
-            return ResultHelper.NotFound<EntryInfo>();
+            return ResultHelper.NotFound<EntryInfo>(_localizer);
 
         var viewCount = isReceivedForCustomer
             ? await _viewCountService.AddAndGet(entryId, cancellationToken)

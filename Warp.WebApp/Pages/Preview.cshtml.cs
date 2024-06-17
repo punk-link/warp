@@ -1,5 +1,6 @@
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
 using Warp.WebApp.Pages.Shared.Components;
@@ -12,22 +13,22 @@ namespace Warp.WebApp.Pages;
 
 public class PreviewModel : BasePageModel
 {
-    public PreviewModel(ILoggerFactory loggerFactory, IEntryService previewEntryService) : base(loggerFactory)
+    public PreviewModel(ILoggerFactory loggerFactory, IStringLocalizer<ServerResources> localizer, IEntryService entryService) : base(loggerFactory)
     {
-        _entryService = previewEntryService;
+        _entryService = entryService;
+        _localizer = localizer;
     }
 
 
     public async Task<IActionResult> OnGet(string id, CancellationToken cancellationToken)
     {
-        // TODO: add localization
         var decodedId = IdCoder.Decode(id);
         if (decodedId == Guid.Empty)
-            return RedirectToError(ProblemDetailsHelper.Create("Can't decode a provided ID."));
+            return RedirectToError(ProblemDetailsHelper.Create(_localizer["IdDecodingErrorMessage"]));
 
         var claim = CookieService.GetClaim(HttpContext);
         if (claim is null)
-            return RedirectToError(ProblemDetailsHelper.Create("Can`t open preview page cause of no permission."));
+            return RedirectToError(ProblemDetailsHelper.Create(_localizer["NoPreviewPermissionErrorMessage"]));
 
         var userGuid = Guid.Parse(claim.Value);
         var (_, isFailure, entry, problemDetails) = await _entryService.Get(userGuid, decodedId, cancellationToken);
@@ -86,4 +87,5 @@ public class PreviewModel : BasePageModel
 
 
     private readonly IEntryService _entryService;
+    private readonly IStringLocalizer<ServerResources> _localizer;
 }

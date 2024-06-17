@@ -1,5 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using Warp.WebApp.Data;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
@@ -8,9 +9,10 @@ namespace Warp.WebApp.Services.Images;
 
 public class ImageService : IImageService
 {
-    public ImageService(IDataStorage dataStorage)
+    public ImageService(IDataStorage dataStorage, IStringLocalizer<ServerResources> localizer)
     {
         _dataStorage = dataStorage;
+        _localizer = localizer;
     }
 
 
@@ -70,7 +72,7 @@ public class ImageService : IImageService
 
         return image != default
             ? Result.Success<ImageInfo, ProblemDetails>(image)
-            : ResultHelper.NotFound<ImageInfo>();
+            : ResultHelper.NotFound<ImageInfo>(_localizer);
     }
 
 
@@ -99,4 +101,5 @@ public class ImageService : IImageService
 
 
     private readonly IDataStorage _dataStorage;
+    private readonly IStringLocalizer<ServerResources> _localizer;
 }
