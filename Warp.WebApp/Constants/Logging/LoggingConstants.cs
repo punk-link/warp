@@ -4,6 +4,8 @@ public static class LoggingConstants
 {
     // Generic
     public const int ServerError = 10_001;
+    public const int ServerErrorWithMessage = 10_002;
+    public const int ServiceUnavailable = 10_003;
 
     // Startup
     public const int RedisHostUnspecified = 11_001;

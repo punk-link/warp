@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using System.Net;
 using System.Text.Json;
 using Warp.WebApp.Models.ProblemDetails;
@@ -43,6 +44,10 @@ public static class ProblemDetailsHelper
 
     public static ProblemDetails CreateNotFound()
         => Create("The requested resource was not found.", HttpStatusCode.NotFound, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.4");
+
+
+    public static ProblemDetails CreateServiceUnavailable(IStringLocalizer<ServerResources> localizer)
+        => Create(localizer["ServiceUnavailableErrorMessage"], HttpStatusCode.ServiceUnavailable, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.4");
 
 
     public static List<Error> GetErrors(this ProblemDetails details)

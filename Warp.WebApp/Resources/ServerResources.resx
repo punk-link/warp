@@ -135,6 +135,9 @@
   <data name="NoEntryRemovePermissionsErrorMessage" xml:space="preserve">
     <value>Can`t remove entry cause of no permission.</value>
   </data>
+  <data name="ServiceUnavailableErrorMessage" xml:space="preserve">
+    <value>The server is currently unable to handle the request due to a temporary overload or maintenance of the server.</value>
+  </data>
   <data name="StoringDefaultStructureErrorMessage" xml:space="preserve">
     <value>Can't store a default value.</value>
   </data>
