@@ -13,8 +13,8 @@ public sealed class ReportController : BaseController
     {
         _reportService = reportService;
     }
-    
-    
+
+
     [HttpPost("{id}")]
     public async Task<IActionResult> Post([FromRoute] string id, CancellationToken cancellationToken = default)
     {
@@ -26,6 +26,6 @@ public sealed class ReportController : BaseController
         return NoContent();
     }
 
-    
+
     private readonly IReportService _reportService;
 }

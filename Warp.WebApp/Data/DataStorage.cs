@@ -1,8 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
-using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Localization;
-using Newtonsoft.Json.Linq;
 using Warp.WebApp.Data.Redis;
 using Warp.WebApp.Extensions.Logging;
 
@@ -53,6 +51,7 @@ public sealed class DataStorage : IDataStorage
         return Result.Success();
     }
 
+
     public async Task<Result> CrossValueSet<K, V>(string keyK, K valueK, TimeSpan expiresInK, string keyV, V valueV, TimeSpan expiresInV, CancellationToken cancellationToken)
     {
         if (valueK is null || IsDefaultStruct(valueK))
@@ -82,6 +81,7 @@ public sealed class DataStorage : IDataStorage
         return await _distributedStorage.TryGet<T>(key, cancellationToken);
     }
 
+
     public async ValueTask<HashSet<T>> TryGetSet<T>(string key, CancellationToken cancellationToken)
     {
         return await _distributedStorage.TryGetSet<T>(key, cancellationToken);
@@ -89,9 +89,7 @@ public sealed class DataStorage : IDataStorage
 
 
     public async Task<bool> IsValueContainsInSet<T>(string key, T value, CancellationToken cancellationToken)
-    {
-        return await _distributedStorage.IsValueContainsInSet<T>(key, value, cancellationToken);
-    }
+        => await _distributedStorage.IsValueContainsInSet(key, value, cancellationToken);
 
 
     private static bool IsDefaultStruct<T>(T value)

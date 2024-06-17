@@ -1,14 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.Threading;
-using Warp.WebApp.Helpers;
-using Warp.WebApp.Services.User;
+using Microsoft.Extensions.Localization;
+using System.Text.Json;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Entries;
-using Newtonsoft.Json.Linq;
-using System.Text.Json;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using CSharpFunctionalExtensions;
-using Microsoft.Extensions.Localization;
+using Warp.WebApp.Services.User;
 
 namespace Warp.WebApp.Controllers;
 
@@ -31,15 +26,15 @@ public class EntryController : BaseController
             return ReturnIdDecodingBadRequest();
 
         var claim = CookieService.GetClaim(HttpContext);
-        if (claim != null)
-        {
-            var userId = Guid.Parse(claim.Value);
-            var result = await _entryService.Remove(userId, decodedEntryId, cancellationToken);
-            if (result.IsFailure)
-                return Forbid();
-        }
+        if (claim is null)
+            return NoContent();
 
-        return Ok();
+        var userId = Guid.Parse(claim.Value);
+        var result = await _entryService.Remove(userId, decodedEntryId, cancellationToken);
+        if (result.IsFailure)
+            return Forbid();
+
+        return NoContent();
     }
 
 

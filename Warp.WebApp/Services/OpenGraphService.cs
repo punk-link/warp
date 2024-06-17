@@ -26,8 +26,8 @@ public static partial class OpenGraphService
             return description;
 
         var decodedDescription = WebUtility.HtmlDecode(description);
-        var descriptionWithoutTags = HtmlTagsExpression().Replace(maxDescriptionLength <= decodedDescription.Length 
-            ? decodedDescription[..maxDescriptionLength] 
+        var descriptionWithoutTags = HtmlTagsExpression().Replace(maxDescriptionLength <= decodedDescription.Length
+            ? decodedDescription[..maxDescriptionLength]
             : decodedDescription, string.Empty);
 
         var trimmedDescription = descriptionWithoutTags.Trim();

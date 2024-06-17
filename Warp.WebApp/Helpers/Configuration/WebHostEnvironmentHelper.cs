@@ -6,6 +6,6 @@ public static class WebHostEnvironmentHelper
         => environment.IsDevelopment() || environment.IsLocal();
 
 
-    public static bool IsLocal(this IWebHostEnvironment environment) 
+    public static bool IsLocal(this IWebHostEnvironment environment)
         => environment.IsEnvironment("Local");
 }

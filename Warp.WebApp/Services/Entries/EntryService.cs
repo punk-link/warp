@@ -50,7 +50,7 @@ public sealed class EntryService : IEntryService
     public async Task<Result<EntryInfo, ProblemDetails>> Get(Guid userId, Guid entryId, CancellationToken cancellationToken, bool isReceivedForCustomer = false)
     {
         if (await _reportService.Contains(entryId, cancellationToken))
-            return ResultHelper.NotFound<EntryInfo>();
+            return ResultHelper.NotFound<EntryInfo>(_localizer);
 
         var entryIdCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entryId);
 
@@ -59,12 +59,12 @@ public sealed class EntryService : IEntryService
             : await _dataStorage.TryGet<Entry>(entryIdCacheKey, cancellationToken);
 
         if (!entry.HasValue || entry.Value.Equals(default))
-            return ResultHelper.NotFound<EntryInfo>();
+            return ResultHelper.NotFound<EntryInfo>(_localizer);
 
         var viewCount = isReceivedForCustomer
             ? await _viewCountService.AddAndGet(entryId, cancellationToken)
             : await _viewCountService.Get(entryId, cancellationToken);
-                
+
 
         var imageIds = (await _imageService.Get(entryId, cancellationToken))
             .Select(image => image.Id)
@@ -75,9 +75,7 @@ public sealed class EntryService : IEntryService
 
 
     public async Task<Result> Remove(Guid userId, Guid entryId, CancellationToken cancellationToken)
-    {
-        return await _userService.TryToRemoveUserEntry(userId, entryId, cancellationToken);
-    }
+        => await _userService.TryToRemoveUserEntry(userId, entryId, cancellationToken);
 
 
     private readonly IDataStorage _dataStorage;

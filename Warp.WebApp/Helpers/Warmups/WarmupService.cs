@@ -21,7 +21,6 @@ public class WarmupService : IHostedService
         => Task.CompletedTask;
 
 
-    
     private static void WarmUp(IServiceCollection services, IServiceProvider serviceProvider)
     {
         using var scope = serviceProvider.CreateScope();
@@ -33,10 +32,11 @@ public class WarmupService : IHostedService
     private static IEnumerable<Type> GetServiceTypes(IServiceCollection services)
         => services
             .Where(descriptor => descriptor.ImplementationType != typeof(WarmupService))
-            .Where(descriptor => descriptor.ServiceType.ContainsGenericParameters == false)
+            .Where(descriptor => descriptor.ServiceType.ContainsGenericParameters is false)
             .Select(descriptor => descriptor.ServiceType)
             .Distinct();
 
 
     private readonly IServiceCollection _serviceCollection;
-    private readonly IServiceProvider _serviceProvider;}
+    private readonly IServiceProvider _serviceProvider;
+}

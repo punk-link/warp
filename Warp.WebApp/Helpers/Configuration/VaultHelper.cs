@@ -45,7 +45,7 @@ public static class VaultHelper
 
         return vaultClient;
     }
-     
+
 
     private const string StorageName = "secrets";
 }

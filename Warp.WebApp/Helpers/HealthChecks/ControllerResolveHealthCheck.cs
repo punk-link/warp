@@ -18,7 +18,7 @@ public class ControllerResolveHealthCheck : IHealthCheck
 
         try
         {
-            foreach (var controllerType in ControllerTypes)
+            foreach (var controllerType in _controllerTypes)
                 _provider.GetRequiredService(controllerType);
 
             _areControllersResolved = true;
@@ -32,13 +32,13 @@ public class ControllerResolveHealthCheck : IHealthCheck
     }
 
 
-    private static readonly Type[] ControllerTypes = typeof(ControllerResolveHealthCheck).Assembly
+    private static readonly Type[] _controllerTypes = typeof(ControllerResolveHealthCheck).Assembly
         .GetTypes()
         .Where(t => Attribute.GetCustomAttribute(t, typeof(ApiControllerAttribute)) is not null)
-        .Where(t=> t is { IsAbstract: false, IsPublic: true })
+        .Where(t => t is { IsAbstract: false, IsPublic: true })
         .ToArray();
 
 
-    private readonly IServiceProvider  _provider;
+    private readonly IServiceProvider _provider;
     private static bool _areControllersResolved;
 }

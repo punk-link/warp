@@ -1,8 +1,6 @@
-﻿using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication;
-using Sentry.Protocol;
+﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
-using CSharpFunctionalExtensions;
 
 namespace Warp.WebApp.Services.User;
 
@@ -10,20 +8,19 @@ public class CookieService : ICookieService
 {
     public async Task<Guid> ConfigureCookie(HttpContext httpContext, HttpResponse response)
     {
-        List<Claim> claims = new List<Claim>();
-        Claim claim;
 
-        if (httpContext.User.Claims != null && httpContext.User.Claims.Any())
+        if (httpContext.User.Claims.Any())
         {
-            claims = httpContext.User.Claims.ToList();
-            Guid.TryParse(claims.FirstOrDefault(x => x.Type == ClaimTypes.Name)?.Value, out var foundUserId);
-            return foundUserId;
+            var existingClaims = httpContext.User.Claims.ToList();
+            if (Guid.TryParse(existingClaims.First(x => x.Type == ClaimTypes.Name).Value, out var foundUserId))
+                return foundUserId;
         }
-        else
-            claim = new Claim(ClaimTypes.Name, Guid.NewGuid().ToString());
 
-        Guid.TryParse(claim!.Value, out var userId);
-        claims.Add(claim);
+        var userId = Guid.NewGuid();
+        List<Claim> claims =
+        [
+            new Claim(ClaimTypes.Name, userId.ToString())
+        ];
         var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
         await response.HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, new AuthenticationProperties
@@ -34,7 +31,8 @@ public class CookieService : ICookieService
 
         return userId;
     }
-    
+
+
     public static Claim? GetClaim(HttpContext httpContext)
     {
         var claim = httpContext.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Name && Guid.TryParse(x.Value, out _));

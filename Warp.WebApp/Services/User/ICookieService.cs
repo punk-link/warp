@@ -1,6 +1,4 @@
-﻿using System.Security.Claims;
-
-namespace Warp.WebApp.Services.User;
+﻿namespace Warp.WebApp.Services.User;
 
 public interface ICookieService
 {

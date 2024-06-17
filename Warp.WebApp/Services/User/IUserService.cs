@@ -1,5 +1,4 @@
 ﻿using CSharpFunctionalExtensions;
-using Microsoft.AspNetCore.Mvc;
 using Warp.WebApp.Models;
 
 namespace Warp.WebApp.Services.User;

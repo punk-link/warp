@@ -23,7 +23,7 @@ public class RobotsMiddleware
         await context.Response.WriteAsync(content);
     }
 
-        
+
     private static async ValueTask<string> GetFileContent(string contentRootPath)
     {
         var filePath = Path.Combine(contentRootPath, "robots.txt");

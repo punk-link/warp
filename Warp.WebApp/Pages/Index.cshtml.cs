@@ -1,18 +1,12 @@
-using System.ComponentModel;
-using Consul;
 using CSharpFunctionalExtensions;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.OutputCaching;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
-using System.ComponentModel;
-using System.Security.Claims;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
 using Warp.WebApp.Models.Options;
-using Microsoft.Extensions.Localization;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Entries;
@@ -70,6 +64,7 @@ public class IndexModel : BasePageModel
             SelectedExpirationPeriod = GetExpirationPeriodId(entryInfo.Entry.ExpiresAt - entryInfo.Entry.CreatedAt);
         }
 
+
         void AddOpenGraphModel()
         {
             OpenGraphModel = OpenGraphService.GetModel(TextContent);//, ImageUrls);
@@ -104,18 +99,18 @@ public class IndexModel : BasePageModel
 
     private static int GetExpirationPeriodId(TimeSpan expirationPeriod)
     {
-        var ts5min = new TimeSpan(0, 5, 0);
-        var ts30min = new TimeSpan(0, 30, 0);
-        var ts1hour = new TimeSpan(1, 0, 0);
-        var ts8hours = new TimeSpan(8, 0, 0);
+        var ts5Min = new TimeSpan(0, 5, 0);
+        var ts30Min = new TimeSpan(0, 30, 0);
+        var ts1Hour = new TimeSpan(1, 0, 0);
+        var ts8Hours = new TimeSpan(8, 0, 0);
 
-        if (expirationPeriod <= ts5min)
+        if (expirationPeriod <= ts5Min)
             return 1;
-        if (expirationPeriod <= ts30min && expirationPeriod > ts5min)
+        if (expirationPeriod <= ts30Min && expirationPeriod > ts5Min)
             return 2;
-        if (expirationPeriod <= ts1hour && expirationPeriod > ts30min)
+        if (expirationPeriod <= ts1Hour && expirationPeriod > ts30Min)
             return 3;
-        if (expirationPeriod <= ts8hours && expirationPeriod > ts1hour)
+        if (expirationPeriod <= ts8Hours && expirationPeriod > ts1Hour)
             return 4;
 
         return 5;
@@ -130,7 +125,7 @@ public class IndexModel : BasePageModel
 
     [BindProperty]
     public string TextContent { get; set; } = string.Empty;
-    
+
     public List<SelectListItem> ExpirationPeriodOptions
         =>
         [

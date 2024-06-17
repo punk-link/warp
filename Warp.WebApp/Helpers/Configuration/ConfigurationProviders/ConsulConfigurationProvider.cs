@@ -1,6 +1,6 @@
-﻿using System.Text;
+﻿using Consul;
+using System.Text;
 using System.Text.Json.Nodes;
-using Consul;
 
 namespace Warp.WebApp.Helpers.Configuration.ConfigurationProviders;
 
@@ -31,9 +31,9 @@ public class ConsulConfigurationProvider : ConfigurationProvider
                 case JsonValue:
                     Data.Add(nodeKey, value.ToString());
                     continue;
-                case JsonObject: 
-                    foreach (var prop in  value.AsObject().AsEnumerable())
-                    { 
+                case JsonObject:
+                    foreach (var prop in value.AsObject().AsEnumerable())
+                    {
                         if (prop.Value is null)
                             continue;
 
@@ -47,7 +47,7 @@ public class ConsulConfigurationProvider : ConfigurationProvider
     }
 
 
-    private static ConsulClient GetConsulClient(string address, string token) 
+    private static ConsulClient GetConsulClient(string address, string token)
         => new(options =>
         {
             options.Address = new Uri(address);

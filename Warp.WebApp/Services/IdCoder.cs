@@ -6,11 +6,11 @@ public static class IdCoder
     {
         var restored = id.Replace(Char62Replacement, Char62)
             .Replace(Char63Replacement, Char63);
-        
+
         Span<byte> buffer = stackalloc byte[GuidSize];
-        
-        return Convert.TryFromBase64String(restored + Padding, buffer, out _) 
-            ? new Guid(buffer) 
+
+        return Convert.TryFromBase64String(restored + Padding, buffer, out _)
+            ? new Guid(buffer)
             : Guid.Empty;
     }
 

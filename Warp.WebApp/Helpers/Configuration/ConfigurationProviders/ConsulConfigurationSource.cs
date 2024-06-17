@@ -11,9 +11,7 @@ public class ConsulConfigurationSource : IConfigurationSource
 
 
     public IConfigurationProvider Build(IConfigurationBuilder _)
-    {
-        return new ConsulConfigurationProvider(_address, _token, _storageName);
-    }
+        => new ConsulConfigurationProvider(_address, _token, _storageName);
 
 
     private readonly string _address;

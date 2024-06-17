@@ -1,5 +1,5 @@
-﻿using System.Globalization;
-using StackExchange.Redis;
+﻿using StackExchange.Redis;
+using System.Globalization;
 using Warp.WebApp.Extensions.Logging;
 
 namespace Warp.WebApp.Helpers.Configuration;
@@ -18,7 +18,7 @@ public static class DistributedCacheHelper
         var options = new ConfigurationOptions
         {
             AbortOnConnectFail = true,
-            EndPoints = 
+            EndPoints =
             {
                 { host, port }
             },
