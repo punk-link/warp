@@ -28,5 +28,4 @@ public class PrivacyModel : PageModel
 
 
     private readonly AnalyticsOptions _analyticsOptions;
-
 }

@@ -1,6 +1,5 @@
 ﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
-using Warp.WebApp.Services;
 
 var summary = BenchmarkRunner.Run<MemoryBenchmarkDemo>();
 Console.WriteLine(summary);

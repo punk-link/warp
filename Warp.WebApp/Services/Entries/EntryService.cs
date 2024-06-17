@@ -64,7 +64,7 @@ public sealed class EntryService : IEntryService
         var viewCount = isReceivedForCustomer
             ? await _viewCountService.AddAndGet(entryId, cancellationToken)
             : await _viewCountService.Get(entryId, cancellationToken);
-                
+
 
         var imageIds = (await _imageService.Get(entryId, cancellationToken))
             .Select(image => image.Id)
@@ -75,9 +75,7 @@ public sealed class EntryService : IEntryService
 
 
     public async Task<Result> Remove(Guid userId, Guid entryId, CancellationToken cancellationToken)
-    {
-        return await _userService.TryToRemoveUserEntry(userId, entryId, cancellationToken);
-    }
+        => await _userService.TryToRemoveUserEntry(userId, entryId, cancellationToken);
 
 
     private readonly IDataStorage _dataStorage;

@@ -12,6 +12,6 @@ public readonly record struct Error
     }
 
 
-    public string Code { get; } 
-    public string Message { get; } 
+    public string Code { get; }
+    public string Message { get; }
 }

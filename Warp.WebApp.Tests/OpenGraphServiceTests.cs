@@ -7,7 +7,7 @@ public class OpenGraphServiceTests
     [Fact]
     public void GetDefaultModel_ReturnsDefaultModel()
     {
-        var result = OpenGraphService.GetDefaultModel(Description);
+        var result = OpenGraphService.GetDefaultModel(_description);
 
         Assert.NotNull(result);
         Assert.NotEmpty(result.Title);
@@ -18,11 +18,11 @@ public class OpenGraphServiceTests
     [Fact]
     public void GetModel_WithDescription_ReturnsModelWithProcessedDescription()
     {
-        var result = OpenGraphService.GetModel(Description);
+        var result = OpenGraphService.GetModel(_description);
 
         Assert.NotNull(result);
         Assert.NotEmpty(result.Title);
-        Assert.Equal(Description, result.Description);
+        Assert.Equal(_description, result.Description);
         Assert.NotEmpty(result.ImageUrl);
     }
 
@@ -45,7 +45,7 @@ public class OpenGraphServiceTests
     {
         var urls = new List<string> { "https://example.com/image.jpg" };
 
-        var result = OpenGraphService.GetModel(Description, urls);
+        var result = OpenGraphService.GetModel(_description, urls);
 
         Assert.NotNull(result);
         Assert.Equal(urls[0], result.ImageUrl);
@@ -57,12 +57,12 @@ public class OpenGraphServiceTests
     {
         var urls = new List<string>();
 
-        var result = OpenGraphService.GetModel(Description, urls);
+        var result = OpenGraphService.GetModel(_description, urls);
 
         Assert.NotNull(result);
         Assert.NotEmpty(result.ImageUrl);
     }
 
 
-    private const string Description = "This is a test description.";
+    private const string _description = "This is a test description.";
 }

@@ -17,7 +17,7 @@ public class BaseController : ControllerBase
     {
         if (result.IsFailure)
             return BadRequest(result.Error);
-        
+
         return NoContent();
     }
 

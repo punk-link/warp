@@ -11,13 +11,13 @@ namespace Warp.WebApp.Pages;
 
 public class EntryModel : BasePageModel
 {
-    public EntryModel(ILoggerFactory loggerFactory, IEntryService entryService) 
+    public EntryModel(ILoggerFactory loggerFactory, IEntryService entryService)
         : base(loggerFactory)
     {
         _entryService = entryService;
     }
-    
-    
+
+
     public async Task<IActionResult> OnGet(string id, CancellationToken cancellationToken)
     {
         var decodedId = IdCoder.Decode(id);
@@ -52,7 +52,7 @@ public class EntryModel : BasePageModel
         }
     }
 
-    
+
     public OpenGraphModel OpenGraphModel { get; set; } = default!;
 
 
@@ -62,7 +62,7 @@ public class EntryModel : BasePageModel
     public string TextContent { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public long ViewCount { get; set; } = 1;
-    
-    
+
+
     private readonly IEntryService _entryService;
 }

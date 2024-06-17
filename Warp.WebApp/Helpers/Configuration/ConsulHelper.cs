@@ -11,7 +11,7 @@ public static class ConsulHelper
     }
 
 
-    private static IConfigurationBuilder AddConsulConfiguration(this IConfigurationBuilder builder, string address, string token, string storageName) 
+    private static IConfigurationBuilder AddConsulConfiguration(this IConfigurationBuilder builder, string address, string token, string storageName)
         => builder.Add(new ConsulConfigurationSource(address, token, storageName));
 
 

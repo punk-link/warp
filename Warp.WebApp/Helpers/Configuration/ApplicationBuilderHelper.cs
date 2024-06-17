@@ -6,7 +6,7 @@ namespace Warp.WebApp.Helpers.Configuration;
 
 public static class ApplicationBuilderHelper
 {
-    public static Action<IApplicationBuilder> ConfigureApiExceptionHandler(this IApplicationBuilder app, IWebHostEnvironment environment) 
+    public static Action<IApplicationBuilder> ConfigureApiExceptionHandler(this IApplicationBuilder app, IWebHostEnvironment environment)
         => handler => handler.Run(async context =>
         {
             var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();

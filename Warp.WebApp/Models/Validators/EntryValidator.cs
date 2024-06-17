@@ -11,7 +11,7 @@ public class EntryValidator : AbstractValidator<Entry>
         RuleFor(x => x.Content).NotEmpty()
             .WithErrorCode(LoggingConstants.WarpContentEmpty.ToString())
             .WithMessage(localizer["EntryBodyEmptyErrorMessage"]);
-        
+
         RuleFor(x => x.ExpiresAt).GreaterThan(default(DateTime))
             .WithErrorCode(LoggingConstants.WarpExpirationPeriodEmpty.ToString())
             .WithMessage(localizer["EntryExpirationPeriodEmptyErrorMessage"]);

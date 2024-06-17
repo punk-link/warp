@@ -204,6 +204,10 @@ dotnet_naming_rule.non_field_members_should_be_pascal_case.severity = suggestion
 dotnet_naming_rule.non_field_members_should_be_pascal_case.symbols = non_field_members
 dotnet_naming_rule.non_field_members_should_be_pascal_case.style = pascal_case
 
+dotnet_naming_rule.constant_should_be_pascal_case.severity = suggestion
+dotnet_naming_rule.constant_should_be_pascal_case.symbols = constant
+dotnet_naming_rule.constant_should_be_pascal_case.style = pascal_case
+
 dotnet_naming_rule.private_field_should_be_begins_with__.severity = suggestion
 dotnet_naming_rule.private_field_should_be_begins_with__.symbols = private_field
 dotnet_naming_rule.private_field_should_be_begins_with__.style = begins_with__
@@ -225,6 +229,10 @@ dotnet_naming_symbols.non_field_members.required_modifiers =
 dotnet_naming_symbols.private_field.applicable_kinds = field
 dotnet_naming_symbols.private_field.applicable_accessibilities = private
 dotnet_naming_symbols.private_field.required_modifiers = 
+
+dotnet_naming_symbols.constant.applicable_kinds = field
+dotnet_naming_symbols.constant.applicable_accessibilities = *
+dotnet_naming_symbols.constant.required_modifiers = const
 
 # Naming styles
 

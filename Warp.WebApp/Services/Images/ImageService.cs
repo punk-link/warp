@@ -77,7 +77,7 @@ public class ImageService : IImageService
     private async Task<(string, Guid)> Add(IFormFile file, CancellationToken cancellationToken)
     {
         using var memoryStream = new MemoryStream();
-        await file.CopyToAsync(memoryStream);
+        await file.CopyToAsync(memoryStream, cancellationToken);
 
         var imageInfo = new ImageInfo
         {
@@ -96,7 +96,6 @@ public class ImageService : IImageService
     public static List<string> BuildImageUrls(Guid id, List<Guid> imageIds)
     => imageIds.Select(imageId => $"/api/images/entry-id/{id}/image-id/{imageId}")
         .ToList();
-
 
 
     private readonly IDataStorage _dataStorage;

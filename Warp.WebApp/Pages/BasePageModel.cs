@@ -1,8 +1,8 @@
-﻿using System.Diagnostics;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Diagnostics;
 using System.Net;
 using System.Text.Json;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Warp.WebApp.Extensions.Logging;
 using Warp.WebApp.Helpers;
 
@@ -14,8 +14,8 @@ public class BasePageModel : PageModel
     {
         _logger = loggerFactory.CreateLogger<BasePageModel>();
     }
-    
-    
+
+
     protected void AddProblemDetails(ProblemDetails problemDetails)
     {
         var problemDetailsJson = JsonSerializer.Serialize(problemDetails);
@@ -28,8 +28,8 @@ public class BasePageModel : PageModel
         var problemDetailsObject = TempData[ProblemDetailsTempDataToken];
         if (problemDetailsObject is null)
             return default;
-        
-        var problemDetailsJson = (string) problemDetailsObject;
+
+        var problemDetailsJson = (string)problemDetailsObject;
         return JsonSerializer.Deserialize<ProblemDetails>(problemDetailsJson);
     }
 
@@ -37,13 +37,13 @@ public class BasePageModel : PageModel
     protected IActionResult RedirectToError(ProblemDetails problemDetails)
     {
         var traceId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
-        
+
         problemDetails = AddTracingData(problemDetails, traceId);
         AddProblemDetails(problemDetails);
 
-        if (problemDetails.Status != (int) HttpStatusCode.NotFound)
+        if (problemDetails.Status != (int)HttpStatusCode.NotFound)
             LogErrors(problemDetails, traceId);
-        
+
         return RedirectToPage("./Error");
     }
 
@@ -52,7 +52,7 @@ public class BasePageModel : PageModel
     {
         problemDetails.Instance = HttpContext.Request.Path;
         problemDetails.AddTraceId(traceId);
-        
+
         return problemDetails;
     }
 

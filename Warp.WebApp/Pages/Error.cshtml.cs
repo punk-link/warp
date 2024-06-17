@@ -26,20 +26,20 @@ public class ErrorModel : BasePageModel
         Errors = problemDetails.GetErrors();
         RequestId = problemDetails.GetTraceId();
         Title = problemDetails.Title;
-            
+
         if (problemDetails.Status != null)
             Status = problemDetails.Status.Value;
     }
 
 
-    public bool ShowErrors 
+    public bool ShowErrors
         => Errors.Count > 0;
 
 
-    public bool ShowRequestId 
+    public bool ShowRequestId
         => !string.IsNullOrEmpty(RequestId);
-    
-    
+
+
     public string? Detail { get; set; } = "An error occurred while processing your request.";
     public List<Error> Errors { get; set; } = Enumerable.Empty<Error>().ToList();
     public string? RequestId { get; set; }

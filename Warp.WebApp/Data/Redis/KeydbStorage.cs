@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.DataProtection.KeyManagement;
-using StackExchange.Redis;
+﻿using StackExchange.Redis;
 using System.Text.Json;
 using Warp.WebApp.Models;
 
@@ -67,8 +66,10 @@ public sealed class KeyDbStorage : IDistributedStorage
         var redisTask = db.SetMembersAsync(key);
 
         var completedTask = await ExecuteOrCancel(redisTask!, cancellationToken);
+        if (completedTask is null)
+            return Enumerable.Empty<T>().ToHashSet();
 
-        return completedTask.Select(d => JsonSerializer.Deserialize<T>(d)).ToHashSet();
+        return completedTask.Select(d => JsonSerializer.Deserialize<T>(d!)).ToHashSet()!;
     }
 
 
@@ -78,7 +79,6 @@ public sealed class KeyDbStorage : IDistributedStorage
         var redisTask = db.StringGetAsync(key);
 
         var completedTask = await ExecuteOrCancel(redisTask, cancellationToken);
-
         if (!completedTask.HasValue)
             return default;
 
@@ -103,7 +103,7 @@ public sealed class KeyDbStorage : IDistributedStorage
         return _multiplexer.GetDatabase(dbIndex);
     }
 
-    private async Task<T?> ExecuteOrCancel<T>(Task<T?> task, CancellationToken cancellationToken)
+    private static async Task<T?> ExecuteOrCancel<T>(Task<T?> task, CancellationToken cancellationToken)
     {
         var completedTask = await Task.WhenAny(task, Task.Delay(Timeout.Infinite, cancellationToken));
         if (completedTask == task)

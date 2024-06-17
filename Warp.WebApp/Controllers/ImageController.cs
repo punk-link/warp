@@ -35,7 +35,7 @@ public sealed class ImageController : BaseController
 
         return new FileStreamResult(new MemoryStream(value.Content), value.ContentType);
     }
-    
+
 
     [HttpPost]
     public async Task<IActionResult> Upload([FromForm] List<IFormFile> images, CancellationToken cancellationToken = default)
@@ -47,6 +47,6 @@ public sealed class ImageController : BaseController
         return Ok(results);
     }
 
-    
+
     private readonly IImageService _imageService;
 }

@@ -1,6 +1,5 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Localization;
-using Newtonsoft.Json.Linq;
 using Warp.WebApp.Data;
 using Warp.WebApp.Models;
 
@@ -64,14 +63,16 @@ public class UserService : IUserService
         var userIdCacheKey = CacheKeyBuilder.BuildSetGuidCacheKey(userId);
         var entryIdList = await _dataStorage.TryGetSet<string>(userIdCacheKey, cancellationToken);
         var entryList = new List<Entry>();
-        if (entryIdList != null && entryIdList.Count > 0)
+        if (entryIdList is not { Count: > 0 })
+            return entryList;
+
+        foreach (var entryId in entryIdList)
         {
-            foreach (var entryId in entryIdList)
-            {
-                Guid.TryParse(entryId, out var entryGuid);
-                var entryIdCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entryGuid);
-                entryList.Add(await _dataStorage.TryGet<Entry>(entryIdCacheKey, cancellationToken));
-            }
+            if (!Guid.TryParse(entryId, out var entryGuid))
+                continue;
+            
+            var entryIdCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entryGuid);
+            entryList.Add(await _dataStorage.TryGet<Entry>(entryIdCacheKey, cancellationToken));
         }
 
         return entryList;

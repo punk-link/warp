@@ -1,12 +1,8 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Razor;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.ResponseCompression;
 using System.Globalization;
-using Warp.WebApp;
 using Warp.WebApp.Data;
 using Warp.WebApp.Data.Redis;
 using Warp.WebApp.Helpers.Configuration;
@@ -97,7 +93,7 @@ return;
 IServiceCollection AddOptions(IServiceCollection services, IConfiguration configuration)
 {
     services.Configure<AnalyticsOptions>(configuration.GetSection(nameof(AnalyticsOptions)));
-        
+
     return services;
 }
 
@@ -138,9 +134,9 @@ void AddLogging(WebApplicationBuilder webApplicationBuilder1)
 {
     webApplicationBuilder1.Logging.ClearProviders();
 
-    #if DEBUG
+#if DEBUG
     builder.Logging.AddDebug();
-    #endif
+#endif
 
     webApplicationBuilder1.Logging.AddConsole();
     if (!string.IsNullOrWhiteSpace(webApplicationBuilder1.Configuration["SentryDsn"]))
