@@ -29,5 +29,12 @@ public class BaseController : ControllerBase
     }
 
 
-    private readonly IStringLocalizer<ServerResources> _localizer;
+    protected IActionResult ReturnNoPermissionToRemoveBadRequest()
+    {
+        var detail = _localizer["NoEntryRemovePermissionsErrorMessage"];
+        return BadRequest(ProblemDetailsHelper.Create(detail));
+    }
+
+
+    protected readonly IStringLocalizer<ServerResources> _localizer;
 }

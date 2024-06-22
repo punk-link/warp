@@ -1,5 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Localization;
+using Sentry;
 using Warp.WebApp.Data;
 using Warp.WebApp.Models;
 
@@ -35,8 +36,7 @@ public class UserService : IUserService
 
     public async Task<Entry?> TryGetUserEntry(Guid userId, Guid entryId, CancellationToken cancellationToken)
     {
-        var userIdCacheKey = CacheKeyBuilder.BuildSetGuidCacheKey(userId);
-        if (!await _dataStorage.IsValueContainsInSet(userIdCacheKey, entryId, cancellationToken))
+        if (!await IsEntryBelongToUser(userId, entryId, cancellationToken))
             return default;
 
         var entryList = await GetUserEntries(userId, cancellationToken);
@@ -48,13 +48,19 @@ public class UserService : IUserService
 
     public async Task<Result> TryToRemoveUserEntry(Guid userId, Guid entryId, CancellationToken cancellationToken)
     {
-        var userIdCacheKey = CacheKeyBuilder.BuildSetGuidCacheKey(userId);
-        if (!await _dataStorage.IsValueContainsInSet(userIdCacheKey, entryId, cancellationToken))
+        if (!await IsEntryBelongToUser(userId, entryId, cancellationToken))
             return Result.Failure(_localizer["NoEntryRemovePermissionsErrorMessage"]);
 
         var entryIdCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entryId);
         await _dataStorage.Remove<EntryInfo>(entryIdCacheKey, cancellationToken);
         return Result.Success();
+    }
+
+
+    public async Task<bool> IsEntryBelongToUser(Guid userId, Guid entryId, CancellationToken cancellationToken)
+    {
+        var userIdCacheKey = CacheKeyBuilder.BuildSetGuidCacheKey(userId);
+        return await _dataStorage.IsValueContainsInSet(userIdCacheKey, entryId, cancellationToken);
     }
 
 

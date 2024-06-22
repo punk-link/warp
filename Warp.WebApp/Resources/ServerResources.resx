@@ -135,6 +135,9 @@
   <data name="NoEntryRemovePermissionsErrorMessage" xml:space="preserve">
     <value>Can`t remove entry cause of no permission.</value>
   </data>
+  <data name="NoPermissionErrorMessage" xml:space="preserve">
+    <value>No permission to perform the operation</value>
+  </data>
   <data name="NoPreviewPermissionErrorMessage" xml:space="preserve">
     <value>Can't open the preview page, cause of no permission.</value>
   </data>

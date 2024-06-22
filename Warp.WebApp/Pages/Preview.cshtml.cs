@@ -31,7 +31,7 @@ public class PreviewModel : BasePageModel
             return RedirectToError(ProblemDetailsHelper.Create(_localizer["NoPreviewPermissionErrorMessage"]));
 
         var userGuid = Guid.Parse(claim.Value);
-        var (_, isFailure, entry, problemDetails) = await _entryService.Get(userGuid, decodedId, cancellationToken);
+        var (_, isFailure, entry, problemDetails) = await _entryService.Get(userGuid, decodedId, cancellationToken: cancellationToken);
         if (isFailure)
             return RedirectToError(problemDetails);
 
@@ -66,7 +66,7 @@ public class PreviewModel : BasePageModel
 
         var decodedId = IdCoder.Decode(id);
         var userGuid = Guid.Parse(claim.Value);
-        var (_, isGetFailure, entryGet, problemDetailsGet) = await _entryService.Get(userGuid, decodedId, cancellationToken);
+        var (_, isGetFailure, entryGet, problemDetailsGet) = await _entryService.Get(userGuid, decodedId, cancellationToken: cancellationToken);
         if (isGetFailure)
             return RedirectToError(problemDetailsGet);
 

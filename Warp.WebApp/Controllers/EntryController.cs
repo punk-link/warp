@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using System.Text.Json;
+using Warp.WebApp.Helpers;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.User;
@@ -27,12 +28,12 @@ public class EntryController : BaseController
 
         var claim = CookieService.GetClaim(HttpContext);
         if (claim is null)
-            return NoContent();
+            return ReturnNoPermissionToRemoveBadRequest();
 
         var userId = Guid.Parse(claim.Value);
         var result = await _entryService.Remove(userId, decodedEntryId, cancellationToken);
         if (result.IsFailure)
-            return Forbid();
+            return BadRequest(ProblemDetailsHelper.Create(result.Error));
 
         return NoContent();
     }
