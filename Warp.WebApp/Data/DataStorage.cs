@@ -50,6 +50,10 @@ public sealed class DataStorage : IDataStorage
     }
 
 
+    public async Task<bool> ContainsInSet<T>(string key, T value, CancellationToken cancellationToken)
+        => await _distributedStorage.ContainsInSet(key, value, cancellationToken);
+
+
     public async Task Remove<T>(string key, CancellationToken cancellationToken)
     {
         _memoryCache.Remove(key);
@@ -86,10 +90,6 @@ public sealed class DataStorage : IDataStorage
     {
         return await _distributedStorage.TryGetSet<T>(key, cancellationToken);
     }
-
-
-    public async Task<bool> IsValueContainsInSet<T>(string key, T value, CancellationToken cancellationToken)
-        => await _distributedStorage.IsValueContainsInSet(key, value, cancellationToken);
 
 
     private static bool IsDefaultStruct<T>(T value)

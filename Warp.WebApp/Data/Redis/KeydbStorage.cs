@@ -41,6 +41,16 @@ public sealed class KeyDbStorage : IDistributedStorage
         return await ExecuteOrCancel(redisTask, cancellationToken);
     }
 
+
+    public async Task<bool> ContainsInSet<T>(string key, T value, CancellationToken cancellationToken)
+    {
+        var db = GetDatabase<T>();
+        var valueBytes = JsonSerializer.SerializeToUtf8Bytes(value);
+        var redisTask = db.SetContainsAsync(key, valueBytes);
+
+        return await ExecuteOrCancel(redisTask, cancellationToken);
+    }
+
     public async Task Remove<T>(string key, CancellationToken cancellationToken)
     {
         var db = GetDatabase<T>();
@@ -82,16 +92,6 @@ public sealed class KeyDbStorage : IDistributedStorage
 
         var bytes = (byte[])completedTask!;
         return JsonSerializer.Deserialize<T>(bytes)!;
-    }
-
-
-    public async Task<bool> IsValueContainsInSet<T>(string key, T value, CancellationToken cancellationToken)
-    {
-        var db = GetDatabase<T>();
-        var valueBytes = JsonSerializer.SerializeToUtf8Bytes(value);
-        var redisTask = db.SetContainsAsync(key, valueBytes);
-
-        return await ExecuteOrCancel(redisTask, cancellationToken);
     }
 
 

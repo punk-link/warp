@@ -5,9 +5,7 @@ using Warp.WebApp.Data;
 using Warp.WebApp.Extensions;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
-using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Models.Validators;
-using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Images;
 
 namespace Warp.WebApp.Services.Entries;
@@ -15,18 +13,17 @@ namespace Warp.WebApp.Services.Entries;
 public sealed class EntryService : IEntryService
 {
     public EntryService(IStringLocalizer<ServerResources> localizer, IDataStorage dataStorage, IImageService imageService, IReportService reportService,
-        IViewCountService viewCountService, ICreatorService userService)
+        IViewCountService viewCountService)
     {
         _dataStorage = dataStorage;
         _imageService = imageService;
         _localizer = localizer;
         _reportService = reportService;
         _viewCountService = viewCountService;
-        _userService = userService;
     }
 
 
-    public async Task<Result<Entry, ProblemDetails>> Add(string content, TimeSpan expiresIn, Creator creator, List<Guid> imageIds,
+    public async Task<Result<Entry, ProblemDetails>> Add(string content, TimeSpan expiresIn, List<Guid> imageIds,
         CancellationToken cancellationToken)
     {
         var entry = BuildEntry();
@@ -37,6 +34,9 @@ public sealed class EntryService : IEntryService
             return validationResult.ToFailure<Entry>(_localizer);
 
         await _imageService.Attach(entry.Id, expiresIn, imageIds, cancellationToken);
+
+        var entryIdCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entry.Id);
+        await _dataStorage.Set(entryIdCacheKey, entry, expiresIn, cancellationToken);
 
         return entry;
 
@@ -52,18 +52,15 @@ public sealed class EntryService : IEntryService
     }
 
 
-    public async Task<Result<EntryInfo, ProblemDetails>> Get(Guid userId, Guid entryId, CancellationToken cancellationToken, bool isReceivedForCustomer = false)
+    public async Task<Result<EntryInfo, ProblemDetails>> Get(Guid entryId, CancellationToken cancellationToken, bool isReceivedForCustomer = false)
     {
         if (await _reportService.Contains(entryId, cancellationToken))
             return ResultHelper.NotFound<EntryInfo>(_localizer);
 
         var entryIdCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entryId);
 
-        var entry = userId != Guid.Empty
-            ? await _userService.TryGetUserEntry(userId, entryId, cancellationToken)
-            : await _dataStorage.TryGet<Entry>(entryIdCacheKey, cancellationToken);
-
-        if (!entry.HasValue || entry.Value.Equals(default))
+        var entry = await _dataStorage.TryGet<Entry>(entryIdCacheKey, cancellationToken);
+        if (entry.Equals(default))
             return ResultHelper.NotFound<EntryInfo>(_localizer);
 
         var viewCount = isReceivedForCustomer
@@ -75,12 +72,17 @@ public sealed class EntryService : IEntryService
             .Select(image => image.Id)
             .ToList();
 
-        return Result.Success<EntryInfo, ProblemDetails>(new EntryInfo((Entry)entry, viewCount, imageIds));
+        return Result.Success<EntryInfo, ProblemDetails>(new EntryInfo(entry, viewCount, imageIds));
     }
 
 
-    public async Task<Result> Remove(Guid userId, Guid entryId, CancellationToken cancellationToken)
-        => await _userService.TryToRemoveUserEntry(userId, entryId, cancellationToken);
+    public async Task<Result> Remove(Guid entryId, CancellationToken cancellationToken)
+    {
+        var entryIdCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entryId);
+        await _dataStorage.Remove<Entry>(entryIdCacheKey, cancellationToken);
+
+        return Result.Success();
+    }
 
 
     private readonly IDataStorage _dataStorage;
@@ -88,5 +90,4 @@ public sealed class EntryService : IEntryService
     private readonly IStringLocalizer<ServerResources> _localizer;
     private readonly IReportService _reportService;
     private readonly IViewCountService _viewCountService;
-    private readonly ICreatorService _userService;
 }

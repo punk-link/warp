@@ -33,28 +33,24 @@ public class IndexModel : BasePageModel
     [OutputCache(Duration = 3600)]
     public async Task<IActionResult> OnGet(string? id, CancellationToken cancellationToken)
     {
-        if (!string.IsNullOrEmpty(id))
+        AnalyticsModel = new AnalyticsModel(_analyticsOptions);
+
+        if (string.IsNullOrEmpty(id))
         {
-            var decodedId = IdCoder.Decode(id);
-            if (decodedId == Guid.Empty)
-                return RedirectToError(ProblemDetailsHelper.Create("Can't decode a provided ID."));
-
-            var claim = CookieService.GetClaim(HttpContext);
-            if (claim != null)
-            {
-                var userId = Guid.Parse(claim.Value);
-                var (_, isFailure, entry, problemDetails) = await _entryService.Get(userId, decodedId, cancellationToken);
-                if (isFailure)
-                    return RedirectToError(problemDetails);
-
-                BuildModel(entry);
-                AddOpenGraphModel();
-                return Page();
-            }
+            OpenGraphModel = OpenGraphService.GetDefaultModel(_serverLocalizer["DefaultOpenGraphDescriptionText"]);
+            return Page();
         }
 
-        AnalyticsModel = new AnalyticsModel(_analyticsOptions);
-        OpenGraphModel = OpenGraphService.GetDefaultModel(_serverLocalizer["DefaultOpenGraphDescriptionText"]);
+        var decodedId = IdCoder.Decode(id);
+        if (decodedId == Guid.Empty)
+            return RedirectToError(ProblemDetailsHelper.Create("Can't decode a provided ID."));
+
+        var (_, isFailure, entry, problemDetails) = await _entryService.Get(decodedId, cancellationToken);
+        if (isFailure)
+            return RedirectToError(problemDetails);
+
+        BuildModel(entry);
+        OpenGraphModel = OpenGraphService.GetModel(TextContent);
         return Page();
 
 
@@ -63,12 +59,6 @@ public class IndexModel : BasePageModel
             TextContent = TextFormatter.GetCleanString(entryInfo.Entry.Content);
             ImageIds = entryInfo.ImageIds;
             SelectedExpirationPeriod = GetExpirationPeriodId(entryInfo.Entry.ExpiresAt - entryInfo.Entry.CreatedAt);
-        }
-
-
-        void AddOpenGraphModel()
-        {
-            OpenGraphModel = OpenGraphService.GetModel(TextContent);
         }
     }
 
@@ -81,7 +71,7 @@ public class IndexModel : BasePageModel
         if (isCreationFailed)
             return RedirectToError(creatorError);
 
-        var (_, isFailure, entry, entryError) = await _entryService.Add(TextContent, expiresIn, creator, ImageIds, cancellationToken);
+        var (_, isFailure, entry, entryError) = await _entryService.Add(TextContent, expiresIn, ImageIds, cancellationToken);
         if (isFailure)
             return RedirectToError(entryError);
 

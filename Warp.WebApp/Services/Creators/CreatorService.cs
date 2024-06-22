@@ -31,20 +31,14 @@ public class CreatorService : ICreatorService
 
     public async Task<Result<DummyObject, ProblemDetails>> AttachEntry(Creator creator, Entry entry, TimeSpan expiresIn, CancellationToken cancellationToken)
     {
-        var setExpiresIn = expiresIn;
-        var entryList = await GetCreatorEntries(creator.Id, cancellationToken);
-        if (entryList.Count > 0)
-        {
-            var maxExpirationDate = entryList.Max(x => x.ExpiresAt);
-            setExpiresIn = maxExpirationDate > entry.ExpiresAt
+        var maxExpirationDate = await GetSetExpirationTime(creator.Id, cancellationToken);
+        var setExpiresIn = maxExpirationDate > entry.ExpiresAt
                 ? maxExpirationDate - entry.ExpiresAt
                 : entry.ExpiresAt - maxExpirationDate;
-        }
 
         var userIdCacheKey = CacheKeyBuilder.BuildCreatorsEntrySetCacheKey(creator.Id);
-        var entryCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entry.Id);
 
-        var result = await _dataStorage.AddToSet(userIdCacheKey, entryCacheKey, setExpiresIn, cancellationToken);
+        var result = await _dataStorage.AddToSet(userIdCacheKey, entry.Id, setExpiresIn, cancellationToken);
         if (!result.IsFailure)
             return new DummyObject();
 
@@ -53,9 +47,12 @@ public class CreatorService : ICreatorService
     }
 
 
-    public async Task<Creator?> Get(Guid creatorId, CancellationToken cancellationToken)
+    public async Task<Creator?> Get(Guid? creatorId, CancellationToken cancellationToken)
     {
-        var userCacheKey = CacheKeyBuilder.BuildCreatorCacheKey(creatorId);
+        if (creatorId is null)
+            return null;
+
+        var userCacheKey = CacheKeyBuilder.BuildCreatorCacheKey(creatorId.Value);
         var creator = await _dataStorage.TryGet<Creator>(userCacheKey, cancellationToken);
         if (creator == default)
             return null;
@@ -77,49 +74,35 @@ public class CreatorService : ICreatorService
     }
 
 
-    public async Task<Entry?> TryGetUserEntry(Guid userId, Guid entryId, CancellationToken cancellationToken)
+    public Task<Result<bool>> IsEntryBelongsToCreator(Creator creator, Guid entryId, CancellationToken cancellationToken)
+        => IsEntryBelongsToCreator(creator.Id, entryId, cancellationToken);
+
+
+    public async Task<Result<bool>> IsEntryBelongsToCreator(Guid creatorId, Guid entryId, CancellationToken cancellationToken)
     {
-        var userIdCacheKey = CacheKeyBuilder.BuildCreatorsEntrySetCacheKey(userId);
-        if (!await _dataStorage.IsValueContainsInSet(userIdCacheKey, entryId, cancellationToken))
-            return default;
-
-        var entryList = await GetCreatorEntries(userId, cancellationToken);
-        var foundEntry = entryList.FirstOrDefault(x => x.Id == entryId);
-
-        return foundEntry;
+        var creatorsEntrySetCacheKey = CacheKeyBuilder.BuildCreatorsEntrySetCacheKey(creatorId);
+        return await _dataStorage.ContainsInSet(creatorsEntrySetCacheKey, entryId, cancellationToken);
     }
 
 
-    public async Task<Result> TryToRemoveUserEntry(Guid userId, Guid entryId, CancellationToken cancellationToken)
-    {
-        var userIdCacheKey = CacheKeyBuilder.BuildCreatorsEntrySetCacheKey(userId);
-        if (!await _dataStorage.IsValueContainsInSet(userIdCacheKey, entryId, cancellationToken))
-            return Result.Failure(_localizer["NoEntryRemovePermissionsErrorMessage"]);
-
-        var entryIdCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entryId);
-        await _dataStorage.Remove<EntryInfo>(entryIdCacheKey, cancellationToken);
-        return Result.Success();
-    }
-
-
-    private async Task<List<Entry>> GetCreatorEntries(Guid creatorId, CancellationToken cancellationToken)
+    private async Task<DateTime> GetSetExpirationTime(Guid creatorId, CancellationToken cancellationToken)
     {
         var userIdCacheKey = CacheKeyBuilder.BuildCreatorsEntrySetCacheKey(creatorId);
-        var entryIdList = await _dataStorage.TryGetSet<string>(userIdCacheKey, cancellationToken);
-        var entryList = new List<Entry>();
-        if (entryIdList is not { Count: > 0 })
-            return entryList;
-
-        foreach (var entryId in entryIdList)
+        var entryIds = await _dataStorage.TryGetSet<Guid>(userIdCacheKey, cancellationToken);
+        if (entryIds.Count == 0)
+            return DateTime.MinValue;
+        
+        var expirationDates = new List<DateTime>(entryIds.Count);
+        foreach (var entryId in entryIds)
         {
-            if (!Guid.TryParse(entryId, out var entryGuid))
-                continue;
-            
-            var entryIdCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entryGuid);
-            entryList.Add(await _dataStorage.TryGet<Entry>(entryIdCacheKey, cancellationToken));
+            var entryIdCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entryId);
+
+            // TODO: requesting all entries one by one is suboptimal. Consider refactoring.
+            var entry = await _dataStorage.TryGet<Entry>(entryIdCacheKey, cancellationToken);
+            expirationDates.Add(entry.ExpiresAt);
         }
 
-        return entryList;
+        return expirationDates.Max();
     }
 
 
