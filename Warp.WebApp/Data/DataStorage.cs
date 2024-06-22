@@ -20,6 +20,27 @@ public sealed class DataStorage : IDataStorage
     public async Task<long> AddAndGetCounter(string key, CancellationToken cancellationToken)
         => await _distributedStorage.AddAndGetCounter(key, cancellationToken);
 
+
+    public async Task<Result> AddToSet<T>(string key, T value, TimeSpan expiresIn, CancellationToken cancellationToken)
+    {
+        if (value is null || IsDefaultStruct(value))
+        {
+            _logger.LogSetDefaultCacheValueError(value?.ToString());
+            return Result.Failure(_localizer["StoringDefaultStructureErrorMessage"]);
+        }
+
+        await _distributedStorage.AddToSet(key, value, expiresIn, cancellationToken);
+
+        if(!_memoryCache.TryGetValue(key, out HashSet<T>? set))
+            set = [];
+
+        set!.Add(value);
+        _memoryCache.Set(key, set, expiresIn);
+
+        return Result.Success();
+    }
+
+
     public async ValueTask<bool> Contains<T>(string key, CancellationToken cancellationToken)
     {
         if (_memoryCache.TryGetValue(key, out _))
@@ -47,27 +68,6 @@ public sealed class DataStorage : IDataStorage
         _memoryCache.Set(key, value, expiresIn);
 
         await _distributedStorage.Set(key, value, expiresIn, cancellationToken);
-
-        return Result.Success();
-    }
-
-
-    public async Task<Result> CrossValueSet<K, V>(string keyK, K valueK, TimeSpan expiresInK, string keyV, V valueV, TimeSpan expiresInV, CancellationToken cancellationToken)
-    {
-        if (valueK is null || IsDefaultStruct(valueK))
-        {
-            _logger.LogSetDefaultCacheValueError(valueK?.ToString());
-            return Result.Failure(_localizer["StoringDefaultStructureErrorMessage"]);
-        }
-        if (valueV is null || IsDefaultStruct(valueV))
-        {
-            _logger.LogSetDefaultCacheValueError(valueV?.ToString());
-            return Result.Failure(_localizer["StoringDefaultStructureErrorMessage"]);
-        }
-
-        _memoryCache.Set(keyV, valueV, expiresInV);
-
-        await _distributedStorage.CrossValueSet(keyK, valueK, expiresInK, keyV, valueV, expiresInV, cancellationToken);
 
         return Result.Success();
     }

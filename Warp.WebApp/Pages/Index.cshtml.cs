@@ -18,11 +18,12 @@ namespace Warp.WebApp.Pages;
 public class IndexModel : BasePageModel
 {
     public IndexModel(IOptionsSnapshot<AnalyticsOptions> analyticsOptions, ILoggerFactory loggerFactory, IStringLocalizer<IndexModel> localizer,
-        IStringLocalizer<ServerResources> serverLocalizer, IEntryService entryService, ICookieService cookieService)
+        IStringLocalizer<ServerResources> serverLocalizer, IEntryService entryService, ICookieService cookieService, ICreatorService creatorService)
         : base(loggerFactory)
     {
         _analyticsOptions = analyticsOptions.Value;
         _cookieService = cookieService;
+        _creatorService = creatorService;
         _entryService = entryService;
         _localizer = localizer;
         _serverLocalizer = serverLocalizer;
@@ -67,7 +68,7 @@ public class IndexModel : BasePageModel
 
         void AddOpenGraphModel()
         {
-            OpenGraphModel = OpenGraphService.GetModel(TextContent);//, ImageUrls);
+            OpenGraphModel = OpenGraphService.GetModel(TextContent);
         }
     }
 
@@ -75,13 +76,22 @@ public class IndexModel : BasePageModel
     public async Task<IActionResult> OnPost(CancellationToken cancellationToken)
     {
         var expiresIn = GetExpirationPeriod(SelectedExpirationPeriod);
-        var userId = await _cookieService.ConfigureCookie(HttpContext, Response);
-        var (_, isFailure, id, problemDetails) = await _entryService.Add(userId, TextContent, expiresIn, ImageIds, cancellationToken);
+        var creatorId = _cookieService.GetCreatorId(HttpContext);
+        var (_, isCreationFailed, creator, creatorError) = await _creatorService.GetOrAdd(creatorId, cancellationToken);
+        if (isCreationFailed)
+            return RedirectToError(creatorError);
 
+        var (_, isFailure, entry, entryError) = await _entryService.Add(TextContent, expiresIn, creator, ImageIds, cancellationToken);
         if (isFailure)
-            return RedirectToError(problemDetails);
+            return RedirectToError(entryError);
 
-        return RedirectToPage("./Preview", new { id = IdCoder.Encode(id) });
+        var attachResult = await _creatorService.AttachEntry(creator, entry, expiresIn, cancellationToken);
+        if (attachResult.IsFailure)
+            return RedirectToError(attachResult.Error);
+        
+        await _cookieService.Set(HttpContext, creator.Id);
+
+        return RedirectToPage("./Preview", new { id = IdCoder.Encode(entry.Id) });
     }
 
 
@@ -143,6 +153,7 @@ public class IndexModel : BasePageModel
 
     private readonly AnalyticsOptions _analyticsOptions;
     private readonly ICookieService _cookieService;
+    private readonly ICreatorService _creatorService;
     private readonly IEntryService _entryService;
     private readonly IStringLocalizer<IndexModel> _localizer;
     private readonly IStringLocalizer<ServerResources> _serverLocalizer;

@@ -2,5 +2,6 @@
 
 public interface ICookieService
 {
-    public Task<Guid> ConfigureCookie(HttpContext httpContext, HttpResponse response);
+    public Guid? GetCreatorId(HttpContext httpContext);
+    public Task Set(HttpContext httpContext, Guid creatorId);
 }

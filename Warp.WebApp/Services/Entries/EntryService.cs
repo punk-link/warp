@@ -5,6 +5,7 @@ using Warp.WebApp.Data;
 using Warp.WebApp.Extensions;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
+using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Models.Validators;
 using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Images;
@@ -25,25 +26,29 @@ public sealed class EntryService : IEntryService
     }
 
 
-    public async Task<Result<Guid, ProblemDetails>> Add(Guid userId, string content, TimeSpan expiresIn, List<Guid> imageIds, CancellationToken cancellationToken)
+    public async Task<Result<Entry, ProblemDetails>> Add(string content, TimeSpan expiresIn, Creator creator, List<Guid> imageIds,
+        CancellationToken cancellationToken)
     {
-        var now = DateTime.UtcNow;
-        var formattedText = TextFormatter.Format(content);
-        var description = OpenGraphService.GetDescription(formattedText);
-        var entry = new Entry(Guid.NewGuid(), formattedText, description, now, now + expiresIn);
+        var entry = BuildEntry();
 
         var validator = new EntryValidator(_localizer);
         var validationResult = await validator.ValidateAsync(entry, cancellationToken);
         if (!validationResult.IsValid)
-            return validationResult.ToFailure<Guid>(_localizer);
-
-        var result = await _userService.AttachEntryToUser(userId, entry, expiresIn, cancellationToken);
+            return validationResult.ToFailure<Entry>(_localizer);
 
         await _imageService.Attach(entry.Id, expiresIn, imageIds, cancellationToken);
 
-        return result.IsFailure
-            ? result.ToFailure<Guid>()
-            : Result.Success<Guid, ProblemDetails>(entry.Id);
+        return entry;
+
+
+        Entry BuildEntry()
+        {
+            var now = DateTime.UtcNow;
+            var formattedText = TextFormatter.Format(content);
+            var description = OpenGraphService.GetDescription(formattedText);
+            
+            return new Entry(Guid.NewGuid(), formattedText, description, now, now + expiresIn);
+        }
     }
 
 

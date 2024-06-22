@@ -70,7 +70,7 @@ public class PreviewModel : BasePageModel
         if (isGetFailure)
             return RedirectToError(problemDetailsGet);
 
-        var (_, isAddFailure, newEntryId, problemDetailsAdd) = await _entryService.Add(userGuid, entryGet.Entry.Content, entryGet.Entry.ExpiresAt - entryGet.Entry.CreatedAt, entryGet.ImageIds, cancellationToken);
+        var (_, isAddFailure, newEntryId, problemDetailsAdd) = await _entryService.Add(entryGet.Entry.Content, entryGet.Entry.ExpiresAt - entryGet.Entry.CreatedAt, userGuid, entryGet.ImageIds, cancellationToken);
         if (isAddFailure)
             return RedirectToError(problemDetailsAdd);
 
