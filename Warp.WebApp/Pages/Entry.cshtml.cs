@@ -29,7 +29,7 @@ public class EntryModel : BasePageModel
         var claim = CookieService.GetClaim(HttpContext);
         Guid? customerId = claim != null ? Guid.Parse(claim.Value) : null;
 
-        var (_, isFailure, entry, problemDetails) = await _entryService.Get(Guid.Empty, decodedId, cancellationToken, true, customerId);
+        var (_, isFailure, entry, problemDetails) = await _entryService.Get(Guid.Empty, decodedId, true, customerId, cancellationToken);
         if (isFailure)
             return RedirectToError(problemDetails);
 

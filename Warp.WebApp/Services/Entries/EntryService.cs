@@ -49,7 +49,7 @@ public sealed class EntryService : IEntryService
     }
 
 
-    public async Task<Result<EntryInfo, ProblemDetails>> Get(Guid userId, Guid entryId, CancellationToken cancellationToken, bool isReceivedForCustomer = false, Guid? customerId = null)
+    public async Task<Result<EntryInfo, ProblemDetails>> Get(Guid userId, Guid entryId, bool isReceivedForCustomer = false, Guid? customerId = null, CancellationToken cancellationToken = default)
     {
         if (await _reportService.Contains(entryId, cancellationToken))
             return ResultHelper.NotFound<EntryInfo>(_localizer);
