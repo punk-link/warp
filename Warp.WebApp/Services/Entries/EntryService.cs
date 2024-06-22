@@ -1,6 +1,8 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
+using Sentry;
+using System.Threading;
 using Warp.WebApp.Data;
 using Warp.WebApp.Extensions;
 using Warp.WebApp.Helpers;
@@ -47,7 +49,7 @@ public sealed class EntryService : IEntryService
     }
 
 
-    public async Task<Result<EntryInfo, ProblemDetails>> Get(Guid userId, Guid entryId, CancellationToken cancellationToken, bool isReceivedForCustomer = false)
+    public async Task<Result<EntryInfo, ProblemDetails>> Get(Guid userId, Guid entryId, CancellationToken cancellationToken, bool isReceivedForCustomer = false, Guid? customerId = null)
     {
         if (await _reportService.Contains(entryId, cancellationToken))
             return ResultHelper.NotFound<EntryInfo>(_localizer);
@@ -61,10 +63,7 @@ public sealed class EntryService : IEntryService
         if (!entry.HasValue || entry.Value.Equals(default))
             return ResultHelper.NotFound<EntryInfo>(_localizer);
 
-        var viewCount = isReceivedForCustomer
-            ? await _viewCountService.AddAndGet(entryId, cancellationToken)
-            : await _viewCountService.Get(entryId, cancellationToken);
-
+        var viewCount = await GetViewCount(entryId, cancellationToken, isReceivedForCustomer, customerId);
 
         var imageIds = (await _imageService.Get(entryId, cancellationToken))
             .Select(image => image.Id)
@@ -76,6 +75,14 @@ public sealed class EntryService : IEntryService
 
     public async Task<Result> Remove(Guid userId, Guid entryId, CancellationToken cancellationToken)
         => await _userService.TryToRemoveUserEntry(userId, entryId, cancellationToken);
+
+
+    private async Task<long> GetViewCount(Guid entryId, CancellationToken cancellationToken, bool isReceivedForCustomer, Guid? customerId)
+    {
+        return isReceivedForCustomer && !await _userService.IsEntryBelongToUser(customerId.GetValueOrDefault(), entryId, cancellationToken)
+            ? await _viewCountService.AddAndGet(entryId, cancellationToken)
+            : await _viewCountService.Get(entryId, cancellationToken);
+    }
 
 
     private readonly IDataStorage _dataStorage;

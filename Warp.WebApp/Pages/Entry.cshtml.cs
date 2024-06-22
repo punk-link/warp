@@ -1,11 +1,13 @@
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
+using Warp.WebApp.Services.User;
 
 namespace Warp.WebApp.Pages;
 
@@ -24,7 +26,10 @@ public class EntryModel : BasePageModel
         if (decodedId == Guid.Empty)
             return RedirectToError(ProblemDetailsHelper.Create("Can't decode a provided ID."));
 
-        var (_, isFailure, entry, problemDetails) = await _entryService.Get(Guid.Empty, decodedId, cancellationToken, true);
+        var claim = CookieService.GetClaim(HttpContext);
+        Guid? customerId = claim != null ? Guid.Parse(claim.Value) : null;
+
+        var (_, isFailure, entry, problemDetails) = await _entryService.Get(Guid.Empty, decodedId, cancellationToken, true, customerId);
         if (isFailure)
             return RedirectToError(problemDetails);
 
