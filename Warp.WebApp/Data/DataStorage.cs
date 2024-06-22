@@ -50,8 +50,16 @@ public sealed class DataStorage : IDataStorage
     }
 
 
-    public async Task<bool> ContainsInSet<T>(string key, T value, CancellationToken cancellationToken)
-        => await _distributedStorage.ContainsInSet(key, value, cancellationToken);
+    public async ValueTask<bool> ContainsInSet<T>(string key, T value, CancellationToken cancellationToken)
+    {
+        if (!_memoryCache.TryGetValue(key, out HashSet<T>? set))
+            return await _distributedStorage.ContainsInSet(key, value, cancellationToken);
+        
+        if (set!.Contains(value))
+            return true;
+
+        return await _distributedStorage.ContainsInSet(key, value, cancellationToken);
+    }
 
 
     public async Task Remove<T>(string key, CancellationToken cancellationToken)

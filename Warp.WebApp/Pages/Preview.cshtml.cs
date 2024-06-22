@@ -34,7 +34,7 @@ public class PreviewModel : BasePageModel
         if (creator is null)
             return RedirectToError(ProblemDetailsHelper.Create(_localizer["NoPreviewPermissionErrorMessage"]));
 
-        var (_, isFailure, entry, problemDetails) = await _entryService.Get(decodedId, cancellationToken);
+        var (_, isFailure, entry, problemDetails) = await _entryService.Get(decodedId, cancellationToken: cancellationToken);
         if (isFailure)
             return RedirectToError(problemDetails);
 
@@ -76,7 +76,7 @@ public class PreviewModel : BasePageModel
         if (isEntryBelongsToCreatorResult.IsFailure)
             return RedirectToError(ProblemDetailsHelper.Create(_localizer["NoPreviewPermissionErrorMessage"]));
 
-        var (_, isGetFailure, entryGet, problemDetailsGet) = await _entryService.Get(decodedId, cancellationToken);
+        var (_, isGetFailure, entryGet, problemDetailsGet) = await _entryService.Get(decodedId, cancellationToken: cancellationToken);
         if (isGetFailure)
             return RedirectToError(problemDetailsGet);
 

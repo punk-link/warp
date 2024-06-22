@@ -45,7 +45,16 @@ public class IndexModel : BasePageModel
         if (decodedId == Guid.Empty)
             return RedirectToError(ProblemDetailsHelper.Create("Can't decode a provided ID."));
 
-        var (_, isFailure, entry, problemDetails) = await _entryService.Get(decodedId, cancellationToken);
+        var isRequestedByCreator = false;
+        var creatorId = _cookieService.GetCreatorId(HttpContext);
+        if (creatorId is not null)
+        {
+            var isEntryBelongsToCreatorResult = await _creatorService.IsEntryBelongsToCreator(creatorId.Value, decodedId, cancellationToken);
+            if (isEntryBelongsToCreatorResult.IsSuccess)
+                isRequestedByCreator = isEntryBelongsToCreatorResult.Value;
+        }
+
+        var (_, isFailure, entry, problemDetails) = await _entryService.Get(decodedId, isRequestedByCreator, cancellationToken);
         if (isFailure)
             return RedirectToError(problemDetails);
 

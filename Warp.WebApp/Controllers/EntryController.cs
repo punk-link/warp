@@ -37,10 +37,7 @@ public class EntryController : BaseController
         if (isEntryBelongsToCreatorResult.IsFailure)
             return NoContent();
 
-        var result = await _entryService.Remove(decodedId, cancellationToken);
-        if (result.IsFailure)
-            return Forbid();
-
+        _ = await _entryService.Remove(decodedId, cancellationToken);
         return NoContent();
     }
 

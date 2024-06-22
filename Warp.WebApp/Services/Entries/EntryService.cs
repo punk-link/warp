@@ -52,7 +52,7 @@ public sealed class EntryService : IEntryService
     }
 
 
-    public async Task<Result<EntryInfo, ProblemDetails>> Get(Guid entryId, CancellationToken cancellationToken, bool isReceivedForCustomer = false)
+    public async Task<Result<EntryInfo, ProblemDetails>> Get(Guid entryId, bool isRequestedByCreator = false, CancellationToken cancellationToken = default)
     {
         if (await _reportService.Contains(entryId, cancellationToken))
             return ResultHelper.NotFound<EntryInfo>(_localizer);
@@ -63,9 +63,7 @@ public sealed class EntryService : IEntryService
         if (entry.Equals(default))
             return ResultHelper.NotFound<EntryInfo>(_localizer);
 
-        var viewCount = isReceivedForCustomer
-            ? await _viewCountService.AddAndGet(entryId, cancellationToken)
-            : await _viewCountService.Get(entryId, cancellationToken);
+        var viewCount = await GetViewCount(entryId, isRequestedByCreator, cancellationToken);
 
 
         var imageIds = (await _imageService.Get(entryId, cancellationToken))
@@ -82,6 +80,14 @@ public sealed class EntryService : IEntryService
         await _dataStorage.Remove<Entry>(entryIdCacheKey, cancellationToken);
 
         return Result.Success();
+    }
+
+
+    private async Task<long> GetViewCount(Guid entryId, bool isRequestedByCreator, CancellationToken cancellationToken)
+    {
+        return isRequestedByCreator 
+            ? await _viewCountService.Get(entryId, cancellationToken)
+            : await _viewCountService.AddAndGet(entryId, cancellationToken);
     }
 
 
