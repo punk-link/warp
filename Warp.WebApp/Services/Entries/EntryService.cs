@@ -6,15 +6,15 @@ using Warp.WebApp.Extensions;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
 using Warp.WebApp.Models.Validators;
+using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Images;
-using Warp.WebApp.Services.Users;
 
 namespace Warp.WebApp.Services.Entries;
 
 public sealed class EntryService : IEntryService
 {
     public EntryService(IStringLocalizer<ServerResources> localizer, IDataStorage dataStorage, IImageService imageService, IReportService reportService,
-        IViewCountService viewCountService, IUserService userService)
+        IViewCountService viewCountService, ICreatorService userService)
     {
         _dataStorage = dataStorage;
         _imageService = imageService;
@@ -83,5 +83,5 @@ public sealed class EntryService : IEntryService
     private readonly IStringLocalizer<ServerResources> _localizer;
     private readonly IReportService _reportService;
     private readonly IViewCountService _viewCountService;
-    private readonly IUserService _userService;
+    private readonly ICreatorService _userService;
 }

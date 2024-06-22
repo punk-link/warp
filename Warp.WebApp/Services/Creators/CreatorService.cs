@@ -1,15 +1,14 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Localization;
-using System.Threading.Tasks;
 using Warp.WebApp.Data;
 using Warp.WebApp.Models;
-using Warp.WebApp.Models.Users;
+using Warp.WebApp.Models.Creators;
 
-namespace Warp.WebApp.Services.Users;
+namespace Warp.WebApp.Services.Creators;
 
-public class UserService : IUserService
+public class CreatorService : ICreatorService
 {
-    public UserService(IStringLocalizer<ServerResources> localizer, IDataStorage dataStorage)
+    public CreatorService(IStringLocalizer<ServerResources> localizer, IDataStorage dataStorage)
     {
         _dataStorage = dataStorage;
         _localizer = localizer;
