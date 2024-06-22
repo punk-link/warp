@@ -1,10 +1,11 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Localization;
+using System.Threading.Tasks;
 using Warp.WebApp.Data;
 using Warp.WebApp.Models;
+using Warp.WebApp.Models.Users;
 
-
-namespace Warp.WebApp.Services.User;
+namespace Warp.WebApp.Services.Users;
 
 public class UserService : IUserService
 {

@@ -12,7 +12,7 @@ using Warp.WebApp.Middlewares;
 using Warp.WebApp.Models.Options;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
-using Warp.WebApp.Services.User;
+using Warp.WebApp.Services.Users;
 
 var builder = WebApplication.CreateBuilder(args);
 

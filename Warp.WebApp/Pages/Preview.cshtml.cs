@@ -7,7 +7,7 @@ using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
-using Warp.WebApp.Services.User;
+using Warp.WebApp.Services.Users;
 
 namespace Warp.WebApp.Pages;
 

@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
 
-namespace Warp.WebApp.Services.User;
+namespace Warp.WebApp.Services.Users;
 
 public class CookieService : ICookieService
 {

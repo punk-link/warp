@@ -1,7 +1,7 @@
 ﻿using CSharpFunctionalExtensions;
 using Warp.WebApp.Models;
 
-namespace Warp.WebApp.Services.User;
+namespace Warp.WebApp.Services.Users;
 
 public interface IUserService
 {

@@ -1,4 +1,4 @@
-﻿namespace Warp.WebApp.Services.User;
+﻿namespace Warp.WebApp.Services.Users;
 
 public interface ICookieService
 {

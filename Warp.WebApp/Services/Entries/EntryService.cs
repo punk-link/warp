@@ -7,7 +7,7 @@ using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
 using Warp.WebApp.Models.Validators;
 using Warp.WebApp.Services.Images;
-using Warp.WebApp.Services.User;
+using Warp.WebApp.Services.Users;
 
 namespace Warp.WebApp.Services.Entries;
 
