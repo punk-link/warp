@@ -5,16 +5,19 @@ using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
+using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
-using Warp.WebApp.Services.User;
 
 namespace Warp.WebApp.Pages;
 
 public class PreviewModel : BasePageModel
 {
-    public PreviewModel(ILoggerFactory loggerFactory, IStringLocalizer<ServerResources> localizer, IEntryService entryService) : base(loggerFactory)
+    public PreviewModel(ILoggerFactory loggerFactory, IStringLocalizer<ServerResources> localizer, ICookieService cookieService,
+        ICreatorService creatorService, IEntryService entryService) : base(loggerFactory)
     {
+        _cookieService = cookieService;
+        _creatorService = creatorService;
         _entryService = entryService;
         _localizer = localizer;
     }
@@ -26,12 +29,12 @@ public class PreviewModel : BasePageModel
         if (decodedId == Guid.Empty)
             return RedirectToError(ProblemDetailsHelper.Create(_localizer["IdDecodingErrorMessage"]));
 
-        var claim = CookieService.GetClaim(HttpContext);
-        if (claim is null)
+        var creatorId = _cookieService.GetCreatorId(HttpContext);
+        var creator = await _creatorService.Get(creatorId, cancellationToken);
+        if (creator is null)
             return RedirectToError(ProblemDetailsHelper.Create(_localizer["NoPreviewPermissionErrorMessage"]));
 
-        var userGuid = Guid.Parse(claim.Value);
-        var (_, isFailure, entry, problemDetails) = await _entryService.Get(userGuid, decodedId, cancellationToken: cancellationToken);
+        var (_, isFailure, entry, problemDetails) = await _entryService.Get(decodedId, cancellationToken: cancellationToken);
         if (isFailure)
             return RedirectToError(problemDetails);
 
@@ -60,21 +63,31 @@ public class PreviewModel : BasePageModel
 
     public async Task<IActionResult> OnPostCopy(string id, CancellationToken cancellationToken)
     {
-        var claim = CookieService.GetClaim(HttpContext);
-        if (claim is null)
-            return RedirectToError(ProblemDetailsHelper.Create("Can`t copy entry cause of no permission."));
-
         var decodedId = IdCoder.Decode(id);
-        var userGuid = Guid.Parse(claim.Value);
-        var (_, isGetFailure, entryGet, problemDetailsGet) = await _entryService.Get(userGuid, decodedId, cancellationToken: cancellationToken);
+        if (decodedId == Guid.Empty)
+            return RedirectToError(ProblemDetailsHelper.Create(_localizer["IdDecodingErrorMessage"]));
+        
+        var creatorId = _cookieService.GetCreatorId(HttpContext);
+        var creator = await _creatorService.Get(creatorId, cancellationToken);
+        if (creator is null)
+            return RedirectToError(ProblemDetailsHelper.Create(_localizer["NoPreviewPermissionErrorMessage"]));
+
+        var isEntryBelongsToCreatorResult = await _creatorService.IsEntryBelongsToCreator(creator.Value, decodedId, cancellationToken);
+        if (isEntryBelongsToCreatorResult.IsFailure)
+            return RedirectToError(ProblemDetailsHelper.Create(_localizer["NoPreviewPermissionErrorMessage"]));
+
+        var (_, isGetFailure, entryGet, problemDetailsGet) = await _entryService.Get(decodedId, cancellationToken: cancellationToken);
         if (isGetFailure)
             return RedirectToError(problemDetailsGet);
 
-        var (_, isAddFailure, newEntryId, problemDetailsAdd) = await _entryService.Add(userGuid, entryGet.Entry.Content, entryGet.Entry.ExpiresAt - entryGet.Entry.CreatedAt, entryGet.ImageIds, cancellationToken);
+        var expiresIn = entryGet.Entry.ExpiresAt - entryGet.Entry.CreatedAt;
+        var (_, isAddFailure, newEntry, problemDetailsAdd) = await _entryService.Add(entryGet.Entry.Content, expiresIn, entryGet.ImageIds, cancellationToken);
         if (isAddFailure)
             return RedirectToError(problemDetailsAdd);
 
-        return RedirectToPage("./Index", new { id = IdCoder.Encode(newEntryId) });
+        await _creatorService.AttachEntry(creator.Value, newEntry, expiresIn, cancellationToken);
+
+        return RedirectToPage("./Index", new { id = IdCoder.Encode(newEntry.Id) });
     }
 
 
@@ -85,7 +98,9 @@ public class PreviewModel : BasePageModel
     public List<string> ImageUrls { get; set; } = [];
     public string TextContent { get; set; } = string.Empty;
 
-
+    
+    private readonly ICookieService _cookieService;
+    private readonly ICreatorService _creatorService;
     private readonly IEntryService _entryService;
     private readonly IStringLocalizer<ServerResources> _localizer;
 }

@@ -46,6 +46,10 @@ public static class ProblemDetailsHelper
         => Create(localizer["NotFoundErrorMessage"], HttpStatusCode.NotFound, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.4");
 
 
+    public static ProblemDetails CreateServerException(string error)
+        => Create(error, HttpStatusCode.InternalServerError, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.1");
+
+
     public static ProblemDetails CreateServiceUnavailable(IStringLocalizer<ServerResources> localizer)
         => Create(localizer["ServiceUnavailableErrorMessage"], HttpStatusCode.ServiceUnavailable, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.4");
 

@@ -20,12 +20,45 @@ public sealed class DataStorage : IDataStorage
     public async Task<long> AddAndGetCounter(string key, CancellationToken cancellationToken)
         => await _distributedStorage.AddAndGetCounter(key, cancellationToken);
 
+
+    public async Task<Result> AddToSet<T>(string key, T value, TimeSpan expiresIn, CancellationToken cancellationToken)
+    {
+        if (value is null || IsDefaultStruct(value))
+        {
+            _logger.LogSetDefaultCacheValueError(value?.ToString());
+            return Result.Failure(_localizer["StoringDefaultStructureErrorMessage"]);
+        }
+
+        await _distributedStorage.AddToSet(key, value, expiresIn, cancellationToken);
+
+        if(!_memoryCache.TryGetValue(key, out HashSet<T>? set))
+            set = [];
+
+        set!.Add(value);
+        _memoryCache.Set(key, set, expiresIn);
+
+        return Result.Success();
+    }
+
+
     public async ValueTask<bool> Contains<T>(string key, CancellationToken cancellationToken)
     {
         if (_memoryCache.TryGetValue(key, out _))
             return true;
 
         return await _distributedStorage.Contains<T>(key, cancellationToken);
+    }
+
+
+    public async ValueTask<bool> ContainsInSet<T>(string key, T value, CancellationToken cancellationToken)
+    {
+        if (!_memoryCache.TryGetValue(key, out HashSet<T>? set))
+            return await _distributedStorage.ContainsInSet(key, value, cancellationToken);
+        
+        if (set!.Contains(value))
+            return true;
+
+        return await _distributedStorage.ContainsInSet(key, value, cancellationToken);
     }
 
 
@@ -52,27 +85,6 @@ public sealed class DataStorage : IDataStorage
     }
 
 
-    public async Task<Result> CrossValueSet<K, V>(string keyK, K valueK, TimeSpan expiresInK, string keyV, V valueV, TimeSpan expiresInV, CancellationToken cancellationToken)
-    {
-        if (valueK is null || IsDefaultStruct(valueK))
-        {
-            _logger.LogSetDefaultCacheValueError(valueK?.ToString());
-            return Result.Failure(_localizer["StoringDefaultStructureErrorMessage"]);
-        }
-        if (valueV is null || IsDefaultStruct(valueV))
-        {
-            _logger.LogSetDefaultCacheValueError(valueV?.ToString());
-            return Result.Failure(_localizer["StoringDefaultStructureErrorMessage"]);
-        }
-
-        _memoryCache.Set(keyV, valueV, expiresInV);
-
-        await _distributedStorage.CrossValueSet(keyK, valueK, expiresInK, keyV, valueV, expiresInV, cancellationToken);
-
-        return Result.Success();
-    }
-
-
     public async ValueTask<T?> TryGet<T>(string key, CancellationToken cancellationToken)
     {
         if (_memoryCache.TryGetValue(key, out T? value))
@@ -86,10 +98,6 @@ public sealed class DataStorage : IDataStorage
     {
         return await _distributedStorage.TryGetSet<T>(key, cancellationToken);
     }
-
-
-    public async Task<bool> IsValueContainsInSet<T>(string key, T value, CancellationToken cancellationToken)
-        => await _distributedStorage.IsValueContainsInSet(key, value, cancellationToken);
 
 
     private static bool IsDefaultStruct<T>(T value)

@@ -6,7 +6,7 @@ namespace Warp.WebApp.Services.Entries;
 
 public interface IEntryService
 {
-    public Task<Result<Guid, ProblemDetails>> Add(Guid userId, string content, TimeSpan expiresIn, List<Guid> imageIds, CancellationToken cancellationToken);
-    public Task<Result<EntryInfo, ProblemDetails>> Get(Guid userId, Guid entryId, bool isReceivedForCustomer = false, Guid? customerGuid = null, CancellationToken cancellationToken = default);
-    public Task<Result> Remove(Guid userId, Guid entryId, CancellationToken cancellationToken);
+    public Task<Result<Entry, ProblemDetails>> Add(string content, TimeSpan expiresIn, List<Guid> imageIds, CancellationToken cancellationToken);
+    public Task<Result<EntryInfo, ProblemDetails>> Get(Guid entryId, bool isRequestedByCreator = false, CancellationToken cancellationToken = default);
+    public Task<Result> Remove(Guid entryId, CancellationToken cancellationToken);
 }

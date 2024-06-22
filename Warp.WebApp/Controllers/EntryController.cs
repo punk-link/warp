@@ -1,10 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using System.Text.Json;
-using Warp.WebApp.Helpers;
 using Warp.WebApp.Services;
+using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Entries;
-using Warp.WebApp.Services.User;
 
 namespace Warp.WebApp.Controllers;
 
@@ -12,8 +11,11 @@ namespace Warp.WebApp.Controllers;
 [Route("/api/entry")]
 public class EntryController : BaseController
 {
-    public EntryController(IStringLocalizer<ServerResources> localizer, IEntryService entryService) : base(localizer)
+    public EntryController(IStringLocalizer<ServerResources> localizer, ICookieService cookieService, ICreatorService creatorService,
+        IEntryService entryService) : base(localizer)
     {
+        _cookieService = cookieService;
+        _creatorService = creatorService;
         _entryService = entryService;
     }
 
@@ -21,23 +23,26 @@ public class EntryController : BaseController
     [HttpDelete]
     public async Task<IActionResult> DeleteEntry([FromBody] JsonElement id, CancellationToken cancellationToken = default)
     {
+        // TODO: Refactor this line to avoid using TryGetProperty method
         id.TryGetProperty("id", out var value);
-        var decodedEntryId = IdCoder.Decode(value.ToString());
-        if (decodedEntryId == Guid.Empty)
+        var decodedId = IdCoder.Decode(value.ToString());
+        if (decodedId == Guid.Empty)
             return ReturnIdDecodingBadRequest();
 
-        var claim = CookieService.GetClaim(HttpContext);
-        if (claim is null)
-            return ReturnNoPermissionToRemoveBadRequest();
+        var creatorId = _cookieService.GetCreatorId(HttpContext);
+        if (creatorId is null)
+            return NoContent();
 
-        var userId = Guid.Parse(claim.Value);
-        var result = await _entryService.Remove(userId, decodedEntryId, cancellationToken);
-        if (result.IsFailure)
-            return BadRequest(ProblemDetailsHelper.Create(result.Error));
+        var isEntryBelongsToCreatorResult = await _creatorService.IsEntryBelongsToCreator(creatorId.Value, decodedId, cancellationToken);
+        if (isEntryBelongsToCreatorResult.IsFailure)
+            return NoContent();
 
+        _ = await _entryService.Remove(decodedId, cancellationToken);
         return NoContent();
     }
 
 
+    private readonly ICookieService _cookieService;
+    private readonly ICreatorService _creatorService;
     private readonly IEntryService _entryService;
 }

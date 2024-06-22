@@ -9,8 +9,8 @@ using Warp.WebApp.Models;
 using Warp.WebApp.Models.Options;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
+using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Entries;
-using Warp.WebApp.Services.User;
 
 namespace Warp.WebApp.Pages;
 
@@ -18,11 +18,12 @@ namespace Warp.WebApp.Pages;
 public class IndexModel : BasePageModel
 {
     public IndexModel(IOptionsSnapshot<AnalyticsOptions> analyticsOptions, ILoggerFactory loggerFactory, IStringLocalizer<IndexModel> localizer,
-        IStringLocalizer<ServerResources> serverLocalizer, IEntryService entryService, ICookieService cookieService)
+        IStringLocalizer<ServerResources> serverLocalizer, IEntryService entryService, ICookieService cookieService, ICreatorService creatorService)
         : base(loggerFactory)
     {
         _analyticsOptions = analyticsOptions.Value;
         _cookieService = cookieService;
+        _creatorService = creatorService;
         _entryService = entryService;
         _localizer = localizer;
         _serverLocalizer = serverLocalizer;
@@ -32,28 +33,33 @@ public class IndexModel : BasePageModel
     [OutputCache(Duration = 3600)]
     public async Task<IActionResult> OnGet(string? id, CancellationToken cancellationToken)
     {
-        if (!string.IsNullOrEmpty(id))
+        AnalyticsModel = new AnalyticsModel(_analyticsOptions);
+
+        if (string.IsNullOrEmpty(id))
         {
-            var decodedId = IdCoder.Decode(id);
-            if (decodedId == Guid.Empty)
-                return RedirectToError(ProblemDetailsHelper.Create("Can't decode a provided ID."));
-
-            var claim = CookieService.GetClaim(HttpContext);
-            if (claim != null)
-            {
-                var userId = Guid.Parse(claim.Value);
-                var (_, isFailure, entry, problemDetails) = await _entryService.Get(userId, decodedId, cancellationToken: cancellationToken);
-                if (isFailure)
-                    return RedirectToError(problemDetails);
-
-                BuildModel(entry);
-                AddOpenGraphModel();
-                return Page();
-            }
+            OpenGraphModel = OpenGraphService.GetDefaultModel(_serverLocalizer["DefaultOpenGraphDescriptionText"]);
+            return Page();
         }
 
-        AnalyticsModel = new AnalyticsModel(_analyticsOptions);
-        OpenGraphModel = OpenGraphService.GetDefaultModel(_serverLocalizer["DefaultOpenGraphDescriptionText"]);
+        var decodedId = IdCoder.Decode(id);
+        if (decodedId == Guid.Empty)
+            return RedirectToError(ProblemDetailsHelper.Create("Can't decode a provided ID."));
+
+        var isRequestedByCreator = false;
+        var creatorId = _cookieService.GetCreatorId(HttpContext);
+        if (creatorId is not null)
+        {
+            var isEntryBelongsToCreatorResult = await _creatorService.IsEntryBelongsToCreator(creatorId.Value, decodedId, cancellationToken);
+            if (isEntryBelongsToCreatorResult.IsSuccess)
+                isRequestedByCreator = isEntryBelongsToCreatorResult.Value;
+        }
+
+        var (_, isFailure, entry, problemDetails) = await _entryService.Get(decodedId, isRequestedByCreator, cancellationToken);
+        if (isFailure)
+            return RedirectToError(problemDetails);
+
+        BuildModel(entry);
+        OpenGraphModel = OpenGraphService.GetModel(TextContent);
         return Page();
 
 
@@ -63,25 +69,28 @@ public class IndexModel : BasePageModel
             ImageIds = entryInfo.ImageIds;
             SelectedExpirationPeriod = GetExpirationPeriodId(entryInfo.Entry.ExpiresAt - entryInfo.Entry.CreatedAt);
         }
-
-
-        void AddOpenGraphModel()
-        {
-            OpenGraphModel = OpenGraphService.GetModel(TextContent);//, ImageUrls);
-        }
     }
 
 
     public async Task<IActionResult> OnPost(CancellationToken cancellationToken)
     {
         var expiresIn = GetExpirationPeriod(SelectedExpirationPeriod);
-        var userId = await _cookieService.ConfigureCookie(HttpContext, Response);
-        var (_, isFailure, id, problemDetails) = await _entryService.Add(userId, TextContent, expiresIn, ImageIds, cancellationToken);
+        var creatorId = _cookieService.GetCreatorId(HttpContext);
+        var (_, isCreationFailed, creator, creatorError) = await _creatorService.GetOrAdd(creatorId, cancellationToken);
+        if (isCreationFailed)
+            return RedirectToError(creatorError);
 
+        var (_, isFailure, entry, entryError) = await _entryService.Add(TextContent, expiresIn, ImageIds, cancellationToken);
         if (isFailure)
-            return RedirectToError(problemDetails);
+            return RedirectToError(entryError);
 
-        return RedirectToPage("./Preview", new { id = IdCoder.Encode(id) });
+        var attachResult = await _creatorService.AttachEntry(creator, entry, expiresIn, cancellationToken);
+        if (attachResult.IsFailure)
+            return RedirectToError(attachResult.Error);
+        
+        await _cookieService.Set(HttpContext, creator.Id);
+
+        return RedirectToPage("./Preview", new { id = IdCoder.Encode(entry.Id) });
     }
 
 
@@ -143,6 +152,7 @@ public class IndexModel : BasePageModel
 
     private readonly AnalyticsOptions _analyticsOptions;
     private readonly ICookieService _cookieService;
+    private readonly ICreatorService _creatorService;
     private readonly IEntryService _entryService;
     private readonly IStringLocalizer<IndexModel> _localizer;
     private readonly IStringLocalizer<ServerResources> _serverLocalizer;
