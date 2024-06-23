@@ -33,8 +33,8 @@ public class EntryController : BaseController
         if (creatorId is null)
             return NoContent();
 
-        var isEntryBelongsToCreator = await _creatorService.IsEntryBelongsToCreator(creatorId.Value, decodedId, cancellationToken);
-        if (!isEntryBelongsToCreator)
+        var entryBelongsToCreator = await _creatorService.EntryBelongsToCreator(creatorId.Value, decodedId, cancellationToken);
+        if (!entryBelongsToCreator)
             return NoContent();
 
         _ = await _entryService.Remove(decodedId, cancellationToken);

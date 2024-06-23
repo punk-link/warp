@@ -1,11 +1,8 @@
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
-using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
-using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
 
@@ -13,85 +10,41 @@ namespace Warp.WebApp.Pages;
 
 public class PreviewModel : BasePageModel
 {
-    public PreviewModel(ILoggerFactory loggerFactory, IStringLocalizer<ServerResources> localizer, ICookieService cookieService,
-        ICreatorService creatorService, IEntryService entryService) : base(loggerFactory)
+    public PreviewModel(ILoggerFactory loggerFactory, IEntryPresentationService entryPresentationService) : base(loggerFactory)
     {
-        _cookieService = cookieService;
-        _creatorService = creatorService;
-        _entryService = entryService;
-        _localizer = localizer;
+        _entryPresentationService = entryPresentationService;
     }
 
 
     public async Task<IActionResult> OnGet(string id, CancellationToken cancellationToken)
     {
-        var decodedId = IdCoder.Decode(id);
-        if (decodedId == Guid.Empty)
-            return RedirectToError(ProblemDetailsHelper.Create(_localizer["IdDecodingErrorMessage"]));
-
-        var creatorId = _cookieService.GetCreatorId(HttpContext);
-        var creator = await _creatorService.Get(creatorId, cancellationToken);
-        if (creator is null)
-            return RedirectToError(ProblemDetailsHelper.Create(_localizer["NoPreviewPermissionErrorMessage"]));
-
-        var (_, isFailure, entry, problemDetails) = await _entryService.Get(decodedId, cancellationToken: cancellationToken);
-        if (isFailure)
-            return RedirectToError(problemDetails);
-
-        Result.Success()
-            .Tap(() => BuildModel(id, entry))
-            .Tap(AddOpenGraphModel);
-
-        return Page();
+        return await _entryPresentationService.Modify(id, HttpContext, cancellationToken)
+            .Tap(BuildModel)
+            .Finally(result => result.IsSuccess 
+                ? Page() 
+                : RedirectToError(result.Error));
 
 
-        void BuildModel(string entryId, EntryInfo entryInfo)
+        void BuildModel(EntryInfo entryInfo)
         {
-            Id = entryId;
+            Id = id;
             ExpiresIn = new DateTimeOffset(entryInfo.Entry.ExpiresAt).ToUnixTimeMilliseconds();
             TextContent = entryInfo.Entry.Content;
+
+            var decodedId = IdCoder.Decode(id);
             ImageUrls = ImageService.BuildImageUrls(decodedId, entryInfo.ImageIds);
-        }
-
-
-        void AddOpenGraphModel()
-        {
-            OpenGraphModel = OpenGraphService.GetModel(TextContent, ImageUrls);
         }
     }
 
 
     public async Task<IActionResult> OnPostCopy(string id, CancellationToken cancellationToken)
     {
-        var decodedId = IdCoder.Decode(id);
-        if (decodedId == Guid.Empty)
-            return RedirectToError(ProblemDetailsHelper.Create(_localizer["IdDecodingErrorMessage"]));
-        
-        var creatorId = _cookieService.GetCreatorId(HttpContext);
-        var creator = await _creatorService.Get(creatorId, cancellationToken);
-        if (creator is null)
-            return RedirectToError(ProblemDetailsHelper.Create(_localizer["NoPreviewPermissionErrorMessage"]));
-
-        var isEntryBelongsToCreator = await _creatorService.IsEntryBelongsToCreator(creator.Value, decodedId, cancellationToken);
-        if (!isEntryBelongsToCreator)
-            return RedirectToError(ProblemDetailsHelper.Create(_localizer["NoPreviewPermissionErrorMessage"]));
-
-        var (_, isGetFailure, entryGet, problemDetailsGet) = await _entryService.Get(decodedId, cancellationToken: cancellationToken);
-        if (isGetFailure)
-            return RedirectToError(problemDetailsGet);
-
-        var expiresIn = entryGet.Entry.ExpiresAt - entryGet.Entry.CreatedAt;
-        var (_, isAddFailure, newEntry, problemDetailsAdd) = await _entryService.Add(entryGet.Entry.Content, expiresIn, entryGet.ImageIds, cancellationToken);
-        if (isAddFailure)
-            return RedirectToError(problemDetailsAdd);
-
-        await _creatorService.AttachEntry(creator.Value, newEntry, expiresIn, cancellationToken);
-
-        return RedirectToPage("./Index", new { id = IdCoder.Encode(newEntry.Id) });
+        return await _entryPresentationService.Copy(id, HttpContext, cancellationToken)
+            .Finally(result => result.IsSuccess 
+                ? RedirectToPage("./Index", new { id = IdCoder.Encode(result.Value.Id) }) 
+                : RedirectToError(result.Error));
     }
 
-
-    public OpenGraphModel OpenGraphModel { get; set; } = default!;
 
     public long ExpiresIn { get; set; }
     public string Id { get; set; } = default!;
@@ -99,8 +52,5 @@ public class PreviewModel : BasePageModel
     public string TextContent { get; set; } = string.Empty;
 
     
-    private readonly ICookieService _cookieService;
-    private readonly ICreatorService _creatorService;
-    private readonly IEntryService _entryService;
-    private readonly IStringLocalizer<ServerResources> _localizer;
+    private readonly IEntryPresentationService _entryPresentationService;
 }
