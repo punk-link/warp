@@ -111,6 +111,8 @@ IServiceCollection AddServices(IServiceCollection services)
     services.AddTransient<ICreatorService, CreatorService>();
     services.AddTransient<ICookieService, CookieService>();
 
+    services.AddTransient<IEntryPresentationService, EntryPresentationService>();
+
     services.AddHostedService<WarmupService>();
 
     return services;
