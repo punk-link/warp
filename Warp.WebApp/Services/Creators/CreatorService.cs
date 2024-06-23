@@ -74,11 +74,11 @@ public class CreatorService : ICreatorService
     }
 
 
-    public Task<Result<bool>> IsEntryBelongsToCreator(Creator creator, Guid entryId, CancellationToken cancellationToken)
+    public Task<bool> IsEntryBelongsToCreator(Creator creator, Guid entryId, CancellationToken cancellationToken)
         => IsEntryBelongsToCreator(creator.Id, entryId, cancellationToken);
 
 
-    public async Task<Result<bool>> IsEntryBelongsToCreator(Guid creatorId, Guid entryId, CancellationToken cancellationToken)
+    public async Task<bool> IsEntryBelongsToCreator(Guid creatorId, Guid entryId, CancellationToken cancellationToken)
     {
         var creatorsEntrySetCacheKey = CacheKeyBuilder.BuildCreatorsEntrySetCacheKey(creatorId);
         return await _dataStorage.ContainsInSet(creatorsEntrySetCacheKey, entryId, cancellationToken);

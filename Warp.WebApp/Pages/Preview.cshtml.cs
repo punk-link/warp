@@ -72,8 +72,8 @@ public class PreviewModel : BasePageModel
         if (creator is null)
             return RedirectToError(ProblemDetailsHelper.Create(_localizer["NoPreviewPermissionErrorMessage"]));
 
-        var isEntryBelongsToCreatorResult = await _creatorService.IsEntryBelongsToCreator(creator.Value, decodedId, cancellationToken);
-        if (isEntryBelongsToCreatorResult.IsFailure)
+        var isEntryBelongsToCreator = await _creatorService.IsEntryBelongsToCreator(creator.Value, decodedId, cancellationToken);
+        if (!isEntryBelongsToCreator)
             return RedirectToError(ProblemDetailsHelper.Create(_localizer["NoPreviewPermissionErrorMessage"]));
 
         var (_, isGetFailure, entryGet, problemDetailsGet) = await _entryService.Get(decodedId, cancellationToken: cancellationToken);
