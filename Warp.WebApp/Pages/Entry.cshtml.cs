@@ -4,6 +4,7 @@ using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
+using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
 
@@ -11,9 +12,11 @@ namespace Warp.WebApp.Pages;
 
 public class EntryModel : BasePageModel
 {
-    public EntryModel(ILoggerFactory loggerFactory, IEntryService entryService)
+    public EntryModel(ILoggerFactory loggerFactory, ICookieService cookieService, ICreatorService creatorService, IEntryService entryService)
         : base(loggerFactory)
     {
+        _cookieService = cookieService;
+        _creatorService = creatorService;
         _entryService = entryService;
     }
 
@@ -24,7 +27,16 @@ public class EntryModel : BasePageModel
         if (decodedId == Guid.Empty)
             return RedirectToError(ProblemDetailsHelper.Create("Can't decode a provided ID."));
 
-        var (_, isFailure, entry, problemDetails) = await _entryService.Get(decodedId, true, cancellationToken);
+        var isRequestedByCreator = false;
+        var creatorId = _cookieService.GetCreatorId(HttpContext);
+        if (creatorId is not null)
+        {
+            var isEntryBelongsToCreatorResult = await _creatorService.IsEntryBelongsToCreator(creatorId.Value, decodedId, cancellationToken);
+            if (isEntryBelongsToCreatorResult.IsSuccess)
+                isRequestedByCreator = isEntryBelongsToCreatorResult.Value;
+        }
+
+        var (_, isFailure, entry, problemDetails) = await _entryService.Get(decodedId, isRequestedByCreator, cancellationToken);
         if (isFailure)
             return RedirectToError(problemDetails);
 
@@ -64,5 +76,7 @@ public class EntryModel : BasePageModel
     public long ViewCount { get; set; } = 1;
 
 
+    private readonly ICookieService _cookieService;
+    private readonly ICreatorService _creatorService;
     private readonly IEntryService _entryService;
 }
