@@ -19,6 +19,7 @@
   <ItemGroup>
     <Content Remove="wwwroot\js\components\textarea.js" />
     <Content Remove="wwwroot\js\functions\copier.js" />
+    <Content Remove="wwwroot\js\functions\error-interceptor.js" />
   </ItemGroup>
 
   <ItemGroup>
@@ -64,6 +65,7 @@
   <ItemGroup>
     <None Include="wwwroot\js\components\textarea.js" />
     <None Include="wwwroot\js\functions\copier.js" />
+    <None Include="wwwroot\js\functions\error-interceptor.js" />
   </ItemGroup>
 
   <ItemGroup>

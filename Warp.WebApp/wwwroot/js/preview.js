@@ -1,4 +1,5 @@
 import { copyUrl } from '/js/functions/copier.js';
+import { navigateToErrorPage } from '/js/functions/error-interceptor.js';
 
 async function deleteEntry(entryId) {
     let responce = await fetch('/api/entry', {
@@ -12,7 +13,11 @@ async function deleteEntry(entryId) {
 
     if (responce.ok)
         location.href = '/deleted';
+
+    if (!(responce.ok && responce.redirected))
+        navigateToErrorPage(responce.body);
 }
+
 
 export function addPreviewEvents(entryId) {
     let copyLinkButton = document.getElementById('copy-link-button');
