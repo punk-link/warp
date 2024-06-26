@@ -1,21 +1,14 @@
 import { copyUrl } from '/js/functions/copier.js';
-import { navigateToErrorPage } from '/js/functions/error-interceptor.js';
+import { makeHttpRequest, POST, DELETE } from '/js/functions/http-client.js';
 
-async function deleteEntry(entryId) {
-    let responce = await fetch('/api/entry', {
-        method: 'DELETE',
-        body: JSON.stringify({ id: entryId }),
-        headers: {
-            'Accept': 'application/json; charset=utf-8',
-            'Content-Type': 'application/json; charset=utf-8'
-        },
-    });
+async function deleteEntry(entryId) {   
+    let responce = await makeHttpRequest('/api/entry', DELETE, { id: entryId });
 
     if (responce.ok)
         location.href = '/deleted';
 
     if (!(responce.ok && responce.redirected))
-        navigateToErrorPage(responce.body);
+        await makeHttpRequest('/error', POST, { problemDetails: responce.body });
 }
 
 
