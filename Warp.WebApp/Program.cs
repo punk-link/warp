@@ -77,6 +77,11 @@ app.UseHealthChecks("/health");
 app.UseMiddleware<CancellationExceptionHandlerMiddleware>();
 app.UseMiddleware<RobotsMiddleware>();
 app.UseStaticFiles();
+app.UseCookiePolicy(new CookiePolicyOptions()
+{
+    Secure = CookieSecurePolicy.Always,
+    MinimumSameSitePolicy = SameSiteMode.Strict
+});
 
 app.UseRouting();
 
