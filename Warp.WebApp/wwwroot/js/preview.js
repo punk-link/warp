@@ -1,8 +1,9 @@
 import { copyUrl } from '/js/functions/copier.js';
 import { makeHttpRequest, POST, DELETE } from '/js/functions/http-client.js';
 
-async function deleteEntry(entryId) {   
-    let responce = await makeHttpRequest('/api/entry', DELETE, { id: entryId });
+async function deleteEntry(entryId) {
+    entryId += '1';
+    let responce = await makeHttpRequest(`/api/entries/${entryId}`, DELETE);
 
     if (responce.ok)
         location.href = '/deleted';
@@ -27,5 +28,4 @@ export function addPreviewEvents(entryId) {
     editButton.onclick = () => location.href = '/?id=' + entryId;
 
     deleteButton.onclick = async () => await deleteEntry(entryId);
-    
 }

@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
-using System.Text.Json;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Entries;
@@ -8,7 +7,7 @@ using Warp.WebApp.Services.Entries;
 namespace Warp.WebApp.Controllers;
 
 [ApiController]
-[Route("/api/entry")]
+[Route("/api/entries")]
 public class EntryController : BaseController
 {
     public EntryController(IStringLocalizer<ServerResources> localizer, ICookieService cookieService, ICreatorService creatorService,
@@ -20,17 +19,15 @@ public class EntryController : BaseController
     }
 
 
-    [HttpDelete]
-    public async Task<IActionResult> DeleteEntry([FromBody] JsonElement id, CancellationToken cancellationToken = default)
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteEntry([FromRoute] string id, CancellationToken cancellationToken = default)
     {
-        // TODO: Refactor this line to avoid using TryGetProperty method
-        id.TryGetProperty("id", out var value);
-        var decodedId = IdCoder.Decode(value.ToString());
+        var decodedId = IdCoder.Decode(id);
         if (decodedId == Guid.Empty)
             return ReturnIdDecodingBadRequest();
 
         var creatorId = _cookieService.GetCreatorId(HttpContext);
-        if (creatorId is null)
+        if (!creatorId.HasValue)
             return NoContent();
 
         var entryBelongsToCreator = await _creatorService.EntryBelongsToCreator(creatorId.Value, decodedId, cancellationToken);
