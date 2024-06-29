@@ -49,6 +49,11 @@ builder.Services.AddResponseCompression(options =>
 builder.Services.AddResponseCaching();
 builder.Services.AddOutputCache();
 
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.Limits.MaxRequestBodySize = long.MaxValue;
+});
+
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
 
 

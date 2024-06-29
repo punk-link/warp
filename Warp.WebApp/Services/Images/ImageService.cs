@@ -1,6 +1,8 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Localization;
+using Microsoft.Net.Http.Headers;
 using Warp.WebApp.Data;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
@@ -16,18 +18,80 @@ public class ImageService : IImageService
     }
 
 
-    public async Task<Dictionary<string, Guid>> Add(List<IFormFile> files, CancellationToken cancellationToken)
-    {
-        // TODO: add validation and a count check
+    //public async Task<Dictionary<string, Guid>> Add(List<IFormFile> files, CancellationToken cancellationToken)
+    //{
+    //    // TODO: add validation and a count check
 
-        var results = new Dictionary<string, Guid>(files.Count);
-        foreach (var file in files)
+    //    var results = new Dictionary<string, Guid>(files.Count);
+    //    foreach (var file in files)
+    //    {
+    //        var (clientFileName, id) = await Add(file, cancellationToken);
+    //        results.Add(clientFileName, id);
+    //    }
+
+    //    return results;
+    //}
+
+
+    public async Task<Dictionary<string, Guid>> Add(Stream fileStream, string contentType, CancellationToken cancellationToken)
+    {
+        var boundary = GetBoundary(MediaTypeHeaderValue.Parse(contentType));
+        var multipartReader = new MultipartReader(boundary, fileStream);
+        var section = await multipartReader.ReadNextSectionAsync();
+
+        var results = new Dictionary<string, Guid>();
+        while (section != null)
         {
-            var (clientFileName, id) = await Add(file, cancellationToken);
-            results.Add(clientFileName, id);
+            var fileSection = section.AsFileSection();
+            if (fileSection != null)
+            {
+                var result = await Add(fileSection,contentType, cancellationToken);
+                if(result != default)
+                   results.Add(result.Item1, result.Item2);
+            }
+
+            section = await multipartReader.ReadNextSectionAsync();
         }
 
         return results;
+    }
+
+
+    private async Task<(string, Guid)> Add(FileMultipartSection fileSection, string contentType, CancellationToken cancellationToken)
+    {
+        var extension = Path.GetExtension(fileSection.FileName);
+        if (!allowedExtensions.Contains(extension))
+        {
+            return default;
+        }
+
+        using var memoryStream = new MemoryStream();
+        await fileSection.FileStream?.CopyToAsync(memoryStream, cancellationToken);
+
+        var imageInfo = new ImageInfo
+        {
+            Id = Guid.NewGuid(),
+            Content = memoryStream.ToArray(),
+            ContentType = contentType
+        };
+
+        var cacheKey = CacheKeyBuilder.BuildImageInfoCacheKey(imageInfo.Id);
+        await _dataStorage.Set(cacheKey, imageInfo, TimeSpan.FromHours(1), cancellationToken);
+
+        return (fileSection.FileName, imageInfo.Id);
+    }
+
+
+    private string GetBoundary(MediaTypeHeaderValue contentType)
+    {
+        var boundary = HeaderUtilities.RemoveQuotes(contentType.Boundary).Value;
+
+        if (string.IsNullOrWhiteSpace(boundary))
+        {
+            throw new InvalidDataException("Missing content-type boundary.");
+        }
+
+        return boundary;
     }
 
 
@@ -76,25 +140,6 @@ public class ImageService : IImageService
     }
 
 
-    private async Task<(string, Guid)> Add(IFormFile file, CancellationToken cancellationToken)
-    {
-        using var memoryStream = new MemoryStream();
-        await file.CopyToAsync(memoryStream, cancellationToken);
-
-        var imageInfo = new ImageInfo
-        {
-            Id = Guid.NewGuid(),
-            Content = memoryStream.ToArray(),
-            ContentType = file.ContentType
-        };
-
-        var cacheKey = CacheKeyBuilder.BuildImageInfoCacheKey(imageInfo.Id);
-        await _dataStorage.Set(cacheKey, imageInfo, TimeSpan.FromHours(1), cancellationToken);
-
-        return (file.FileName, imageInfo.Id);
-    }
-
-
     public static List<string> BuildImageUrls(Guid id, List<Guid> imageIds)
     => imageIds.Select(imageId => $"/api/images/entry-id/{id}/image-id/{imageId}")
         .ToList();
@@ -102,4 +147,5 @@ public class ImageService : IImageService
 
     private readonly IDataStorage _dataStorage;
     private readonly IStringLocalizer<ServerResources> _localizer;
+    private readonly IEnumerable<string> allowedExtensions = new List<string> { ".zip", ".bin", ".png", ".jpg" };
 }

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.Extensions.Localization;
+using Warp.WebApp.Filters;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Images;
 
@@ -37,14 +38,25 @@ public sealed class ImageController : BaseController
     }
 
 
-    [HttpPost]
-    public async Task<IActionResult> Upload([FromForm] List<IFormFile> images, CancellationToken cancellationToken = default)
-    {
-        var imageContainers = await _imageService.Add(images, cancellationToken);
-        var results = imageContainers.Select(x => new KeyValuePair<string, string>(x.Key, IdCoder.Encode(x.Value)))
-            .ToList();
+    //[HttpPost]
+    //public async Task<IActionResult> Upload([FromForm] List<IFormFile> images, CancellationToken cancellationToken = default)
+    //{
+    //    var imageContainers = await _imageService.Add(images, cancellationToken);
+    //    var results = imageContainers.Select(x => new KeyValuePair<string, string>(x.Key, IdCoder.Encode(x.Value)))
+    //        .ToList();
 
-        return Ok(results);
+    //    return Ok(results);
+    //}
+
+    [HttpPost]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status415UnsupportedMediaType)]
+    [MultipartFormData]
+    [DisableFormValueModelBinding]
+    public async Task<IActionResult> Upload(CancellationToken cancellationToken = default)
+    {
+        var results = await _imageService.Add(HttpContext.Request.Body, Request.ContentType, cancellationToken);
+        return CreatedAtAction(nameof(Upload), results);
     }
 
 
