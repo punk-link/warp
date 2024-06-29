@@ -9,7 +9,10 @@ async function deleteEntry(entryId) {
         location.href = '/deleted';
 
     if (!(responce.ok && responce.redirected))
-        await makeHttpRequest('/error', POST, { problemDetails: responce.body });
+    {
+        let body = await responce.json();
+        await makeHttpRequest('/error', POST, { problemDetails: body });
+    }
 }
 
 
