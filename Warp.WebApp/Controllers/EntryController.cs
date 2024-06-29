@@ -28,14 +28,14 @@ public class EntryController : BaseController
 
         var creatorId = _cookieService.GetCreatorId(HttpContext);
         if (!creatorId.HasValue)
-            return NoContent();
+            return ReturnForbid();
 
         var entryBelongsToCreator = await _creatorService.EntryBelongsToCreator(creatorId.Value, decodedId, cancellationToken);
         if (!entryBelongsToCreator)
-            return NoContent();
+            return ReturnForbid();
 
         _ = await _entryService.Remove(decodedId, cancellationToken);
-        return NoContent();
+        return Ok();
     }
 
 
