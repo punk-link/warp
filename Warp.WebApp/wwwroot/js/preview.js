@@ -1,5 +1,5 @@
 import { copyUrl } from '/js/functions/copier.js';
-import { makeHttpRequest, POST, DELETE } from '/js/functions/http-client.js';
+import { makeHttpRequest, DELETE } from '/js/functions/http-client.js';
 
 async function deleteEntry(entryId) {
     entryId += '1';
@@ -8,10 +8,11 @@ async function deleteEntry(entryId) {
     if (responce.ok)
         location.href = '/deleted';
 
-    if (!(responce.ok && responce.redirected))
-    {
-        let body = await responce.json();
-        await makeHttpRequest('/error', POST, { problemDetails: body });
+    if (!(responce.ok && responce.redirected)) {
+        let problemDetails = await responce.json();
+        let url = '/error?details=' + encodeURIComponent(JSON.stringify(problemDetails));
+        
+        location.href = url;
     }
 }
 

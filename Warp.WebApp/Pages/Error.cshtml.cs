@@ -17,22 +17,14 @@ public class ErrorModel : BasePageModel
     }
 
 
-    public void OnGet()
+    public void OnGet([FromQuery] string? details)
     {
-        var problemDetails = GetProblemDetails();
-        if (problemDetails is null)
-            return;
-
-        FillModel(problemDetails);
-    }
-
-
-    public IActionResult OnPost([FromBody] JsonElement body)
-    {
-        body.TryGetProperty("problemDetails", out var value);
-        var problemDetails = value.Deserialize<ProblemDetails>();
-        FillModel(problemDetails);
-        return Page();
+        var problemDetails = !string.IsNullOrWhiteSpace(details) 
+            ? JsonSerializer.Deserialize<ProblemDetails>(details) 
+            : GetProblemDetails();
+        
+        if (problemDetails is not null)
+            FillModel(problemDetails);
     }
 
 
