@@ -1,27 +1,25 @@
-function appendPreview(files, uploadResults) {
+import { makeHttpRequest, POST } from '../functions/http-client.js';
+
+
+function appendPreview(files, imageContainer) {
     let gallery = document.getElementsByClassName('upload-gallery')[0];
-    let imageContainer = document.getElementsByClassName('image-container')[0];
 
     files.forEach(file => {
         let reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onloadend = function () {
-            let imageWrapper = document.createElement('div');
-            imageWrapper.classList.add('image-wrapper');
-            
-            let image = document.createElement('img');
-            image.src = reader.result;
+            var parser = new DOMParser();
+            let doc = parser.parseFromString(imageContainer, 'text/html');
+            let containerElement = doc.getElementsByClassName('image-container')[0];
 
-            if (uploadResults[file.name]) {
-                let input = getInputToImageId(uploadResults[file.name]);
-                imageContainer.append(input);
-                
-                let uploadedIcon = getImageUploadedIcon();
-                imageWrapper.append(uploadedIcon);
-            }
+            containerElement.querySelector('img')
+                .remove();
 
-            imageWrapper.append(image);
-            gallery.append(imageWrapper);
+            let newImage = document.createElement('img');
+            newImage.src = reader.result;
+
+            containerElement.prepend(newImage);
+            gallery.prepend(containerElement);
         }
     });
 }
@@ -36,33 +34,6 @@ function dropImages(e) {
 }
 
 
-function getImageUploadedIcon() {
-    let uploadedIcon = document.createElement('i');
-    uploadedIcon.classList.add('icofont-cloud-upload');
-
-    let iconWrapper = document.createElement('div');
-    iconWrapper.classList.add('icon-wrapper');
-    iconWrapper.classList.add('flex-container');
-    iconWrapper.classList.add('justify-center');
-    iconWrapper.classList.add('align-center');
-
-    iconWrapper.append(uploadedIcon);
-
-    return iconWrapper;
-}
-
-
-function getInputToImageId(id) {
-    let input = document.createElement('input');
-    input.style.display = 'none';
-    input.name = 'ImageIds';
-    input.type = 'text';
-    input.value = id;
-
-    return input;
-}
-
-
 async function uploadImages(files) {
     let formData = new FormData();
     files.forEach(file => {
@@ -74,13 +45,13 @@ async function uploadImages(files) {
         body: formData
     });
 
-    if (response.status !== 200) {
+    if (!response.ok) {
         console.error(response.status, response.statusText);
         return;
     }
         
-    let responseContent = await response.json();
-    appendPreview(files, responseContent);
+    let imageContainer = await response.text();
+    appendPreview(files, imageContainer);
 }
 
 

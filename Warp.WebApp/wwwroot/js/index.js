@@ -27,12 +27,30 @@ function overrideFormSubmitEvent(form, sourceSpan, targetTextbox) {
 }
 
 
+function addShowEntryContainerEvent(displayedButton, hiddenButton, displayedContainer, hiddenContainer) {
+    displayedButton.addEventListener('click', function () {
+        hiddenContainer.classList.add('d-none');
+
+        hiddenButton.classList.remove('active');
+        displayedButton.classList.add('active');
+
+        displayedContainer.classList.remove('d-none');
+    });
+}
+
+
 export function addIndexEvents() {
     let backgroundImageContainer = document.getElementById('roaming-image');
     repositionBackgroundImage(backgroundImageContainer);
 
-    let textModeButton = document.getElementById('warp-text');
-    textModeButton.classList.add('active');
+    let advancedModeButton = document.getElementById('mode-advanced');
+    let textModeButton = document.getElementById('mode-text');
+
+    let advancedModeContainer = document.getElementById('advanced-mode');
+    let textModeContainer = document.getElementById('text-mode');
+
+    addShowEntryContainerEvent(advancedModeButton, textModeButton, advancedModeContainer, textModeContainer);
+    addShowEntryContainerEvent(textModeButton, advancedModeButton, textModeContainer, advancedModeContainer);
 
     let textModeTextarea = document.getElementById('warp-text');
     let sendButton = document.getElementById('create-button');
@@ -48,16 +66,10 @@ export function addIndexEvents() {
         }
     }, false);
 
+    let dropArea = document.getElementsByClassName('drop-area')[0];
+    let fileInput = document.getElementById('file');
+    let uploadButton = document.getElementById('empty-image-container');
+    addDropAreaEvents(dropArea, fileInput, uploadButton);
+
     //addPasteImageEventListener();
-
-    //let dropArea = document.getElementsByClassName('drop-area')[0];
-    //let fileInput = document.getElementById('file');
-    //let uploadButton = document.getElementById('upload-button');
-    //addDropAreaEvents(dropArea, fileInput, uploadButton);
-
-    //let warpContentTextarea = document.getElementById('warp-content-textarea');
-    //let warpContentForm = document.getElementsByTagName('form')[0];
-    //let warpContentSpan = document.getElementById('warp-content-textarea-span');
-    
-    //overrideFormSubmitEvent(warpContentForm, warpContentSpan, warpContentTextarea);
 }

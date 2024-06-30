@@ -1,7 +1,10 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.Extensions.Localization;
+using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Images;
 
@@ -44,7 +47,17 @@ public sealed class ImageController : BaseController
         var results = imageContainers.Select(x => new KeyValuePair<string, string>(x.Key, IdCoder.Encode(x.Value)))
             .ToList();
 
-        return Ok(results);
+        var model = new ImageContainerModel(imageContainers.First().Value, isEditable: true);
+        var result = new PartialViewResult
+        {
+            ViewName = "Components/ImageContainer",
+            ViewData = new ViewDataDictionary(new EmptyModelMetadataProvider(), new ModelStateDictionary())
+            {
+                Model = model
+            }
+        };
+
+        return result;
     }
 
 

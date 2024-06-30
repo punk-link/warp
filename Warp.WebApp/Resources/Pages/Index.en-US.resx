@@ -132,7 +132,10 @@
   <data name="TextModeButton" xml:space="preserve">
     <value>Text</value>
   </data>
-  <data name="TextModeLabel" xml:space="preserve">
+  <data name="TextAreaLabel" xml:space="preserve">
     <value>Type or paste text here</value>
+  </data>
+  <data name="ImageAreaLabel" xml:space="preserve">
+    <value>Drag &amp; drop or browse images</value>
   </data>
 </root>

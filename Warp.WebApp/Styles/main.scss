@@ -9,6 +9,8 @@
 @import "sizing.scss";
 @import "texts.scss";
 
+@import "image-processor.scss";
+
 
 root {
     color: $text-100;
@@ -43,6 +45,7 @@ p {
 
         img {
             filter: invert(97%) sepia(3%) saturate(2195%) hue-rotate(344deg) brightness(106%) contrast(102%);
+            opacity: .5;
         }
     }
 }
@@ -54,7 +57,6 @@ p {
     font-weight: $font-weight-semibold;
     letter-spacing: 0;
 }
-
 
 .logo {
     font-family: $headings-font-family;
