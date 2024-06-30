@@ -1,6 +1,7 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
+using System.Net;
 using Warp.WebApp.Helpers;
 
 namespace Warp.WebApp.Controllers;
@@ -19,6 +20,12 @@ public class BaseController : ControllerBase
             return BadRequest(result.Error);
 
         return NoContent();
+    }
+
+
+    protected IActionResult ReturnForbid()
+    {
+        return StatusCode((int)HttpStatusCode.Forbidden, ProblemDetailsHelper.CreateForbidden(_localizer));
     }
 
 

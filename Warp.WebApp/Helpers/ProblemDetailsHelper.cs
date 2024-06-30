@@ -54,6 +54,10 @@ public static class ProblemDetailsHelper
         => Create(localizer["ServiceUnavailableErrorMessage"], HttpStatusCode.ServiceUnavailable, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.4");
 
 
+    public static ProblemDetails CreateForbidden(IStringLocalizer<ServerResources> localizer)
+    => Create(localizer["NoPermissionErrorMessage"], HttpStatusCode.Forbidden, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.3");
+
+
     public static List<Error> GetErrors(this ProblemDetails details)
     {
         if (!details.Extensions.TryGetValue(ErrorsExtensionToken, out var errorsObject))
