@@ -1,36 +1,64 @@
+import { uploadFinishedEvent } from '../events/events.js';
 import { makeHttpRequest, POST } from '../functions/http-client.js';
 
 
-function appendPreview(files, imageContainer) {
+function addImageDeleteEvent(containerElement) {
+    let deleteButton = containerElement.querySelector('.delete-image-button');
+    deleteButton.onclick = (e) => deleteImage(e);
+
+    return containerElement;
+}
+
+
+function deleteImage(e) {
+    e.target.closest('.image-container').remove();
+ }
+
+
+async function dropImages(e) {
+    let transfer = e.dataTransfer;
+    let fileList = transfer.files;
+    let files = Array.from(fileList)
+    
+    await uploadImages(files);
+}
+
+
+function getImageContainerElement(imageContainer) {
+    let domParser = new DOMParser();
+    let doc = domParser.parseFromString(imageContainer, 'text/html');
+
+    return doc.getElementsByClassName('image-container')[0];
+}
+
+
+function renderPreview(files, imageContainer) {
     let gallery = document.getElementsByClassName('upload-gallery')[0];
 
     files.forEach(file => {
         let reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onloadend = function () {
-            var parser = new DOMParser();
-            let doc = parser.parseFromString(imageContainer, 'text/html');
-            let containerElement = doc.getElementsByClassName('image-container')[0];
+            let containerElement = getImageContainerElement(imageContainer);
+            containerElement = replaceImagePreview(containerElement, reader);
+            containerElement = addImageDeleteEvent(containerElement);
 
-            containerElement.querySelector('img')
-                .remove();
-
-            let newImage = document.createElement('img');
-            newImage.src = reader.result;
-
-            containerElement.prepend(newImage);
             gallery.prepend(containerElement);
         }
     });
+
+    document.dispatchEvent(uploadFinishedEvent);
 }
 
 
-function dropImages(e) {
-    let transfer = e.dataTransfer;
-    let fileList = transfer.files;
-    let files = Array.from(fileList)
+function replaceImagePreview(containerElement, reader) {
+    let newImage = document.createElement('img');
+    newImage.src = reader.result;
     
-    uploadImages(files);
+    containerElement.querySelector('img').remove();
+    containerElement.prepend(newImage);
+
+    return containerElement;
 }
 
 
@@ -51,35 +79,35 @@ async function uploadImages(files) {
     }
         
     let imageContainer = await response.text();
-    appendPreview(files, imageContainer);
+    renderPreview(files, imageContainer);
 }
 
 
 export function addDropAreaEvents(dropArea, fileInput, uploadButton) {
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropArea.addEventListener(eventName, function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        });
+        dropArea.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
     });
 
     ['dragenter', 'dragover'].forEach(eventName => {
-        dropArea.addEventListener(eventName, function () {
-            dropArea.classList.add('highlighted');
-        });
+        dropArea.addEventListener(eventName, () => {
+                dropArea.classList.add('highlighted');
+            });
     });
 
     ['dragleave', 'drop'].forEach(eventName => {
-        dropArea.addEventListener(eventName, function () {
-            dropArea.classList.remove('highlighted');
-        });
+        dropArea.addEventListener(eventName, () => {
+                dropArea.classList.remove('highlighted');
+            });
     });
 
     dropArea.addEventListener('drop', async (e) => await dropImages(e));
 
-    fileInput.onchange = (e) => {
+    fileInput.onchange = async (e) => {
         let files = Array.from(e.target.files)
-        uploadImages(files);
+        await uploadImages(files);
     };
 
     uploadButton.onclick = () => fileInput.click();
@@ -102,8 +130,8 @@ export async function pasteImages() {
             }
         }
         
-        uploadImages(files);
-    } catch(err) {
+        await uploadImages(files);
+    } catch (err) {
         console.error(err);
     }
 }

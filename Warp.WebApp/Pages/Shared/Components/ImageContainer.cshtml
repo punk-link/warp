@@ -1,4 +1,6 @@
-﻿@model ImageContainerModel
+﻿@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResources> SharedLocalizer
+@model ImageContainerModel
 
 @if (Model.ImageId == Guid.Empty)
 {
@@ -11,5 +13,11 @@ else if (Model.IsEditable)
     <div id="image-container-@Model.ImageId" class="image-container me-3 mb-3">
         <img src="">
         <input type="hidden" name="ImageIds" value="@Model.ImageId" />
+        <div class="d-flex justify-content-center delete-image-icon-container">
+            <a href="javascript:void(0);" class="bg-white border-radius-pill d-flex justify-content-center align-items-center delete-image-button"
+               data-target="@Model.ImageId" type="button" title="@SharedLocalizer["DeleteButton"]">
+                <i class="icofont-bin text-light"></i>
+            </a>
+        </div>
     </div>
 }

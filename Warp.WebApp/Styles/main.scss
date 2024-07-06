@@ -58,6 +58,16 @@ p {
     letter-spacing: 0;
 }
 
+.delete-image-icon-container {
+    position: relative;
+    top: -25%;
+
+    a {
+        height: 1.5 * $spacer;
+        width: 1.5 * $spacer;
+    }
+}
+
 .logo {
     font-family: $headings-font-family;
     font-weight: $headings-font-weight;
