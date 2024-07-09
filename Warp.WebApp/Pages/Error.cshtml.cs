@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using System.Net;
+using System.Text.Json;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Models.ProblemDetails;
 
@@ -16,19 +17,14 @@ public class ErrorModel : BasePageModel
     }
 
 
-    public void OnGet()
+    public void OnGet([FromQuery] string? details)
     {
-        var problemDetails = GetProblemDetails();
-        if (problemDetails is null)
-            return;
-
-        Detail = problemDetails.Detail;
-        Errors = problemDetails.GetErrors();
-        RequestId = problemDetails.GetTraceId();
-        Title = problemDetails.Title;
-
-        if (problemDetails.Status != null)
-            Status = problemDetails.Status.Value;
+        var problemDetails = !string.IsNullOrWhiteSpace(details) 
+            ? JsonSerializer.Deserialize<ProblemDetails>(details) 
+            : GetProblemDetails();
+        
+        if (problemDetails is not null)
+            FillModel(problemDetails);
     }
 
 
@@ -38,6 +34,18 @@ public class ErrorModel : BasePageModel
 
     public bool ShowRequestId
         => !string.IsNullOrEmpty(RequestId);
+
+
+    private void FillModel(ProblemDetails problemDetails)
+    {
+        Detail = problemDetails.Detail;
+        Errors = problemDetails.GetErrors();
+        RequestId = problemDetails.GetTraceId();
+        Title = problemDetails.Title;
+
+        if (problemDetails.Status != null)
+            Status = problemDetails.Status.Value;
+    }
 
 
     public string? Detail { get; set; } = "An error occurred while processing your request.";

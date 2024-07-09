@@ -1,65 +1,64 @@
-function appendPreview(files, uploadResults) {
+import { uploadFinishedEvent } from '../events/events.js';
+import { makeHttpRequest, POST } from '../functions/http-client.js';
+
+
+function addImageDeleteEvent(containerElement) {
+    let deleteButton = containerElement.querySelector('.delete-image-button');
+    deleteButton.onclick = (e) => deleteImage(e);
+
+    return containerElement;
+}
+
+
+function deleteImage(e) {
+    e.target.closest('.image-container').remove();
+ }
+
+
+async function dropImages(e) {
+    let transfer = e.dataTransfer;
+    let fileList = transfer.files;
+    let files = Array.from(fileList)
+    
+    await uploadImages(files);
+}
+
+
+function getImageContainerElement(imageContainer) {
+    let domParser = new DOMParser();
+    let doc = domParser.parseFromString(imageContainer, 'text/html');
+
+    return doc.getElementsByClassName('image-container')[0];
+}
+
+
+function renderPreview(files, imageContainer) {
     let gallery = document.getElementsByClassName('upload-gallery')[0];
-    let imageContainer = document.getElementsByClassName('image-container')[0];
 
     files.forEach(file => {
         let reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onloadend = function () {
-            let imageWrapper = document.createElement('div');
-            imageWrapper.classList.add('image-wrapper');
-            
-            let image = document.createElement('img');
-            image.src = reader.result;
+            let containerElement = getImageContainerElement(imageContainer);
+            containerElement = replaceImagePreview(containerElement, reader);
+            containerElement = addImageDeleteEvent(containerElement);
 
-            if (uploadResults[file.name]) {
-                let input = getInputToImageId(uploadResults[file.name]);
-                imageContainer.append(input);
-                
-                let uploadedIcon = getImageUploadedIcon();
-                imageWrapper.append(uploadedIcon);
-            }
-
-            imageWrapper.append(image);
-            gallery.append(imageWrapper);
+            gallery.prepend(containerElement);
         }
     });
+
+    document.dispatchEvent(uploadFinishedEvent);
 }
 
 
-function dropImages(e) {
-    let transfer = e.dataTransfer;
-    let fileList = transfer.files;
-    let files = Array.from(fileList)
+function replaceImagePreview(containerElement, reader) {
+    let newImage = document.createElement('img');
+    newImage.src = reader.result;
     
-    uploadImages(files);
-}
+    containerElement.querySelector('img').remove();
+    containerElement.prepend(newImage);
 
-
-function getImageUploadedIcon() {
-    let uploadedIcon = document.createElement('i');
-    uploadedIcon.classList.add('icofont-cloud-upload');
-
-    let iconWrapper = document.createElement('div');
-    iconWrapper.classList.add('icon-wrapper');
-    iconWrapper.classList.add('flex-container');
-    iconWrapper.classList.add('justify-center');
-    iconWrapper.classList.add('align-center');
-
-    iconWrapper.append(uploadedIcon);
-
-    return iconWrapper;
-}
-
-
-function getInputToImageId(id) {
-    let input = document.createElement('input');
-    input.style.display = 'none';
-    input.name = 'ImageIds';
-    input.type = 'text';
-    input.value = id;
-
-    return input;
+    return containerElement;
 }
 
 
@@ -74,41 +73,41 @@ async function uploadImages(files) {
         body: formData
     });
 
-    if (response.status !== 200) {
+    if (!response.ok) {
         console.error(response.status, response.statusText);
         return;
     }
         
-    let responseContent = await response.json();
-    appendPreview(files, responseContent);
+    let imageContainer = await response.text();
+    renderPreview(files, imageContainer);
 }
 
 
 export function addDropAreaEvents(dropArea, fileInput, uploadButton) {
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropArea.addEventListener(eventName, function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-        });
+        dropArea.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
     });
 
     ['dragenter', 'dragover'].forEach(eventName => {
-        dropArea.addEventListener(eventName, function () {
-            dropArea.classList.add('highlighted');
-        });
+        dropArea.addEventListener(eventName, () => {
+                dropArea.classList.add('highlighted');
+            });
     });
 
     ['dragleave', 'drop'].forEach(eventName => {
-        dropArea.addEventListener(eventName, function () {
-            dropArea.classList.remove('highlighted');
-        });
+        dropArea.addEventListener(eventName, () => {
+                dropArea.classList.remove('highlighted');
+            });
     });
 
     dropArea.addEventListener('drop', async (e) => await dropImages(e));
 
-    fileInput.onchange = (e) => {
+    fileInput.onchange = async (e) => {
         let files = Array.from(e.target.files)
-        uploadImages(files);
+        await uploadImages(files);
     };
 
     uploadButton.onclick = () => fileInput.click();
@@ -131,8 +130,8 @@ export async function pasteImages() {
             }
         }
         
-        uploadImages(files);
-    } catch(err) {
+        await uploadImages(files);
+    } catch (err) {
         console.error(err);
     }
 }

@@ -120,9 +120,6 @@
   <data name="CopyButton" xml:space="preserve">
     <value>Copy Entry</value>
   </data>
-  <data name="DeleteButton" xml:space="preserve">
-    <value>Delete</value>
-  </data>
   <data name="the entry expires in" xml:space="preserve">
     <value>the entry expires in</value>
   </data>

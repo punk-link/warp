@@ -1,8 +1,10 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.Extensions.Localization;
-using Warp.WebApp.Filters;
+using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Images;
 
@@ -56,7 +58,18 @@ public sealed class ImageController : BaseController
     public async Task<IActionResult> Upload(CancellationToken cancellationToken = default)
     {
         var results = await _imageService.Add(HttpContext.Request.Body, Request.ContentType, cancellationToken);
-        return CreatedAtAction(nameof(Upload), results);
+
+        var model = new ImageContainerModel(results.First().Value, isEditable: true);
+        var result = new PartialViewResult
+        {
+            ViewName = "Components/ImageContainer",
+            ViewData = new ViewDataDictionary(new EmptyModelMetadataProvider(), new ModelStateDictionary())
+            {
+                Model = model
+            }
+        };
+        //return CreatedAtAction(nameof(Upload), results);
+        return result;
     }
 
 
