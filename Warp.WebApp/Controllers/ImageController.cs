@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.Extensions.Localization;
 using Warp.WebApp.Pages.Shared.Components;
+using Warp.WebApp.Filters;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Images;
 
