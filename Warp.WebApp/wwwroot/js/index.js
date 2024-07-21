@@ -1,7 +1,10 @@
 import { eventNames } from'/js/events/events.js';
 import { repositionBackgroundImage } from '/js/functions/image-positioner.js';
 import { addDropAreaEvents, pasteImages } from './modules/image-processor.js';
-    
+
+
+const EditMode = { Advanced: 2, Text: 1 };
+
 
 function addPasteImageEventListener() {
     document.body.addEventListener('keydown', async function (e) {
@@ -15,18 +18,23 @@ function addEntryContainerEvents(advancedModeButton, textModeButton) {
     let advancedModeContainer = document.getElementById('advanced-mode');
     let textModeContainer = document.getElementById('text-mode');
 
-    addShowEntryContainerEvent(advancedModeButton, textModeButton, advancedModeContainer, textModeContainer);
-    addShowEntryContainerEvent(textModeButton, advancedModeButton, textModeContainer, advancedModeContainer);
+    addShowEntryContainerEvent(advancedModeButton, textModeButton, advancedModeContainer, textModeContainer, EditMode.Advanced);
+    addShowEntryContainerEvent(textModeButton, advancedModeButton, textModeContainer, advancedModeContainer, EditMode.Text);
 }
 
 
-function addShowEntryContainerEvent(displayedButton, hiddenButton, displayedContainer, hiddenContainer) {
+function addShowEntryContainerEvent(displayedButton, hiddenButton, displayedContainer, hiddenContainer, mode) {
+    let editModeInput = document.getElementById('edit-mode-state');
+    
     displayedButton.addEventListener('click', () => {
             hiddenContainer.classList.add('d-none');
             hiddenButton.classList.remove('active');
 
             displayedButton.classList.add('active');
             displayedContainer.classList.remove('d-none');
+
+            editModeInput.value = mode;
+            console.log('edit mode: ' + editModeInput.value);
         });
 }
 

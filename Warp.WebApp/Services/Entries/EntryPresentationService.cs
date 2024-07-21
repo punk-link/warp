@@ -42,7 +42,7 @@ public class EntryPresentationService : IEntryPresentationService
 
         async Task<Result<(Creator Creator, Entry Entry), ProblemDetails>> AddEntry(Creator creator)
         {
-            var entryResult = await _entryService.Add(request.TextContent, request.ExpiresIn, request.ImageIds, cancellationToken);
+            var entryResult = await _entryService.Add(request.TextContent, request.ExpiresIn, request.ImageIds, request.EditMode, cancellationToken);
             if (entryResult.IsFailure)
                 return entryResult.Error;
 

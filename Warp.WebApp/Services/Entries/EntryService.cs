@@ -5,6 +5,7 @@ using Warp.WebApp.Data;
 using Warp.WebApp.Extensions;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
+using Warp.WebApp.Models.Entries.Enums;
 using Warp.WebApp.Models.Validators;
 using Warp.WebApp.Services.Images;
 
@@ -23,12 +24,12 @@ public sealed class EntryService : IEntryService
     }
 
 
-    public async Task<Result<Entry, ProblemDetails>> Add(string content, TimeSpan expiresIn, List<Guid> imageIds,
+    public async Task<Result<Entry, ProblemDetails>> Add(string content, TimeSpan expiresIn, List<Guid> imageIds, EditMode editMode, 
         CancellationToken cancellationToken)
     {
         var entry = BuildEntry();
 
-        var validator = new EntryValidator(_localizer);
+        var validator = new EntryValidator(_localizer, imageIds);
         var validationResult = await validator.ValidateAsync(entry, cancellationToken);
         if (!validationResult.IsValid)
             return validationResult.ToFailure<Entry>(_localizer);
@@ -47,7 +48,7 @@ public sealed class EntryService : IEntryService
             var formattedText = TextFormatter.Format(content);
             var description = OpenGraphService.GetDescription(formattedText);
             
-            return new Entry(Guid.NewGuid(), formattedText, description, now, now + expiresIn);
+            return new Entry(Guid.NewGuid(), formattedText, description, now, now + expiresIn, editMode);
         }
     }
 

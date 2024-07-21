@@ -1,6 +1,7 @@
 ﻿@page 
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using Microsoft.Extensions.Localization
+@using Warp.WebApp.Models.Entries.Enums
 @model IndexModel
 @inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
 @inject IStringLocalizer<SharedResources> SharedLocalizer
@@ -91,6 +92,7 @@
                     </button>
                 </div>
             </div>
+            <input id="edit-mode-state" type="hidden" asp-for="EditMode" value="@EditMode.Advanced"/>
         </form>
     </section>
 </div>

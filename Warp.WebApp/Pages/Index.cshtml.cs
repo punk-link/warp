@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
 using Warp.WebApp.Models;
+using Warp.WebApp.Models.Entries.Enums;
 using Warp.WebApp.Models.Options;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
@@ -71,7 +72,7 @@ public class IndexModel : BasePageModel
     public async Task<IActionResult> OnPost(CancellationToken cancellationToken)
     {
         var expiresIn = GetExpirationPeriod(SelectedExpirationPeriod);
-        var request = new EntryRequest { TextContent = TextContent, ExpiresIn = expiresIn, ImageIds = ImageIds };
+        var request = new EntryRequest { TextContent = TextContent, ExpiresIn = expiresIn, ImageIds = ImageIds, EditMode = EditMode };
 
         var result = await _entryPresentationService.Add(request, HttpContext, cancellationToken);
         if (result.IsFailure)
@@ -112,6 +113,9 @@ public class IndexModel : BasePageModel
         return 5;
     }
 
+
+    [BindProperty]
+    public EditMode EditMode { get; set; }
 
     [BindProperty]
     public List<Guid> ImageIds { get; set; } = [];
