@@ -2,7 +2,7 @@
 @inject IStringLocalizer<SharedResources> SharedLocalizer
 @model ImageContainerModel
 
-@if (Model.ImageId == Guid.Empty)
+@if (Model.ImageId == string.Empty)
 {
     <div id="empty-image-container" class="image-container d-flex align-items-center justify-content-center">
         <i class="icofont-plus text-lighter fs-1"></i>

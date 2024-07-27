@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.Extensions.Localization;
+using Warp.WebApp.Helpers;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Images;
@@ -14,9 +15,11 @@ namespace Warp.WebApp.Controllers;
 [Route("/api/images")]
 public sealed class ImageController : BaseController
 {
-    public ImageController(IStringLocalizer<ServerResources> localizer, IImageService imageService) : base(localizer)
+    public ImageController(IStringLocalizer<ServerResources> localizer, IImageService imageService, PartialViewRenderHelper partialViewRenderHelper) 
+        : base(localizer)
     {
         _imageService = imageService;
+        _partialViewRenderHelper = partialViewRenderHelper;
     }
 
 
@@ -43,23 +46,37 @@ public sealed class ImageController : BaseController
     [HttpPost]
     public async Task<IActionResult> Upload([FromForm] List<IFormFile> images, CancellationToken cancellationToken = default)
     {
-        var imageContainers = await _imageService.Add(images, cancellationToken);
-        var results = imageContainers.Select(x => new KeyValuePair<string, string>(x.Key, IdCoder.Encode(x.Value)))
+        var imageContainers = (await _imageService.Add(images, cancellationToken))
+            .Select(x => new KeyValuePair<string, string>(x.Key, IdCoder.Encode(x.Value)))
             .ToList();
 
-        var model = new ImageContainerModel(imageContainers.First().Value, isEditable: true);
-        var result = new PartialViewResult
-        {
-            ViewName = "Components/ImageContainer",
-            ViewData = new ViewDataDictionary(new EmptyModelMetadataProvider(), new ModelStateDictionary())
-            {
-                Model = model
-            }
-        };
+        return Ok(await BuildUploadResults(imageContainers));
+    }
 
-        return result;
+
+    private async Task<List<string>> BuildUploadResults(List<KeyValuePair<string, string>> imageContainers)
+    {
+        var uploadResults = new List<string>(imageContainers.Count);
+
+        foreach (var container in imageContainers)
+        {
+            var partialView = new PartialViewResult
+            {
+                ViewName = "Components/ImageContainer",
+                ViewData = new ViewDataDictionary(new EmptyModelMetadataProvider(), new ModelStateDictionary())
+                {
+                    Model = new ImageContainerModel(container.Value, isEditable: true)
+                }
+            };
+
+            var html = await _partialViewRenderHelper.ToString(ControllerContext, HttpContext, partialView);
+            uploadResults.Add(html);
+        }
+
+        return uploadResults;
     }
 
 
     private readonly IImageService _imageService;
+    private readonly PartialViewRenderHelper _partialViewRenderHelper;
 }
