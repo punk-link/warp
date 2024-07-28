@@ -32,13 +32,17 @@ function getImageContainerElement(imageContainer) {
 }
 
 
-function renderPreview(files, imageContainer) {
+function renderPreview(files, imageContainers) {
     let gallery = document.getElementsByClassName('upload-gallery')[0];
 
     files.forEach(file => {
         let reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onloadend = function () {
+            let imageContainer = imageContainers[file.name];
+            if (imageContainer === undefined) 
+                return;
+
             let containerElement = getImageContainerElement(imageContainer);
             containerElement = replaceImagePreview(containerElement, reader);
             containerElement = addImageDeleteEvent(containerElement);
@@ -78,8 +82,8 @@ async function uploadImages(files) {
         return;
     }
         
-    let imageContainer = await response.text();
-    renderPreview(files, imageContainer);
+    let imageContainers = await response.json();
+    renderPreview(files, imageContainers);
 }
 
 

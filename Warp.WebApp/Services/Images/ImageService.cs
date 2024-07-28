@@ -36,6 +36,7 @@ public class ImageService : IImageService
         if (imageIds.Count == 0)
             return;
 
+        // TODO: try to use a Redis set instead of a list
         var imageInfos = new List<ImageInfo>(imageIds.Count);
         foreach (var imageId in imageIds)
         {

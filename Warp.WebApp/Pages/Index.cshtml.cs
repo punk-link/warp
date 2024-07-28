@@ -72,7 +72,9 @@ public class IndexModel : BasePageModel
     public async Task<IActionResult> OnPost(CancellationToken cancellationToken)
     {
         var expiresIn = GetExpirationPeriod(SelectedExpirationPeriod);
-        var request = new EntryRequest { TextContent = TextContent, ExpiresIn = expiresIn, ImageIds = ImageIds, EditMode = EditMode };
+        var decodedImageIds = ImageIds.Select(IdCoder.Decode).ToList();
+
+        var request = new EntryRequest { TextContent = TextContent, ExpiresIn = expiresIn, ImageIds = decodedImageIds, EditMode = EditMode };
 
         var result = await _entryPresentationService.Add(request, HttpContext, cancellationToken);
         if (result.IsFailure)
@@ -118,7 +120,7 @@ public class IndexModel : BasePageModel
     public EditMode EditMode { get; set; }
 
     [BindProperty]
-    public List<Guid> ImageIds { get; set; } = [];
+    public List<string> ImageIds { get; set; } = [];
 
     [BindProperty]
     public int SelectedExpirationPeriod { get; set; }

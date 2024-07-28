@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.ResponseCompression;
 using System.Globalization;
 using Warp.WebApp.Data;
 using Warp.WebApp.Data.Redis;
+using Warp.WebApp.Helpers;
 using Warp.WebApp.Helpers.Configuration;
 using Warp.WebApp.Helpers.HealthChecks;
 using Warp.WebApp.Helpers.Warmups;
@@ -106,6 +107,8 @@ IServiceCollection AddOptions(IServiceCollection services, IConfiguration config
 IServiceCollection AddServices(IServiceCollection services)
 {
     services.AddSingleton(services);
+
+    services.AddTransient<PartialViewRenderHelper>();
 
     services.AddSingleton<IImageService, ImageService>();
     services.AddSingleton<IDistributedStorage, KeyDbStorage>();

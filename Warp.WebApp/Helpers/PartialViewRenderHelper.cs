@@ -17,7 +17,7 @@ public class PartialViewRenderHelper
     }
 
 
-    public async Task<string> ToString(ControllerContext controllerContext, HttpContext httpContext, PartialViewResult partialView)
+    public async Task<string> Render(ControllerContext controllerContext, HttpContext httpContext, PartialViewResult partialView)
     {
         var viewResult = GetViewEngineResult(controllerContext, partialView.ViewName!);
 

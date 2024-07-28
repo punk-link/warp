@@ -4,7 +4,7 @@ namespace Warp.WebApp.Pages.Shared.Components;
 
 public class ImageContainerModel : PageModel
 {
-    public ImageContainerModel(string imageId, bool isEditable = false)
+    public ImageContainerModel(Guid imageId, bool isEditable = false)
     {
         ImageId = imageId;
         IsEditable = isEditable;
@@ -12,7 +12,7 @@ public class ImageContainerModel : PageModel
 
 
     public static ImageContainerModel Empty
-        => new(string.Empty);
+        => new(Guid.Empty);
 
 
     public void OnGet()
@@ -20,6 +20,6 @@ public class ImageContainerModel : PageModel
     }
 
 
-    public string ImageId { get; init; }
+    public Guid ImageId { get; init; }
     public bool IsEditable { get; init; }
 }

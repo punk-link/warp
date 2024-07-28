@@ -24,9 +24,10 @@ function addEntryContainerEvents(advancedModeButton, textModeButton) {
 
 
 function addShowEntryContainerEvent(displayedButton, hiddenButton, displayedContainer, hiddenContainer, mode) {
-    let editModeInput = document.getElementById('edit-mode-state');
+    let editModeInputs = document.getElementsByClassName('edit-mode-state');
     
-    displayedButton.addEventListener('click', () => {
+    for (let editModeInput of editModeInputs) {
+        displayedButton.addEventListener('click', () => {
             hiddenContainer.classList.add('d-none');
             hiddenButton.classList.remove('active');
 
@@ -36,6 +37,7 @@ function addShowEntryContainerEvent(displayedButton, hiddenButton, displayedCont
             editModeInput.value = mode;
             console.log('edit mode: ' + editModeInput.value);
         });
+    }
 }
 
 
@@ -43,16 +45,18 @@ function addCreateButtonEvents(advancedModeButton, textModeButton) {
     let advancedModeTextarea = document.getElementById('warp-advanced');
     let textModeTextarea = document.getElementById('warp-text');
     
-    let createButton = document.getElementById('create-button');
-    if (advancedModeTextarea.value !== '' && textModeTextarea.value !== '') 
+    let createButtons = document.getElementsByClassName('create-button');
+    for (let createButton of createButtons) {
+        if (advancedModeTextarea.value !== '' && textModeTextarea.value !== '') 
         createButton.disabled = false;
 
-    toggleCreateButtonState(createButton, advancedModeButton, advancedModeTextarea);
-    toggleCreateButtonState(createButton, textModeButton, textModeTextarea);
+        toggleCreateButtonState(createButton, advancedModeButton, advancedModeTextarea);
+        toggleCreateButtonState(createButton, textModeButton, textModeTextarea);
 
-    document.addEventListener(eventNames.uploadFinished, () => {
-            createButton.disabled = false;
-        });
+        document.addEventListener(eventNames.uploadFinished, () => {
+                createButton.disabled = false;
+            });
+    }
 }
 
 

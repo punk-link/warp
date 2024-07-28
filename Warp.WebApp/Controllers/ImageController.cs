@@ -46,22 +46,20 @@ public sealed class ImageController : BaseController
     [HttpPost]
     public async Task<IActionResult> Upload([FromForm] List<IFormFile> images, CancellationToken cancellationToken = default)
     {
-        var imageContainers = (await _imageService.Add(images, cancellationToken))
-            .Select(x => new KeyValuePair<string, string>(x.Key, IdCoder.Encode(x.Value)))
-            .ToList();
-
+        var imageContainers = await _imageService.Add(images, cancellationToken);
         return Ok(await BuildUploadResults(imageContainers));
     }
 
 
-    private async Task<List<string>> BuildUploadResults(List<KeyValuePair<string, string>> imageContainers)
+    private async Task<Dictionary<string, string>> BuildUploadResults(Dictionary<string, Guid> imageContainers)
     {
-        var uploadResults = new List<string>(imageContainers.Count);
+        var uploadResults = new Dictionary<string, string>(imageContainers.Count);
 
         foreach (var container in imageContainers)
         {
             var partialView = new PartialViewResult
             {
+                
                 ViewName = "Components/ImageContainer",
                 ViewData = new ViewDataDictionary(new EmptyModelMetadataProvider(), new ModelStateDictionary())
                 {
@@ -69,8 +67,8 @@ public sealed class ImageController : BaseController
                 }
             };
 
-            var html = await _partialViewRenderHelper.ToString(ControllerContext, HttpContext, partialView);
-            uploadResults.Add(html);
+            var html = await _partialViewRenderHelper.Render(ControllerContext, HttpContext, partialView);
+            uploadResults.Add(container.Key, html);
         }
 
         return uploadResults;

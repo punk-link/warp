@@ -4,7 +4,6 @@ using Warp.WebApp.Models;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Entries;
-using Warp.WebApp.Services.Images;
 
 namespace Warp.WebApp.Pages;
 
@@ -30,9 +29,12 @@ public class PreviewModel : BasePageModel
             Id = id;
             ExpiresIn = new DateTimeOffset(entryInfo.Entry.ExpiresAt).ToUnixTimeMilliseconds();
             TextContent = entryInfo.Entry.Content;
-
-            var decodedId = IdCoder.Decode(id);
-            ImageUrls = ImageService.BuildImageUrls(decodedId, entryInfo.ImageIds);
+            
+            foreach (var imageId in entryInfo.ImageIds)
+            {
+                var imageContainer = new ImageContainerModel(imageId);
+                ImageContainers.Add(imageContainer);
+            }
         }
     }
 
@@ -48,7 +50,7 @@ public class PreviewModel : BasePageModel
 
     public long ExpiresIn { get; set; }
     public string Id { get; set; } = default!;
-    public List<string> ImageUrls { get; set; } = [];
+    public List<ImageContainerModel> ImageContainers { get; set; } = [];
     public string TextContent { get; set; } = string.Empty;
 
     
