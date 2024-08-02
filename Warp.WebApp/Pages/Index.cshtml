@@ -94,7 +94,7 @@
                                 <div class="d-flex flex-row flex-wrap upload-gallery">
                                     @foreach (var imageContainer in Model.ImageContainers)
                                     {
-                                        <partial name="Shared/Components/ImageContainer" model="imageContainer"/>
+                                        <partial name="Shared/Components/EditableImageContainer" model="imageContainer"/>
                                     }
                                 </div>
                                 <input type="file" id="file" class="file-input d-none" multiple="multiple" accept="image/*">

@@ -4,10 +4,10 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.Extensions.Localization;
-using Warp.WebApp.Helpers;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Images;
+using Warp.WebApp.Services.Infrastructure;
 
 namespace Warp.WebApp.Controllers;
 
@@ -15,7 +15,7 @@ namespace Warp.WebApp.Controllers;
 [Route("/api/images")]
 public sealed class ImageController : BaseController
 {
-    public ImageController(IStringLocalizer<ServerResources> localizer, IImageService imageService, PartialViewRenderHelper partialViewRenderHelper) 
+    public ImageController(IStringLocalizer<ServerResources> localizer, IImageService imageService, IPartialViewRenderService partialViewRenderHelper) 
         : base(localizer)
     {
         _imageService = imageService;
@@ -60,10 +60,10 @@ public sealed class ImageController : BaseController
             var partialView = new PartialViewResult
             {
                 
-                ViewName = "Components/ImageContainer",
+                ViewName = "Components/EditableImageContainer",
                 ViewData = new ViewDataDictionary(new EmptyModelMetadataProvider(), new ModelStateDictionary())
                 {
-                    Model = new ImageContainerModel(container.Value, isEditable: true)
+                    Model = new EditableImageContainerModel(container.Value, isEditable: true)
                 }
             };
 
@@ -76,5 +76,5 @@ public sealed class ImageController : BaseController
 
 
     private readonly IImageService _imageService;
-    private readonly PartialViewRenderHelper _partialViewRenderHelper;
+    private readonly IPartialViewRenderService _partialViewRenderHelper;
 }

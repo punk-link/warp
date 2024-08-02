@@ -35,7 +35,7 @@ public class IndexModel : BasePageModel
         if (string.IsNullOrEmpty(id))
         {
             OpenGraphModel = OpenGraphService.GetDefaultModel(_serverLocalizer["DefaultOpenGraphDescriptionText"]);
-            ImageContainers.Add(ImageContainerModel.Empty);
+            ImageContainers.Add(EditableImageContainerModel.Empty);
             return Page();
         }
 
@@ -54,11 +54,11 @@ public class IndexModel : BasePageModel
 
             foreach (var imageId in entryInfo.ImageIds)
             {
-                var imageContainer = new ImageContainerModel(imageId);
+                var imageContainer = new EditableImageContainerModel(imageId);
                 ImageContainers.Add(imageContainer);
             }
 
-            ImageContainers.Add(ImageContainerModel.Empty);
+            ImageContainers.Add(EditableImageContainerModel.Empty);
         }
 
 
@@ -129,7 +129,7 @@ public class IndexModel : BasePageModel
     public string TextContent { get; set; } = string.Empty;
 
     public AnalyticsModel AnalyticsModel { get; set; } = default!;
-    public List<ImageContainerModel> ImageContainers { get; set; } = [];
+    public List<EditableImageContainerModel> ImageContainers { get; set; } = [];
     public OpenGraphModel OpenGraphModel { get; set; } = default!;
 
     public List<SelectListItem> ExpirationPeriodOptions

@@ -4,14 +4,17 @@ using Warp.WebApp.Models;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Entries;
+using Warp.WebApp.Services.Infrastructure;
 
 namespace Warp.WebApp.Pages;
 
 public class PreviewModel : BasePageModel
 {
-    public PreviewModel(ILoggerFactory loggerFactory, IEntryPresentationService entryPresentationService) : base(loggerFactory)
+    public PreviewModel(ILoggerFactory loggerFactory, IEntryPresentationService entryPresentationService, IUrlService urlService)
+        : base(loggerFactory)
     {
         _entryPresentationService = entryPresentationService;
+        _urlService = urlService;
     }
 
 
@@ -32,8 +35,8 @@ public class PreviewModel : BasePageModel
             
             foreach (var imageId in entryInfo.ImageIds)
             {
-                var imageContainer = new ImageContainerModel(imageId);
-                ImageContainers.Add(imageContainer);
+                var url = _urlService.GetImageUrl(id, in imageId);
+                ImageContainers.Add(new ReadOnlyImageContainerModel(url));
             }
         }
     }
@@ -50,9 +53,10 @@ public class PreviewModel : BasePageModel
 
     public long ExpiresIn { get; set; }
     public string Id { get; set; } = default!;
-    public List<ImageContainerModel> ImageContainers { get; set; } = [];
+    public List<ReadOnlyImageContainerModel> ImageContainers { get; set; } = [];
     public string TextContent { get; set; } = string.Empty;
 
     
     private readonly IEntryPresentationService _entryPresentationService;
+    private readonly IUrlService _urlService;
 }

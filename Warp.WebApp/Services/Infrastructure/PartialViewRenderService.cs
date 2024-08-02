@@ -4,13 +4,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
 using Warp.WebApp.Extensions.Logging;
 
-namespace Warp.WebApp.Helpers;
+namespace Warp.WebApp.Services.Infrastructure;
 
-public class PartialViewRenderHelper
+public class PartialViewRenderService : IPartialViewRenderService
 {
-    public PartialViewRenderHelper(ILoggerFactory loggerFactory, ITempDataDictionaryFactory tempDataDictionaryFactory, ICompositeViewEngine viewEngine)
+    public PartialViewRenderService(ILoggerFactory loggerFactory, ITempDataDictionaryFactory tempDataDictionaryFactory, ICompositeViewEngine viewEngine)
     {
-        _logger = loggerFactory.CreateLogger<PartialViewRenderHelper>();
+        _logger = loggerFactory.CreateLogger<PartialViewRenderService>();
 
         _tempDataDictionaryFactory = tempDataDictionaryFactory;
         _viewEngine = viewEngine;
@@ -41,19 +41,18 @@ public class PartialViewRenderHelper
 
     private ViewEngineResult GetViewEngineResult(ControllerContext controllerContext, string viewName)
     {
-        try
-        {
-            return _viewEngine.FindView(controllerContext, viewName, false);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogPartialViewNotFound(viewName, ex.Message);
-            throw;
-        }
+        var viewResult = _viewEngine.FindView(controllerContext, viewName, false);
+        if (viewResult.Success)
+            return viewResult;
+
+        var ex = new InvalidOperationException($"Partial view '{viewName}' not found.");
+        _logger.LogPartialViewNotFound(viewName, ex.Message);
+
+        throw ex;
     }
 
 
-    private readonly ILogger<PartialViewRenderHelper> _logger;
+    private readonly ILogger<PartialViewRenderService> _logger;
     private readonly ITempDataDictionaryFactory _tempDataDictionaryFactory;
     private readonly ICompositeViewEngine _viewEngine;
 }

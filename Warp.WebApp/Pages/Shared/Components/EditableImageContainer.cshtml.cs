@@ -2,16 +2,16 @@
 
 namespace Warp.WebApp.Pages.Shared.Components;
 
-public class ImageContainerModel : PageModel
+public class EditableImageContainerModel : PageModel
 {
-    public ImageContainerModel(Guid imageId, bool isEditable = false)
+    public EditableImageContainerModel(Guid imageId, bool isEditable = false)
     {
         ImageId = imageId;
         IsEditable = isEditable;
     }
 
 
-    public static ImageContainerModel Empty
+    public static EditableImageContainerModel Empty
         => new(Guid.Empty);
 
 

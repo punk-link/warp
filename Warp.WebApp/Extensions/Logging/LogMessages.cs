@@ -38,4 +38,10 @@ internal static partial class LogMessages
 
     [LoggerMessage(LoggingConstants.PartialViewRenderingError, LogLevel.Critical, "Error rendering partial view '{PartialViewName}' - '{ErrorMessage}'.")]
     public static partial void LogPartialViewRenderingError(this ILogger logger, string partialViewName, string errorMessage);
+
+    [LoggerMessage(LoggingConstants.ActionContextNotFound, LogLevel.Critical, "Action context not found while trying to build an image URL from a Razor page.")]
+    public static partial void LogActionContextNotFound(this ILogger logger);
+
+    [LoggerMessage(LoggingConstants.ImageControllerGetMethodNotFound, LogLevel.Critical, "Get image controller's method not found.")]
+    public static partial void LogImageControllerGetMethodNotFound(this ILogger logger);
 }
