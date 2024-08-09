@@ -4,16 +4,17 @@ using Warp.WebApp.Models;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Entries;
-using Warp.WebApp.Services.Images;
+using Warp.WebApp.Services.Infrastructure;
 
 namespace Warp.WebApp.Pages;
 
 public class EntryModel : BasePageModel
 {
-    public EntryModel(ILoggerFactory loggerFactory, IEntryPresentationService entryPresentationService)
+    public EntryModel(ILoggerFactory loggerFactory, IEntryPresentationService entryPresentationService, IUrlService urlService)
         : base(loggerFactory)
     {
         _entryPresentationService = entryPresentationService;
+        _urlService = urlService;
     }
 
 
@@ -34,13 +35,22 @@ public class EntryModel : BasePageModel
             TextContent = entryInfo.Entry.Content;
             Description = entryInfo.Entry.Description;
             ViewCount = entryInfo.ViewCount;
-            ImageUrls = ImageService.BuildImageUrls(entryInfo.Entry.Id, entryInfo.ImageIds);
+
+            foreach (var imageId in entryInfo.ImageIds)
+            {
+                var url = _urlService.GetImageUrl(id, in imageId);
+                ImageContainers.Add(new ReadOnlyImageContainerModel(url));
+            }
         }
 
-
+        // TODO: move closer to the initialization of the model
         void AddOpenGraphModel()
         {
-            OpenGraphModel = OpenGraphService.GetModel(TextContent, ImageUrls);
+            if (ImageContainers.Count == 0)
+                return;
+
+            var imageUrls = ImageContainers.Select(x => x.ImageUrl).ToList();
+            OpenGraphModel = OpenGraphService.GetModel(TextContent, imageUrls);
         }
     }
 
@@ -50,11 +60,12 @@ public class EntryModel : BasePageModel
 
     public long ExpiresIn { get; set; }
     public string Id { get; set; } = default!;
-    public List<string> ImageUrls { get; set; } = [];
+    public List<ReadOnlyImageContainerModel> ImageContainers { get; set; } = [];
     public string TextContent { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public long ViewCount { get; set; } = 1;
 
 
     private readonly IEntryPresentationService _entryPresentationService;
+    private readonly IUrlService _urlService;
 }

@@ -46,6 +46,12 @@
                 </div>
             </div>
             <article class="my-5">
+                <div class="d-flex flex-row flex-wrap upload-gallery">
+                    @foreach (var imageContainer in Model.ImageContainers)
+                    {
+                        <partial name="Shared/Components/ReadOnlyImageContainer" model="imageContainer" />
+                    }
+                </div>
                 @Html.Raw(Model.TextContent)
             </article>
         </div>

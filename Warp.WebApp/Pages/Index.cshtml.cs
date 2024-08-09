@@ -64,7 +64,7 @@ public class IndexModel : BasePageModel
 
         void AddOpenGraphModel()
         {
-            OpenGraphModel = OpenGraphService.GetModel(TextContent);
+            OpenGraphModel = OpenGraphService.GetModel(TextContent, []);
         }
     }
 

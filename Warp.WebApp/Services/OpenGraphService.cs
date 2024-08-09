@@ -7,10 +7,10 @@ namespace Warp.WebApp.Services;
 public static partial class OpenGraphService
 {
     public static OpenGraphModel GetDefaultModel(string defaultDescription)
-        => GetModel(defaultDescription);
+        => GetModel(defaultDescription, Enumerable.Empty<Uri>().ToList());
 
 
-    public static OpenGraphModel GetModel(string description, List<string>? urls = null)
+    public static OpenGraphModel GetModel(string description, List<Uri> urls)
     {
         var processedUrl = GetImageUrl(urls);
 
@@ -51,12 +51,13 @@ public static partial class OpenGraphService
     }
 
 
-    private static string GetImageUrl(List<string>? urls)
+    private static string GetImageUrl(List<Uri> urls)
     {
-        if (urls is null || urls.Count == 0)
+        if (urls.Count == 0)
             return DefaultImageUrl;
 
-        return urls.First();
+        // TODO: check if the url is not a relative path
+        return urls.First().ToString();
     }
 
 
