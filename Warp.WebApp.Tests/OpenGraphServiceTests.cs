@@ -1,29 +1,48 @@
+using Microsoft.Extensions.Localization;
+using NSubstitute;
+using Warp.WebApp.Models;
+using Warp.WebApp.Models.Entries;
+using Warp.WebApp.Models.Entries.Enums;
 using Warp.WebApp.Services;
 
 namespace Warp.WebApp.Tests;
 
 public class OpenGraphServiceTests
 {
-    [Fact]
-    public void GetDefaultModel_ReturnsDefaultModel()
+    public OpenGraphServiceTests()
     {
-        var result = OpenGraphService.GetDefaultModel(_description);
+        var localizerMock = Substitute.For<IStringLocalizer<ServerResources>>();
 
-        Assert.NotNull(result);
-        Assert.NotEmpty(result.Title);
-        Assert.NotEmpty(result.ImageUrl);
+        localizerMock["DefaultOpenGraphDescriptionText"].Returns(new LocalizedString("DefaultOpenGraphDescriptionText", DefaultDescription));
+
+        _localizer = localizerMock;
     }
 
 
     [Fact]
-    public void GetModel_WithDescription_ReturnsModelWithProcessedDescription()
+    public void GetDefaultDescription_ReturnsDefaultDescription()
     {
-        var result = OpenGraphService.GetModel(_description);
+        var service = new OpenGraphService(_localizer);
+        
+        var result = service.GetDefaultDescription();
 
-        Assert.NotNull(result);
         Assert.NotEmpty(result.Title);
-        Assert.Equal(_description, result.Description);
-        Assert.NotEmpty(result.ImageUrl);
+        Assert.Equal(DefaultDescription, result.Description);
+        Assert.NotNull(result.ImageUrl);
+    }
+
+
+    [Fact]
+    public void BuildDescription_WithDescription_ReturnsProcessedDescription()
+    {
+        var service = new OpenGraphService(_localizer);
+        var entry = new Entry(Guid.NewGuid(), Description, DateTime.Now, DateTime.Now, EditMode.Unknown, [], EntryOpenGraphDescription.Empty);
+        
+        var result = service.BuildDescription(entry);
+
+        Assert.NotEmpty(result.Title);
+        Assert.Equal(Description, result.Description);
+        Assert.NotNull(result.ImageUrl);
     }
 
 
@@ -31,38 +50,45 @@ public class OpenGraphServiceTests
     [InlineData("This is a very long description that exceeds the maximum length allowed. It should be trimmed and end with ellipsis. very long description that exceeds the maximum length allowed. It should be trimmed and end with ellipsis.", "This is a very long description that exceeds the maximum length allowed. It should be trimmed and end with ellipsis. very long description that exceeds the maximum length allowed.")]
     [InlineData("This is a very long description that exceeds the maximum length allowed, it should be trimmed and end with ellipsis, very long description that exceeds the maximum length allowed, it should be trimmed.", "This is a very long description that exceeds the maximum length allowed, it should be trimmed and end with ellipsis, very long description that exceeds the maximum length allowed, it should be...")]
     [InlineData("This is a very long description that exceeds the maximum length allowed, it should be trimmed and end with ellipsis, very long description that exceeds the maximum length allowed, it should be trimmed and end with ellipsis.", "This is a very long description that exceeds the maximum length allowed, it should be trimmed and end with ellipsis, very long description that exceeds the maximum length allowed, it should be...")]
-    public void GetModel_WithLongDescription_ReturnsModelWithProcessedDescription(string description, string expected)
+    public void BuildDescription_WithLongDescription_ReturnsProcessedDescription(string description, string expected)
     {
-        var result = OpenGraphService.GetModel(OpenGraphService.GetDescription(description));
+        var service = new OpenGraphService(_localizer);
+        var entry = new Entry(Guid.NewGuid(), description, DateTime.Now, DateTime.Now, EditMode.Unknown, [], EntryOpenGraphDescription.Empty);
+        
+        var result = service.BuildDescription(entry);
 
-        Assert.NotNull(result);
         Assert.Equal(expected, result.Description);
     }
 
 
     [Fact]
-    public void GetModel_WithUrls_ReturnsModelWithProcessedUrl()
+    public void BuildDescription_WithUrls_ReturnsModelWithProcessedUrl()
     {
-        var urls = new List<string> { "https://example.com/image.jpg" };
+        var urls = new List<Uri> { new("https://example.com/image.jpg") };
+        var service = new OpenGraphService(_localizer);
+        var entry = new Entry(Guid.NewGuid(), Description, DateTime.Now, DateTime.Now, EditMode.Unknown, urls, EntryOpenGraphDescription.Empty);
+        
+        var result = service.BuildDescription(entry);
 
-        var result = OpenGraphService.GetModel(_description, urls);
-
-        Assert.NotNull(result);
         Assert.Equal(urls[0], result.ImageUrl);
     }
 
 
     [Fact]
-    public void GetModel_WithEmptyUrls_ReturnsModelWithDefaultImageUrl()
+    public void BuildDescription_WithEmptyUrls_ReturnsModelWithDefaultImageUrl()
     {
-        var urls = new List<string>();
+        var urls = new List<Uri>();
+        var service = new OpenGraphService(_localizer);
+        var entry = new Entry(Guid.NewGuid(), Description, DateTime.Now, DateTime.Now, EditMode.Unknown, urls, EntryOpenGraphDescription.Empty);
+        
+        var result = service.BuildDescription(entry);
 
-        var result = OpenGraphService.GetModel(_description, urls);
-
-        Assert.NotNull(result);
-        Assert.NotEmpty(result.ImageUrl);
+        Assert.NotNull(result.ImageUrl);
     }
 
 
-    private const string _description = "This is a test description.";
+    private const string DefaultDescription = "DefaultOpenGraphDescriptionText";
+    private const string Description = "This is a test description.";
+
+    private readonly IStringLocalizer<ServerResources> _localizer;
 }
