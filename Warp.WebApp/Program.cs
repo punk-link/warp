@@ -11,6 +11,7 @@ using Warp.WebApp.Helpers.HealthChecks;
 using Warp.WebApp.Helpers.Warmups;
 using Warp.WebApp.Middlewares;
 using Warp.WebApp.Models.Options;
+using Warp.WebApp.Services;
 using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
@@ -112,6 +113,7 @@ IServiceCollection AddServices(IServiceCollection services)
     services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
     services.AddTransient<IPartialViewRenderService, PartialViewRenderService>();
     services.AddTransient<IUrlService, UrlService>();
+    services.AddTransient<IOpenGraphService, OpenGraphService>();
 
     services.AddSingleton<IImageService, ImageService>();
     services.AddSingleton<IDistributedStorage, KeyDbStorage>();

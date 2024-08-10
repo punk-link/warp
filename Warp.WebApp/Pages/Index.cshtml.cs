@@ -17,13 +17,13 @@ namespace Warp.WebApp.Pages;
 public class IndexModel : BasePageModel
 {
     public IndexModel(IOptionsSnapshot<AnalyticsOptions> analyticsOptions, ILoggerFactory loggerFactory, IStringLocalizer<IndexModel> localizer,
-        IStringLocalizer<ServerResources> serverLocalizer, IEntryPresentationService entryPresentationService)
+        IOpenGraphService openGraphService, IEntryPresentationService entryPresentationService)
         : base(loggerFactory)
     {
         _analyticsOptions = analyticsOptions.Value;
         _entryPresentationService = entryPresentationService;
         _localizer = localizer;
-        _serverLocalizer = serverLocalizer;
+        _openGraphService = openGraphService;
     }
 
 
@@ -34,20 +34,23 @@ public class IndexModel : BasePageModel
 
         if (string.IsNullOrEmpty(id))
         {
-            OpenGraphModel = OpenGraphService.GetDefaultModel(_serverLocalizer["DefaultOpenGraphDescriptionText"]);
+            var openGraphDescription = _openGraphService.GetDefaultDescription();
+            OpenGraphModel = new OpenGraphModel(openGraphDescription);
+
             ImageContainers.Add(EditableImageContainerModel.Empty);
+            
             return Page();
         }
 
         return await _entryPresentationService.Get(id, HttpContext, cancellationToken)
-            .Tap(BuildModel)
+            .Bind(BuildModel)
             .Tap(AddOpenGraphModel)
             .Finally(result => result.IsSuccess 
                 ? Page() 
                 : RedirectToError(result.Error));
 
 
-        void BuildModel(EntryInfo entryInfo)
+        Result<Entry, ProblemDetails> BuildModel(EntryInfo entryInfo)
         {
             TextContent = TextFormatter.GetCleanString(entryInfo.Entry.Content);
             SelectedExpirationPeriod = GetExpirationPeriodId(entryInfo.Entry.ExpiresAt - entryInfo.Entry.CreatedAt);
@@ -59,13 +62,13 @@ public class IndexModel : BasePageModel
             }
 
             ImageContainers.Add(EditableImageContainerModel.Empty);
+
+            return entryInfo.Entry;
         }
 
 
-        void AddOpenGraphModel()
-        {
-            OpenGraphModel = OpenGraphService.GetModel(TextContent, []);
-        }
+        void AddOpenGraphModel(Entry entry)
+            => OpenGraphModel = new OpenGraphModel(entry.OpenGraphDescription);
     }
 
 
@@ -146,5 +149,5 @@ public class IndexModel : BasePageModel
     private readonly AnalyticsOptions _analyticsOptions;
     private readonly IEntryPresentationService _entryPresentationService;
     private readonly IStringLocalizer<IndexModel> _localizer;
-    private readonly IStringLocalizer<ServerResources> _serverLocalizer;
+    private readonly IOpenGraphService _openGraphService;
 }

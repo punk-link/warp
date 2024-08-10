@@ -2,7 +2,7 @@
 
 <meta property="og:title" content="@Model.Title">
 <meta property="og:description" content="@Model.Description">
-@if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+@if (Model.ImageUrl is not null)
 {
-    <meta property="og:description" content="@Model.ImageUrl">
+    <meta property="og:description" content="@Model.ImageUrl.ToString()">
 }

@@ -4,17 +4,15 @@ using Warp.WebApp.Models;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Entries;
-using Warp.WebApp.Services.Infrastructure;
 
 namespace Warp.WebApp.Pages;
 
 public class PreviewModel : BasePageModel
 {
-    public PreviewModel(ILoggerFactory loggerFactory, IEntryPresentationService entryPresentationService, IUrlService urlService)
+    public PreviewModel(ILoggerFactory loggerFactory, IEntryPresentationService entryPresentationService)
         : base(loggerFactory)
     {
         _entryPresentationService = entryPresentationService;
-        _urlService = urlService;
     }
 
 
@@ -33,11 +31,8 @@ public class PreviewModel : BasePageModel
             ExpiresIn = new DateTimeOffset(entryInfo.Entry.ExpiresAt).ToUnixTimeMilliseconds();
             TextContent = entryInfo.Entry.Content;
             
-            foreach (var imageId in entryInfo.ImageIds)
-            {
-                var url = _urlService.GetImageUrl(id, in imageId);
-                ImageContainers.Add(new ReadOnlyImageContainerModel(url));
-            }
+            foreach (var imageUrl in entryInfo.Entry.ImageUrls)
+                ImageContainers.Add(new ReadOnlyImageContainerModel(imageUrl));
         }
     }
 
@@ -58,5 +53,4 @@ public class PreviewModel : BasePageModel
 
     
     private readonly IEntryPresentationService _entryPresentationService;
-    private readonly IUrlService _urlService;
 }

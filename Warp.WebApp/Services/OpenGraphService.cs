@@ -1,29 +1,41 @@
-﻿using System.Net;
+﻿using Microsoft.Extensions.Localization;
+using System.Net;
 using System.Text.RegularExpressions;
-using Warp.WebApp.Pages.Shared.Components;
+using Warp.WebApp.Models;
+using Warp.WebApp.Models.Entries;
 
 namespace Warp.WebApp.Services;
 
-public static partial class OpenGraphService
+public partial class OpenGraphService : IOpenGraphService
 {
-    public static OpenGraphModel GetDefaultModel(string defaultDescription)
-        => GetModel(defaultDescription, Enumerable.Empty<Uri>().ToList());
-
-
-    public static OpenGraphModel GetModel(string description, List<Uri> urls)
+    public OpenGraphService(IStringLocalizer<ServerResources> localizer)
     {
-        var processedUrl = GetImageUrl(urls);
-
-        return new OpenGraphModel(Title, description, processedUrl);
+        _localizer = localizer;
     }
 
 
-    public static string GetDescription(string description)
+    public EntryOpenGraphDescription BuildDescription(Entry entry)
+    {
+        var description = GetDescription(entry.Content);
+        var previewImageUrl = GetImageUrl(entry.ImageUrls);
+
+        return new EntryOpenGraphDescription(Title, description, previewImageUrl);
+    }
+
+
+    public EntryOpenGraphDescription GetDefaultDescription()
+    {
+        var description = GetDescription(string.Empty);
+        return new EntryOpenGraphDescription(Title, description, _defaultImageUrl);
+    }
+
+
+    private string GetDescription(string description)
     {
         const int maxDescriptionLength = 200;
 
         if (string.IsNullOrWhiteSpace(description))
-            return description;
+            return _localizer["DefaultOpenGraphDescriptionText"];
 
         var decodedDescription = WebUtility.HtmlDecode(description);
         var descriptionWithoutTags = HtmlTagsExpression().Replace(maxDescriptionLength <= decodedDescription.Length
@@ -51,20 +63,23 @@ public static partial class OpenGraphService
     }
 
 
-    private static string GetImageUrl(List<Uri> urls)
+    private static Uri GetImageUrl(List<Uri> urls)
     {
         if (urls.Count == 0)
-            return DefaultImageUrl;
+            return _defaultImageUrl;
 
         // TODO: check if the url is not a relative path
-        return urls.First().ToString();
+        return urls.First();
     }
 
 
-    private const string DefaultImageUrl = "https://warp.punk.link/favicon.ico";
+    private static readonly Uri _defaultImageUrl = new ("https://warp.punk.link/favicon.ico");
     private const string Title = "Warp";
 
 
     [GeneratedRegex("<.*?>")]
     private static partial Regex HtmlTagsExpression();
+
+
+    private readonly IStringLocalizer<ServerResources> _localizer;
 }

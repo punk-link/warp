@@ -1,14 +1,15 @@
 ﻿using Microsoft.AspNetCore.Mvc.RazorPages;
+using Warp.WebApp.Models.Entries;
 
 namespace Warp.WebApp.Pages.Shared.Components;
 
 public class OpenGraphModel : PageModel
 {
-    public OpenGraphModel(string title, string description, string imageUrl)
+    public OpenGraphModel(EntryOpenGraphDescription openGraphDescription)
     {
-        Description = description;
-        ImageUrl = imageUrl;
-        Title = title;
+        Description = openGraphDescription.Description;
+        ImageUrl = openGraphDescription.ImageUrl;
+        Title = openGraphDescription.Title;
     }
 
 
@@ -19,5 +20,5 @@ public class OpenGraphModel : PageModel
 
     public string Title { get; init; }
     public string Description { get; init; }
-    public string ImageUrl { get; init; }
+    public Uri? ImageUrl { get; init; }
 }
