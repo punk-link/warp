@@ -16,6 +16,10 @@ public static class LoggingConstants
 
     // Infrastructure
     public const int DefaultCacheValueError = 12_001;
+    public const int PartialViewNotFound = 12_101;
+    public const int PartialViewRenderingError = 12_102;
+    public const int ActionContextNotFound = 12_103;
+    public const int ImageControllerGetMethodNotFound = 12_104;
 
     // Domain
     public const int WarpContentEmpty = 20_001;

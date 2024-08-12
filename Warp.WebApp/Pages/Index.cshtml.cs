@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
 using Warp.WebApp.Models;
+using Warp.WebApp.Models.Entries.Enums;
 using Warp.WebApp.Models.Options;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
@@ -16,13 +17,13 @@ namespace Warp.WebApp.Pages;
 public class IndexModel : BasePageModel
 {
     public IndexModel(IOptionsSnapshot<AnalyticsOptions> analyticsOptions, ILoggerFactory loggerFactory, IStringLocalizer<IndexModel> localizer,
-        IStringLocalizer<ServerResources> serverLocalizer, IEntryPresentationService entryPresentationService)
+        IOpenGraphService openGraphService, IEntryPresentationService entryPresentationService)
         : base(loggerFactory)
     {
         _analyticsOptions = analyticsOptions.Value;
         _entryPresentationService = entryPresentationService;
         _localizer = localizer;
-        _serverLocalizer = serverLocalizer;
+        _openGraphService = openGraphService;
     }
 
 
@@ -33,37 +34,50 @@ public class IndexModel : BasePageModel
 
         if (string.IsNullOrEmpty(id))
         {
-            OpenGraphModel = OpenGraphService.GetDefaultModel(_serverLocalizer["DefaultOpenGraphDescriptionText"]);
+            var openGraphDescription = _openGraphService.GetDefaultDescription();
+            OpenGraphModel = new OpenGraphModel(openGraphDescription);
+
+            ImageContainers.Add(EditableImageContainerModel.Empty);
+            
             return Page();
         }
 
         return await _entryPresentationService.Get(id, HttpContext, cancellationToken)
-            .Tap(BuildModel)
+            .Bind(BuildModel)
             .Tap(AddOpenGraphModel)
             .Finally(result => result.IsSuccess 
                 ? Page() 
                 : RedirectToError(result.Error));
 
 
-        void BuildModel(EntryInfo entryInfo)
+        Result<Entry, ProblemDetails> BuildModel(EntryInfo entryInfo)
         {
             TextContent = TextFormatter.GetCleanString(entryInfo.Entry.Content);
-            ImageIds = entryInfo.ImageIds;
             SelectedExpirationPeriod = GetExpirationPeriodId(entryInfo.Entry.ExpiresAt - entryInfo.Entry.CreatedAt);
+
+            foreach (var imageId in entryInfo.ImageIds)
+            {
+                var imageContainer = new EditableImageContainerModel(imageId);
+                ImageContainers.Add(imageContainer);
+            }
+
+            ImageContainers.Add(EditableImageContainerModel.Empty);
+
+            return entryInfo.Entry;
         }
 
 
-        void AddOpenGraphModel()
-        {
-            OpenGraphModel = OpenGraphService.GetModel(TextContent);
-        }
+        void AddOpenGraphModel(Entry entry)
+            => OpenGraphModel = new OpenGraphModel(entry.OpenGraphDescription);
     }
 
 
     public async Task<IActionResult> OnPost(CancellationToken cancellationToken)
     {
         var expiresIn = GetExpirationPeriod(SelectedExpirationPeriod);
-        var request = new EntryRequest { TextContent = TextContent, ExpiresIn = expiresIn, ImageIds = ImageIds };
+        var decodedImageIds = ImageIds.Select(IdCoder.Decode).ToList();
+
+        var request = new EntryRequest { TextContent = TextContent, ExpiresIn = expiresIn, ImageIds = decodedImageIds, EditMode = EditMode };
 
         var result = await _entryPresentationService.Add(request, HttpContext, cancellationToken);
         if (result.IsFailure)
@@ -106,7 +120,10 @@ public class IndexModel : BasePageModel
 
 
     [BindProperty]
-    public List<Guid> ImageIds { get; set; } = [];
+    public EditMode EditMode { get; set; }
+
+    [BindProperty]
+    public List<string> ImageIds { get; set; } = [];
 
     [BindProperty]
     public int SelectedExpirationPeriod { get; set; }
@@ -115,6 +132,7 @@ public class IndexModel : BasePageModel
     public string TextContent { get; set; } = string.Empty;
 
     public AnalyticsModel AnalyticsModel { get; set; } = default!;
+    public List<EditableImageContainerModel> ImageContainers { get; set; } = [];
     public OpenGraphModel OpenGraphModel { get; set; } = default!;
 
     public List<SelectListItem> ExpirationPeriodOptions
@@ -131,5 +149,5 @@ public class IndexModel : BasePageModel
     private readonly AnalyticsOptions _analyticsOptions;
     private readonly IEntryPresentationService _entryPresentationService;
     private readonly IStringLocalizer<IndexModel> _localizer;
-    private readonly IStringLocalizer<ServerResources> _serverLocalizer;
+    private readonly IOpenGraphService _openGraphService;
 }

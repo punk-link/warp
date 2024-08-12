@@ -1,6 +1,10 @@
-import { addDropAreaEvents, pasteImages } from './modules/image-processor.js';
+import { eventNames } from'/js/events/events.js';
 import { repositionBackgroundImage } from '/js/functions/image-positioner.js';
-    
+import { addDropAreaEvents, pasteImages } from './modules/image-processor.js';
+
+
+const EditMode = { Advanced: 2, Text: 1 };
+
 
 function addPasteImageEventListener() {
     document.body.addEventListener('keydown', async function (e) {
@@ -10,20 +14,62 @@ function addPasteImageEventListener() {
 }
 
 
-function disableCreateButton(sendButton) {
-    sendButton.disabled = true;
+function addEntryContainerEvents(advancedModeButton, textModeButton) {
+    let advancedModeContainer = document.getElementById('advanced-mode');
+    let textModeContainer = document.getElementById('text-mode');
+
+    addShowEntryContainerEvent(advancedModeButton, textModeButton, advancedModeContainer, textModeContainer, EditMode.Advanced);
+    addShowEntryContainerEvent(textModeButton, advancedModeButton, textModeContainer, advancedModeContainer, EditMode.Text);
 }
 
 
-function enableCreateButton(sendButton) {
-    sendButton.disabled = false;
+function addShowEntryContainerEvent(displayedButton, hiddenButton, displayedContainer, hiddenContainer, mode) {
+    let editModeInputs = document.getElementsByClassName('edit-mode-state');
+    
+    for (let editModeInput of editModeInputs) {
+        displayedButton.addEventListener('click', () => {
+            hiddenContainer.classList.add('d-none');
+            hiddenButton.classList.remove('active');
+
+            displayedButton.classList.add('active');
+            displayedContainer.classList.remove('d-none');
+
+            editModeInput.value = mode;
+            console.log('edit mode: ' + editModeInput.value);
+        });
+    }
 }
 
 
-function overrideFormSubmitEvent(form, sourceSpan, targetTextbox) {
-    form.addEventListener('submit', function () {
-        targetTextbox.value = sourceSpan.innerHTML;
-    });
+function addCreateButtonEvents(advancedModeButton, textModeButton) {
+    let advancedModeTextarea = document.getElementById('warp-advanced');
+    let textModeTextarea = document.getElementById('warp-text');
+    
+    let createButtons = document.getElementsByClassName('create-button');
+    for (let createButton of createButtons) {
+        if (advancedModeTextarea.value !== '' && textModeTextarea.value !== '') 
+        createButton.disabled = false;
+
+        toggleCreateButtonState(createButton, advancedModeButton, advancedModeTextarea);
+        toggleCreateButtonState(createButton, textModeButton, textModeTextarea);
+
+        document.addEventListener(eventNames.uploadFinished, () => {
+                createButton.disabled = false;
+            });
+    }
+}
+
+
+function toggleCreateButtonState(createButton, targetModeButton, targetTextarea) {
+    targetTextarea.addEventListener('input', () => {
+            if (!targetModeButton.classList.contains('active'))
+                return;
+
+            if (targetTextarea.value === '') 
+                createButton.disabled = true;
+            else 
+                createButton.disabled = false;
+        }, false);
 }
 
 
@@ -31,33 +77,16 @@ export function addIndexEvents() {
     let backgroundImageContainer = document.getElementById('roaming-image');
     repositionBackgroundImage(backgroundImageContainer);
 
-    let textModeButton = document.getElementById('warp-text');
-    textModeButton.classList.add('active');
+    let advancedModeButton = document.getElementById('mode-advanced');
+    let textModeButton = document.getElementById('mode-text');
 
-    let textModeTextarea = document.getElementById('warp-text');
-    let sendButton = document.getElementById('create-button');
-    if (textModeTextarea.value !== '') {
-        sendButton.disabled = false;
-    }
+    addEntryContainerEvents(advancedModeButton, textModeButton);
+    addCreateButtonEvents(advancedModeButton, textModeButton);    
 
-    textModeTextarea.addEventListener('input', () => {
-        if (textModeTextarea.value === '') {
-            disableCreateButton(sendButton);
-        } else {
-            enableCreateButton(sendButton);
-        }
-    }, false);
-
-    //addPasteImageEventListener();
-
-    //let dropArea = document.getElementsByClassName('drop-area')[0];
-    //let fileInput = document.getElementById('file');
-    //let uploadButton = document.getElementById('upload-button');
-    //addDropAreaEvents(dropArea, fileInput, uploadButton);
-
-    //let warpContentTextarea = document.getElementById('warp-content-textarea');
-    //let warpContentForm = document.getElementsByTagName('form')[0];
-    //let warpContentSpan = document.getElementById('warp-content-textarea-span');
+    let dropArea = document.getElementsByClassName('drop-area')[0];
+    let fileInput = document.getElementById('file');
+    let uploadButton = document.getElementById('empty-image-container');
     
-    //overrideFormSubmitEvent(warpContentForm, warpContentSpan, warpContentTextarea);
+    addDropAreaEvents(dropArea, fileInput, uploadButton);
+    addPasteImageEventListener();
 }

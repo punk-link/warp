@@ -1,0 +1,24 @@
+﻿@using Microsoft.Extensions.Localization
+@using Warp.WebApp.Services
+@inject IStringLocalizer<SharedResources> SharedLocalizer
+@model EditableImageContainerModel
+
+@if (Model.ImageId == Guid.Empty)
+{
+    <div id="empty-image-container" class="image-container d-flex align-items-center justify-content-center">
+        <i class="icofont-plus text-lighter fs-1"></i>
+    </div>
+}
+else if (Model.IsEditable)
+{
+    <div id="image-container-@IdCoder.Encode(Model.ImageId)" class="image-container me-3 mb-3">
+        <img src="">
+        <input type="hidden" name="ImageIds" value="@IdCoder.Encode(Model.ImageId)" />
+        <div class="d-flex justify-content-center delete-image-icon-container">
+            <a href="javascript:void(0);" class="bg-white border-radius-pill d-flex justify-content-center align-items-center delete-image-button"
+               data-target="@Model.ImageId" type="button" title="@SharedLocalizer["DeleteButton"]">
+                <i class="icofont-bin text-light"></i>
+            </a>
+        </div>
+    </div>
+}

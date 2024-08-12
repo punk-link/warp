@@ -31,11 +31,12 @@ public class ImageService : IImageService
     }
 
 
-    public async Task Attach(Guid entryId, TimeSpan relativeExpirationTime, List<Guid> imageIds, CancellationToken cancellationToken)
+    public async Task<List<Guid>> Attach(Guid entryId, TimeSpan relativeExpirationTime, List<Guid> imageIds, CancellationToken cancellationToken)
     {
         if (imageIds.Count == 0)
-            return;
+            return Enumerable.Empty<Guid>().ToList();
 
+        // TODO: try to use a Redis set instead of a list
         var imageInfos = new List<ImageInfo>(imageIds.Count);
         foreach (var imageId in imageIds)
         {
@@ -53,6 +54,8 @@ public class ImageService : IImageService
             var entryCacheKey = CacheKeyBuilder.BuildImageInfoCacheKey(imageInfo.Id);
             await _dataStorage.Remove<List<ImageInfo>>(entryCacheKey, cancellationToken);
         }
+
+        return imageInfos.Select(x => x.Id).ToList();
     }
 
 

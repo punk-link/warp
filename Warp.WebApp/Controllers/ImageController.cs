@@ -1,9 +1,13 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.Extensions.Localization;
+using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Images;
+using Warp.WebApp.Services.Infrastructure;
 
 namespace Warp.WebApp.Controllers;
 
@@ -11,9 +15,11 @@ namespace Warp.WebApp.Controllers;
 [Route("/api/images")]
 public sealed class ImageController : BaseController
 {
-    public ImageController(IStringLocalizer<ServerResources> localizer, IImageService imageService) : base(localizer)
+    public ImageController(IStringLocalizer<ServerResources> localizer, IImageService imageService, IPartialViewRenderService partialViewRenderHelper) 
+        : base(localizer)
     {
         _imageService = imageService;
+        _partialViewRenderHelper = partialViewRenderHelper;
     }
 
 
@@ -41,12 +47,34 @@ public sealed class ImageController : BaseController
     public async Task<IActionResult> Upload([FromForm] List<IFormFile> images, CancellationToken cancellationToken = default)
     {
         var imageContainers = await _imageService.Add(images, cancellationToken);
-        var results = imageContainers.Select(x => new KeyValuePair<string, string>(x.Key, IdCoder.Encode(x.Value)))
-            .ToList();
+        return Ok(await BuildUploadResults(imageContainers));
+    }
 
-        return Ok(results);
+
+    private async Task<Dictionary<string, string>> BuildUploadResults(Dictionary<string, Guid> imageContainers)
+    {
+        var uploadResults = new Dictionary<string, string>(imageContainers.Count);
+
+        foreach (var container in imageContainers)
+        {
+            var partialView = new PartialViewResult
+            {
+                
+                ViewName = "Components/EditableImageContainer",
+                ViewData = new ViewDataDictionary(new EmptyModelMetadataProvider(), new ModelStateDictionary())
+                {
+                    Model = new EditableImageContainerModel(container.Value, isEditable: true)
+                }
+            };
+
+            var html = await _partialViewRenderHelper.Render(ControllerContext, HttpContext, partialView);
+            uploadResults.Add(container.Key, html);
+        }
+
+        return uploadResults;
     }
 
 
     private readonly IImageService _imageService;
+    private readonly IPartialViewRenderService _partialViewRenderHelper;
 }

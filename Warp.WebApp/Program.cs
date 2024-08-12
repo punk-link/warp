@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Localization;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.ResponseCompression;
 using System.Globalization;
@@ -10,9 +11,11 @@ using Warp.WebApp.Helpers.HealthChecks;
 using Warp.WebApp.Helpers.Warmups;
 using Warp.WebApp.Middlewares;
 using Warp.WebApp.Models.Options;
+using Warp.WebApp.Services;
 using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
+using Warp.WebApp.Services.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -106,6 +109,11 @@ IServiceCollection AddOptions(IServiceCollection services, IConfiguration config
 IServiceCollection AddServices(IServiceCollection services)
 {
     services.AddSingleton(services);
+
+    services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
+    services.AddTransient<IPartialViewRenderService, PartialViewRenderService>();
+    services.AddTransient<IUrlService, UrlService>();
+    services.AddTransient<IOpenGraphService, OpenGraphService>();
 
     services.AddSingleton<IImageService, ImageService>();
     services.AddSingleton<IDistributedStorage, KeyDbStorage>();

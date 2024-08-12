@@ -1,8 +1,11 @@
-﻿namespace Warp.WebApp.Models;
+﻿using Warp.WebApp.Models.Entries.Enums;
+
+namespace Warp.WebApp.Models;
 
 public readonly record struct EntryRequest
 {
-    public string TextContent { get; init; }
+    public EditMode EditMode { get; init; }
     public TimeSpan ExpiresIn { get; init; }
     public List<Guid> ImageIds { get; init; }
+    public string TextContent { get; init; }
 }

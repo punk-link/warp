@@ -1,6 +1,7 @@
 ﻿@page 
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using Microsoft.Extensions.Localization
+@using Warp.WebApp.Models.Entries.Enums
 @model IndexModel
 @inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
 @inject IStringLocalizer<SharedResources> SharedLocalizer
@@ -38,41 +39,88 @@
             </h1>
         </div>
         <div class="col-6 d-flex justify-content-end">
-            <button id="mode-text" class="nav nav-tab active" tabindex="1">
+            <button id="mode-text" class="nav nav-tab" tabindex="1">
                 @Localizer["TextModeButton"]
             </button>
-            <button id="mode-advanced" class="nav nav-tab" tabindex="2" disabled>
+            <button id="mode-advanced" class="nav nav-tab active" tabindex="2">
                 @Localizer["AdvancedModeButton"]
             </button>
         </div>
     </div>
 
     <section class="px-3 my-5">
-        <form class="d-flex flex-column align-items-center justify-content-around min-vh-75" method="post">
-            <div id="text-mode" class="col-12 col-md-6 mb-5">
-                <div class="d-flex flex-column">
-                    <textarea id="warp-text" class="order-2" asp-for="TextContent" placeholder=" "></textarea>
-                    <label class="order-1 ps-0" for="warp-text">@Localizer["TextModeLabel"]</label>
-                </div>
-            </div>
-            <div id="advanced-mode" class="d-none col-12 col-md-6 mb-5"></div>
-            <div class="d-flex justify-content-between col-12 col-md-6 pb-3 sticky-bottom bg-transparent">
-                <div class="bg-white border-radius-sm">
-                    <label asp-for="SelectedExpirationPeriod">@Localizer["ExpirationPeriodLabel"]</label>
-                    <div class="input-group">
-                        <span class="input-group-text primary">
-                            <i class="icofont-close"></i>
-                        </span>
-                        <select asp-for="SelectedExpirationPeriod" asp-items="Model.ExpirationPeriodOptions" tabindex="4"></select>
+        <div id="text-mode" class="d-none">
+            <form method="post">
+                <div class="d-flex flex-column align-items-center justify-content-around min-vh-75">
+                    <div class="col-12 col-md-6 mb-5">
+                        <div class="d-flex flex-column">
+                            <textarea id="warp-text" class="order-2 bg-transparent" asp-for="TextContent" placeholder=" "></textarea>
+                            <label class="order-1 ps-0" for="warp-text">@Localizer["TextAreaLabel"]</label>
+                        </div>
                     </div>
+                    <div class="d-flex justify-content-between col-12 col-md-6 pb-3 sticky-bottom bg-transparent">
+                        <div class="bg-white border-radius-sm">
+                            <label asp-for="SelectedExpirationPeriod">@Localizer["ExpirationPeriodLabel"]</label>
+                            <div class="input-group">
+                                <span class="input-group-text primary">
+                                    <i class="icofont-close"></i>
+                                </span>
+                                <select asp-for="SelectedExpirationPeriod" asp-items="Model.ExpirationPeriodOptions" tabindex="4"></select>
+                            </div>
+                        </div>
+                        <div>
+                            <button class="btn btn-primary create-button" tabindex="5" type="submit" disabled>
+                                @Localizer["CreateButton"]
+                            </button>
+                        </div>
+                    </div>
+                    <input class="edit-mode-state" type="hidden" asp-for="EditMode" value="@EditMode.Text" />
                 </div>
-                <div>
-                    <button id="create-button" class="btn btn-primary" tabindex="5" type="submit" disabled>
-                        @Localizer["CreateButton"]
-                    </button>
+            </form>
+        </div>
+        <div id="advanced-mode">
+            <form method="post">
+                <div class="d-flex flex-column align-items-center justify-content-around min-vh-75">
+                    <div class="col-12 p-2 col-md-6 mb-5 drop-area">
+                        <div class="d-flex flex-column">
+                            <div class="d-flex flex-column mb-5">
+                                <i class="icofont-align-left text-danger fs-2 mb-2"></i>
+                                <label class="ps-0" for="warp-advanced">@Localizer["TextAreaLabel"]</label>
+                                <textarea id="warp-advanced" class="bg-transparent" asp-for="TextContent" placeholder=" "></textarea>
+                            </div>
+                            <div class="d-flex flex-column mb-5">
+                                <i class="icofont-hill-sunny text-danger fs-1 mb-2"></i>
+                                <label class="ps-0 mb-3">@Localizer["ImageAreaLabel"]</label>
+                                <div class="d-flex flex-row flex-wrap upload-gallery">
+                                    @foreach (var imageContainer in Model.ImageContainers)
+                                    {
+                                        <partial name="Shared/Components/EditableImageContainer" model="imageContainer"/>
+                                    }
+                                </div>
+                                <input type="file" id="file" class="file-input d-none" multiple="multiple" accept="image/*">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between col-12 col-md-6 pb-3 sticky-bottom bg-transparent">
+                        <div class="bg-white border-radius-sm">
+                            <label asp-for="SelectedExpirationPeriod">@Localizer["ExpirationPeriodLabel"]</label>
+                            <div class="input-group">
+                                <span class="input-group-text primary">
+                                    <i class="icofont-close"></i>
+                                </span>
+                                <select asp-for="SelectedExpirationPeriod" asp-items="Model.ExpirationPeriodOptions" tabindex="4"></select>
+                            </div>
+                        </div>
+                        <div>
+                            <button class="btn btn-primary create-button" tabindex="5" type="submit" disabled>
+                                @Localizer["CreateButton"]
+                            </button>
+                        </div>
+                    </div>
+                    <input class="edit-mode-state" type="hidden" asp-for="EditMode" value="@EditMode.Advanced"/>
                 </div>
-            </div>
-        </form>
+            </form>
+        </div>
     </section>
 </div>
 

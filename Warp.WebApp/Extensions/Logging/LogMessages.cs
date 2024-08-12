@@ -7,10 +7,10 @@ internal static partial class LogMessages
     [LoggerMessage(LoggingConstants.ServerError, LogLevel.Warning, "An error occurred during the request {RequestId}.")]
     public static partial void LogGenericServerError(this ILogger logger, string? requestId);
 
-    [LoggerMessage(LoggingConstants.ServerErrorWithMessage, LogLevel.Warning, "An error occurred during the request {RequestId}: {ErrorMessage}.")]
+    [LoggerMessage(LoggingConstants.ServerErrorWithMessage, LogLevel.Warning, "An error occurred during the request {RequestId} - '{ErrorMessage}'.")]
     public static partial void LogGenericServerError(this ILogger logger, string? requestId, string errorMessage);
 
-    [LoggerMessage(LoggingConstants.ServiceUnavailable, LogLevel.Warning, "503 Service Unavailable {RequestId}: {ErrorMessage}.")]
+    [LoggerMessage(LoggingConstants.ServiceUnavailable, LogLevel.Warning, "503 Service Unavailable {RequestId} - '{ErrorMessage}'.")]
     public static partial void LogServiceUnavailable(this ILogger logger, string? requestId, string errorMessage);
 
 
@@ -32,4 +32,16 @@ internal static partial class LogMessages
 
     [LoggerMessage(LoggingConstants.DefaultCacheValueError, LogLevel.Warning, "Can't store a default value {CacheValue}.")]
     public static partial void LogSetDefaultCacheValueError(this ILogger logger, string? cacheValue);
+
+    [LoggerMessage(LoggingConstants.PartialViewNotFound, LogLevel.Critical, "Partial view '{PartialViewName}' not found - '{ErrorMessage}'.")]
+    public static partial void LogPartialViewNotFound(this ILogger logger, string partialViewName, string errorMessage);
+
+    [LoggerMessage(LoggingConstants.PartialViewRenderingError, LogLevel.Critical, "Error rendering partial view '{PartialViewName}' - '{ErrorMessage}'.")]
+    public static partial void LogPartialViewRenderingError(this ILogger logger, string partialViewName, string errorMessage);
+
+    [LoggerMessage(LoggingConstants.ActionContextNotFound, LogLevel.Critical, "Action context not found while trying to build an image URL from a Razor page.")]
+    public static partial void LogActionContextNotFound(this ILogger logger);
+
+    [LoggerMessage(LoggingConstants.ImageControllerGetMethodNotFound, LogLevel.Critical, "Get image controller's method not found.")]
+    public static partial void LogImageControllerGetMethodNotFound(this ILogger logger);
 }
