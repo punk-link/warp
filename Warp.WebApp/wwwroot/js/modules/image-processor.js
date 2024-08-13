@@ -1,5 +1,4 @@
 import { uploadFinishedEvent } from '../events/events.js';
-import { makeHttpRequest, POST } from '../functions/http-client.js';
 
 
 function addImageDeleteEvent(containerElement) {
