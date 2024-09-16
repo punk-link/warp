@@ -58,9 +58,9 @@ steps:
     values: image.tag=${DRONE_COMMIT_SHA:0:7}
   environment:
     KUBE_API_SERVER:
-      from_secret: KUBERNETES_DEV_API
+      from_secret: KUBERNETES_DEV_API_NEW
     KUBE_TOKEN:
-      from_secret: KUBERNETES_DEV_TOKEN      
+      from_secret: KUBERNETES_DEV_TOKEN_NEW      
       
 - name: send telegram notification
   image: appleboy/drone-telegram
