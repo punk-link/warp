@@ -10,10 +10,11 @@ Warp is a service where you can share short-lived texts and media with your frie
 
 To run the service you have to pass the following environment variables:
 
-|Variable        |Description                        |
-|----------------|-----------------------------------|
-|PNKL_VAULT_ADDR |An address of a Vault instance     |
-|PNKL_VAULT_TOKEN|An access token of a Vault instance|
+|Variable        |Type  |Notes|Description                        |
+|----------------|------|-----|-----------------------------------|
+|PNKL_VAULT_ADDR |String|     |An address of a Vault instance     |
+|PNKL_VAULT_TOKEN|String|     |An access token of a Vault instance|
+|DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS|Boolean|Local env only| Dsiables the telemetry dashboard login|
 
 ### Docker Compose
 

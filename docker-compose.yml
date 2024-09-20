@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   keydb:
     image: eqalpha/keydb
@@ -7,3 +6,9 @@ services:
     volumes:
       - ./data:/data
     command: keydb-server
+
+  aspire-dashboard:
+    image: mcr.microsoft.com/dotnet/aspire-dashboard
+    ports:
+      - 18888:18888
+      - 4317:18889
