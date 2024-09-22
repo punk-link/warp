@@ -16,6 +16,12 @@ using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
 using Warp.WebApp.Services.Infrastructure;
+using OpenTelemetry;
+using OpenTelemetry.Exporter;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +30,7 @@ var logger = GetProgramLogger(builder);
 AddConfiguration(logger, builder);
 
 AddLogging(builder);
+AddTelemetry(builder);
 
 builder.Services.AddSingleton(_ => DistributedCacheHelper.GetConnectionMultiplexer(logger, builder.Configuration));
 
@@ -98,15 +105,13 @@ app.Run();
 return;
 
 
-IServiceCollection AddOptions(IServiceCollection services, IConfiguration configuration)
+void AddOptions(IServiceCollection services, IConfiguration configuration)
 {
     services.Configure<AnalyticsOptions>(configuration.GetSection(nameof(AnalyticsOptions)));
-
-    return services;
 }
 
 
-IServiceCollection AddServices(IServiceCollection services)
+void AddServices(IServiceCollection services)
 {
     services.AddSingleton(services);
 
@@ -127,8 +132,6 @@ IServiceCollection AddServices(IServiceCollection services)
     services.AddTransient<IEntryPresentationService, EntryPresentationService>();
 
     services.AddHostedService<WarmupService>();
-
-    return services;
 }
 
 
@@ -145,21 +148,58 @@ void AddConfiguration(ILogger<Program> logger1, WebApplicationBuilder builder1)
 }
 
 
-void AddLogging(WebApplicationBuilder webApplicationBuilder1)
+void AddLogging(WebApplicationBuilder webApplicationBuilder)
 {
-    webApplicationBuilder1.Logging.ClearProviders();
+    webApplicationBuilder.Logging.ClearProviders();
 
 #if DEBUG
     builder.Logging.AddDebug();
 #endif
 
-    webApplicationBuilder1.Logging.AddConsole();
-    if (!string.IsNullOrWhiteSpace(webApplicationBuilder1.Configuration["SentryDsn"]))
-        webApplicationBuilder1.Logging.AddSentry(o =>
+    webApplicationBuilder.Logging.AddConsole();
+    if (!string.IsNullOrWhiteSpace(webApplicationBuilder.Configuration["SentryDsn"]))
+        webApplicationBuilder.Logging.AddSentry(o =>
         {
-            o.Dsn = webApplicationBuilder1.Configuration["SentryDsn"];
+            o.Dsn = webApplicationBuilder.Configuration["SentryDsn"];
             o.AttachStacktrace = true;
         });
+
+    webApplicationBuilder.Logging.AddOpenTelemetry(logging =>
+    {
+        logging.IncludeFormattedMessage = true;
+        logging.IncludeScopes = true;
+    });
+}
+
+
+void AddTelemetry(WebApplicationBuilder webApplicationBuilder)
+{
+    var openTelemetryEndpoint = webApplicationBuilder.Configuration["OpenTelemetry:Endpoint"]!;
+    if (string.IsNullOrWhiteSpace(openTelemetryEndpoint))
+        return;
+
+    var serviceName = webApplicationBuilder.Configuration["ServiceName"]!;
+    var openTelemetryBuilder = builder.Services.AddOpenTelemetry();
+
+    openTelemetryBuilder.WithMetrics(metrics =>
+    {
+        metrics.ConfigureResource(configure => configure.AddService(serviceName))
+            .AddHttpClientInstrumentation()
+            .AddAspNetCoreInstrumentation()
+            .AddMeter("Microsoft.AspNetCore.Hosting")
+            .AddMeter("Microsoft.AspNetCore.Server.Kestrel");
+    });
+
+    openTelemetryBuilder.WithTracing(tracing =>
+    {
+        tracing.ConfigureResource(configure => configure.AddService(serviceName))
+            .AddHttpClientInstrumentation()
+            .AddAspNetCoreInstrumentation()
+            .AddRedisInstrumentation()
+            .SetSampler(new AlwaysOnSampler());
+    });
+
+    openTelemetryBuilder.UseOtlpExporter(OtlpExportProtocol.Grpc, new Uri(openTelemetryEndpoint));
 }
 
 
