@@ -1,6 +1,10 @@
 import { uploadFinishedEvent } from '../events/events.js';
 
 
+const PLUS_ICON = 'icofont-plus';
+const CLOCK_ICON = 'icofont-clock-time';
+
+
 function addImageDeleteEvent(containerElement) {
     let deleteButton = containerElement.querySelector('.delete-image-button');
     deleteButton.onclick = (e) => deleteImage(e);
@@ -31,6 +35,11 @@ function getImageContainerElement(imageContainer) {
 }
 
 
+function removeUploadingIcon(element) {
+    toggleUploadingIcon(element, CLOCK_ICON, PLUS_ICON);
+}
+
+
 function renderPreview(files, imageContainers) {
     let gallery = document.getElementsByClassName('upload-gallery')[0];
 
@@ -46,7 +55,11 @@ function renderPreview(files, imageContainers) {
             containerElement = replaceImagePreview(containerElement, reader);
             containerElement = addImageDeleteEvent(containerElement);
 
+            containerElement.classList.add('d-none');
             gallery.prepend(containerElement);
+
+            containerElement.classList.remove('d-none');
+            containerElement.classList.add('catchy-fade-in');
         }
     });
 
@@ -65,7 +78,27 @@ function replaceImagePreview(containerElement, reader) {
 }
 
 
+function toggleUploadingIcon(element, removedState, addedState) {
+    let icon = element.getElementsByTagName('i')[0];
+    element.classList.add('d-none');
+
+    icon.classList.remove(removedState);
+    icon.classList.add(addedState);
+
+    element.classList.remove('d-none');
+    element.classList.add('catchy-fade-in');
+}
+
+
+function setUploadingIcon(element) {
+    toggleUploadingIcon(element, PLUS_ICON, CLOCK_ICON);
+}
+
+
 async function uploadImages(files) {
+    let emptyImageContainer = document.getElementById('empty-image-container');
+    setUploadingIcon(emptyImageContainer);
+
     let formData = new FormData();
     files.forEach(file => {
         formData.append('Images', file, file.name);
@@ -77,12 +110,16 @@ async function uploadImages(files) {
     });
 
     if (!response.ok) {
+        removeUploadingIcon(emptyImageContainer);
+
         console.error(response.status, response.statusText);
         return;
     }
         
     let imageContainers = await response.json();
     renderPreview(files, imageContainers);
+
+    removeUploadingIcon(emptyImageContainer);
 }
 
 
