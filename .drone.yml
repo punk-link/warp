@@ -60,7 +60,7 @@ steps:
     KUBE_API_SERVER:
       from_secret: KUBERNETES_DEV_API
     KUBE_TOKEN:
-      from_secret: KUBERNETES_DEV_TOKEN      
+      from_secret: KUBERNETES_DEV_TOKEN     
       
 - name: send telegram notification
   image: appleboy/drone-telegram
@@ -77,3 +77,76 @@ steps:
       {{/success}}
   when:
     status: [success, failure]  
+
+
+---
+kind: pipeline
+type: docker
+name: Production
+
+trigger:
+  branches:
+    - master
+  event:
+    - promote
+  target:
+    - production    
+
+steps:
+- name: Build docker image & push to repository
+  image: plugins/docker
+  environment: 
+    GITHUB_TOKEN:
+      from_secret: GITHUB_TOKEN     
+    PNKL_VAULT_TOKEN:
+      from_secret: PNKL_VAULT_TOKEN_NEW    
+    BUILD_VERSION: ${DRONE_COMMIT_SHA:0:7}-NEW
+  settings:
+    registry: registry.punk.link
+    repo: registry.punk.link/warp-webapp
+    tags:
+      - ${DRONE_COMMIT_SHA:0:7}-NEW
+    force_tag: true
+    use_cache: true
+    username:
+      from_secret: DOCKER_LOGIN
+    password:
+      from_secret: DOCKER_PASSWORD
+    build_args_from_env:
+      - GITHUB_TOKEN
+      - PNKL_VAULT_TOKEN    
+
+- name: Deploy to DEV
+  image: pelotech/drone-helm3
+  settings:
+    mode: upgrade
+    chart: ./Helm/
+    release: warp-webapp
+    values_files: ["Helm/values_prod.yaml"]
+    namespace: dev
+    skip_tls_verify: true
+    wait_for_upgrade: true
+    values: image.tag=${DRONE_COMMIT_SHA:0:7}-NEW
+  environment:
+    KUBE_API_SERVER:
+      from_secret: KUBERNETES_DEV_API_NEW
+    KUBE_TOKEN:
+      from_secret: KUBERNETES_DEV_TOKEN_NEW          
+      
+- name: send telegram notification
+  image: appleboy/drone-telegram
+  settings:
+    token: 
+      from_secret: TELEGRAM_TOKEN
+    to: 
+      from_secret: TELEGRAM_GROUP_ID
+    message: >
+      {{#success build.status}}
+        ✅ Build {{build.number}} `{{ build.event }}` of `{{repo.name}}` succeeded. Commit by {{commit.author}} on `{{commit.branch}}` ``` {{commit.message}} ``` {{ build.link }}
+      {{else}}
+        ❌ Build {{build.number}} `{{ build.event }}` of `{{repo.name}}` failed. Commit by {{commit.author}} on `{{commit.branch}}` ``` {{commit.message}} ``` {{ build.link }}
+      {{/success}}
+  when:
+    status: [success, failure]  
+
+    
