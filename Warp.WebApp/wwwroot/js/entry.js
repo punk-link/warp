@@ -4,7 +4,7 @@ import { repositionBackgroundImage } from '/js/functions/image-positioner.js';
 
 
 async function report(id) {
-    let response = await fetch('/api/reports/' + id, {
+    let response = await fetch('/api/entries/' + id + '/report', {
         method: 'POST'
     });
 
