@@ -11,11 +11,12 @@ namespace Warp.WebApp.Controllers;
 public class EntryController : BaseController
 {
     public EntryController(IStringLocalizer<ServerResources> localizer, ICookieService cookieService, ICreatorService creatorService,
-        IEntryService entryService) : base(localizer)
+        IEntryService entryService, IReportService reportService) : base(localizer)
     {
         _cookieService = cookieService;
         _creatorService = creatorService;
         _entryService = entryService;
+        _reportService = reportService;
     }
 
 
@@ -39,7 +40,20 @@ public class EntryController : BaseController
     }
 
 
+    [HttpPost("{id}/report")]
+    public async Task<IActionResult> ReportEntry([FromRoute] string id, CancellationToken cancellationToken = default)
+    {
+        var decodedId = IdCoder.Decode(id);
+        if (decodedId == Guid.Empty)
+            return ReturnIdDecodingBadRequest();
+
+        await _reportService.MarkAsReported(decodedId, cancellationToken);
+        return NoContent();
+    }
+
+
     private readonly ICookieService _cookieService;
     private readonly ICreatorService _creatorService;
     private readonly IEntryService _entryService;
+    private readonly IReportService _reportService;
 }
