@@ -15,12 +15,10 @@
 @section Scripts {
     <script type="module" src="~/js/components/modal.js" defer></script>
     <script type="module" defer>
-        import { addEntryEvents } from '/js/entry.js';
         import { addPreviewEvents } from '/js/preview.js';
 
         document.addEventListener('DOMContentLoaded', () => {
-            addPreviewEvents('@Model.Id');
-            addEntryEvents('@Model.Id', '@Model.ExpiresIn');
+            addPreviewEvents('@Model.Id', '@Model.ExpiresIn');
         });
     </script>
 }
@@ -56,17 +54,17 @@
         </div>
         <div class="d-flex justify-content-between align-items-center col-12 offset-md-3 col-md-6 sticky-bottom bg-transparent pb-3">
             <div class="bg-white border-radius-sm">
-                <a id="delete-button" class="btn btn-link" tabindex="3" title="@SharedLocalizer["DeleteButton"]">
+                <a id="delete-button" class="btn btn-link" title="@SharedLocalizer["DeleteButton"]">
                         <i class="icofont-bin text-lighter"></i>
                     </a>
             </div>
             <div class="bg-white border-radius-sm">
-                <a id="edit-button" class="btn btn-link d-none" tabindex="2" title="@Localizer["CopyButton"]">
+                <a id="edit-button" class="btn btn-link d-none" title="@Localizer["CopyButton"]">
                     <i class="icofont-loop text-lighter"></i>
                 </a>
             </div>
             <div>
-                <a id="copy-link-button" class="btn btn-primary align-items-center" tabindex="1">
+                <a id="copy-link-button" class="btn btn-primary align-items-center">
                     <i class="icofont-link text-lighter"></i>@SharedLocalizer["CopyLinkButton"]
                 </a>
             </div>
