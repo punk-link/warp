@@ -79,6 +79,8 @@ if (!app.Environment.IsDevelopmentOrLocal())
     app.UseHsts();
 }
 
+app.UseMiddleware<ApiExceptionHandlerMiddleware>();
+
 app.UseHttpsRedirection();
 app.UseResponseCompression();
 app.UseResponseCaching();

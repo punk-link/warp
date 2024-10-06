@@ -1,5 +1,4 @@
 import Countdown from '/js/components/countdown.js';
-import { copyUrl } from '/js/functions/copier.js';
 import { repositionBackgroundImage } from '/js/functions/image-positioner.js';
 
 
@@ -20,12 +19,15 @@ export function addEntryEvents(entryId, expirationDate) {
     let countdownElement = document.getElementsByClassName('countdown')[0];
     let countdown = new Countdown(countdownElement, expirationDate);
 
-    let copyButton = document.getElementById('copy-url-button');
-    copyButton.onclick = () => copyUrl();
-
     let pageCloseButton = document.getElementById('page-close-button');
     pageCloseButton.onclick = () => location.href = '/';
 
     let reportButton = document.getElementById('report-button');
     reportButton.onclick = async () => await report(entryId);
+
+    Fancybox.bind("[data-fancybox]", {
+        caption: function (fancybox, slide) {
+            return slide.thumbEl?.alt || "";
+        }
+    });
 }

@@ -1,8 +1,9 @@
 import { copyUrl } from '/js/functions/copier.js';
+import Countdown from '/js/components/countdown.js';
+import { repositionBackgroundImage } from '/js/functions/image-positioner.js';
 import { makeHttpRequest, DELETE } from '/js/functions/http-client.js';
 
 async function deleteEntry(entryId) {
-    entryId += '1';
     let responce = await makeHttpRequest(`/api/entries/${entryId}`, DELETE);
 
     if (responce.ok)
@@ -17,7 +18,13 @@ async function deleteEntry(entryId) {
 }
 
 
-export function addPreviewEvents(entryId) {
+export function addPreviewEvents(entryId, expirationDate) {
+    let backgroundImageContainer = document.getElementById('roaming-image');
+    repositionBackgroundImage(backgroundImageContainer);
+
+    let countdownElement = document.getElementsByClassName('countdown')[0];
+    let countdown = new Countdown(countdownElement, expirationDate);
+
     let copyLinkButton = document.getElementById('copy-link-button');
     let editButton = document.getElementById('edit-button');
     let deleteButton = document.getElementById('delete-button');
@@ -32,4 +39,10 @@ export function addPreviewEvents(entryId) {
     editButton.onclick = () => location.href = '/?id=' + entryId;
 
     deleteButton.onclick = async () => await deleteEntry(entryId);
+
+    Fancybox.bind("[data-fancybox]", {
+        caption: function (fancybox, slide) {
+            return slide.thumbEl?.alt || "";
+        }
+    });
 }
