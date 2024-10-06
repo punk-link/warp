@@ -17,12 +17,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="wwwroot\js\components\textarea.js" />
-    <Content Remove="wwwroot\js\functions\copier.js" />
-    <Content Remove="wwwroot\js\functions\http-client.js" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Remove="robots.txt" />
   </ItemGroup>
 
@@ -48,17 +42,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <UpToDateCheckInput Remove="Pages\Entry.cshtml" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <_ContentIncludedByDefault Remove="Pages\Entry.cshtml" />
-    <_ContentIncludedByDefault Remove="wwwroot\js\index.js" />
-    <_ContentIncludedByDefault Remove="wwwroot\js\components\textarea.js" />
-    <_ContentIncludedByDefault Remove="wwwroot\js\functions\copier.js" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Content Include="BinarySources\warp.xcf" />
     <Content Include="robots.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -67,12 +50,6 @@
 
   <ItemGroup>
     <Folder Include="wwwroot\img\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="wwwroot\js\components\textarea.js" />
-    <None Include="wwwroot\js\functions\copier.js" />
-    <None Include="wwwroot\js\functions\http-client.js" />
   </ItemGroup>
 
   <ItemGroup>
