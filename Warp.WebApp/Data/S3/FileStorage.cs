@@ -6,7 +6,7 @@ using Warp.WebApp.Models;
 
 namespace Warp.WebApp.Data.S3;
 
-public class FileStorage
+public class FileStorage : IFileStorage
 {
     private readonly IConfiguration _configuration;
 
@@ -15,18 +15,20 @@ public class FileStorage
         _configuration = configuration;
     }
 
-    public async Task SaveFileToStorage(ImageInfo value, TimeSpan expiresIn, CancellationToken cancellationToken)
+    public async Task SaveFileToStorage(ImageInfo value, CancellationToken cancellationToken)
     {
         var s3Client = CreateClient();
-        var request = new PutObjectRequest
+        using (var memoryStream = new MemoryStream(value.Content))
         {
-            BucketName = "warp-webapp-dev",
-            Key = value.Id.ToString(),
-            InputStream = new MemoryStream(value.Content),
-            ContentType = value.ContentType
-        };
-
-        var response = await s3Client.PutObjectAsync(request, cancellationToken);
+            var request = new PutObjectRequest
+            {
+                BucketName = "warp-webapp-dev",
+                Key = value.Id.ToString(),
+                InputStream = memoryStream,
+                ContentType = value.ContentType
+            };
+            var response = await s3Client.PutObjectAsync(request, cancellationToken);
+        }
     }
 
     public async Task<ImageInfo> GetFileFromStorage(Guid key, CancellationToken cancellationToken)

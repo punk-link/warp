@@ -60,7 +60,7 @@ public sealed class EntryService : IEntryService
 
         async Task<Result<Entry, ProblemDetails>> AttachImages(Entry entry)
         {
-            var attachedImageIds = await _imageService.Attach(entry.Id, expiresIn, imageIds, cancellationToken);
+            var attachedImageIds = await _imageService.Attach(imageIds, cancellationToken);
             var imageUrls = new List<Uri>(attachedImageIds.Count);
             foreach (var imageId in attachedImageIds)
             {
@@ -100,10 +100,7 @@ public sealed class EntryService : IEntryService
 
         var viewCount = await GetViewCount(entryId, isRequestedByCreator, cancellationToken);
 
-
-        var imageIds = (await _imageService.Get(entryId, cancellationToken))
-            .Select(image => image.Id)
-            .ToList();
+        var imageIds = entry.ImageUrls.Select(x => IdCoder.Decode(x.ToString().Split("/").Last())).ToList();
 
         return Result.Success<EntryInfo, ProblemDetails>(new EntryInfo(entry, viewCount, imageIds));
     }

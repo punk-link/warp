@@ -21,6 +21,7 @@ using OpenTelemetry.Exporter;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using Warp.WebApp.Data.S3;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -123,6 +124,7 @@ void AddServices(IServiceCollection services)
     services.AddSingleton<IImageService, ImageService>();
     services.AddSingleton<IDistributedStorage, KeyDbStorage>();
     services.AddSingleton<IDataStorage, DataStorage>();
+    services.AddSingleton<IFileStorage, FileStorage>();
     services.AddTransient<IReportService, ReportService>();
     services.AddTransient<IViewCountService, ViewCountService>();
     services.AddTransient<IEntryService, EntryService>();
