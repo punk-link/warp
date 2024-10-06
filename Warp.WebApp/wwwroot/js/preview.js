@@ -4,7 +4,6 @@ import { repositionBackgroundImage } from '/js/functions/image-positioner.js';
 import { makeHttpRequest, DELETE } from '/js/functions/http-client.js';
 
 async function deleteEntry(entryId) {
-    entryId += '1';
     let responce = await makeHttpRequest(`/api/entries/${entryId}`, DELETE);
 
     if (responce.ok)

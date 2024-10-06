@@ -43,7 +43,7 @@ public class EntryController : BaseController
     [HttpPost("{id}/report")]
     public async Task<IActionResult> ReportEntry([FromRoute] string id, CancellationToken cancellationToken = default)
     {
-       var decodedId = IdCoder.Decode(id);
+        var decodedId = IdCoder.Decode(id);
         if (decodedId == Guid.Empty)
             return ReturnIdDecodingBadRequest();
 
