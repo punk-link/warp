@@ -1,15 +1,14 @@
 @import "../../node_modules/bootstrap/scss/bootstrap-grid.scss";
 
-@import "animations.scss";
-@import "buttons.scss";
-@import "colors.scss";
-@import "form.scss";
-@import "modal.scss";
-@import "nav.scss";
-@import "sizing.scss";
-@import "texts.scss";
-
-@import "image-processor.scss";
+@import "./components/_buttons.scss";
+@import "./components/_forms.scss";
+@import "./components/_image-processors.scss";
+@import "./components/_modals.scss";
+@import "./components/_navs.scss";
+@import "./layout/_typography.scss";
+@import "./utils/_animations.scss";
+@import "./variables/_colors.scss";
+@import "./variables/_sizing.scss";
 
 
 root {
@@ -17,7 +16,6 @@ root {
     font-family: $font-family-sans-serif;
     font-size: $font-size-base;
 }
-
 
 a {
     text-decoration: none;

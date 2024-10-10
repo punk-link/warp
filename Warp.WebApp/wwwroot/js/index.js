@@ -35,7 +35,6 @@ function addShowEntryContainerEvent(displayedButton, hiddenButton, displayedCont
             displayedContainer.classList.remove('d-none');
 
             editModeInput.value = mode;
-            console.log('edit mode: ' + editModeInput.value);
         });
     }
 }
