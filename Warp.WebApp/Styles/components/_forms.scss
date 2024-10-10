@@ -1,7 +1,7 @@
-@import "colors.scss";
-@import "fonts.scss";
-@import "functions.scss";
-@import "variables.scss";
+@import "../utils/_functions.scss";
+@import "../variables/_colors.scss";
+@import "../variables/_fonts.scss";
+@import "../variables/_variables.scss";
 
 %no-outline-variant {
     outline: none;
