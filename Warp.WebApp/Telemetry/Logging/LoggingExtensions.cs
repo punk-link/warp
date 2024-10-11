@@ -28,7 +28,7 @@ public static class LoggingExtensions
     }
 
 
-    internal static ILogger<Program> GetProgramLogger(this WebApplicationBuilder builder)
+    internal static ILogger<Program> GetStartUpLogger(this WebApplicationBuilder builder)
     {
         var logLevel = Enum.Parse<LogLevel>(builder.Configuration["Logging:LogLevel:Default"]!);
         using var loggerFactory = LoggerFactory.Create(loggerBuilder => loggerBuilder

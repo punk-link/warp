@@ -22,14 +22,14 @@ using Warp.WebApp.Telemetry.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var logger = builder.GetProgramLogger();
+var startupLogger = builder.GetStartUpLogger();
 
-AddConfiguration(logger, builder);
+AddConfiguration(startupLogger, builder);
 
 builder.AddLogging()
     .AddTelemetry();
 
-builder.Services.AddSingleton(_ => DistributedCacheHelper.GetConnectionMultiplexer(logger, builder.Configuration));
+builder.Services.AddSingleton(_ => DistributedCacheHelper.GetConnectionMultiplexer(startupLogger, builder.Configuration));
 
 AddOptions(builder.Services, builder.Configuration);
 AddServices(builder.Services);
@@ -105,7 +105,7 @@ app.Run();
 return;
 
 
-void AddConfiguration(ILogger<Program> logger1, WebApplicationBuilder builder1)
+void AddConfiguration(ILogger<Program> logger, WebApplicationBuilder builder1)
 {
     if (builder.Environment.IsLocal())
     {
@@ -113,7 +113,7 @@ void AddConfiguration(ILogger<Program> logger1, WebApplicationBuilder builder1)
         return;
     }
 
-    var secrets = VaultHelper.GetSecrets<ProgramSecrets>(logger1, builder1.Configuration);
+    var secrets = VaultHelper.GetSecrets<ProgramSecrets>(logger, builder1.Configuration);
     builder1.AddConsulConfiguration(secrets.ConsulAddress, secrets.ConsulToken);
 }
 
