@@ -10,10 +10,10 @@ public static class DistributedCacheHelper
     {
         var host = configuration["Redis:Host"]!;
         if (string.IsNullOrWhiteSpace(host))
-            logger.LogRedisHostUnspecified();
+            logger.LogRedisHostIsNotSpecified();
 
         if (!int.TryParse(configuration["Redis:Port"]!, NumberStyles.Integer, CultureInfo.InvariantCulture, out var port))
-            logger.LogRedisPortUnspecified();
+            logger.LogRedisPortIsNotSpecified();
 
         var options = new ConfigurationOptions
         {

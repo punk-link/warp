@@ -14,11 +14,11 @@ internal static partial class LogMessages
     public static partial void LogServiceUnavailable(this ILogger logger, string? requestId, string errorMessage);
 
 
-    [LoggerMessage(LoggingConstants.RedisHostUnspecified, LogLevel.Critical, "Startup error: Redis host unspecified.")]
-    public static partial void LogRedisHostUnspecified(this ILogger logger);
+    [LoggerMessage(LoggingConstants.RedisHostIsNotSnspecified, LogLevel.Critical, "Startup error: Redis host is not specified.")]
+    public static partial void LogRedisHostIsNotSpecified(this ILogger logger);
 
-    [LoggerMessage(LoggingConstants.RedisPortUnspecified, LogLevel.Critical, "Startup error: Redis port unspecified.")]
-    public static partial void LogRedisPortUnspecified(this ILogger logger);
+    [LoggerMessage(LoggingConstants.RedisPortIsNotSnspecified, LogLevel.Critical, "Startup error: Redis port is not specified.")]
+    public static partial void LogRedisPortIsNotSpecified(this ILogger logger);
 
     [LoggerMessage(LoggingConstants.RedisConnectionException, LogLevel.Critical, "Startup error: Redis connection exception occurred - '{ErrorMessage}'.")]
     public static partial void LogRedisConnectionException(this ILogger logger, string errorMessage);
@@ -26,11 +26,11 @@ internal static partial class LogMessages
     [LoggerMessage(LoggingConstants.VaultConnectionException, LogLevel.Critical, "Startup error: Vault connection exception occurred - '{ErrorMessage}'.")]
     public static partial void LogVaultConnectionException(this ILogger logger, string errorMessage);
 
-    [LoggerMessage(LoggingConstants.VaultSecretCastException, LogLevel.Critical, "Startup error: can't cast obtained secrets to a typed object - '{ErrorMessage}'.")]
+    [LoggerMessage(LoggingConstants.VaultSecretCastException, LogLevel.Critical, "Startup error: Unable to cast obtained secrets to a typed object - '{ErrorMessage}'.")]
     public static partial void LogVaultSecretCastException(this ILogger logger, string errorMessage);
 
 
-    [LoggerMessage(LoggingConstants.DefaultCacheValueError, LogLevel.Warning, "Can't store a default value {CacheValue}.")]
+    [LoggerMessage(LoggingConstants.DefaultCacheValueError, LogLevel.Warning, "Unable to store a default value {CacheValue}.")]
     public static partial void LogSetDefaultCacheValueError(this ILogger logger, string? cacheValue);
 
     [LoggerMessage(LoggingConstants.PartialViewNotFound, LogLevel.Critical, "Partial view '{PartialViewName}' not found - '{ErrorMessage}'.")]
