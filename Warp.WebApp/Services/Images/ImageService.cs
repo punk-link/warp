@@ -98,6 +98,7 @@ public class ImageService : IImageService
     }
 
 
+    // TODO: make URL generation more flexible
     public static List<string> BuildImageUrls(Guid id, List<Guid> imageIds)
     => imageIds.Select(imageId => $"/api/images/entry-id/{id}/image-id/{imageId}")
         .ToList();
