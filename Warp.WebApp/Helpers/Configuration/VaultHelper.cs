@@ -2,7 +2,7 @@
 using Vault;
 using Vault.Client;
 using Vault.Model;
-using Warp.WebApp.Extensions.Logging;
+using Warp.WebApp.Telemetry.Logging;
 
 namespace Warp.WebApp.Helpers.Configuration;
 

@@ -1,6 +1,6 @@
 ﻿using StackExchange.Redis;
 using System.Globalization;
-using Warp.WebApp.Extensions.Logging;
+using Warp.WebApp.Telemetry.Logging;
 
 namespace Warp.WebApp.Helpers.Configuration;
 

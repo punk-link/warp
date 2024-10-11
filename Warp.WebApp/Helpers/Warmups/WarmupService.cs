@@ -1,4 +1,6 @@
-﻿namespace Warp.WebApp.Helpers.Warmups;
+﻿using Warp.WebApp.Attributes;
+
+namespace Warp.WebApp.Helpers.Warmups;
 
 public class WarmupService : IHostedService
 {
@@ -21,6 +23,7 @@ public class WarmupService : IHostedService
         => Task.CompletedTask;
 
 
+    [TraceMethod]
     private static void WarmUp(IServiceCollection services, IServiceProvider serviceProvider)
     {
         using var scope = serviceProvider.CreateScope();

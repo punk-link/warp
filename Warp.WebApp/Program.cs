@@ -16,21 +16,18 @@ using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
 using Warp.WebApp.Services.Infrastructure;
-using OpenTelemetry;
-using OpenTelemetry.Exporter;
-using OpenTelemetry.Metrics;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
+using Warp.WebApp.Telemetry;
+using Warp.WebApp.Telemetry.Logging;
 
 
 var builder = WebApplication.CreateBuilder(args);
 
-var logger = GetProgramLogger(builder);
+var logger = builder.GetProgramLogger();
 
 AddConfiguration(logger, builder);
 
-AddLogging(builder);
-AddTelemetry(builder);
+builder.AddLogging()
+    .AddTelemetry();
 
 builder.Services.AddSingleton(_ => DistributedCacheHelper.GetConnectionMultiplexer(logger, builder.Configuration));
 
@@ -79,6 +76,7 @@ if (!app.Environment.IsDevelopmentOrLocal())
 }
 
 app.UseMiddleware<ApiExceptionHandlerMiddleware>();
+app.UseMiddleware<TraceMethodMiddleware>();
 
 app.UseHttpsRedirection();
 app.UseResponseCompression();
@@ -105,6 +103,19 @@ app.MapRazorPages();
 
 app.Run();
 return;
+
+
+void AddConfiguration(ILogger<Program> logger1, WebApplicationBuilder builder1)
+{
+    if (builder.Environment.IsLocal())
+    {
+        builder1.Configuration.AddJsonFile($"appsettings.{builder1.Configuration["ASPNETCORE_ENVIRONMENT"]}.json", optional: true, reloadOnChange: true);
+        return;
+    }
+
+    var secrets = VaultHelper.GetSecrets<ProgramSecrets>(logger1, builder1.Configuration);
+    builder1.AddConsulConfiguration(secrets.ConsulAddress, secrets.ConsulToken);
+}
 
 
 void AddOptions(IServiceCollection services, IConfiguration configuration)
@@ -134,83 +145,4 @@ void AddServices(IServiceCollection services)
     services.AddTransient<IEntryPresentationService, EntryPresentationService>();
 
     services.AddHostedService<WarmupService>();
-}
-
-
-void AddConfiguration(ILogger<Program> logger1, WebApplicationBuilder builder1)
-{
-    if (builder.Environment.IsLocal())
-    {
-        builder1.Configuration.AddJsonFile($"appsettings.{builder1.Configuration["ASPNETCORE_ENVIRONMENT"]}.json", optional: true, reloadOnChange: true);
-        return;
-    }
-
-    var secrets = VaultHelper.GetSecrets<ProgramSecrets>(logger1, builder1.Configuration);
-    builder1.AddConsulConfiguration(secrets.ConsulAddress, secrets.ConsulToken);
-}
-
-
-void AddLogging(WebApplicationBuilder webApplicationBuilder)
-{
-    webApplicationBuilder.Logging.ClearProviders();
-
-#if DEBUG
-    builder.Logging.AddDebug();
-#endif
-
-    webApplicationBuilder.Logging.AddConsole();
-    if (!string.IsNullOrWhiteSpace(webApplicationBuilder.Configuration["SentryDsn"]))
-        webApplicationBuilder.Logging.AddSentry(o =>
-        {
-            o.Dsn = webApplicationBuilder.Configuration["SentryDsn"];
-            o.AttachStacktrace = true;
-        });
-
-    webApplicationBuilder.Logging.AddOpenTelemetry(logging =>
-    {
-        logging.IncludeFormattedMessage = true;
-        logging.IncludeScopes = true;
-    });
-}
-
-
-void AddTelemetry(WebApplicationBuilder webApplicationBuilder)
-{
-    var openTelemetryEndpoint = webApplicationBuilder.Configuration["OpenTelemetry:Endpoint"]!;
-    if (string.IsNullOrWhiteSpace(openTelemetryEndpoint))
-        return;
-
-    var serviceName = webApplicationBuilder.Configuration["ServiceName"]!;
-    var openTelemetryBuilder = builder.Services.AddOpenTelemetry();
-
-    openTelemetryBuilder.WithMetrics(metrics =>
-    {
-        metrics.ConfigureResource(configure => configure.AddService(serviceName))
-            .AddHttpClientInstrumentation()
-            .AddAspNetCoreInstrumentation()
-            .AddMeter("Microsoft.AspNetCore.Hosting")
-            .AddMeter("Microsoft.AspNetCore.Server.Kestrel");
-    });
-
-    openTelemetryBuilder.WithTracing(tracing =>
-    {
-        tracing.ConfigureResource(configure => configure.AddService(serviceName))
-            .AddHttpClientInstrumentation()
-            .AddAspNetCoreInstrumentation()
-            .AddRedisInstrumentation()
-            .SetSampler(new AlwaysOnSampler());
-    });
-
-    openTelemetryBuilder.UseOtlpExporter(OtlpExportProtocol.Grpc, new Uri(openTelemetryEndpoint));
-}
-
-
-ILogger<Program> GetProgramLogger(WebApplicationBuilder webApplicationBuilder)
-{
-    var logLevel = Enum.Parse<LogLevel>(webApplicationBuilder.Configuration["Logging:LogLevel:Default"]!);
-    using var loggerFactory = LoggerFactory.Create(loggerBuilder => loggerBuilder
-        .SetMinimumLevel(logLevel)
-        .AddConsole());
-
-    return loggerFactory.CreateLogger<Program>();
 }

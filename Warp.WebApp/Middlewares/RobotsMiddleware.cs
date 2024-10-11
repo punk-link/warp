@@ -1,4 +1,6 @@
-﻿namespace Warp.WebApp.Middlewares;
+﻿using Warp.WebApp.Telemetry.Metrics;
+
+namespace Warp.WebApp.Middlewares;
 
 public class RobotsMiddleware
 {
@@ -18,6 +20,8 @@ public class RobotsMiddleware
         }
 
         var content = await GetFileContent(_environment.ContentRootPath);
+
+        ApplicationMetrics.RobotsMiddlewareCounter.Add(1);
 
         context.Response.ContentType = "text/plain";
         await context.Response.WriteAsync(content);

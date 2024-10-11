@@ -1,6 +1,6 @@
 ﻿using Warp.WebApp.Constants.Logging;
 
-namespace Warp.WebApp.Extensions.Logging;
+namespace Warp.WebApp.Telemetry.Logging;
 
 internal static partial class LogMessages
 {

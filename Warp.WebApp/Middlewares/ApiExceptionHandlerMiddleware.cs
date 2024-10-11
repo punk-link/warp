@@ -1,5 +1,5 @@
 ﻿using System.Net;
-using Warp.WebApp.Extensions.Logging;
+using Warp.WebApp.Telemetry.Logging;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Helpers.Configuration;
 
