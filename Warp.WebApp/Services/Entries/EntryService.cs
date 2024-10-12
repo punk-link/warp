@@ -89,23 +89,56 @@ public sealed class EntryService : IEntryService
 
     public async Task<Result<EntryInfo, ProblemDetails>> Get(Guid entryId, bool isRequestedByCreator = false, CancellationToken cancellationToken = default)
     {
-        if (await _reportService.Contains(entryId, cancellationToken))
-            return ResultHelper.NotFound<EntryInfo>(_localizer);
-
-        var entryIdCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entryId);
-
-        var entry = await _dataStorage.TryGet<Entry>(entryIdCacheKey, cancellationToken);
-        if (entry.Equals(default))
-            return ResultHelper.NotFound<EntryInfo>(_localizer);
-
-        var viewCount = await GetViewCount(entryId, isRequestedByCreator, cancellationToken);
+        return await EnsureNotReported()
+            .Bind(_ => GetEntry())
+            .Bind(GetViews)
+            .Bind(GetImageIds)
+            .Bind(BuildEntryInfo);
 
 
-        var imageIds = (await _imageService.Get(entryId, cancellationToken))
-            .Select(image => image.Id)
-            .ToList();
+        async Task<Result<DummyObject, ProblemDetails>> EnsureNotReported()
+        {
+            if (await _reportService.Contains(entryId, cancellationToken))
+                return ResultHelper.NotFound<DummyObject>(_localizer);
 
-        return Result.Success<EntryInfo, ProblemDetails>(new EntryInfo(entry, viewCount, imageIds));
+            return new DummyObject();
+        }
+
+
+        async Task<Result<Entry, ProblemDetails>> GetEntry()
+        {
+            var entryIdCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entryId);
+
+            var entry = await _dataStorage.TryGet<Entry>(entryIdCacheKey, cancellationToken);
+            if (entry.Equals(default))
+                return ResultHelper.NotFound<Entry>(_localizer);
+
+            return entry;
+        }
+
+
+        async Task<Result<(Entry, long), ProblemDetails>> GetViews(Entry entry)
+        { 
+            var viewCount = isRequestedByCreator 
+                ? await _viewCountService.Get(entryId, cancellationToken)
+                : await _viewCountService.AddAndGet(entryId, cancellationToken);
+            
+            return (entry, viewCount);
+        }
+
+
+        async Task<Result<(Entry, long, List<Guid>), ProblemDetails>> GetImageIds((Entry Entry, long ViewCount) tuple)
+        {
+            var imageIds = (await _imageService.Get(entryId, cancellationToken))
+                .Select(image => image.Id)
+                .ToList();
+
+            return (tuple.Entry, tuple.ViewCount, imageIds);
+        }
+
+
+        Result<EntryInfo, ProblemDetails> BuildEntryInfo((Entry Entry, long ViewCount, List<Guid> ImageIds) tuple) 
+            => new EntryInfo(tuple.Entry, tuple.ViewCount, tuple.ImageIds);
     }
 
 
@@ -115,14 +148,6 @@ public sealed class EntryService : IEntryService
         await _dataStorage.Remove<Entry>(entryIdCacheKey, cancellationToken);
 
         return Result.Success();
-    }
-
-
-    private async Task<long> GetViewCount(Guid entryId, bool isRequestedByCreator, CancellationToken cancellationToken)
-    {
-        return isRequestedByCreator 
-            ? await _viewCountService.Get(entryId, cancellationToken)
-            : await _viewCountService.AddAndGet(entryId, cancellationToken);
     }
 
 
