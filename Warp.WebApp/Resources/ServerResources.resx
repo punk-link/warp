@@ -117,43 +117,44 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="AttachEntryErrorMessage" xml:space="preserve">
-    <value>Can't attach the entry to the creator due an internal server error.</value>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="AttachEntryErrorMessage" type="System.Resources.ResXNullRef, System.Windows.Forms">
+    <value />
   </data>
   <data name="DefaultOpenGraphDescriptionText" xml:space="preserve">
-    <value>Warp is a simple and secure way to share text and images.</value>
+    <value />
   </data>
   <data name="EntryBodyEmptyErrorMessage" xml:space="preserve">
-    <value>Can't add the content. The body is empty.</value>
+    <value />
   </data>
   <data name="EntryExpirationPeriodEmptyErrorMessage" xml:space="preserve">
-    <value>Can't add the content. The expiration period is empty.</value>
+    <value />
   </data>
   <data name="IdDecodingErrorMessage" xml:space="preserve">
-    <value>Can't decode a provided ID.</value>
+    <value />
   </data>
   <data name="ModelValidationErrorMessage" xml:space="preserve">
-    <value>Model validation error.</value>
+    <value />
   </data>
   <data name="NoEntryRemovePermissionsErrorMessage" xml:space="preserve">
-    <value>Can`t remove entry cause of no permission.</value>
+    <value />
   </data>
   <data name="NoPermissionErrorMessage" xml:space="preserve">
-    <value>No permission to perform the operation</value>
+    <value />
   </data>
   <data name="NoPreviewPermissionErrorMessage" xml:space="preserve">
-    <value>Can't open the preview page, cause of no permission.</value>
+    <value />
   </data>
   <data name="NotFoundErrorMessage" xml:space="preserve">
-    <value>The requested resource was not found.</value>
+    <value />
   </data>
   <data name="ServiceUnavailableErrorMessage" xml:space="preserve">
-    <value>The server is currently unable to handle the request due to a temporary overload or maintenance of the server.</value>
+    <value />
   </data>
   <data name="StoringDefaultStructureErrorMessage" xml:space="preserve">
-    <value>Can't store a default value.</value>
+    <value />
   </data>
   <data name="EntryNotFoundErrorMessage" xml:space="preserve">
-    <value>Entry is not found.</value>
+    <value />
   </data>
 </root>
