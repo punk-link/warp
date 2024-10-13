@@ -126,7 +126,8 @@ void AddServices(IServiceCollection services)
     services.AddSingleton<IImageService, ImageService>();
     services.AddSingleton<IDistributedStorage, KeyDbStorage>();
     services.AddSingleton<IDataStorage, DataStorage>();
-    services.AddSingleton<IFileStorage, FileStorage>();
+    services.AddSingleton<IAmazonS3, AmazonS3Fabric>();
+    services.AddSingleton<IS3FileStorage, S3FileStorage>();
     services.AddTransient<IReportService, ReportService>();
     services.AddTransient<IViewCountService, ViewCountService>();
     services.AddTransient<IEntryService, EntryService>();

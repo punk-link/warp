@@ -10,11 +10,11 @@ namespace Warp.WebApp.Services.Images;
 
 public class ImageService : IImageService
 {
-    public ImageService(IDataStorage dataStorage, IStringLocalizer<ServerResources> localizer, IFileStorage fileStorage)
+    public ImageService(IDataStorage dataStorage, IStringLocalizer<ServerResources> localizer, IS3FileStorage S3fileStorage)
     {
         _dataStorage = dataStorage;
         _localizer = localizer;
-        _fileStorage = fileStorage;
+        _S3fileStorage = S3fileStorage;
     }
 
 
@@ -43,6 +43,7 @@ public class ImageService : IImageService
         foreach (var imageId in imageIds)
         {
             var value = await GetImage(imageId, cancellationToken);
+
             if (!value.Equals(default))
                 imageInfos.Add(value);
         }
@@ -57,6 +58,7 @@ public class ImageService : IImageService
         foreach(var imageId in imageIds)
         {
             var value = await GetImage(imageId, cancellationToken);
+
             if(value != default)
                 values.Add(value);
         }
@@ -67,7 +69,7 @@ public class ImageService : IImageService
 
     private async Task<ImageInfo> GetImage(Guid imageId, CancellationToken cancellationToken)
     {
-        return await _fileStorage.GetFileFromStorage(imageId, cancellationToken);
+        return await _S3fileStorage.Get(imageId, cancellationToken);
     }
 
 
@@ -93,7 +95,7 @@ public class ImageService : IImageService
             ContentType = file.ContentType
         };
 
-        await _fileStorage.SaveFileToStorage(imageInfo, cancellationToken);
+        await _S3fileStorage.Save(imageInfo, cancellationToken);
 
         return (file.FileName, imageInfo.Id);
     }
@@ -105,5 +107,5 @@ public class ImageService : IImageService
 
     private readonly IDataStorage _dataStorage;
     private readonly IStringLocalizer<ServerResources> _localizer;
-    private readonly IFileStorage _fileStorage;
+    private readonly IS3FileStorage _S3fileStorage;
 }
