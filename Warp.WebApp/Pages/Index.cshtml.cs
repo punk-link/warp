@@ -52,6 +52,7 @@ public class IndexModel : BasePageModel
 
         Result<Entry, ProblemDetails> BuildModel(EntryInfo entryInfo)
         {
+            EditMode = entryInfo.Entry.EditMode;
             TextContent = TextFormatter.GetCleanString(entryInfo.Entry.Content);
             SelectedExpirationPeriod = GetExpirationPeriodId(entryInfo.Entry.ExpiresAt - entryInfo.Entry.CreatedAt);
 
@@ -120,7 +121,7 @@ public class IndexModel : BasePageModel
 
 
     [BindProperty]
-    public EditMode EditMode { get; set; }
+    public EditMode EditMode { get; set; } = EditMode.Text;
 
     [BindProperty]
     public List<string> ImageIds { get; set; } = [];
