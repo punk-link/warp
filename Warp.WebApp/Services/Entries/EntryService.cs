@@ -100,7 +100,7 @@ public sealed class EntryService : IEntryService
 
         var viewCount = await GetViewCount(entryId, isRequestedByCreator, cancellationToken);
 
-        var imageIds = entry.ImageUrls.Select(x => IdCoder.Decode(x.Segments.LastOrDefault())).ToList();
+        var imageIds = entry.ImageUrls.Select(x => IdCoder.Decode(x.ToString().Split("/").Last())).ToList();
 
         return Result.Success<EntryInfo, ProblemDetails>(new EntryInfo(entry, viewCount, imageIds));
     }

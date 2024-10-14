@@ -10,7 +10,7 @@ public class S3FileStorage : IS3FileStorage
 {
     public S3FileStorage(IAmazonS3Fabric amazonS3Fabric)
     {
-        amazonS3Fabric = _amazonS3Fabric;
+        _amazonS3Fabric = amazonS3Fabric;
     }
 
     public async Task Save(ImageInfo imageInfo, CancellationToken cancellationToken)
