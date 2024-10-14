@@ -8,7 +8,7 @@ namespace Warp.WebApp.Data.S3;
 
 public class S3FileStorage : IS3FileStorage
 {
-    public S3FileStorage(IAmazonS3 amazonS3Fabric)
+    public S3FileStorage(IAmazonS3Fabric amazonS3Fabric)
     {
         amazonS3Fabric = _amazonS3Fabric;
     }
@@ -57,5 +57,5 @@ public class S3FileStorage : IS3FileStorage
     }
 
 
-    private readonly IAmazonS3 _amazonS3Fabric;
+    private readonly IAmazonS3Fabric _amazonS3Fabric;
 }

@@ -2,7 +2,7 @@
 
 namespace Warp.WebApp.Data.S3;
 
-public class AmazonS3Fabric : IAmazonS3
+public class AmazonS3Fabric : IAmazonS3Fabric
 {
     public AmazonS3Fabric(IConfiguration configuration)
     {
