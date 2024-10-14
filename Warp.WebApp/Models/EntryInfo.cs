@@ -9,11 +9,9 @@ public readonly record struct EntryInfo
     {
         Entry = entry;
         ViewCount = viewCount;
-        ImageIds = imageIds;
     }
 
 
     public Entry Entry { get; }
-    public List<Guid> ImageIds { get; }
     public long ViewCount { get; }
 }

@@ -55,7 +55,7 @@ public class IndexModel : BasePageModel
             TextContent = TextFormatter.GetCleanString(entryInfo.Entry.Content);
             SelectedExpirationPeriod = GetExpirationPeriodId(entryInfo.Entry.ExpiresAt - entryInfo.Entry.CreatedAt);
 
-            foreach (var imageId in entryInfo.ImageIds)
+            foreach (var imageId in entryInfo.Entry.ImageIds)
             {
                 var imageContainer = new EditableImageContainerModel(imageId);
                 ImageContainers.Add(imageContainer);
