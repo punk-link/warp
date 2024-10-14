@@ -4,6 +4,9 @@ public static class IdCoder
 {
     public static Guid Decode(string id)
     {
+        if(string.IsNullOrEmpty(id))
+            return Guid.Empty;
+
         var restored = id.Replace(Char62Replacement, Char62)
             .Replace(Char63Replacement, Char63);
 
