@@ -2,7 +2,7 @@
 
 namespace Warp.WebApp.Services;
 
-public static class TextFormatter
+public static partial class TextFormatter
 {
     public static string Format(string text)
     {
@@ -30,7 +30,10 @@ public static class TextFormatter
         if (string.IsNullOrWhiteSpace(htmlText))
             return string.Empty;
 
-        const string pattern = @"<(.|\n)*?>";
-        return Regex.Replace(htmlText, pattern, string.Empty, RegexOptions.Compiled);
+        return HTMLTagRegex().Replace(htmlText, string.Empty);
     }
+
+
+    [GeneratedRegex(@"<(.|\n)*?>", RegexOptions.Compiled)]
+    private static partial Regex HTMLTagRegex();
 }

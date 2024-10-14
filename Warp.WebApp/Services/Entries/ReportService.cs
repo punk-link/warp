@@ -1,4 +1,5 @@
-﻿using Warp.WebApp.Constants.Caching;
+﻿using Warp.WebApp.Attributes;
+using Warp.WebApp.Constants.Caching;
 using Warp.WebApp.Data;
 using Warp.WebApp.Models;
 
@@ -12,6 +13,7 @@ public sealed class ReportService : IReportService
     }
 
 
+    [TraceMethod]
     public ValueTask<bool> Contains(Guid id, CancellationToken cancellationToken)
     {
         var cacheKey = CacheKeyBuilder.BuildReportServiceCacheKey(in id);
@@ -19,6 +21,7 @@ public sealed class ReportService : IReportService
     }
 
 
+    [TraceMethod]
     public Task MarkAsReported(Guid id, CancellationToken cancellationToken)
     {
         var cacheKey = CacheKeyBuilder.BuildReportServiceCacheKey(in id);

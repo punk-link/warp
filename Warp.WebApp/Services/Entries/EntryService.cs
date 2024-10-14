@@ -1,6 +1,7 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
+using Warp.WebApp.Attributes;
 using Warp.WebApp.Data;
 using Warp.WebApp.Extensions;
 using Warp.WebApp.Helpers;
@@ -27,6 +28,7 @@ public sealed class EntryService : IEntryService
     }
 
 
+    [TraceMethod]
     public async Task<Result<Entry, ProblemDetails>> Add(string content, TimeSpan expiresIn, List<Guid> imageIds, EditMode editMode, 
         CancellationToken cancellationToken)
     {
@@ -87,6 +89,7 @@ public sealed class EntryService : IEntryService
     }
 
 
+    [TraceMethod]
     public async Task<Result<EntryInfo, ProblemDetails>> Get(Guid entryId, bool isRequestedByCreator = false, CancellationToken cancellationToken = default)
     {
         if (await _reportService.Contains(entryId, cancellationToken))
@@ -109,6 +112,7 @@ public sealed class EntryService : IEntryService
     }
 
 
+    [TraceMethod]
     public async Task<Result> Remove(Guid entryId, CancellationToken cancellationToken)
     {
         var entryIdCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entryId);

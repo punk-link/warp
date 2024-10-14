@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using System.Diagnostics;
 using System.Net;
 using System.Text.Json;
-using Warp.WebApp.Extensions.Logging;
+using Warp.WebApp.Telemetry.Logging;
 using Warp.WebApp.Helpers;
 
 namespace Warp.WebApp.Pages;

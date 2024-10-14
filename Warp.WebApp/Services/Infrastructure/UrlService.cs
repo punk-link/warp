@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
 using Warp.WebApp.Controllers;
-using Warp.WebApp.Extensions.Logging;
+using Warp.WebApp.Telemetry.Logging;
 
 namespace Warp.WebApp.Services.Infrastructure;
 
