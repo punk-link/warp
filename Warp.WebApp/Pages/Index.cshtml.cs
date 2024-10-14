@@ -10,6 +10,7 @@ using Warp.WebApp.Models.Options;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Entries;
+using Warp.WebApp.Services.Images;
 
 namespace Warp.WebApp.Pages;
 
@@ -58,7 +59,10 @@ public class IndexModel : BasePageModel
 
             foreach (var imageId in entryInfo.ImageIds)
             {
-                var imageContainer = new EditableImageContainerModel(imageId);
+                // TODO: remove this hack when we have a proper solution for image urls
+                var urls = ImageService.BuildImageUrls(entryInfo.Entry.Id, [imageId]);
+                var url = urls.First();
+                var imageContainer = new EditableImageContainerModel(imageId, new Uri(url, UriKind.Relative));
                 ImageContainers.Add(imageContainer);
             }
 

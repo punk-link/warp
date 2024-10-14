@@ -99,7 +99,7 @@ public class ImageService : IImageService
 
 
     public static List<string> BuildImageUrls(Guid id, List<Guid> imageIds)
-    => imageIds.Select(imageId => $"/api/images/entry-id/{id}/image-id/{imageId}")
+    => imageIds.Select(imageId => $"/api/images/entry-id/{IdCoder.Encode(id)}/image-id/{IdCoder.Encode(imageId)}")
         .ToList();
 
 
