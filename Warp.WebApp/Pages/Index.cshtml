@@ -21,12 +21,17 @@
 }
 
 @section Scripts {
-    <script type="module" src="~/js/components/textarea.js" defer></script>
     <script type="module" defer>
-        import { addIndexEvents } from '/js/index.js';
+        import { addIndexEvents, adjustTextareaSizes } from '/js/index.js';
+        
+        const initEditMode = @((int)Model.EditMode);
 
         document.addEventListener('DOMContentLoaded', () => {
-            addIndexEvents();
+            addIndexEvents(initEditMode);
+        });
+
+        window.addEventListener('load', () => {
+            adjustTextareaSizes(initEditMode);
         });
     </script>
 }
@@ -39,17 +44,17 @@
             </h1>
         </div>
         <div class="col-6 d-flex justify-content-end">
-            <button id="mode-text" class="nav nav-tab" tabindex="1">
+            <button id="mode-text" class="nav nav-tab">
                 @Localizer["TextModeButton"]
             </button>
-            <button id="mode-advanced" class="nav nav-tab active" tabindex="2">
+            <button id="mode-advanced" class="nav nav-tab">
                 @Localizer["AdvancedModeButton"]
             </button>
         </div>
     </div>
 
     <section class="px-3 my-5">
-        <div id="text-mode" class="d-none">
+        <div id="text-mode">
             <form method="post">
                 <div class="d-flex flex-column align-items-center justify-content-around min-vh-75">
                     <div class="col-12 col-md-6 mb-5">

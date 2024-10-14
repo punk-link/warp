@@ -1,9 +1,14 @@
-import { eventNames } from'/js/events/events.js';
+import { eventNames } from '/js/events/events.js';
+import { adjustTextareaSize } from '/js/components/textarea.js';
 import { repositionBackgroundImage } from '/js/functions/image-positioner.js';
 import { addDropAreaEvents, pasteImages } from './modules/image-processor.js';
 
 
-const EditMode = { Advanced: 2, Text: 1 };
+const EditMode = { 
+    Unknown: 0, 
+    Text: 1, 
+    Advanced: 2
+};
 
 
 function addPasteImageEventListener() {
@@ -14,7 +19,7 @@ function addPasteImageEventListener() {
 }
 
 
-function addEntryContainerEvents(advancedModeButton, textModeButton) {
+function addEntryContainerEvents(advancedModeButton, textModeButton, editMode) {
     let advancedModeContainer = document.getElementById('advanced-mode');
     let textModeContainer = document.getElementById('text-mode');
 
@@ -47,40 +52,55 @@ function addCreateButtonEvents(advancedModeButton, textModeButton) {
     let createButtons = document.getElementsByClassName('create-button');
     for (let createButton of createButtons) {
         if (advancedModeTextarea.value !== '' && textModeTextarea.value !== '') 
-        createButton.disabled = false;
+            createButton.disabled = false;
 
         toggleCreateButtonState(createButton, advancedModeButton, advancedModeTextarea);
         toggleCreateButtonState(createButton, textModeButton, textModeTextarea);
 
         document.addEventListener(eventNames.uploadFinished, () => {
-                createButton.disabled = false;
-            });
+            createButton.disabled = false;
+        });
     }
+}
+
+
+function initializeEditModes(editMode) {
+    let advancedModeButton = document.getElementById('mode-advanced');
+    let textModeButton = document.getElementById('mode-text');
+
+    switch (editMode) {
+        case EditMode.Advanced:
+            advancedModeButton.classList.add('active');
+            break;
+        case EditMode.Unknown:
+        case EditMode.Text:
+            textModeButton.classList.add('active');
+            break;
+    }
+
+    addEntryContainerEvents(advancedModeButton, textModeButton, editMode);
+    addCreateButtonEvents(advancedModeButton, textModeButton);    
 }
 
 
 function toggleCreateButtonState(createButton, targetModeButton, targetTextarea) {
     targetTextarea.addEventListener('input', () => {
-            if (!targetModeButton.classList.contains('active'))
-                return;
+        if (!targetModeButton.classList.contains('active'))
+            return;
 
-            if (targetTextarea.value === '') 
-                createButton.disabled = true;
-            else 
-                createButton.disabled = false;
-        }, false);
+        if (targetTextarea.value === '') 
+            createButton.disabled = true;
+        else 
+            createButton.disabled = false;
+    }, false);
 }
 
 
-export function addIndexEvents() {
+export function addIndexEvents(editMode) {
     let backgroundImageContainer = document.getElementById('roaming-image');
     repositionBackgroundImage(backgroundImageContainer);
 
-    let advancedModeButton = document.getElementById('mode-advanced');
-    let textModeButton = document.getElementById('mode-text');
-
-    addEntryContainerEvents(advancedModeButton, textModeButton);
-    addCreateButtonEvents(advancedModeButton, textModeButton);    
+    initializeEditModes(editMode);
 
     let dropArea = document.getElementsByClassName('drop-area')[0];
     let fileInput = document.getElementById('file');
@@ -88,4 +108,25 @@ export function addIndexEvents() {
     
     addDropAreaEvents(dropArea, fileInput, uploadButton);
     addPasteImageEventListener();
+}
+
+
+export function adjustTextareaSizes(editMode) {
+    let textareas = document.getElementsByTagName('textarea');
+    for (let textarea of textareas) {
+        adjustTextareaSize(textarea);
+    }
+
+    let advancedModeContainer = document.getElementById('advanced-mode');
+    let textModeContainer = document.getElementById('text-mode');
+
+    switch (editMode) {
+        case EditMode.Advanced:
+            textModeContainer.classList.add('d-none');
+            break;
+        case EditMode.Unknown:
+        case EditMode.Text:
+            advancedModeContainer.classList.add('d-none');
+            break;
+    }
 }

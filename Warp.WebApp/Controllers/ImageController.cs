@@ -63,7 +63,7 @@ public sealed class ImageController : BaseController
                 ViewName = "Components/EditableImageContainer",
                 ViewData = new ViewDataDictionary(new EmptyModelMetadataProvider(), new ModelStateDictionary())
                 {
-                    Model = new EditableImageContainerModel(container.Value, isEditable: true)
+                    Model = new EditableImageContainerModel(container.Value, null)
                 }
             };
 

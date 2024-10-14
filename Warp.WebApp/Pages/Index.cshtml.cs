@@ -10,6 +10,7 @@ using Warp.WebApp.Models.Options;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Entries;
+using Warp.WebApp.Services.Images;
 
 namespace Warp.WebApp.Pages;
 
@@ -52,12 +53,16 @@ public class IndexModel : BasePageModel
 
         Result<Entry, ProblemDetails> BuildModel(EntryInfo entryInfo)
         {
+            EditMode = entryInfo.Entry.EditMode;
             TextContent = TextFormatter.GetCleanString(entryInfo.Entry.Content);
             SelectedExpirationPeriod = GetExpirationPeriodId(entryInfo.Entry.ExpiresAt - entryInfo.Entry.CreatedAt);
 
             foreach (var imageId in entryInfo.ImageIds)
             {
-                var imageContainer = new EditableImageContainerModel(imageId);
+                // TODO: remove this hack when we have a proper solution for image urls
+                var urls = ImageService.BuildImageUrls(entryInfo.Entry.Id, [imageId]);
+                var url = urls.First();
+                var imageContainer = new EditableImageContainerModel(imageId, new Uri(url, UriKind.Relative));
                 ImageContainers.Add(imageContainer);
             }
 
@@ -120,7 +125,7 @@ public class IndexModel : BasePageModel
 
 
     [BindProperty]
-    public EditMode EditMode { get; set; }
+    public EditMode EditMode { get; set; } = EditMode.Text;
 
     [BindProperty]
     public List<string> ImageIds { get; set; } = [];
