@@ -23,7 +23,7 @@ public class OpenGraphServiceTests
     public void GetDefaultDescription_ReturnsDefaultDescription()
     {
         var service = new OpenGraphService(_localizer);
-        
+
         var result = service.GetDefaultDescription();
 
         Assert.NotEmpty(result.Title);
@@ -37,7 +37,7 @@ public class OpenGraphServiceTests
     {
         var service = new OpenGraphService(_localizer);
         var entry = new Entry(Guid.NewGuid(), Description, DateTime.Now, DateTime.Now, EditMode.Unknown, [], EntryOpenGraphDescription.Empty);
-        
+
         var result = service.BuildDescription(entry);
 
         Assert.NotEmpty(result.Title);
@@ -54,7 +54,7 @@ public class OpenGraphServiceTests
     {
         var service = new OpenGraphService(_localizer);
         var entry = new Entry(Guid.NewGuid(), description, DateTime.Now, DateTime.Now, EditMode.Unknown, [], EntryOpenGraphDescription.Empty);
-        
+
         var result = service.BuildDescription(entry);
 
         Assert.Equal(expected, result.Description);
@@ -67,7 +67,7 @@ public class OpenGraphServiceTests
         var urls = new List<Uri> { new("https://example.com/image.jpg") };
         var service = new OpenGraphService(_localizer);
         var entry = new Entry(Guid.NewGuid(), Description, DateTime.Now, DateTime.Now, EditMode.Unknown, urls, EntryOpenGraphDescription.Empty);
-        
+
         var result = service.BuildDescription(entry);
 
         Assert.Equal(urls[0], result.ImageUrl);
@@ -80,7 +80,7 @@ public class OpenGraphServiceTests
         var urls = new List<Uri>();
         var service = new OpenGraphService(_localizer);
         var entry = new Entry(Guid.NewGuid(), Description, DateTime.Now, DateTime.Now, EditMode.Unknown, urls, EntryOpenGraphDescription.Empty);
-        
+
         var result = service.BuildDescription(entry);
 
         Assert.NotNull(result.ImageUrl);

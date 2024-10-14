@@ -3,21 +3,25 @@ using System.Net;
 using System.Text.RegularExpressions;
 using Warp.WebApp.Models;
 using Warp.WebApp.Models.Entries;
+using Warp.WebApp.Services.Images;
+using Warp.WebApp.Services.Infrastructure;
 
 namespace Warp.WebApp.Services;
 
 public partial class OpenGraphService : IOpenGraphService
 {
-    public OpenGraphService(IStringLocalizer<ServerResources> localizer)
+    public OpenGraphService(IStringLocalizer<ServerResources> localizer, IUrlService urlService)
     {
         _localizer = localizer;
+        _urlService = urlService;
     }
 
 
     public EntryOpenGraphDescription BuildDescription(Entry entry)
     {
         var description = GetDescription(entry.Content);
-        var previewImageUrl = GetImageUrl(entry.ImageUrls);
+        var imageUrls = entry.ImageIds.Select(x => _urlService.GetImageUrl(entry.Id, x)).ToList();
+        var previewImageUrl = GetImageUrl(imageUrls);
 
         return new EntryOpenGraphDescription(Title, description, previewImageUrl);
     }
@@ -82,4 +86,5 @@ public partial class OpenGraphService : IOpenGraphService
 
 
     private readonly IStringLocalizer<ServerResources> _localizer;
+    private readonly IUrlService _urlService;
 }

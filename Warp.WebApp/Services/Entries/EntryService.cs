@@ -68,7 +68,7 @@ public sealed class EntryService : IEntryService
                 imageUrls.Add(url);
             }
 
-            return entry with { ImageUrls = imageUrls };
+            return entry with { ImageIds = attachedImageIds };
         }
 
 
@@ -100,7 +100,7 @@ public sealed class EntryService : IEntryService
 
         var viewCount = await GetViewCount(entryId, isRequestedByCreator, cancellationToken);
 
-        var imageIds = entry.ImageUrls.Select(x => IdCoder.Decode(x.ToString().Split("/").Last())).ToList();
+        var imageIds = entry.ImageIds.Select(x => IdCoder.Decode(x.ToString().Split("/").Last())).ToList();
 
         return Result.Success<EntryInfo, ProblemDetails>(new EntryInfo(entry, viewCount, imageIds));
     }

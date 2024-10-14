@@ -7,7 +7,7 @@ namespace Warp.WebApp.Models;
 public readonly record struct Entry
 {
     [JsonConstructor]
-    public Entry(Guid id, string content, DateTime createdAt, DateTime expiresAt, EditMode editMode, List<Uri> imageUrls,
+    public Entry(Guid id, string content, DateTime createdAt, DateTime expiresAt, EditMode editMode, List<Guid> imageIds,
         EntryOpenGraphDescription openGraphDescription)
     {
         Id = id;
@@ -15,7 +15,7 @@ public readonly record struct Entry
         CreatedAt = createdAt;
         EditMode = editMode;
         ExpiresAt = expiresAt;
-        ImageUrls = imageUrls;
+        ImageIds = imageIds;
         OpenGraphDescription = openGraphDescription;
     }
 
@@ -31,6 +31,6 @@ public readonly record struct Entry
     public DateTime CreatedAt { get; }
     public EditMode EditMode { get; } = EditMode.Unknown;
     public DateTime ExpiresAt { get; }
-    public List<Uri> ImageUrls { get; init; }
+    public List<Guid> ImageIds { get; init; }
     public EntryOpenGraphDescription OpenGraphDescription { get; init; }
 }
