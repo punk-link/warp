@@ -126,7 +126,7 @@ void AddServices(IServiceCollection services)
     services.AddSingleton<IImageService, ImageService>();
     services.AddSingleton<IDistributedStorage, KeyDbStorage>();
     services.AddSingleton<IDataStorage, DataStorage>();
-    services.AddSingleton<IAmazonS3Fabric, AmazonS3Fabric>();
+    services.AddSingleton<IAmazonS3Factory, AmazonS3Factory>();
     services.AddSingleton<IS3FileStorage, S3FileStorage>();
     services.AddTransient<IReportService, ReportService>();
     services.AddTransient<IViewCountService, ViewCountService>();
@@ -147,6 +147,8 @@ void AddConfiguration(ILogger<Program> logger1, WebApplicationBuilder builder1)
         builder1.Configuration.AddJsonFile($"appsettings.{builder1.Configuration["ASPNETCORE_ENVIRONMENT"]}.json", optional: true, reloadOnChange: true);
         return;
     }
+
+    builder.Configuration.GetSection(nameof(S3Options)).Get<S3Options>();
 
     var secrets = VaultHelper.GetSecrets<ProgramSecrets>(logger1, builder1.Configuration);
     builder1.AddConsulConfiguration(secrets.ConsulAddress, secrets.ConsulToken);

@@ -8,7 +8,7 @@ namespace Warp.WebApp.Data.S3;
 
 public class S3FileStorage : IS3FileStorage
 {
-    public S3FileStorage(IAmazonS3Fabric amazonS3Fabric)
+    public S3FileStorage(IAmazonS3Factory amazonS3Fabric)
     {
         _amazonS3Fabric = amazonS3Fabric;
     }
@@ -16,17 +16,17 @@ public class S3FileStorage : IS3FileStorage
     public async Task Save(ImageInfo imageInfo, CancellationToken cancellationToken)
     {
         var s3Client = _amazonS3Fabric.CreateClient();
-        using (var memoryStream = new MemoryStream(imageInfo.Content))
+
+        using var memoryStream = new MemoryStream(imageInfo.Content);
+        var request = new PutObjectRequest
         {
-            var request = new PutObjectRequest
-            {
-                BucketName = _amazonS3Fabric.GetBucketName(),
-                Key = imageInfo.Id.ToString(),
-                InputStream = memoryStream,
-                ContentType = imageInfo.ContentType
-            };
-            var result = await s3Client.PutObjectAsync(request, cancellationToken);
-        }
+            BucketName = _amazonS3Fabric.GetBucketName(),
+            Key = imageInfo.Id.ToString(),
+            InputStream = memoryStream,
+            ContentType = imageInfo.ContentType
+        };
+
+        var result = await s3Client.PutObjectAsync(request, cancellationToken);
     }
 
     public async Task<ImageInfo> Get(Guid key, CancellationToken cancellationToken)
@@ -39,23 +39,21 @@ public class S3FileStorage : IS3FileStorage
         };
 
         var result = await s3Client.GetObjectAsync(request, cancellationToken);
-        if (result != null)
-        {
-            using (var memoryStream = new MemoryStream())
-            {
-                result.ResponseStream.CopyTo(memoryStream);
-                return new ImageInfo()
-                {
-                    Id = key,
-                    Content = memoryStream.ToArray(),
-                    ContentType = result.Headers.ContentType
-                };
-            }
-        }
 
-        else return default;
+        if (result is null)
+            return default;
+
+        using var memoryStream = new MemoryStream();
+        result.ResponseStream.CopyTo(memoryStream);
+
+        return new ImageInfo()
+        {
+            Id = key,
+            Content = memoryStream.ToArray(),
+            ContentType = result.Headers.ContentType
+        };
     }
 
 
-    private readonly IAmazonS3Fabric _amazonS3Fabric;
+    private readonly IAmazonS3Factory _amazonS3Fabric;
 }
