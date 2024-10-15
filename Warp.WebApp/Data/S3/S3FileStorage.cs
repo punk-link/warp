@@ -2,6 +2,7 @@
 using Amazon.S3;
 using Amazon.S3.Model;
 using System;
+using Warp.WebApp.Attributes;
 using Warp.WebApp.Models;
 
 namespace Warp.WebApp.Data.S3;
@@ -13,6 +14,7 @@ public class S3FileStorage : IS3FileStorage
         _amazonS3Fabric = amazonS3Fabric;
     }
 
+    [TraceMethod]
     public async Task Save(ImageInfo imageInfo, CancellationToken cancellationToken)
     {
         var s3Client = _amazonS3Fabric.CreateClient();
@@ -29,6 +31,7 @@ public class S3FileStorage : IS3FileStorage
         var result = await s3Client.PutObjectAsync(request, cancellationToken);
     }
 
+    [TraceMethod]
     public async Task<ImageInfo> Get(Guid key, CancellationToken cancellationToken)
     {
         var s3Client = _amazonS3Fabric.CreateClient();
