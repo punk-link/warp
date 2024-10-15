@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.ResponseCompression;
 using System.Globalization;
 using Warp.WebApp.Data;
 using Warp.WebApp.Data.Redis;
+using Warp.WebApp.Data.S3;
 using Warp.WebApp.Helpers.Configuration;
 using Warp.WebApp.Helpers.HealthChecks;
 using Warp.WebApp.Helpers.Warmups;
@@ -112,6 +113,8 @@ void AddConfiguration(ILogger<Program> logger, WebApplicationBuilder builder1)
         builder1.Configuration.AddJsonFile($"appsettings.{builder1.Configuration["ASPNETCORE_ENVIRONMENT"]}.json", optional: true, reloadOnChange: true);
         return;
     }
+
+    builder.Configuration.GetSection(nameof(S3Options)).Get<S3Options>();
 
     var secrets = VaultHelper.GetSecrets<ProgramSecrets>(logger, builder1.Configuration);
     builder1.AddConsulConfiguration(secrets.ConsulAddress, secrets.ConsulToken);
