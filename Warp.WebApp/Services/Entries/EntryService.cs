@@ -132,7 +132,7 @@ public sealed class EntryService : IEntryService
 
         async Task<Result<(Entry, long, List<Guid>), ProblemDetails>> GetImageIds((Entry Entry, long ViewCount) tuple)
         {
-            var imageIds = (await _imageService.Get(entryId, cancellationToken))
+            var imageIds = (await _imageService.GetImageList(tuple.Entry.ImageIds, cancellationToken))
                 .Select(image => image.Id)
                 .ToList();
 
