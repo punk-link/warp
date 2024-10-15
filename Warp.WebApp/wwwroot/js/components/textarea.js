@@ -43,7 +43,7 @@ function setInitialHeight(textarea) {
         let rows = textarea.rows;
         if (textarea.clientWidth !== 0) {
             let charactersPerRow = getCharactersPerRow(textarea);
-            rows = Math.floor(textarea.textLength / charactersPerRow);
+            rows = Math.ceil(textarea.textLength / charactersPerRow);
         }
 
         let lineHeight = parseInt(window.getComputedStyle(textarea).lineHeight);
