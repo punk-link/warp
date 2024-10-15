@@ -1,6 +1,7 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
+using Warp.WebApp.Attributes;
 using Warp.WebApp.Data;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
@@ -17,6 +18,7 @@ public class CreatorService : ICreatorService
     }
 
 
+    [TraceMethod]
     public async Task<Result<Creator, ProblemDetails>> Add(CancellationToken cancellationToken)
     {
         var creatorId = Guid.NewGuid();
@@ -29,6 +31,7 @@ public class CreatorService : ICreatorService
     }
 
 
+    [TraceMethod]
     public async Task<Result<DummyObject, ProblemDetails>> AttachEntry(Creator creator, Entry entry, TimeSpan expiresIn, CancellationToken cancellationToken)
     {
         var maxExpirationDate = await GetSetExpirationTime(creator.Id, cancellationToken);
@@ -47,6 +50,7 @@ public class CreatorService : ICreatorService
     }
 
 
+    [TraceMethod]
     public async Task<Creator?> Get(Guid? creatorId, CancellationToken cancellationToken)
     {
         if (creatorId is null)
@@ -78,6 +82,7 @@ public class CreatorService : ICreatorService
         => EntryBelongsToCreator(creator.Id, entryId, cancellationToken);
 
 
+    [TraceMethod]
     public async Task<bool> EntryBelongsToCreator(Guid creatorId, Guid entryId, CancellationToken cancellationToken)
     {
         var creatorsEntrySetCacheKey = CacheKeyBuilder.BuildCreatorsEntrySetCacheKey(creatorId);

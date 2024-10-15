@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewEngines;
-using Warp.WebApp.Extensions.Logging;
+using Warp.WebApp.Telemetry.Logging;
 
 namespace Warp.WebApp.Services.Infrastructure;
 

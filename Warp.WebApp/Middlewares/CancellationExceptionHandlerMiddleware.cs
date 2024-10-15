@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using System.Diagnostics;
-using Warp.WebApp.Extensions.Logging;
+using Warp.WebApp.Telemetry.Logging;
 using Warp.WebApp.Helpers;
 
 namespace Warp.WebApp.Middlewares;

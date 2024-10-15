@@ -1,4 +1,5 @@
 using CSharpFunctionalExtensions;
+using CSharpFunctionalExtensions.ValueTasks;
 using Microsoft.AspNetCore.Mvc;
 using Warp.WebApp.Models;
 using Warp.WebApp.Pages.Shared.Components;
@@ -24,9 +25,7 @@ public class PreviewModel : BasePageModel
     {
         return await _entryPresentationService.Modify(id, HttpContext, cancellationToken)
             .Tap(BuildModel)
-            .Finally(result => result.IsSuccess 
-                ? Page() 
-                : RedirectToError(result.Error));
+            .Finally(Redirect);
 
 
         void BuildModel(EntryInfo entryInfo)
@@ -37,6 +36,19 @@ public class PreviewModel : BasePageModel
             
             foreach (var imageId in entryInfo.Entry.ImageIds)
                 ImageContainers.Add(new ReadOnlyImageContainerModel(_urlService.GetImageUrl(id, imageId)));
+        }
+
+
+        async Task<IActionResult> Redirect(Result<EntryInfo, ProblemDetails> result)
+        {
+            if (result.IsSuccess)
+                return Page();
+
+            var existedResult = await _entryPresentationService.Get(id, HttpContext, cancellationToken);
+            if (existedResult.IsSuccess)
+                return RedirectToPage("./Entry", new { id = IdCoder.Encode(existedResult.Value.Entry.Id) });
+
+            return RedirectToError(existedResult.Error);
         }
     }
 

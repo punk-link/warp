@@ -50,6 +50,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Extensions\Logging\" />
     <Folder Include="wwwroot\img\" />
   </ItemGroup>
 

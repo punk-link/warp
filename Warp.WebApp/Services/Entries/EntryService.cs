@@ -1,6 +1,7 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
+using Warp.WebApp.Attributes;
 using Warp.WebApp.Data;
 using Warp.WebApp.Extensions;
 using Warp.WebApp.Helpers;
@@ -27,6 +28,7 @@ public sealed class EntryService : IEntryService
     }
 
 
+    [TraceMethod]
     public async Task<Result<Entry, ProblemDetails>> Add(string content, TimeSpan expiresIn, List<Guid> imageIds, EditMode editMode, 
         CancellationToken cancellationToken)
     {
@@ -87,39 +89,69 @@ public sealed class EntryService : IEntryService
     }
 
 
+    [TraceMethod]
     public async Task<Result<EntryInfo, ProblemDetails>> Get(Guid entryId, bool isRequestedByCreator = false, CancellationToken cancellationToken = default)
     {
-        if (await _reportService.Contains(entryId, cancellationToken))
-            return ResultHelper.NotFound<EntryInfo>(_localizer);
+        return await EnsureNotReported()
+            .Bind(_ => GetEntry())
+            .Bind(GetViews)
+            .Bind(GetImageIds)
+            .Bind(BuildEntryInfo);
 
-        var entryIdCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entryId);
 
-        var entry = await _dataStorage.TryGet<Entry>(entryIdCacheKey, cancellationToken);
-        if (entry.Equals(default))
-            return ResultHelper.NotFound<EntryInfo>(_localizer);
+        async Task<Result<DummyObject, ProblemDetails>> EnsureNotReported()
+        {
+            if (await _reportService.Contains(entryId, cancellationToken))
+                return ResultHelper.NotFound<DummyObject>(_localizer);
 
-        var viewCount = await GetViewCount(entryId, isRequestedByCreator, cancellationToken);
+            return new DummyObject();
+        }
 
-        var imageIds = entry.ImageIds.Select(x => IdCoder.Decode(x.ToString().Split("/").Last())).ToList();
 
-        return Result.Success<EntryInfo, ProblemDetails>(new EntryInfo(entry, viewCount, imageIds));
+        async Task<Result<Entry, ProblemDetails>> GetEntry()
+        {
+            var entryIdCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entryId);
+
+            var entry = await _dataStorage.TryGet<Entry>(entryIdCacheKey, cancellationToken);
+            if (entry.Equals(default))
+                return ResultHelper.NotFound<Entry>(_localizer);
+
+            return entry;
+        }
+
+
+        async Task<Result<(Entry, long), ProblemDetails>> GetViews(Entry entry)
+        { 
+            var viewCount = isRequestedByCreator 
+                ? await _viewCountService.Get(entryId, cancellationToken)
+                : await _viewCountService.AddAndGet(entryId, cancellationToken);
+            
+            return (entry, viewCount);
+        }
+
+
+        async Task<Result<(Entry, long, List<Guid>), ProblemDetails>> GetImageIds((Entry Entry, long ViewCount) tuple)
+        {
+            var imageIds = (await _imageService.Get(entryId, cancellationToken))
+                .Select(image => image.Id)
+                .ToList();
+
+            return (tuple.Entry, tuple.ViewCount, imageIds);
+        }
+
+
+        Result<EntryInfo, ProblemDetails> BuildEntryInfo((Entry Entry, long ViewCount, List<Guid> ImageIds) tuple) 
+            => new EntryInfo(tuple.Entry, tuple.ViewCount, tuple.ImageIds);
     }
 
 
+    [TraceMethod]
     public async Task<Result> Remove(Guid entryId, CancellationToken cancellationToken)
     {
         var entryIdCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entryId);
         await _dataStorage.Remove<Entry>(entryIdCacheKey, cancellationToken);
 
         return Result.Success();
-    }
-
-
-    private async Task<long> GetViewCount(Guid entryId, bool isRequestedByCreator, CancellationToken cancellationToken)
-    {
-        return isRequestedByCreator 
-            ? await _viewCountService.Get(entryId, cancellationToken)
-            : await _viewCountService.AddAndGet(entryId, cancellationToken);
     }
 
 
