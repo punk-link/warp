@@ -2,16 +2,20 @@ using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Warp.WebApp.Models;
 using Warp.WebApp.Pages.Shared.Components;
+using Warp.WebApp.Services;
 using Warp.WebApp.Services.Entries;
+using Warp.WebApp.Services.Images;
+using Warp.WebApp.Services.Infrastructure;
 
 namespace Warp.WebApp.Pages;
 
 public class EntryModel : BasePageModel
 {
-    public EntryModel(ILoggerFactory loggerFactory, IEntryPresentationService entryPresentationService)
+    public EntryModel(ILoggerFactory loggerFactory, IEntryPresentationService entryPresentationService, IUrlService urlService)
         : base(loggerFactory)
     {
         _entryPresentationService = entryPresentationService;
+        _urlService = urlService;
     }
 
 
@@ -32,8 +36,8 @@ public class EntryModel : BasePageModel
             TextContent = entryInfo.Entry.Content;
             ViewCount = entryInfo.ViewCount;
 
-            foreach (var imageUrl in entryInfo.Entry.ImageUrls)
-                ImageContainers.Add(new ReadOnlyImageContainerModel(imageUrl));
+            foreach (var imageId in entryInfo.Entry.ImageIds)
+                ImageContainers.Add(new ReadOnlyImageContainerModel(_urlService.GetImageUrl(id, imageId)));
 
             return entryInfo.Entry;
         }
@@ -57,4 +61,5 @@ public class EntryModel : BasePageModel
 
 
     private readonly IEntryPresentationService _entryPresentationService;
+    private readonly IUrlService _urlService;
 }

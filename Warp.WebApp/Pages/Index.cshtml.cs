@@ -57,7 +57,7 @@ public class IndexModel : BasePageModel
             TextContent = TextFormatter.GetCleanString(entryInfo.Entry.Content);
             SelectedExpirationPeriod = GetExpirationPeriodId(entryInfo.Entry.ExpiresAt - entryInfo.Entry.CreatedAt);
 
-            foreach (var imageId in entryInfo.ImageIds)
+            foreach (var imageId in entryInfo.Entry.ImageIds)
             {
                 // TODO: remove this hack when we have a proper solution for image urls
                 var urls = ImageService.BuildImageUrls(entryInfo.Entry.Id, [imageId]);

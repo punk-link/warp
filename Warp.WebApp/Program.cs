@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.ResponseCompression;
 using System.Globalization;
 using Warp.WebApp.Data;
 using Warp.WebApp.Data.Redis;
+using Warp.WebApp.Data.S3;
 using Warp.WebApp.Helpers.Configuration;
 using Warp.WebApp.Helpers.HealthChecks;
 using Warp.WebApp.Helpers.Warmups;
@@ -113,6 +114,8 @@ void AddConfiguration(ILogger<Program> logger, WebApplicationBuilder builder1)
         return;
     }
 
+    builder.Configuration.GetSection(nameof(S3Options)).Get<S3Options>();
+
     var secrets = VaultHelper.GetSecrets<ProgramSecrets>(logger, builder1.Configuration);
     builder1.AddConsulConfiguration(secrets.ConsulAddress, secrets.ConsulToken);
 }
@@ -136,6 +139,8 @@ void AddServices(IServiceCollection services)
     services.AddSingleton<IImageService, ImageService>();
     services.AddSingleton<IDistributedStorage, KeyDbStorage>();
     services.AddSingleton<IDataStorage, DataStorage>();
+    services.AddSingleton<IAmazonS3Factory, AmazonS3Factory>();
+    services.AddSingleton<IS3FileStorage, S3FileStorage>();
     services.AddTransient<IReportService, ReportService>();
     services.AddTransient<IViewCountService, ViewCountService>();
     services.AddTransient<IEntryService, EntryService>();

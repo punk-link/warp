@@ -62,7 +62,7 @@ public sealed class EntryService : IEntryService
 
         async Task<Result<Entry, ProblemDetails>> AttachImages(Entry entry)
         {
-            var attachedImageIds = await _imageService.Attach(entry.Id, expiresIn, imageIds, cancellationToken);
+            var attachedImageIds = await _imageService.Attach(imageIds, cancellationToken);
             var imageUrls = new List<Uri>(attachedImageIds.Count);
             foreach (var imageId in attachedImageIds)
             {
@@ -70,7 +70,7 @@ public sealed class EntryService : IEntryService
                 imageUrls.Add(url);
             }
 
-            return entry with { ImageUrls = imageUrls };
+            return entry with { ImageIds = attachedImageIds };
         }
 
 
@@ -132,7 +132,7 @@ public sealed class EntryService : IEntryService
 
         async Task<Result<(Entry, long, List<Guid>), ProblemDetails>> GetImageIds((Entry Entry, long ViewCount) tuple)
         {
-            var imageIds = (await _imageService.Get(entryId, cancellationToken))
+            var imageIds = (await _imageService.GetImageList(tuple.Entry.ImageIds, cancellationToken))
                 .Select(image => image.Id)
                 .ToList();
 

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using Warp.WebApp.Data;
+using Warp.WebApp.Data.S3;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
 
@@ -9,10 +10,11 @@ namespace Warp.WebApp.Services.Images;
 
 public class ImageService : IImageService
 {
-    public ImageService(IDataStorage dataStorage, IStringLocalizer<ServerResources> localizer)
+    public ImageService(IDataStorage dataStorage, IStringLocalizer<ServerResources> localizer, IS3FileStorage S3fileStorage)
     {
         _dataStorage = dataStorage;
         _localizer = localizer;
+        _S3fileStorage = S3fileStorage;
     }
 
 
@@ -31,7 +33,7 @@ public class ImageService : IImageService
     }
 
 
-    public async Task<List<Guid>> Attach(Guid entryId, TimeSpan relativeExpirationTime, List<Guid> imageIds, CancellationToken cancellationToken)
+    public async Task<List<Guid>> Attach(List<Guid> imageIds, CancellationToken cancellationToken)
     {
         if (imageIds.Count == 0)
             return Enumerable.Empty<Guid>().ToList();
@@ -40,38 +42,40 @@ public class ImageService : IImageService
         var imageInfos = new List<ImageInfo>(imageIds.Count);
         foreach (var imageId in imageIds)
         {
-            var entryCacheKey = CacheKeyBuilder.BuildImageInfoCacheKey(imageId);
-            var value = await _dataStorage.TryGet<ImageInfo>(entryCacheKey, cancellationToken);
+            var value = await GetImage(imageId, cancellationToken);
+
             if (!value.Equals(default))
                 imageInfos.Add(value);
-        }
-
-        var bucketCacheKey = CacheKeyBuilder.BuildImageInfoListCacheKey(entryId);
-        await _dataStorage.Set(bucketCacheKey, imageInfos, relativeExpirationTime, cancellationToken);
-
-        foreach (var imageInfo in imageInfos)
-        {
-            var entryCacheKey = CacheKeyBuilder.BuildImageInfoCacheKey(imageInfo.Id);
-            await _dataStorage.Remove<List<ImageInfo>>(entryCacheKey, cancellationToken);
         }
 
         return imageInfos.Select(x => x.Id).ToList();
     }
 
 
-    public async Task<List<ImageInfo>> Get(Guid entryId, CancellationToken cancellationToken)
+    public async Task<List<ImageInfo>> GetImageList(List<Guid> imageIds, CancellationToken cancellationToken)
     {
-        var bucketCacheKey = CacheKeyBuilder.BuildImageInfoListCacheKey(entryId);
-        var values = await _dataStorage.TryGet<List<ImageInfo>>(bucketCacheKey, cancellationToken);
+        var values = new List<ImageInfo>();
+        foreach(var imageId in imageIds)
+        {
+            var value = await GetImage(imageId, cancellationToken);
 
-        return values ?? Enumerable.Empty<ImageInfo>().ToList();
+            if(value != default)
+                values.Add(value);
+        }
+
+        return values;
     }
 
 
-    public async Task<Result<ImageInfo, ProblemDetails>> Get(Guid entryId, Guid imageId, CancellationToken cancellationToken)
+    private async Task<ImageInfo> GetImage(Guid imageId, CancellationToken cancellationToken)
     {
-        var images = await Get(entryId, cancellationToken);
-        var image = images.FirstOrDefault(x => x.Id == imageId);
+        return await _S3fileStorage.Get(imageId, cancellationToken);
+    }
+
+
+    public async Task<Result<ImageInfo, ProblemDetails>> Get(Guid imageId, CancellationToken cancellationToken)
+    {
+        var image = await GetImage(imageId, cancellationToken);
 
         return image != default
             ? Result.Success<ImageInfo, ProblemDetails>(image)
@@ -91,8 +95,7 @@ public class ImageService : IImageService
             ContentType = file.ContentType
         };
 
-        var cacheKey = CacheKeyBuilder.BuildImageInfoCacheKey(imageInfo.Id);
-        await _dataStorage.Set(cacheKey, imageInfo, TimeSpan.FromHours(1), cancellationToken);
+        await _S3fileStorage.Save(imageInfo, cancellationToken);
 
         return (file.FileName, imageInfo.Id);
     }
@@ -103,7 +106,7 @@ public class ImageService : IImageService
     => imageIds.Select(imageId => $"/api/images/entry-id/{IdCoder.Encode(id)}/image-id/{IdCoder.Encode(imageId)}")
         .ToList();
 
-
     private readonly IDataStorage _dataStorage;
     private readonly IStringLocalizer<ServerResources> _localizer;
+    private readonly IS3FileStorage _S3fileStorage;
 }
