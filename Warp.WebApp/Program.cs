@@ -114,8 +114,6 @@ void AddConfiguration(ILogger<Program> logger, WebApplicationBuilder builder1)
         return;
     }
 
-    builder.Configuration.GetSection(nameof(S3Options)).Get<S3Options>();
-
     var secrets = VaultHelper.GetSecrets<ProgramSecrets>(logger, builder1.Configuration);
     builder1.AddConsulConfiguration(secrets.ConsulAddress, secrets.ConsulToken);
 }
@@ -124,6 +122,7 @@ void AddConfiguration(ILogger<Program> logger, WebApplicationBuilder builder1)
 void AddOptions(IServiceCollection services, IConfiguration configuration)
 {
     services.Configure<AnalyticsOptions>(configuration.GetSection(nameof(AnalyticsOptions)));
+    services.Configure<S3Options>(configuration.GetSection(nameof(S3Options)));
 }
 
 
