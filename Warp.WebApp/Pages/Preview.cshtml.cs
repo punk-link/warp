@@ -5,50 +5,82 @@ using Warp.WebApp.Models;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Entries;
-using static System.Net.Mime.MediaTypeNames;
-using Warp.WebApp.Services.Images;
 using Warp.WebApp.Services.Infrastructure;
+using Warp.WebApp.Services.Creators;
+using Warp.WebApp.Models.Creators;
+using Warp.WebApp.Helpers;
+using Microsoft.Extensions.Localization;
 
 namespace Warp.WebApp.Pages;
 
 public class PreviewModel : BasePageModel
 {
-    public PreviewModel(ILoggerFactory loggerFactory, IEntryPresentationService entryPresentationService, IUrlService urlService)
-        : base(loggerFactory)
+    public PreviewModel(ICookieService cookieService,
+        ICreatorService creatorService,
+        IEntryInfoService entryInfoService,
+        ILoggerFactory loggerFactory, 
+        IEntryPresentationService entryPresentationService, 
+        IStringLocalizer<ServerResources> serverLocalizer, 
+        IUrlService urlService)
+        : base(cookieService, creatorService, loggerFactory)
     {
+        _entryInfoService = entryInfoService;
         _entryPresentationService = entryPresentationService;
+        _serverLocalizer = serverLocalizer;
         _urlService = urlService;
     }
 
 
-    public async Task<IActionResult> OnGet(string id, CancellationToken cancellationToken)
+    public Task<IActionResult> OnGet(string id, CancellationToken cancellationToken)
     {
-        return await _entryPresentationService.Modify(id, HttpContext, cancellationToken)
+        return DecodeId()
+            .Bind(GetCreator)
+            .Bind(GetEntryInfo)
             .Tap(BuildModel)
             .Finally(Redirect);
 
 
-        void BuildModel(EntryInfo entryInfo)
+        Result<Guid, ProblemDetails> DecodeId()
+        {
+            var decodedId = IdCoder.Decode(id);
+            if (decodedId == Guid.Empty)
+                return ProblemDetailsHelper.Create(_serverLocalizer["IdDecodingErrorMessage"]);
+
+            return decodedId;
+        }
+
+
+        Task<Result<(Creator, Guid), ProblemDetails>> GetCreator(Guid decodedId)
+            => base.GetCreator(cancellationToken)
+                .Map(creator => (creator, decodedId));
+
+
+        Task<Result<(Creator, EntryInfo), ProblemDetails>> GetEntryInfo((Creator Creator, Guid DecodedId) tuple) 
+            => _entryInfoService.Get(tuple.Creator, tuple.DecodedId, cancellationToken)
+                .Map(entryInfo => (tuple.Creator, entryInfo));
+
+
+        void BuildModel((Creator, EntryInfo EntryInfo) tuple)
         {
             Id = id;
-            ExpiresIn = new DateTimeOffset(entryInfo.Entry.ExpiresAt).ToUnixTimeMilliseconds();
-            TextContent = entryInfo.Entry.Content;
+            ExpiresIn = new DateTimeOffset(tuple.EntryInfo.Entry.ExpiresAt).ToUnixTimeMilliseconds();
+            TextContent = tuple.EntryInfo.Entry.Content;
             
-            foreach (var imageId in entryInfo.Entry.ImageIds)
+            foreach (var imageId in tuple.EntryInfo.Entry.ImageIds)
                 ImageContainers.Add(new ReadOnlyImageContainerModel(_urlService.GetImageUrl(id, imageId)));
         }
 
 
-        async Task<IActionResult> Redirect(Result<EntryInfo, ProblemDetails> result)
+        IActionResult Redirect(Result<(Creator, EntryInfo), ProblemDetails> result)
         {
-            if (result.IsSuccess)
-                return Page();
+            if (result.IsFailure)
+                return RedirectToError(result.Error);
 
-            var existedResult = await _entryPresentationService.Get(id, HttpContext, cancellationToken);
-            if (existedResult.IsSuccess)
-                return RedirectToPage("./Entry", new { id = IdCoder.Encode(existedResult.Value.Entry.Id) });
+            var (creator, entryInfo) = result.Value;
+            if (entryInfo.CreatorId != creator.Id)
+                return RedirectToPage("./Entry", new { id = IdCoder.Encode(entryInfo.Entry.Id) });
 
-            return RedirectToError(existedResult.Error);
+            return Page();
         }
     }
 
@@ -67,7 +99,9 @@ public class PreviewModel : BasePageModel
     public List<ReadOnlyImageContainerModel> ImageContainers { get; set; } = [];
     public string TextContent { get; set; } = string.Empty;
 
-    
+
+    private readonly IEntryInfoService _entryInfoService;
     private readonly IEntryPresentationService _entryPresentationService;
+    private readonly IStringLocalizer<ServerResources> _serverLocalizer;
     private readonly IUrlService _urlService;
 }

@@ -44,4 +44,7 @@ internal static partial class LogMessages
 
     [LoggerMessage(LoggingConstants.ImageControllerGetMethodNotFound, LogLevel.Critical, "Get image controller's method not found.")]
     public static partial void LogImageControllerGetMethodNotFound(this ILogger logger);
+
+    [LoggerMessage(LoggingConstants.ImageRemovalError, LogLevel.Warning, "Error removing image {ImageId} - '{ErrorMessage}'.")]
+    public static partial void LogImageRemovalError(this ILogger logger, Guid imageId, string errorMessage);
 }

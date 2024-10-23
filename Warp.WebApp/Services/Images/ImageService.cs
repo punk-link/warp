@@ -1,7 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
-using Warp.WebApp.Data;
 using Warp.WebApp.Data.S3;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
@@ -10,11 +9,11 @@ namespace Warp.WebApp.Services.Images;
 
 public class ImageService : IImageService
 {
-    public ImageService(IDataStorage dataStorage, IStringLocalizer<ServerResources> localizer, IS3FileStorage S3fileStorage)
+    public ImageService(IStringLocalizer<ServerResources> localizer, IS3FileStorage s3FileStorage)
     {
-        _dataStorage = dataStorage;
         _localizer = localizer;
-        _S3fileStorage = S3fileStorage;
+
+        _s3FileStorage = s3FileStorage;
     }
 
 
@@ -68,9 +67,7 @@ public class ImageService : IImageService
 
 
     private async Task<ImageInfo> GetImage(Guid imageId, CancellationToken cancellationToken)
-    {
-        return await _S3fileStorage.Get(imageId, cancellationToken);
-    }
+        => await _s3FileStorage.Get(imageId, cancellationToken);
 
 
     public async Task<Result<ImageInfo, ProblemDetails>> Get(Guid imageId, CancellationToken cancellationToken)
@@ -81,6 +78,10 @@ public class ImageService : IImageService
             ? Result.Success<ImageInfo, ProblemDetails>(image)
             : ResultHelper.NotFound<ImageInfo>(_localizer);
     }
+
+
+    public async Task Remove(Guid imageId, CancellationToken cancellationToken)
+        => await _s3FileStorage.Delete(imageId, cancellationToken);
 
 
     private async Task<(string, Guid)> Add(IFormFile file, CancellationToken cancellationToken)
@@ -95,7 +96,7 @@ public class ImageService : IImageService
             ContentType = file.ContentType
         };
 
-        await _S3fileStorage.Save(imageInfo, cancellationToken);
+        await _s3FileStorage.Save(imageInfo, cancellationToken);
 
         return (file.FileName, imageInfo.Id);
     }
@@ -106,7 +107,7 @@ public class ImageService : IImageService
     => imageIds.Select(imageId => $"/api/images/entry-id/{IdCoder.Encode(id)}/image-id/{IdCoder.Encode(imageId)}")
         .ToList();
 
-    private readonly IDataStorage _dataStorage;
+
     private readonly IStringLocalizer<ServerResources> _localizer;
-    private readonly IS3FileStorage _S3fileStorage;
+    private readonly IS3FileStorage _s3FileStorage;
 }

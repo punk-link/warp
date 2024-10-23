@@ -142,6 +142,7 @@ void AddServices(IServiceCollection services)
     services.AddSingleton<IS3FileStorage, S3FileStorage>();
     services.AddTransient<IReportService, ReportService>();
     services.AddTransient<IViewCountService, ViewCountService>();
+    services.AddTransient<IEntryInfoService, EntryInfoService>();
     services.AddTransient<IEntryService, EntryService>();
     services.AddTransient<ICreatorService, CreatorService>();
     services.AddTransient<ICookieService, CookieService>();

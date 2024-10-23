@@ -24,4 +24,5 @@ public static class LoggingConstants
     // Domain
     public const int WarpContentEmpty = 20_001;
     public const int WarpExpirationPeriodEmpty = 20_002;
+    public const int ImageRemovalError = 20_101;
 }

@@ -7,8 +7,7 @@ namespace Warp.WebApp.Models;
 public readonly record struct Entry
 {
     [JsonConstructor]
-    public Entry(Guid id, string content, DateTime createdAt, DateTime expiresAt, EditMode editMode, List<Guid> imageIds,
-        EntryOpenGraphDescription openGraphDescription)
+    public Entry(Guid id, string content, DateTime createdAt, DateTime expiresAt, EditMode editMode, List<Guid> imageIds)
     {
         Id = id;
         Content = content;
@@ -16,12 +15,11 @@ public readonly record struct Entry
         EditMode = editMode;
         ExpiresAt = expiresAt;
         ImageIds = imageIds;
-        OpenGraphDescription = openGraphDescription;
     }
 
 
     public Entry(Guid id, string content, DateTime createdAt, DateTime expiresAt, EditMode editMode) 
-        : this(id, content, createdAt, expiresAt, editMode, [], EntryOpenGraphDescription.Empty)
+        : this(id, content, createdAt, expiresAt, editMode, [])
     {
     }
 
@@ -32,5 +30,4 @@ public readonly record struct Entry
     public EditMode EditMode { get; } = EditMode.Unknown;
     public DateTime ExpiresAt { get; }
     public List<Guid> ImageIds { get; init; }
-    public EntryOpenGraphDescription OpenGraphDescription { get; init; }
 }

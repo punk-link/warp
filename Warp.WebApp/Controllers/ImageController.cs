@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.Extensions.Localization;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
+using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Images;
 using Warp.WebApp.Services.Infrastructure;
 
@@ -15,8 +16,12 @@ namespace Warp.WebApp.Controllers;
 [Route("/api/images")]
 public sealed class ImageController : BaseController
 {
-    public ImageController(IStringLocalizer<ServerResources> localizer, IImageService imageService, IPartialViewRenderService partialViewRenderHelper) 
-        : base(localizer)
+    public ImageController(ICookieService cookieService, 
+        ICreatorService creatorService,
+        IImageService imageService, 
+        IStringLocalizer<ServerResources> localizer,
+        IPartialViewRenderService partialViewRenderHelper) 
+        : base(localizer, cookieService, creatorService)
     {
         _imageService = imageService;
         _partialViewRenderHelper = partialViewRenderHelper;
@@ -36,6 +41,22 @@ public sealed class ImageController : BaseController
             return NotFound(error);
 
         return new FileStreamResult(new MemoryStream(value.Content), value.ContentType);
+    }
+
+
+    [HttpDelete("entry-id/{entryId}/image-id/{imageId}")]
+    public async Task<IActionResult> Remove([FromRoute] string entryId, [FromRoute] string imageId, CancellationToken cancellationToken = default)
+    {
+        var decodedEntryId = IdCoder.Decode(entryId);
+        if (decodedEntryId == Guid.Empty)
+            return ReturnIdDecodingBadRequest();
+
+        var decodedImageId = IdCoder.Decode(imageId);
+        if (decodedImageId == Guid.Empty)
+            return ReturnIdDecodingBadRequest();
+
+        await _imageService.Remove(decodedImageId, cancellationToken);
+        return NoContent();
     }
 
 
