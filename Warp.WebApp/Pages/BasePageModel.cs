@@ -5,13 +5,18 @@ using System.Net;
 using System.Text.Json;
 using Warp.WebApp.Telemetry.Logging;
 using Warp.WebApp.Helpers;
+using Warp.WebApp.Models.Creators;
+using Warp.WebApp.Services.Creators;
+using CSharpFunctionalExtensions;
 
 namespace Warp.WebApp.Pages;
 
 public class BasePageModel : PageModel
 {
-    public BasePageModel(ILoggerFactory loggerFactory)
+    public BasePageModel(ICookieService cookieService, ICreatorService creatorService, ILoggerFactory loggerFactory)
     {
+        _cookieService = cookieService;
+        _creatorService = creatorService;
         _logger = loggerFactory.CreateLogger<BasePageModel>();
     }
 
@@ -20,6 +25,13 @@ public class BasePageModel : PageModel
     {
         var problemDetailsJson = JsonSerializer.Serialize(problemDetails);
         TempData[ProblemDetailsTempDataToken] = problemDetailsJson;
+    }
+
+
+    protected async Task<Result<Creator, ProblemDetails>> GetCreator(CancellationToken cancellationToken)
+    {
+        var creatorId = _cookieService.GetCreatorId(HttpContext);
+        return await _creatorService.Get(creatorId, cancellationToken);
     }
 
 
@@ -70,5 +82,7 @@ public class BasePageModel : PageModel
 
     private const string ProblemDetailsTempDataToken = "ProblemDetails";
 
+    private readonly ICookieService _cookieService;
+    private readonly ICreatorService _creatorService;
     private readonly ILogger<BasePageModel> _logger;
 }

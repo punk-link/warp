@@ -88,7 +88,7 @@ public sealed class DataStorage : IDataStorage
     public async ValueTask<T?> TryGet<T>(string key, CancellationToken cancellationToken)
     {
         if (_memoryCache.TryGetValue(key, out T? value))
-            return value!;
+            return value;
 
         return await _distributedStorage.TryGet<T>(key, cancellationToken);
     }

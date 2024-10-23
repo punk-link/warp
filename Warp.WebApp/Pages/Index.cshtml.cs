@@ -4,12 +4,14 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
+using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
+using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Models.Entries.Enums;
 using Warp.WebApp.Models.Options;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
-using Warp.WebApp.Services.Entries;
+using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Images;
 
 namespace Warp.WebApp.Pages;
@@ -17,78 +19,163 @@ namespace Warp.WebApp.Pages;
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 public class IndexModel : BasePageModel
 {
-    public IndexModel(IOptionsSnapshot<AnalyticsOptions> analyticsOptions, ILoggerFactory loggerFactory, IStringLocalizer<IndexModel> localizer,
-        IOpenGraphService openGraphService, IEntryPresentationService entryPresentationService)
-        : base(loggerFactory)
+    public IndexModel(IOptionsSnapshot<AnalyticsOptions> analyticsOptions, 
+        ICookieService cookieService, 
+        ICreatorService creatorService, 
+        IEntryInfoService entryInfoService,
+        IStringLocalizer<IndexModel> localizer,
+        ILoggerFactory loggerFactory, 
+        IOpenGraphService openGraphService, 
+        IStringLocalizer<ServerResources> serverLocalizer)
+        : base(cookieService, creatorService, loggerFactory)
     {
         _analyticsOptions = analyticsOptions.Value;
-        _entryPresentationService = entryPresentationService;
+        _cookieService = cookieService;
+        _creatorService = creatorService;
+        _entryInfoService = entryInfoService;
         _localizer = localizer;
         _openGraphService = openGraphService;
+        _serverLocalizer = serverLocalizer;
     }
 
 
     [OutputCache(Duration = 3600, VaryByQueryKeys = [nameof(id)])]
-    public async Task<IActionResult> OnGet(string? id, CancellationToken cancellationToken)
+    public Task<IActionResult> OnGet(string? id, CancellationToken cancellationToken)
     {
-        AnalyticsModel = new AnalyticsModel(_analyticsOptions);
+        return InitializeCreator()
+            .Tap(AddAnalyticsModel)
+            .Finally(async creatorResult =>
+            {
+                if (string.IsNullOrEmpty(id))
+                    return BuildNewModal();
 
-        if (string.IsNullOrEmpty(id))
+                var creator = creatorResult.Value;
+                return await BuildExistingModal(creator);
+            });
+
+
+        Task<Result<Creator>> InitializeCreator()
+        {
+            return TryGetCreatorId()
+                .Bind(GetOrAddCreator)
+                .Tap(SetCreatorCookie);
+
+            
+            Result<Guid?> TryGetCreatorId() 
+                => _cookieService.GetCreatorId(HttpContext);
+
+
+            async Task<Result<Creator>> GetOrAddCreator(Guid? creatorId)
+            {
+                if (creatorId is null)
+                    return await _creatorService.Add(cancellationToken);
+
+                var (isSuccess, _, creator, _) = await _creatorService.Get(creatorId.Value, cancellationToken);
+                return isSuccess
+                    ? creator
+                    : await _creatorService.Add(cancellationToken);
+            }
+
+
+            Task SetCreatorCookie(Creator creator)
+                => _cookieService.Set(HttpContext, creator);
+        }
+
+
+        void AddAnalyticsModel()
+            => AnalyticsModel = new AnalyticsModel(_analyticsOptions);
+
+
+        IActionResult BuildNewModal()
         {
             var openGraphDescription = _openGraphService.GetDefaultDescription();
             OpenGraphModel = new OpenGraphModel(openGraphDescription);
 
             ImageContainers.Add(EditableImageContainerModel.Empty);
-            
+
             return Page();
         }
 
-        return await _entryPresentationService.Get(id, HttpContext, cancellationToken)
-            .Bind(BuildModel)
-            .Tap(AddOpenGraphModel)
-            .Finally(result => result.IsSuccess 
-                ? Page() 
-                : RedirectToError(result.Error));
 
-
-        Result<Entry, ProblemDetails> BuildModel(EntryInfo entryInfo)
+        Task<IActionResult> BuildExistingModal(Creator creator)
         {
-            EditMode = entryInfo.Entry.EditMode;
-            TextContent = TextFormatter.GetCleanString(entryInfo.Entry.Content);
-            SelectedExpirationPeriod = GetExpirationPeriodId(entryInfo.Entry.ExpiresAt - entryInfo.Entry.CreatedAt);
+            return DecodeId()
+                .Bind(GetEntryInfo)
+                .Bind(BuildModel)
+                .Tap(AddOpenGraphModel)
+                .Finally(result => result.IsSuccess
+                    ? Page()
+                    : RedirectToError(result.Error));
 
-            foreach (var imageId in entryInfo.Entry.ImageIds)
+
+            Result<Guid, ProblemDetails> DecodeId()
             {
-                // TODO: remove this hack when we have a proper solution for image urls
-                var urls = ImageService.BuildImageUrls(entryInfo.Entry.Id, [imageId]);
-                var url = urls.First();
-                var imageContainer = new EditableImageContainerModel(imageId, new Uri(url, UriKind.Relative));
-                ImageContainers.Add(imageContainer);
+                var decodedId = IdCoder.Decode(id);
+                if (decodedId == Guid.Empty)
+                    return ProblemDetailsHelper.Create(_serverLocalizer["IdDecodingErrorMessage"]);
+
+                return decodedId;
             }
 
-            ImageContainers.Add(EditableImageContainerModel.Empty);
 
-            return entryInfo.Entry;
+            Task<Result<EntryInfo, ProblemDetails>> GetEntryInfo(Guid entryId)
+                => _entryInfoService.Get(creator, entryId, cancellationToken);
+
+
+            Result<EntryInfo, ProblemDetails> BuildModel(EntryInfo entryInfo)
+            {
+                EditMode = entryInfo.Entry.EditMode;
+                TextContent = TextFormatter.GetCleanString(entryInfo.Entry.Content);
+                SelectedExpirationPeriod = GetExpirationPeriodId(entryInfo.Entry.ExpiresAt - entryInfo.Entry.CreatedAt);
+
+                foreach (var imageId in entryInfo.Entry.ImageIds)
+                {
+                    // TODO: remove this hack when we have a proper solution for image urls
+                    var urls = ImageService.BuildImageUrls(entryInfo.Entry.Id, [imageId]);
+                    var url = urls.First();
+                    var imageContainer = new EditableImageContainerModel(imageId, new Uri(url, UriKind.Relative));
+                    ImageContainers.Add(imageContainer);
+                }
+
+                ImageContainers.Add(EditableImageContainerModel.Empty);
+
+                return entryInfo;
+            }
+
+            
+            void AddOpenGraphModel(EntryInfo entryInfo)
+                => OpenGraphModel = new OpenGraphModel(entryInfo.OpenGraphDescription);
         }
-
-
-        void AddOpenGraphModel(Entry entry)
-            => OpenGraphModel = new OpenGraphModel(entry.OpenGraphDescription);
     }
 
 
-    public async Task<IActionResult> OnPost(CancellationToken cancellationToken)
+    public Task<IActionResult> OnPost(CancellationToken cancellationToken)
     {
-        var expiresIn = GetExpirationPeriod(SelectedExpirationPeriod);
-        var decodedImageIds = ImageIds.Select(IdCoder.Decode).ToList();
+        return GetCreator(cancellationToken)
+            .Bind(BuildEntryRequest)
+            .Bind(AddEntryInfo)
+            .Finally(result =>
+            {
+                if (result.IsFailure)
+                    return RedirectToError(result.Error);
 
-        var request = new EntryRequest { TextContent = TextContent, ExpiresIn = expiresIn, ImageIds = decodedImageIds, EditMode = EditMode };
+                var entryInfo = result.Value;
+                return RedirectToPage("./Preview", new { id = IdCoder.Encode(entryInfo.Entry.Id) });
+            });
 
-        var result = await _entryPresentationService.Add(request, HttpContext, cancellationToken);
-        if (result.IsFailure)
-            return RedirectToError(result.Error);
 
-        return RedirectToPage("./Preview", new { id = IdCoder.Encode(result.Value.Id) });
+        Result<(Creator, EntryRequest), ProblemDetails> BuildEntryRequest(Creator creator)
+        {
+            var expiresIn = GetExpirationPeriod(SelectedExpirationPeriod);
+            var decodedImageIds = ImageIds.Select(IdCoder.Decode).ToList();
+        
+            var request = new EntryRequest { TextContent = TextContent, ExpiresIn = expiresIn, ImageIds = decodedImageIds, EditMode = EditMode };
+            return (creator, request);
+        }
+
+
+        Task<Result<EntryInfo, ProblemDetails>> AddEntryInfo((Creator Creator, EntryRequest EntryRequest) tuple)
+            => _entryInfoService.Add(tuple.Creator, tuple.EntryRequest, cancellationToken);
     }
 
 
@@ -152,7 +239,10 @@ public class IndexModel : BasePageModel
 
 
     private readonly AnalyticsOptions _analyticsOptions;
-    private readonly IEntryPresentationService _entryPresentationService;
+    private readonly ICookieService _cookieService;
+    private readonly ICreatorService _creatorService;
+    private readonly IEntryInfoService _entryInfoService;
     private readonly IStringLocalizer<IndexModel> _localizer;
     private readonly IOpenGraphService _openGraphService;
+    private readonly IStringLocalizer<ServerResources> _serverLocalizer;
 }

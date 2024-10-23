@@ -14,6 +14,10 @@ public static class CacheKeyBuilder
         => $"{nameof(Entry)}::{id}";
 
 
+    public static string BuildEntryInfoCacheKey(in Guid entryId)
+        => $"{nameof(EntryInfo)}::{entryId}";
+
+
     public static string BuildImageInfoListCacheKey(in Guid id)
         => $"{nameof(List<ImageInfo>)}::{id}";
 
