@@ -23,7 +23,7 @@ public sealed class EntryService : IEntryService
 
 
     [TraceMethod]
-    public async Task<Result<Entry, ProblemDetails>> Add(EntryRequest entryRequest, CancellationToken cancellationToken)
+    public async Task<Result<Entry, ProblemDetails>> Add(Guid entryInfoId, EntryRequest entryRequest, CancellationToken cancellationToken)
     {
         return await BuildEntry()
             .Bind(Validate)
@@ -32,17 +32,14 @@ public sealed class EntryService : IEntryService
 
         Result<Entry, ProblemDetails> BuildEntry()
         {
-            var now = DateTime.UtcNow;
-            var expirationTime = now + entryRequest.ExpiresIn;
             var formattedText = TextFormatter.Format(entryRequest.TextContent);
-            
-            return new Entry(Guid.NewGuid(), formattedText, now, expirationTime, entryRequest.EditMode);
+            return new Entry(formattedText);
         }
 
 
         async Task<Result<Entry, ProblemDetails>> Validate(Entry entry)
         {
-            var validator = new EntryValidator(_localizer, entryRequest.ImageIds);
+            var validator = new EntryValidator(_localizer, entryRequest);
             var validationResult = await validator.ValidateAsync(entry, cancellationToken);
             if (!validationResult.IsValid)
                 return validationResult.ToFailure<Entry>(_localizer);
@@ -57,7 +54,7 @@ public sealed class EntryService : IEntryService
             var imageUrls = new List<Uri>(attachedImageIds.Count);
             foreach (var imageId in attachedImageIds)
             {
-                var url = _urlService.GetImageUrl(entry.Id, in imageId);
+                var url = _urlService.GetImageUrl(entryInfoId, in imageId);
                 imageUrls.Add(url);
             }
 

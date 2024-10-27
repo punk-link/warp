@@ -49,7 +49,7 @@ public class EntryModel : BasePageModel
         Result<EntryInfo, ProblemDetails> BuildModel(EntryInfo entryInfo)
         {
             Id = id;
-            ExpiresIn = new DateTimeOffset(entryInfo.Entry.ExpiresAt).ToUnixTimeMilliseconds();
+            ExpiresIn = new DateTimeOffset(entryInfo.ExpiresAt).ToUnixTimeMilliseconds();
             OpenGraphModel = new OpenGraphModel(entryInfo.OpenGraphDescription);
             TextContent = entryInfo.Entry.Content;
             ViewCount = entryInfo.ViewCount;

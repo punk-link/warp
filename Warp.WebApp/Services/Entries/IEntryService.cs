@@ -6,5 +6,5 @@ namespace Warp.WebApp.Services.Entries;
 
 public interface IEntryService
 {
-    public Task<Result<Entry, ProblemDetails>> Add(EntryRequest entryRequest, CancellationToken cancellationToken);
+    public Task<Result<Entry, ProblemDetails>> Add(Guid entryInfoId, EntryRequest entryRequest, CancellationToken cancellationToken);
 }

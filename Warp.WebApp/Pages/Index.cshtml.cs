@@ -113,14 +113,14 @@ public class IndexModel : BasePageModel
 
             Result<EntryInfo, ProblemDetails> BuildModel(EntryInfo entryInfo)
             {
-                EditMode = entryInfo.Entry.EditMode;
+                EditMode = entryInfo.EditMode;
                 TextContent = TextFormatter.GetCleanString(entryInfo.Entry.Content);
-                SelectedExpirationPeriod = GetExpirationPeriodId(entryInfo.Entry.ExpiresAt - entryInfo.Entry.CreatedAt);
+                SelectedExpirationPeriod = GetExpirationPeriodId(entryInfo.ExpiresAt - entryInfo.CreatedAt);
 
                 foreach (var imageId in entryInfo.Entry.ImageIds)
                 {
                     // TODO: remove this hack when we have a proper solution for image urls
-                    var urls = ImageService.BuildImageUrls(entryInfo.Entry.Id, [imageId]);
+                    var urls = ImageService.BuildImageUrls(entryInfo.Id, [imageId]);
                     var url = urls.First();
                     var imageContainer = new EditableImageContainerModel(imageId, new Uri(url, UriKind.Relative));
                     ImageContainers.Add(imageContainer);
@@ -149,7 +149,7 @@ public class IndexModel : BasePageModel
                     return RedirectToError(result.Error);
 
                 var entryInfo = result.Value;
-                return RedirectToPage("./Preview", new { id = IdCoder.Encode(entryInfo.Entry.Id) });
+                return RedirectToPage("./Preview", new { id = IdCoder.Encode(entryInfo.Id) });
             });
 
 

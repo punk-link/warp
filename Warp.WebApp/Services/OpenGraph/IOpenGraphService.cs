@@ -5,6 +5,6 @@ namespace Warp.WebApp.Services.OpenGraph;
 
 public interface IOpenGraphService
 {
-    EntryOpenGraphDescription BuildDescription(Entry entry);
+    EntryOpenGraphDescription BuildDescription(Guid entryInfoId, Entry entry);
     EntryOpenGraphDescription GetDefaultDescription();
 }

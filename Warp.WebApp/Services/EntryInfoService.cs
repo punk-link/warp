@@ -4,9 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using Warp.WebApp.Attributes;
 using Warp.WebApp.Data;
+using Warp.WebApp.Extensions;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
 using Warp.WebApp.Models.Creators;
+using Warp.WebApp.Models.Validators;
 using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
@@ -43,21 +45,38 @@ public class EntryInfoService : IEntryInfoService
     [TraceMethod]
     public Task<Result<EntryInfo, ProblemDetails>> Add(Creator creator, EntryRequest entryRequest, CancellationToken cancellationToken)
     {
+        var now = DateTime.UtcNow;
+        var entryInfoId = Guid.NewGuid();
+
         return AddEntry()
             .Bind(BuildEntryInfo)
+            .Bind(Validate)
             // TODO: consider binding with a transaction
             .Bind(AttachToCreator)
             .Tap(CacheEntryInfo);
 
 
         Task<Result<Entry, ProblemDetails>> AddEntry()
-            => _entryService.Add(entryRequest, cancellationToken);
+            => _entryService.Add(entryInfoId, entryRequest, cancellationToken);
 
 
         Result<EntryInfo, ProblemDetails> BuildEntryInfo(Entry entry)
         {
-            var description = _openGraphService.BuildDescription(entry);
-            return new EntryInfo(creator.Id, entry, description);
+            var expirationTime = now + entryRequest.ExpiresIn;
+            var description = _openGraphService.BuildDescription(entryInfoId, entry);
+            
+            return new EntryInfo(entryInfoId, creator.Id, now, expirationTime, entryRequest.EditMode, entry, description);
+        }
+
+
+        async Task<Result<EntryInfo, ProblemDetails>> Validate(EntryInfo entryInfo)
+        {
+            var validator = new EntryInfoValidator(_localizer);
+            var validationResult = await validator.ValidateAsync(entryInfo, cancellationToken);
+            if (!validationResult.IsValid)
+                return validationResult.ToFailure<EntryInfo>(_localizer);
+
+            return entryInfo;
         }
 
 
@@ -73,7 +92,7 @@ public class EntryInfoService : IEntryInfoService
 
         Task CacheEntryInfo(EntryInfo entryInfo)
         {
-            var cacheKey = CacheKeyBuilder.BuildEntryInfoCacheKey(entryInfo.Entry.Id);
+            var cacheKey = CacheKeyBuilder.BuildEntryInfoCacheKey(entryInfo.Id);
             return _dataStorage.Set(cacheKey, entryInfo, entryRequest.ExpiresIn, cancellationToken);
         }
     }
@@ -90,7 +109,7 @@ public class EntryInfoService : IEntryInfoService
 
         static EntryRequest BuildEntryRequest(EntryInfo entryInfo)
         {
-            var expiresIn = entryInfo.Entry.ExpiresAt - entryInfo.Entry.CreatedAt;
+            var expiresIn = entryInfo.ExpiresAt - entryInfo.CreatedAt;
             return new EntryRequest
             {
                 TextContent = entryInfo.Entry.Content,
@@ -169,8 +188,8 @@ public class EntryInfoService : IEntryInfoService
 
         async Task<Result<EntryInfo, ProblemDetails>> UpdateEntryInfo(EntryInfo entryInfo)
         {
-            var expiresAt = entryInfo.Entry.ExpiresAt - DateTime.UtcNow;
-            var cacheKey = CacheKeyBuilder.BuildEntryInfoCacheKey(entryInfo.Entry.Id);
+            var expiresAt = entryInfo.ExpiresAt - DateTime.UtcNow;
+            var cacheKey = CacheKeyBuilder.BuildEntryInfoCacheKey(entryInfo.Id);
             await _dataStorage.Set(cacheKey, entryInfo, expiresAt, cancellationToken);
 
             return entryInfo;

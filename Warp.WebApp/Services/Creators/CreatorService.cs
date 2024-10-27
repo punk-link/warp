@@ -37,25 +37,25 @@ public class CreatorService : ICreatorService
         var userIdCacheKey = CacheKeyBuilder.BuildCreatorsEntrySetCacheKey(creator.Id);
 
         return await UnitResult.Success<ProblemDetails>()
-            .Map(GetSetExpirationTime)
+            .Map(GetMaxExpirationDateTime)
             .Bind(GetExpirationSpan)
             .Bind(AttachEntryToCreator);
 
 
-        async Task<DateTime> GetSetExpirationTime()
+        async Task<DateTime> GetMaxExpirationDateTime()
         {
-            var entryIds = await _dataStorage.TryGetSet<Guid>(userIdCacheKey, cancellationToken);
-            if (entryIds.Count == 0)
+            var entryInfoIds = await _dataStorage.TryGetSet<Guid>(userIdCacheKey, cancellationToken);
+            if (entryInfoIds.Count == 0)
                 return DateTime.MinValue;
-        
-            var expirationDates = new List<DateTime>(entryIds.Count);
-            foreach (var entryId in entryIds)
+
+            var expirationDates = new List<DateTime>(entryInfoIds.Count);
+            foreach (var entryInfoId in entryInfoIds)
             {
-                var entryIdCacheKey = CacheKeyBuilder.BuildEntryCacheKey(entryId);
+                var entryIdCacheKey = CacheKeyBuilder.BuildEntryInfoCacheKey(entryInfoId);
 
                 // TODO: requesting all entries one by one is suboptimal. Consider refactoring.
-                var entry = await _dataStorage.TryGet<Entry>(entryIdCacheKey, cancellationToken);
-                expirationDates.Add(entry.ExpiresAt);
+                var entryInfo = await _dataStorage.TryGet<EntryInfo>(entryIdCacheKey, cancellationToken);
+                expirationDates.Add(entryInfo.ExpiresAt);
             }
 
             return expirationDates.Max();
@@ -63,14 +63,14 @@ public class CreatorService : ICreatorService
 
 
         Result<TimeSpan, ProblemDetails> GetExpirationSpan(DateTime maxExpirationDateTime) 
-            => maxExpirationDateTime > entryInfo.Entry.ExpiresAt
-                ? maxExpirationDateTime - entryInfo.Entry.ExpiresAt
-                : entryInfo.Entry.ExpiresAt - maxExpirationDateTime;
+            => maxExpirationDateTime > entryInfo.ExpiresAt
+                ? maxExpirationDateTime - entryInfo.ExpiresAt
+                : entryInfo.ExpiresAt - maxExpirationDateTime;
 
 
         async Task<UnitResult<ProblemDetails>> AttachEntryToCreator(TimeSpan expirationSpan)
         {
-            var result = await _dataStorage.AddToSet(userIdCacheKey, entryInfo.Entry.Id, expirationSpan, cancellationToken);
+            var result = await _dataStorage.AddToSet(userIdCacheKey, entryInfo.Id, expirationSpan, cancellationToken);
             if (result.IsSuccess)
                 return UnitResult.Success<ProblemDetails>();
 

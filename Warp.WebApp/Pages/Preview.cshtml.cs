@@ -43,7 +43,7 @@ public class PreviewModel : BasePageModel
         void BuildModel((Creator, EntryInfo EntryInfo) tuple)
         {
             Id = id;
-            ExpiresIn = new DateTimeOffset(tuple.EntryInfo.Entry.ExpiresAt).ToUnixTimeMilliseconds();
+            ExpiresIn = new DateTimeOffset(tuple.EntryInfo.ExpiresAt).ToUnixTimeMilliseconds();
             TextContent = tuple.EntryInfo.Entry.Content;
             
             foreach (var imageId in tuple.EntryInfo.Entry.ImageIds)
@@ -58,7 +58,7 @@ public class PreviewModel : BasePageModel
 
             var (creator, entryInfo) = result.Value;
             if (entryInfo.CreatorId != creator.Id)
-                return RedirectToPage("./Entry", new { id = IdCoder.Encode(entryInfo.Entry.Id) });
+                return RedirectToPage("./Entry", new { id = IdCoder.Encode(entryInfo.Id) });
 
             return Page();
         }
@@ -71,7 +71,7 @@ public class PreviewModel : BasePageModel
             .Bind(decodedId => GetCreator(decodedId, cancellationToken))
             .Bind(CopyEntryInfo)
             .Finally(result => result.IsSuccess 
-                ? RedirectToPage("./Index", new { id = IdCoder.Encode(result.Value.Entry.Id) }) 
+                ? RedirectToPage("./Index", new { id = IdCoder.Encode(result.Value.Id) }) 
                 : RedirectToError(result.Error));
 
 
