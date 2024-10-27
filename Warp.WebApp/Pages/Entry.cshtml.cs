@@ -1,51 +1,63 @@
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using Warp.WebApp.Models;
+using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
-using Warp.WebApp.Services.Entries;
-using Warp.WebApp.Services.Images;
+using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Infrastructure;
 
 namespace Warp.WebApp.Pages;
 
 public class EntryModel : BasePageModel
 {
-    public EntryModel(ILoggerFactory loggerFactory, IEntryPresentationService entryPresentationService, IUrlService urlService)
-        : base(loggerFactory)
+    public EntryModel(ICookieService cookieService, 
+        ICreatorService creatorService,
+        IEntryInfoService entryPresentationService,
+        ILoggerFactory loggerFactory, 
+        IStringLocalizer<ServerResources> serverLocalizer, 
+        IUrlService urlService)
+        : base(cookieService, creatorService, loggerFactory, serverLocalizer)
     {
         _entryPresentationService = entryPresentationService;
         _urlService = urlService;
     }
 
 
-    public async Task<IActionResult> OnGet(string id, CancellationToken cancellationToken)
+    public Task<IActionResult> OnGet(string id, CancellationToken cancellationToken)
     {
-        return await _entryPresentationService.Get(id, HttpContext, cancellationToken)
+        return DecodeId(id)
+            .Bind(GetCreator)
+            .Bind(GetEntryInfo)
             .Bind(BuildModel)
-            .Tap(AddOpenGraphModel)
-            .Finally(result => result.IsSuccess 
-                ? Page() 
+            .Finally(result => result.IsSuccess
+                ? Page()
                 : RedirectToError(result.Error));
 
 
-        Result<Entry, ProblemDetails> BuildModel(EntryInfo entryInfo)
+        Task<Result<(Creator, Guid), ProblemDetails>> GetCreator(Guid decodedId) 
+            => base.GetCreator(cancellationToken)
+                .OnFailureCompensate(() => Creator.Empty)
+                .Map(creator => (creator, decodedId));
+
+
+        Task<Result<EntryInfo, ProblemDetails>> GetEntryInfo((Creator Creator, Guid DecodedId) tuple) 
+            => _entryPresentationService.Get(tuple.Creator, tuple.DecodedId, cancellationToken);
+
+
+        Result<EntryInfo, ProblemDetails> BuildModel(EntryInfo entryInfo)
         {
             Id = id;
-            ExpiresIn = new DateTimeOffset(entryInfo.Entry.ExpiresAt).ToUnixTimeMilliseconds();
+            ExpiresIn = new DateTimeOffset(entryInfo.ExpiresAt).ToUnixTimeMilliseconds();
+            OpenGraphModel = new OpenGraphModel(entryInfo.OpenGraphDescription);
             TextContent = entryInfo.Entry.Content;
             ViewCount = entryInfo.ViewCount;
 
             foreach (var imageId in entryInfo.Entry.ImageIds)
                 ImageContainers.Add(new ReadOnlyImageContainerModel(_urlService.GetImageUrl(id, imageId)));
 
-            return entryInfo.Entry;
-        }
-
-
-        void AddOpenGraphModel(Entry entry)
-        {
-            OpenGraphModel = new OpenGraphModel(entry.OpenGraphDescription);
+            return entryInfo;
         }
     }
 
@@ -60,6 +72,6 @@ public class EntryModel : BasePageModel
     public long ViewCount { get; set; } = 1;
 
 
-    private readonly IEntryPresentationService _entryPresentationService;
+    private readonly IEntryInfoService _entryPresentationService;
     private readonly IUrlService _urlService;
 }

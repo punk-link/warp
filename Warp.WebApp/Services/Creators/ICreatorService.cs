@@ -7,10 +7,7 @@ namespace Warp.WebApp.Services.Creators;
 
 public interface ICreatorService
 {
-    public Task<Result<Creator, ProblemDetails>> Add(CancellationToken cancellationToken);
-    public Task<Result<DummyObject, ProblemDetails>> AttachEntry(Creator creator, Entry entry, TimeSpan expiresIn, CancellationToken cancellationToken);
-    public Task<Creator?> Get(Guid? creatorId, CancellationToken cancellationToken);
-    public Task<Result<Creator, ProblemDetails>> GetOrAdd(Guid? creatorId, CancellationToken cancellationToken);
-    public Task<bool> EntryBelongsToCreator(Guid creatorId, Guid entryId, CancellationToken cancellationToken);
-    public Task<bool> EntryBelongsToCreator(Creator creator, Guid entryId, CancellationToken cancellationToken);
+    public Task<Creator> Add(CancellationToken cancellationToken);
+    public Task<UnitResult<ProblemDetails>> AttachEntry(Creator creator, EntryInfo entryInfo, CancellationToken cancellationToken);
+    public Task<Result<Creator, ProblemDetails>> Get(Guid? creatorId, CancellationToken cancellationToken);
 }

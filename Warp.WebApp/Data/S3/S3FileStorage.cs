@@ -9,39 +9,39 @@ namespace Warp.WebApp.Data.S3;
 
 public class S3FileStorage : IS3FileStorage
 {
-    public S3FileStorage(IAmazonS3Factory amazonS3Fabric)
+    public S3FileStorage(IAmazonS3Factory amazonS3Factory)
     {
-        _amazonS3Fabric = amazonS3Fabric;
+        _amazonS3Client = amazonS3Factory.CreateClient();
+        _amazonS3Factory = amazonS3Factory;
     }
+
 
     [TraceMethod]
     public async Task Save(ImageInfo imageInfo, CancellationToken cancellationToken)
     {
-        var s3Client = _amazonS3Fabric.CreateClient();
-
         using var memoryStream = new MemoryStream(imageInfo.Content);
         var request = new PutObjectRequest
         {
-            BucketName = _amazonS3Fabric.GetBucketName(),
+            BucketName = _amazonS3Factory.GetBucketName(),
             Key = imageInfo.Id.ToString(),
             InputStream = memoryStream,
             ContentType = imageInfo.ContentType
         };
 
-        var result = await s3Client.PutObjectAsync(request, cancellationToken);
+        var result = await _amazonS3Client.PutObjectAsync(request, cancellationToken);
     }
 
+
     [TraceMethod]
-    public async Task<ImageInfo> Get(Guid key, CancellationToken cancellationToken)
+    public async Task<ImageInfo> Get(Guid imageId, CancellationToken cancellationToken)
     {
-        var s3Client = _amazonS3Fabric.CreateClient();
         var request = new GetObjectRequest
         {
-            BucketName = _amazonS3Fabric.GetBucketName(),
-            Key = key.ToString(),
+            BucketName = _amazonS3Factory.GetBucketName(),
+            Key = imageId.ToString(),
         };
 
-        var result = await s3Client.GetObjectAsync(request, cancellationToken);
+        var result = await _amazonS3Client.GetObjectAsync(request, cancellationToken);
 
         if (result is null)
             return default;
@@ -51,12 +51,26 @@ public class S3FileStorage : IS3FileStorage
 
         return new ImageInfo()
         {
-            Id = key,
+            Id = imageId,
             Content = memoryStream.ToArray(),
             ContentType = result.Headers.ContentType
         };
     }
 
 
-    private readonly IAmazonS3Factory _amazonS3Fabric;
+    [TraceMethod]
+    public async Task Delete(Guid imageId, CancellationToken cancellationToken)
+    {
+        var request = new DeleteObjectRequest
+        {
+            BucketName = _amazonS3Factory.GetBucketName(),
+            Key = imageId.ToString()
+        };
+
+        await _amazonS3Client.DeleteObjectAsync(request, cancellationToken);
+    }
+
+
+    private readonly AmazonS3Client _amazonS3Client;
+    private readonly IAmazonS3Factory _amazonS3Factory;
 }

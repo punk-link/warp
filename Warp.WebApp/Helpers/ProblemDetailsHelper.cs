@@ -55,7 +55,11 @@ public static class ProblemDetailsHelper
 
 
     public static ProblemDetails CreateForbidden(IStringLocalizer<ServerResources> localizer)
-    => Create(localizer["NoPermissionErrorMessage"], HttpStatusCode.Forbidden, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.3");
+        => Create(localizer["NoPermissionErrorMessage"], HttpStatusCode.Forbidden, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.3");
+
+
+    public static ProblemDetails CreateUnauthorized(IStringLocalizer<ServerResources> localizer, string? detail = null)
+        => Create(detail ?? localizer["UnauthorizedErrorMessage"], HttpStatusCode.Unauthorized, "https://datatracker.ietf.org/doc/html/rfc7235#section-3.1");
 
 
     public static List<Error> GetErrors(this ProblemDetails details)

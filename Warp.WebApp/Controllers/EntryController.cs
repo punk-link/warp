@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using CSharpFunctionalExtensions;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Creators;
@@ -10,12 +11,13 @@ namespace Warp.WebApp.Controllers;
 [Route("/api/entries")]
 public class EntryController : BaseController
 {
-    public EntryController(IStringLocalizer<ServerResources> localizer, ICookieService cookieService, ICreatorService creatorService,
-        IEntryService entryService, IReportService reportService) : base(localizer)
+    public EntryController(ICookieService cookieService, 
+        ICreatorService creatorService,
+        IEntryInfoService entryInfoService, 
+        IStringLocalizer<ServerResources> localizer, 
+        IReportService reportService) : base(localizer, cookieService, creatorService)
     {
-        _cookieService = cookieService;
-        _creatorService = creatorService;
-        _entryService = entryService;
+        _entryInfoService = entryInfoService;
         _reportService = reportService;
     }
 
@@ -27,15 +29,11 @@ public class EntryController : BaseController
         if (decodedId == Guid.Empty)
             return ReturnIdDecodingBadRequest();
 
-        var creatorId = _cookieService.GetCreatorId(HttpContext);
-        if (!creatorId.HasValue)
-            return ReturnForbid();
+        var (_, isFailure, creator, error) = await GetCreator(cancellationToken);
+        if (isFailure)
+            return Unauthorized(error);
 
-        var entryBelongsToCreator = await _creatorService.EntryBelongsToCreator(creatorId.Value, decodedId, cancellationToken);
-        if (!entryBelongsToCreator)
-            return ReturnForbid();
-
-        _ = await _entryService.Remove(decodedId, cancellationToken);
+        _ = await _entryInfoService.Remove(creator, decodedId, cancellationToken);
         return Ok();
     }
 
@@ -52,8 +50,6 @@ public class EntryController : BaseController
     }
 
 
-    private readonly ICookieService _cookieService;
-    private readonly ICreatorService _creatorService;
-    private readonly IEntryService _entryService;
+    private readonly IEntryInfoService _entryInfoService;
     private readonly IReportService _reportService;
 }

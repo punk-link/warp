@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
+using Warp.WebApp.Models.Creators;
 
 namespace Warp.WebApp.Services.Creators;
 
@@ -19,11 +20,11 @@ public class CookieService : ICookieService
     }
 
 
-    public async Task Set(HttpContext httpContext, Guid creatorId)
+    public async Task Set(HttpContext httpContext, Creator creator)
     {
         var claims = new List<Claim>
         {
-            new(ClaimTypes.Name, creatorId.ToString())
+            new(ClaimTypes.Name, creator.Id.ToString())
         };
 
         var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -36,6 +37,6 @@ public class CookieService : ICookieService
     private static readonly AuthenticationProperties _defaultAuthenticationProperties = new()
     {
         IsPersistent = true,
-        ExpiresUtc = DateTimeOffset.UtcNow.AddHours(24)
+        ExpiresUtc = DateTimeOffset.UtcNow.AddDays(365)
     };
 }

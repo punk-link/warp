@@ -10,25 +10,24 @@ public class AmazonS3Factory : IAmazonS3Factory
         _options = options;
     }
 
+
     public AmazonS3Client CreateClient()
     {
         var s3Config = GetConfig();
-        var s3Client = new AmazonS3Client(_options.Value.AccessKey, _options.Value.SecretAccessKey, s3Config);
-        return s3Client;
+        return new AmazonS3Client(_options.Value.AccessKey, _options.Value.SecretAccessKey, s3Config);
     }
+
 
     public string GetBucketName()
-    {
-        return _options.Value.BucketName;
-    }
+        => _options.Value.BucketName;
 
-    private AmazonS3Config GetConfig()
-    {
-        return new AmazonS3Config
+
+    private static AmazonS3Config GetConfig() 
+        => new()
         {
             RegionEndpoint = Amazon.RegionEndpoint.EUCentral1
         };
-    }
+
 
     private readonly IOptions<S3Options> _options;
 }

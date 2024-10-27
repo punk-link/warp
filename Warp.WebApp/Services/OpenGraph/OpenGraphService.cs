@@ -3,10 +3,9 @@ using System.Net;
 using System.Text.RegularExpressions;
 using Warp.WebApp.Models;
 using Warp.WebApp.Models.Entries;
-using Warp.WebApp.Services.Images;
 using Warp.WebApp.Services.Infrastructure;
 
-namespace Warp.WebApp.Services;
+namespace Warp.WebApp.Services.OpenGraph;
 
 public partial class OpenGraphService : IOpenGraphService
 {
@@ -17,12 +16,14 @@ public partial class OpenGraphService : IOpenGraphService
     }
 
 
-    public EntryOpenGraphDescription BuildDescription(Entry entry)
+    public EntryOpenGraphDescription BuildDescription(Guid entryInfoId, Entry entry)
     {
         var description = GetDescription(entry.Content);
-        var imageUrls = entry.ImageIds.Select(x => _urlService.GetImageUrl(entry.Id, x)).ToList();
+        var imageUrls = entry.ImageIds
+            .Select(id => _urlService.GetImageUrl(entryInfoId, id))
+            .FirstOrDefault();
+        
         var previewImageUrl = GetImageUrl(imageUrls);
-
         return new EntryOpenGraphDescription(Title, description, previewImageUrl);
     }
 
@@ -67,13 +68,13 @@ public partial class OpenGraphService : IOpenGraphService
     }
 
 
-    private static Uri GetImageUrl(List<Uri> urls)
+    private static Uri GetImageUrl(Uri? url)
     {
-        if (urls.Count == 0)
+        if (url is null)
             return _defaultImageUrl;
 
         // TODO: check if the url is not a relative path
-        return urls.First();
+        return url;
     }
 
 
