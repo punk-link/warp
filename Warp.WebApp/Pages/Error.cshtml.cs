@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using System.Diagnostics;
 using System.Net;
 using System.Text.Json;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Models.ProblemDetails;
+using Warp.WebApp.Services.Creators;
 
 namespace Warp.WebApp.Pages;
 
@@ -11,8 +13,13 @@ namespace Warp.WebApp.Pages;
 [IgnoreAntiforgeryToken]
 public class ErrorModel : BasePageModel
 {
-    public ErrorModel(ILoggerFactory loggerFactory) : base(loggerFactory)
+    public ErrorModel(ICookieService cookieService, 
+        ICreatorService creatorService, 
+        ILoggerFactory loggerFactory, 
+        IStringLocalizer<ServerResources> serverLocalizer) 
+        : base(cookieService, creatorService, loggerFactory, serverLocalizer)
     {
+        Detail = serverLocalizer["DefaultErrorMessage"];
         RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
     }
 
@@ -24,7 +31,7 @@ public class ErrorModel : BasePageModel
             : GetProblemDetails();
         
         if (problemDetails is not null)
-            FillModel(problemDetails);
+            BuildModel(problemDetails);
     }
 
 
@@ -36,7 +43,7 @@ public class ErrorModel : BasePageModel
         => !string.IsNullOrEmpty(RequestId);
 
 
-    private void FillModel(ProblemDetails problemDetails)
+    private void BuildModel(ProblemDetails problemDetails)
     {
         Detail = problemDetails.Detail;
         Errors = problemDetails.GetErrors();
@@ -48,7 +55,7 @@ public class ErrorModel : BasePageModel
     }
 
 
-    public string? Detail { get; set; } = "An error occurred while processing your request.";
+    public string? Detail { get; set; }
     public List<Error> Errors { get; set; } = Enumerable.Empty<Error>().ToList();
     public string? RequestId { get; set; }
     public int Status { get; set; } = 500;

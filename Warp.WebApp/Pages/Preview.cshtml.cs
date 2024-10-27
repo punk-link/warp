@@ -4,11 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Warp.WebApp.Models;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
-using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Infrastructure;
 using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Models.Creators;
-using Warp.WebApp.Helpers;
 using Microsoft.Extensions.Localization;
 
 namespace Warp.WebApp.Pages;
@@ -19,40 +17,22 @@ public class PreviewModel : BasePageModel
         ICreatorService creatorService,
         IEntryInfoService entryInfoService,
         ILoggerFactory loggerFactory, 
-        IEntryPresentationService entryPresentationService, 
         IStringLocalizer<ServerResources> serverLocalizer, 
         IUrlService urlService)
-        : base(cookieService, creatorService, loggerFactory)
+        : base(cookieService, creatorService, loggerFactory, serverLocalizer)
     {
         _entryInfoService = entryInfoService;
-        _entryPresentationService = entryPresentationService;
-        _serverLocalizer = serverLocalizer;
         _urlService = urlService;
     }
 
 
     public Task<IActionResult> OnGet(string id, CancellationToken cancellationToken)
     {
-        return DecodeId()
-            .Bind(GetCreator)
+        return DecodeId(id)
+            .Bind(decodedId => GetCreator(decodedId, cancellationToken))
             .Bind(GetEntryInfo)
             .Tap(BuildModel)
             .Finally(Redirect);
-
-
-        Result<Guid, ProblemDetails> DecodeId()
-        {
-            var decodedId = IdCoder.Decode(id);
-            if (decodedId == Guid.Empty)
-                return ProblemDetailsHelper.Create(_serverLocalizer["IdDecodingErrorMessage"]);
-
-            return decodedId;
-        }
-
-
-        Task<Result<(Creator, Guid), ProblemDetails>> GetCreator(Guid decodedId)
-            => base.GetCreator(cancellationToken)
-                .Map(creator => (creator, decodedId));
 
 
         Task<Result<(Creator, EntryInfo), ProblemDetails>> GetEntryInfo((Creator Creator, Guid DecodedId) tuple) 
@@ -85,13 +65,24 @@ public class PreviewModel : BasePageModel
     }
 
 
-    public async Task<IActionResult> OnPostCopy(string id, CancellationToken cancellationToken)
+    public Task<IActionResult> OnPostCopy(string id, CancellationToken cancellationToken)
     {
-        return await _entryPresentationService.Copy(id, HttpContext, cancellationToken)
+        return DecodeId(id)
+            .Bind(decodedId => GetCreator(decodedId, cancellationToken))
+            .Bind(CopyEntryInfo)
             .Finally(result => result.IsSuccess 
-                ? RedirectToPage("./Index", new { id = IdCoder.Encode(result.Value.Id) }) 
+                ? RedirectToPage("./Index", new { id = IdCoder.Encode(result.Value.Entry.Id) }) 
                 : RedirectToError(result.Error));
+
+
+        Task<Result<EntryInfo, ProblemDetails>> CopyEntryInfo((Creator Creator, Guid DecodedId) tuple) 
+            => _entryInfoService.Copy(tuple.Creator, tuple.DecodedId, cancellationToken);
     }
+
+
+    private Task<Result<(Creator, Guid), ProblemDetails>> GetCreator(Guid decodedId, CancellationToken cancellationToken) 
+        => GetCreator(cancellationToken)
+            .Map(creator => (creator, decodedId));
 
 
     public long ExpiresIn { get; set; }
@@ -101,7 +92,5 @@ public class PreviewModel : BasePageModel
 
 
     private readonly IEntryInfoService _entryInfoService;
-    private readonly IEntryPresentationService _entryPresentationService;
-    private readonly IStringLocalizer<ServerResources> _serverLocalizer;
     private readonly IUrlService _urlService;
 }

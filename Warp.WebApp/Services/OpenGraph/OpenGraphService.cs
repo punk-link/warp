@@ -3,10 +3,9 @@ using System.Net;
 using System.Text.RegularExpressions;
 using Warp.WebApp.Models;
 using Warp.WebApp.Models.Entries;
-using Warp.WebApp.Services.Images;
 using Warp.WebApp.Services.Infrastructure;
 
-namespace Warp.WebApp.Services;
+namespace Warp.WebApp.Services.OpenGraph;
 
 public partial class OpenGraphService : IOpenGraphService
 {

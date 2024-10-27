@@ -165,4 +165,7 @@
   <data name="UnauthorizedErrorMessage" xml:space="preserve">
     <value>This creator is not authorized to perform the action.</value>
   </data>
+  <data name="DefaultErrorMessage" xml:space="preserve">
+    <value>An error occurred while processing your request.</value>
+  </data>
 </root>

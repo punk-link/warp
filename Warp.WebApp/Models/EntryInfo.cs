@@ -6,7 +6,7 @@ namespace Warp.WebApp.Models;
 public readonly record struct EntryInfo
 {
     [JsonConstructor]
-    public EntryInfo(in Guid creatorId, in Entry entry, in EntryOpenGraphDescription openGraphDescription, long viewCount)
+    public EntryInfo(Guid creatorId, Entry entry, EntryOpenGraphDescription openGraphDescription, long viewCount)
     {
         CreatorId = creatorId;
         Entry = entry;

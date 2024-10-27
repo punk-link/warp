@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
-using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
 using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Models.Entries.Enums;
@@ -13,6 +12,7 @@ using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Images;
+using Warp.WebApp.Services.OpenGraph;
 
 namespace Warp.WebApp.Pages;
 
@@ -27,7 +27,7 @@ public class IndexModel : BasePageModel
         ILoggerFactory loggerFactory, 
         IOpenGraphService openGraphService, 
         IStringLocalizer<ServerResources> serverLocalizer)
-        : base(cookieService, creatorService, loggerFactory)
+        : base(cookieService, creatorService, loggerFactory, serverLocalizer)
     {
         _analyticsOptions = analyticsOptions.Value;
         _cookieService = cookieService;
@@ -35,7 +35,6 @@ public class IndexModel : BasePageModel
         _entryInfoService = entryInfoService;
         _localizer = localizer;
         _openGraphService = openGraphService;
-        _serverLocalizer = serverLocalizer;
     }
 
 
@@ -99,23 +98,13 @@ public class IndexModel : BasePageModel
 
         Task<IActionResult> BuildExistingModal(Creator creator)
         {
-            return DecodeId()
+            return DecodeId(id)
                 .Bind(GetEntryInfo)
                 .Bind(BuildModel)
                 .Tap(AddOpenGraphModel)
                 .Finally(result => result.IsSuccess
                     ? Page()
                     : RedirectToError(result.Error));
-
-
-            Result<Guid, ProblemDetails> DecodeId()
-            {
-                var decodedId = IdCoder.Decode(id);
-                if (decodedId == Guid.Empty)
-                    return ProblemDetailsHelper.Create(_serverLocalizer["IdDecodingErrorMessage"]);
-
-                return decodedId;
-            }
 
 
             Task<Result<EntryInfo, ProblemDetails>> GetEntryInfo(Guid entryId)
@@ -244,5 +233,4 @@ public class IndexModel : BasePageModel
     private readonly IEntryInfoService _entryInfoService;
     private readonly IStringLocalizer<IndexModel> _localizer;
     private readonly IOpenGraphService _openGraphService;
-    private readonly IStringLocalizer<ServerResources> _serverLocalizer;
 }

@@ -10,6 +10,7 @@ using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
+using Warp.WebApp.Services.OpenGraph;
 using Warp.WebApp.Telemetry.Logging;
 
 namespace Warp.WebApp.Services;
@@ -44,7 +45,7 @@ public class EntryInfoService : IEntryInfoService
     {
         return AddEntry()
             .Bind(BuildEntryInfo)
-            // TODO: bound with a transaction
+            // TODO: consider binding with a transaction
             .Bind(AttachToCreator)
             .Tap(CacheEntryInfo);
 
@@ -75,6 +76,32 @@ public class EntryInfoService : IEntryInfoService
             var cacheKey = CacheKeyBuilder.BuildEntryInfoCacheKey(entryInfo.Entry.Id);
             return _dataStorage.Set(cacheKey, entryInfo, entryRequest.ExpiresIn, cancellationToken);
         }
+    }
+
+
+    [TraceMethod]
+    public Task<Result<EntryInfo, ProblemDetails>> Copy(Creator creator, Guid entryId, CancellationToken cancellationToken)
+    {
+        return GetEntryInfo(entryId, cancellationToken)
+            .Ensure(entryInfo => IsBelongsToCreator(entryInfo, creator), ProblemDetailsHelper.Create(_localizer["NoPermissionErrorMessage"]))
+            .Map(BuildEntryRequest)
+            .Bind(AddEntryInfo);
+
+
+        static EntryRequest BuildEntryRequest(EntryInfo entryInfo)
+        {
+            var expiresIn = entryInfo.Entry.ExpiresAt - entryInfo.Entry.CreatedAt;
+            return new EntryRequest
+            {
+                TextContent = entryInfo.Entry.Content,
+                ExpiresIn = expiresIn,
+                ImageIds = [] // TODO: add image ids when the feature is implemented
+            };
+        }
+
+
+        Task<Result<EntryInfo, ProblemDetails>> AddEntryInfo(EntryRequest entryRequest)
+            => Add(creator, entryRequest, cancellationToken);
     }
 
 

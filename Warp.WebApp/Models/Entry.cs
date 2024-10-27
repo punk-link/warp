@@ -1,5 +1,4 @@
 ﻿using System.Text.Json.Serialization;
-using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Entries.Enums;
 
 namespace Warp.WebApp.Models;

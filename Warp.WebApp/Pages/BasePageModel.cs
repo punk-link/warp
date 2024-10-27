@@ -8,16 +8,22 @@ using Warp.WebApp.Helpers;
 using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Services.Creators;
 using CSharpFunctionalExtensions;
+using Warp.WebApp.Services;
+using Microsoft.Extensions.Localization;
 
 namespace Warp.WebApp.Pages;
 
 public class BasePageModel : PageModel
 {
-    public BasePageModel(ICookieService cookieService, ICreatorService creatorService, ILoggerFactory loggerFactory)
+    public BasePageModel(ICookieService cookieService, 
+        ICreatorService creatorService, 
+        ILoggerFactory loggerFactory, 
+        IStringLocalizer<ServerResources> serverLocalizer)
     {
         _cookieService = cookieService;
         _creatorService = creatorService;
         _logger = loggerFactory.CreateLogger<BasePageModel>();
+        _serverLocalizer = serverLocalizer;
     }
 
 
@@ -25,6 +31,16 @@ public class BasePageModel : PageModel
     {
         var problemDetailsJson = JsonSerializer.Serialize(problemDetails);
         TempData[ProblemDetailsTempDataToken] = problemDetailsJson;
+    }
+
+
+    protected Result<Guid, ProblemDetails> DecodeId(string id)
+    {
+        var decodedId = IdCoder.Decode(id);
+        if (decodedId == Guid.Empty)
+            return ProblemDetailsHelper.Create(_serverLocalizer["IdDecodingErrorMessage"]);
+
+        return decodedId;
     }
 
 
@@ -85,4 +101,5 @@ public class BasePageModel : PageModel
     private readonly ICookieService _cookieService;
     private readonly ICreatorService _creatorService;
     private readonly ILogger<BasePageModel> _logger;
+    private readonly IStringLocalizer<ServerResources> _serverLocalizer;
 }

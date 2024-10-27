@@ -11,5 +11,9 @@ public readonly record struct Creator
     }
 
 
+    public static Creator Empty 
+        => new(Guid.Empty);
+
+
     public Guid Id { get; }
 }

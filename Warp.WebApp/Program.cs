@@ -17,6 +17,7 @@ using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
 using Warp.WebApp.Services.Infrastructure;
+using Warp.WebApp.Services.OpenGraph;
 using Warp.WebApp.Telemetry;
 using Warp.WebApp.Telemetry.Logging;
 
@@ -146,8 +147,6 @@ void AddServices(IServiceCollection services)
     services.AddTransient<IEntryService, EntryService>();
     services.AddTransient<ICreatorService, CreatorService>();
     services.AddTransient<ICookieService, CookieService>();
-
-    services.AddTransient<IEntryPresentationService, EntryPresentationService>();
 
     services.AddHostedService<WarmupService>();
 }
