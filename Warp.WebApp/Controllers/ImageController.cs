@@ -31,17 +31,19 @@ public sealed class ImageController : BaseController
 
     [HttpGet("entry-id/{entryId}/image-id/{imageId}")]
     [OutputCache(Duration = 10 * 60, VaryByRouteValueNames = ["entryId", "imageId"])]
-    public async Task<IActionResult> Get([FromRoute] string imageId, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Get([FromRoute] string entryId, [FromRoute] string imageId, CancellationToken cancellationToken = default)
     {
-        // TODO: add a check for the entryId
+        var decodedEntryId = IdCoder.Decode(entryId);
+        if (decodedEntryId == Guid.Empty)
+            return ReturnIdDecodingBadRequest();
 
         var decodedImageId = IdCoder.Decode(imageId);
         if (decodedImageId == Guid.Empty)
             return ReturnIdDecodingBadRequest();
 
-        var (_, isFailure, value, error) = await _imageService.Get(decodedImageId, cancellationToken);
+        var (_, isFailure, value, error) = await _imageService.Get(decodedEntryId, decodedImageId, cancellationToken);
         if (isFailure)
-            return NotFound(error);
+            return BadRequest(error);
 
         return new FileStreamResult(value.Content, value.ContentType);
     }

@@ -1,18 +1,16 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
 using System.Collections.Concurrent;
 using Warp.WebApp.Data.S3;
-using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
+using Warp.WebApp.Models.Files;
 
 namespace Warp.WebApp.Services.Images;
 
 public class ImageService : IImageService
 {
-    public ImageService(IStringLocalizer<ServerResources> localizer, IS3FileStorage s3FileStorage)
+    public ImageService(IS3FileStorage s3FileStorage)
     {
-        _localizer = localizer;
         _s3FileStorage = s3FileStorage;
     }
 
@@ -78,13 +76,50 @@ public class ImageService : IImageService
     }
 
 
+    public async Task<Result<Image, ProblemDetails>> Get(Guid entryId, Guid imageId, CancellationToken cancellationToken)
+    {
+        return await GetImage(imageId, cancellationToken)
+            .Bind(BuildImage);
+
+
+        Task<Result<FileContent, ProblemDetails>> GetImage(Guid imageId, CancellationToken cancellationToken) 
+            => _s3FileStorage.Get(entryId.ToString(), imageId.ToString(), cancellationToken);
+
+
+        Result<Image, ProblemDetails> BuildImage(FileContent stream)
+            => new Image()
+            {
+                Id = imageId,
+                Content = stream.Content,
+                ContentType = stream.ContentType
+            };
+    }
+
+
     public Task<Result<List<ImageInfo>, ProblemDetails>> GetAttached(Guid entryId, List<Guid> imageIds, CancellationToken cancellationToken)
     { 
-        return _s3FileStorage.Contains(entryId, imageIds, cancellationToken)
+        return GetUploaded()
             .Bind(BuildImageInfo);
 
 
-        Result<List<ImageInfo>, ProblemDetails> BuildImageInfo(HashSet<Guid> imageIds) 
+        async Task<Result<List<Guid>, ProblemDetails>> GetUploaded()
+        {
+            var prefix = entryId.ToString();
+            var keys = imageIds.Select(imageId => imageId.ToString())
+                .ToList();
+            
+            var (_, isFailure, stringKeys, error) = await _s3FileStorage.Contains(prefix, keys, cancellationToken);
+            if (isFailure)
+                return error;
+
+            return stringKeys
+                .Select(key => Guid. TryParse(key, out var imageId) ? imageId : Guid.Empty)
+                .Where(imageId => imageId != Guid.Empty)
+                .ToList();
+        }
+
+
+        Result<List<ImageInfo>, ProblemDetails> BuildImageInfo(List<Guid> imageIds) 
             => imageIds.Select(imageId =>
                 {
                     var url = BuildUrl(entryId, imageId);
@@ -93,26 +128,8 @@ public class ImageService : IImageService
     }
 
 
-    public Task<Result<HashSet<Guid>, ProblemDetails>> Contains(Guid entryId, List<Guid> imageIds, CancellationToken cancellationToken) 
-        => _s3FileStorage.Contains(entryId, imageIds, cancellationToken);
-
-
-    public async Task<Result<Image, ProblemDetails>> Get(Guid imageId, CancellationToken cancellationToken)
-    {
-        var image = await GetImage(imageId, cancellationToken);
-
-        return image != default
-            ? Result.Success<Image, ProblemDetails>(image)
-            : ResultHelper.NotFound<Image>(_localizer);
-    }
-
-
     public async Task Remove(Guid imageId, CancellationToken cancellationToken)
         => await _s3FileStorage.Delete(imageId, cancellationToken);
-
-
-    private async Task<Image> GetImage(Guid imageId, CancellationToken cancellationToken)
-        => await _s3FileStorage.Get(imageId, cancellationToken);
 
 
     private static Uri BuildUrl(string encodedEntryId, Guid imageId)
@@ -123,6 +140,5 @@ public class ImageService : IImageService
         => BuildUrl(IdCoder.Encode(entryId), imageId);
 
 
-    private readonly IStringLocalizer<ServerResources> _localizer;
     private readonly IS3FileStorage _s3FileStorage;
 }
