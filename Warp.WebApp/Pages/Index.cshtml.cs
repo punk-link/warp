@@ -46,10 +46,10 @@ public class IndexModel : BasePageModel
             .Finally(async creatorResult =>
             {
                 if (string.IsNullOrEmpty(id))
-                    return BuildNewModal();
+                    return BuildNewModel();
 
                 var creator = creatorResult.Value;
-                return await BuildExistingModal(creator);
+                return await BuildExistingModel(creator);
             });
 
 
@@ -85,18 +85,19 @@ public class IndexModel : BasePageModel
             => AnalyticsModel = new AnalyticsModel(_analyticsOptions);
 
 
-        IActionResult BuildNewModal()
+        IActionResult BuildNewModel()
         {
             var openGraphDescription = _openGraphService.GetDefaultDescription();
             OpenGraphModel = new OpenGraphModel(openGraphDescription);
 
+            Id = IdCoder.Encode(Guid.NewGuid());
             ImageContainers.Add(EditableImageContainerModel.Empty);
 
             return Page();
         }
 
 
-        Task<IActionResult> BuildExistingModal(Creator creator)
+        Task<IActionResult> BuildExistingModel(Creator creator)
         {
             return DecodeId(id)
                 .Bind(GetEntryInfo)
@@ -113,18 +114,13 @@ public class IndexModel : BasePageModel
 
             Result<EntryInfo, ProblemDetails> BuildModel(EntryInfo entryInfo)
             {
+                Id = id;
                 EditMode = entryInfo.EditMode;
                 TextContent = TextFormatter.GetCleanString(entryInfo.Entry.Content);
                 SelectedExpirationPeriod = GetExpirationPeriodId(entryInfo.ExpiresAt - entryInfo.CreatedAt);
 
-                foreach (var imageId in entryInfo.Entry.ImageIds)
-                {
-                    // TODO: remove this hack when we have a proper solution for image urls
-                    var urls = ImageService.BuildImageUrls(entryInfo.Id, [imageId]);
-                    var url = urls.First();
-                    var imageContainer = new EditableImageContainerModel(imageId, new Uri(url, UriKind.Relative));
-                    ImageContainers.Add(imageContainer);
-                }
+                foreach (var imageInfo in entryInfo.ImageInfos)
+                    ImageContainers.Add(new EditableImageContainerModel(imageInfo));
 
                 ImageContainers.Add(EditableImageContainerModel.Empty);
 
@@ -158,7 +154,15 @@ public class IndexModel : BasePageModel
             var expiresIn = GetExpirationPeriod(SelectedExpirationPeriod);
             var decodedImageIds = ImageIds.Select(IdCoder.Decode).ToList();
         
-            var request = new EntryRequest { TextContent = TextContent, ExpiresIn = expiresIn, ImageIds = decodedImageIds, EditMode = EditMode };
+            var request = new EntryRequest 
+            {
+                Id = IdCoder.Decode(Id), 
+                EditMode = EditMode, 
+                ExpiresIn = expiresIn, 
+                ImageIds = decodedImageIds, 
+                TextContent = TextContent
+            };
+
             return (creator, request);
         }
 
@@ -199,6 +203,9 @@ public class IndexModel : BasePageModel
         return 5;
     }
 
+
+    [BindProperty]
+    public string Id { get; set; }
 
     [BindProperty]
     public EditMode EditMode { get; set; } = EditMode.Text;

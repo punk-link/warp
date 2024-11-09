@@ -1,12 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc.RazorPages;
+using Warp.WebApp.Models;
 
 namespace Warp.WebApp.Pages.Shared.Components;
 
 public class ReadOnlyImageContainerModel : PageModel
 {
-    public ReadOnlyImageContainerModel(Uri imageUrl)
+    public ReadOnlyImageContainerModel(ImageInfo imageInfo)
     {
-        ImageUrl = imageUrl;
+        ImageUrl = imageInfo.Url;
     }
 
 

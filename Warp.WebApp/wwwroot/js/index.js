@@ -96,7 +96,7 @@ function toggleCreateButtonState(createButton, targetModeButton, targetTextarea)
 }
 
 
-export function addIndexEvents(editMode) {
+export function addIndexEvents(entryId, editMode) {
     let backgroundImageContainer = document.getElementById('roaming-image');
     repositionBackgroundImage(backgroundImageContainer);
 
@@ -106,8 +106,8 @@ export function addIndexEvents(editMode) {
     let fileInput = document.getElementById('file');
     let uploadButton = document.getElementById('empty-image-container');
     
-    addDropAreaEvents(dropArea, fileInput, uploadButton);
-    addPasteImageEventListener();
+    addDropAreaEvents(entryId, dropArea, fileInput, uploadButton);
+    addPasteImageEventListener(entryId);
 }
 
 

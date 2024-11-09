@@ -11,8 +11,7 @@ const headers = {
 export async function makeHttpRequest(URL, method, body = null) {
     let response = await fetch(URL, {
         method: method,
-        body: body != null ? JSON.stringify(body) : null,
-        headers: body != null ? headers : undefined
+        body: body
     });
 
     return response;

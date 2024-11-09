@@ -1,30 +1,22 @@
 ﻿using Microsoft.Extensions.Localization;
 using System.Net;
 using System.Text.RegularExpressions;
-using Warp.WebApp.Models;
 using Warp.WebApp.Models.Entries;
-using Warp.WebApp.Services.Infrastructure;
 
 namespace Warp.WebApp.Services.OpenGraph;
 
 public partial class OpenGraphService : IOpenGraphService
 {
-    public OpenGraphService(IStringLocalizer<ServerResources> localizer, IUrlService urlService)
+    public OpenGraphService(IStringLocalizer<ServerResources> localizer)
     {
         _localizer = localizer;
-        _urlService = urlService;
     }
 
 
-    public EntryOpenGraphDescription BuildDescription(Guid entryInfoId, Entry entry)
+    public EntryOpenGraphDescription BuildDescription(string descriptionSource, Uri? previewImageUrl)
     {
-        var description = GetDescription(entry.Content);
-        var imageUrls = entry.ImageIds
-            .Select(id => _urlService.GetImageUrl(entryInfoId, id))
-            .FirstOrDefault();
-        
-        var previewImageUrl = GetImageUrl(imageUrls);
-        return new EntryOpenGraphDescription(Title, description, previewImageUrl);
+        var description = GetDescription(descriptionSource);
+        return new EntryOpenGraphDescription(Title, description, GetImageUrl(previewImageUrl));
     }
 
 
@@ -87,5 +79,4 @@ public partial class OpenGraphService : IOpenGraphService
 
 
     private readonly IStringLocalizer<ServerResources> _localizer;
-    private readonly IUrlService _urlService;
 }

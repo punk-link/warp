@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Entries.Enums;
 
@@ -14,6 +13,7 @@ public readonly record struct EntryInfo
         DateTime expiresAt, 
         EditMode editMode,
         Entry entry, 
+        List<ImageInfo> imageInfos,
         EntryOpenGraphDescription openGraphDescription, 
         long viewCount)
     {
@@ -23,20 +23,9 @@ public readonly record struct EntryInfo
         Entry = entry;
         ExpiresAt = expiresAt;
         Id = id;
+        ImageInfos = imageInfos;
         OpenGraphDescription = openGraphDescription;
         ViewCount = viewCount;
-    }
-
-
-    public EntryInfo(in Guid id, 
-        in Guid creatorId, 
-        in DateTime createdAt, 
-        in DateTime expiresAt,
-        EditMode editMode,
-        in Entry entry, 
-        in EntryOpenGraphDescription openGraphDescription)
-        : this(id, creatorId, createdAt, expiresAt, editMode, entry, openGraphDescription, 0)
-    {
     }
 
         
@@ -46,6 +35,7 @@ public readonly record struct EntryInfo
     public EditMode EditMode { get; } = EditMode.Unknown;
     public Entry Entry { get; }
     public DateTime ExpiresAt { get; }
+    public List<ImageInfo> ImageInfos { get; init; }
     public EntryOpenGraphDescription OpenGraphDescription { get; }
     public long ViewCount { get; init; }
 }

@@ -1,39 +1,79 @@
-﻿using Amazon.Runtime.Internal;
-using Amazon.S3;
+﻿using Amazon.S3;
 using Amazon.S3.Model;
-using System;
+using CSharpFunctionalExtensions;
+using Microsoft.AspNetCore.Mvc;
 using Warp.WebApp.Attributes;
+using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
+using Warp.WebApp.Telemetry.Logging;
 
 namespace Warp.WebApp.Data.S3;
 
 public class S3FileStorage : IS3FileStorage
 {
-    public S3FileStorage(IAmazonS3Factory amazonS3Factory)
+    public S3FileStorage(IAmazonS3Factory amazonS3Factory, ILoggerFactory loggerFactory)
     {
+        _logger = loggerFactory.CreateLogger<S3FileStorage>();
+
         _amazonS3Client = amazonS3Factory.CreateClient();
         _amazonS3Factory = amazonS3Factory;
     }
 
 
     [TraceMethod]
-    public async Task Save(ImageInfo imageInfo, CancellationToken cancellationToken)
+    public async Task<Result<HashSet<Guid>, ProblemDetails>> Contains(Guid prefix, List<Guid> objectIds, CancellationToken cancellationToken)
     {
-        using var memoryStream = new MemoryStream(imageInfo.Content);
-        var request = new PutObjectRequest
+        var request = new ListObjectsV2Request
         {
             BucketName = _amazonS3Factory.GetBucketName(),
-            Key = imageInfo.Id.ToString(),
-            InputStream = memoryStream,
-            ContentType = imageInfo.ContentType
+            Prefix = prefix.ToString() + "/"
         };
 
-        var result = await _amazonS3Client.PutObjectAsync(request, cancellationToken);
+        var response = await _amazonS3Client.ListObjectsV2Async(request, cancellationToken);
+        if (response is null || response.HttpStatusCode is not System.Net.HttpStatusCode.OK)
+        {
+            var error = "Failed to list objects in S3: " + response?.HttpStatusCode.ToString() ?? "unknown error";
+            return Result.Failure<HashSet<Guid>, ProblemDetails>(ProblemDetailsHelper.CreateServerException(error));
+        }
+
+        var objectIdsSet = new HashSet<Guid>(objectIds);
+        var existingObjectIds = response.S3Objects
+            .Select(s3Object => Guid.TryParse(s3Object.Key, out var objectId) ? objectId : Guid.Empty)
+            .Where(objectId => objectId != Guid.Empty)
+            .Where(objectIdsSet.Contains)
+            .ToHashSet();
+
+        return existingObjectIds;
     }
 
 
     [TraceMethod]
-    public async Task<ImageInfo> Get(Guid imageId, CancellationToken cancellationToken)
+    public async Task<UnitResult<ProblemDetails>> Save(ImageRequest imageRequest, CancellationToken cancellationToken)
+    {
+        var key = $"{imageRequest.EntryId}/{imageRequest.Id}";
+
+        var request = new PutObjectRequest
+        {
+            BucketName = _amazonS3Factory.GetBucketName(),
+            Key = key,
+            InputStream = imageRequest.Content,
+            ContentType = imageRequest.ContentType
+        };
+
+        var response = await _amazonS3Client.PutObjectAsync(request, cancellationToken);
+        if (response is not null && response.HttpStatusCode is System.Net.HttpStatusCode.OK)
+            return UnitResult.Success<ProblemDetails>();
+
+        var error = "Failed to save image to S3: " + response?.HttpStatusCode.ToString() ?? "unknown error";
+        var problemDetails = ProblemDetailsHelper.CreateServerException(error);
+
+        _logger.LogImageUploadError(error);
+        return UnitResult.Failure(problemDetails);
+    }
+
+
+    [TraceMethod]
+    public async Task<Image> Get(Guid imageId, CancellationToken cancellationToken)
     {
         var request = new GetObjectRequest
         {
@@ -41,18 +81,18 @@ public class S3FileStorage : IS3FileStorage
             Key = imageId.ToString(),
         };
 
-        var result = await _amazonS3Client.GetObjectAsync(request, cancellationToken);
-
+        using var result = await _amazonS3Client.GetObjectAsync(request, cancellationToken);
         if (result is null)
             return default;
 
-        using var memoryStream = new MemoryStream();
-        result.ResponseStream.CopyTo(memoryStream);
+        var contentStream = new MemoryStream();
+        await result.ResponseStream.CopyToAsync(contentStream, cancellationToken);
+        contentStream.Position = 0;
 
-        return new ImageInfo()
+        return new Image()
         {
             Id = imageId,
-            Content = memoryStream.ToArray(),
+            Content = contentStream,
             ContentType = result.Headers.ContentType
         };
     }
@@ -73,4 +113,5 @@ public class S3FileStorage : IS3FileStorage
 
     private readonly AmazonS3Client _amazonS3Client;
     private readonly IAmazonS3Factory _amazonS3Factory;
+    private readonly ILogger<S3FileStorage> _logger;
 }

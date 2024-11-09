@@ -1,18 +1,28 @@
 ﻿using Microsoft.AspNetCore.Mvc.RazorPages;
+using Warp.WebApp.Models;
 
 namespace Warp.WebApp.Pages.Shared.Components;
 
 public class EditableImageContainerModel : PageModel
 {
-    public EditableImageContainerModel(Guid imageId, Uri? imageUrl)
+    public EditableImageContainerModel(ImageInfo imageInfo)
     {
-        ImageId = imageId;
-        ImageUrl = imageUrl;
+        ImageId = imageInfo.Id;
+        ImageUrl = imageInfo.Url;
+    }
+
+
+    private EditableImageContainerModel()
+    {
     }
 
 
     public static EditableImageContainerModel Empty
-        => new(Guid.Empty, null);
+        => new()
+        {
+            ImageId = Guid.Empty,
+            ImageUrl = null
+        };
 
 
     public void OnGet()

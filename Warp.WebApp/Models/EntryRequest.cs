@@ -4,6 +4,7 @@ namespace Warp.WebApp.Models;
 
 public readonly record struct EntryRequest
 {
+    public Guid Id { get; init; }
     public EditMode EditMode { get; init; }
     public TimeSpan ExpiresIn { get; init; }
     public List<Guid> ImageIds { get; init; }

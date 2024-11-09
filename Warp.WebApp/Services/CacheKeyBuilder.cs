@@ -10,10 +10,6 @@ public static class CacheKeyBuilder
         => $"{nameof(Creator)}::{id}";
 
 
-    public static string BuildEntryCacheKey(in Guid id)
-        => $"{nameof(Entry)}::{id}";
-
-
     public static string BuildEntryInfoCacheKey(in Guid entryId)
         => $"{nameof(EntryInfo)}::{entryId}";
 

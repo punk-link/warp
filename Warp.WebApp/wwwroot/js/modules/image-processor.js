@@ -1,21 +1,25 @@
 import { uploadFinishedEvent } from '../events/events.js';
+import { makeHttpRequest, DELETE, POST } from '../functions/http-client.js';
 
 
 const PLUS_ICON = 'icofont-plus';
 const CLOCK_ICON = 'icofont-clock-time';
 
 
-function addImageDeleteEvent(containerElement) {
+function addImageDeleteEvent(entryId, containerElement) {
     let deleteButton = containerElement.querySelector('.delete-image-button');
-    deleteButton.onclick = (e) => deleteImage(e);
+    //deleteButton.onclick = (e) => deleteImage(e);
 
     return containerElement;
 }
 
 
-function deleteImage(e) {
-    e.target.closest('.image-container').remove();
- }
+//function deleteImage(e) {
+//    let responce = await makeHttpRequest(`/api/entry-id/${entryId}/image-id/{imageId}`, DELETE);
+
+//    if (responce.ok)
+//        e.target.closest('.image-container').remove();
+// }
 
 
 async function dropImages(e) {
@@ -35,12 +39,7 @@ function getImageContainerElement(imageContainer) {
 }
 
 
-function removeUploadingIcon(element) {
-    toggleUploadingIcon(element, CLOCK_ICON, PLUS_ICON);
-}
-
-
-function renderPreview(files, imageContainers) {
+function renderPreview(entryId, files, imageContainers) {
     let gallery = document.getElementsByClassName('upload-gallery')[0];
 
     files.forEach(file => {
@@ -53,7 +52,7 @@ function renderPreview(files, imageContainers) {
 
             let containerElement = getImageContainerElement(imageContainer);
             containerElement = replaceImagePreview(containerElement, reader);
-            containerElement = addImageDeleteEvent(containerElement);
+            containerElement = addImageDeleteEvent(entryId, containerElement);
 
             containerElement.classList.add('d-none');
             gallery.prepend(containerElement);
@@ -78,7 +77,7 @@ function replaceImagePreview(containerElement, reader) {
 }
 
 
-function toggleUploadingIcon(element, removedState, addedState) {
+function toggleImageInUseStatus(element, removedState, addedState) {
     let icon = element.getElementsByTagName('i')[0];
     element.classList.add('d-none');
 
@@ -90,40 +89,41 @@ function toggleUploadingIcon(element, removedState, addedState) {
 }
 
 
-function setUploadingIcon(element) {
-    toggleUploadingIcon(element, PLUS_ICON, CLOCK_ICON);
+function setImageInUseStatus(element) {
+    toggleImageInUseStatus(element, PLUS_ICON, CLOCK_ICON);
 }
 
 
-async function uploadImages(files) {
+function unsetImageInUseStatus(element) {
+    toggleImageInUseStatus(element, CLOCK_ICON, PLUS_ICON);
+}
+
+
+async function uploadImages(entryId, files) {
     let emptyImageContainer = document.getElementById('empty-image-container');
-    setUploadingIcon(emptyImageContainer);
+    setImageInUseStatus(emptyImageContainer);
 
     let formData = new FormData();
     files.forEach(file => {
         formData.append('Images', file, file.name);
     });
 
-    let response = await fetch('/api/images/', {
-        method: 'POST',
-        body: formData
-    });
-
+    let response = await makeHttpRequest(`/api/images/entry-id/${entryId}`, POST, formData);
     if (!response.ok) {
-        removeUploadingIcon(emptyImageContainer);
+        unsetImageInUseStatus(emptyImageContainer);
 
         console.error(response.status, response.statusText);
         return;
     }
         
     let imageContainers = await response.json();
-    renderPreview(files, imageContainers);
+    renderPreview(entryId, files, imageContainers);
 
-    removeUploadingIcon(emptyImageContainer);
+    unsetImageInUseStatus(emptyImageContainer);
 }
 
 
-export function addDropAreaEvents(dropArea, fileInput, uploadButton) {
+export function addDropAreaEvents(entryId, dropArea, fileInput, uploadButton) {
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         dropArea.addEventListener(eventName, (e) => {
                 e.preventDefault();
@@ -147,14 +147,14 @@ export function addDropAreaEvents(dropArea, fileInput, uploadButton) {
 
     fileInput.onchange = async (e) => {
         let files = Array.from(e.target.files)
-        await uploadImages(files);
+        await uploadImages(entryId, files);
     };
 
     uploadButton.onclick = () => fileInput.click();
 }
 
 
-export async function pasteImages() {
+export async function pasteImages(entryId) {
     try {
         await navigator.permissions.query({ name: 'clipboard-read' });
 
@@ -170,7 +170,7 @@ export async function pasteImages() {
             }
         }
         
-        await uploadImages(files);
+        await uploadImages(entryId, files);
     } catch (err) {
         console.error(err);
     }

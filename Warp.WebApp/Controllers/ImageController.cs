@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.Extensions.Localization;
+using Warp.WebApp.Models;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Creators;
@@ -32,6 +33,8 @@ public sealed class ImageController : BaseController
     [OutputCache(Duration = 10 * 60, VaryByRouteValueNames = ["entryId", "imageId"])]
     public async Task<IActionResult> Get([FromRoute] string imageId, CancellationToken cancellationToken = default)
     {
+        // TODO: add a check for the entryId
+
         var decodedImageId = IdCoder.Decode(imageId);
         if (decodedImageId == Guid.Empty)
             return ReturnIdDecodingBadRequest();
@@ -40,7 +43,7 @@ public sealed class ImageController : BaseController
         if (isFailure)
             return NotFound(error);
 
-        return new FileStreamResult(new MemoryStream(value.Content), value.ContentType);
+        return new FileStreamResult(value.Content, value.ContentType);
     }
 
 
@@ -60,19 +63,23 @@ public sealed class ImageController : BaseController
     }
 
 
-    [HttpPost]
-    public async Task<IActionResult> Upload([FromForm] List<IFormFile> images, CancellationToken cancellationToken = default)
+    [HttpPost("entry-id/{entryId}")]
+    public async Task<IActionResult> Upload([FromRoute] string entryId, [FromForm] List<IFormFile> images, CancellationToken cancellationToken = default)
     {
-        var imageContainers = await _imageService.Add(images, cancellationToken);
-        return Ok(await BuildUploadResults(imageContainers));
+        var decodedEntryId = IdCoder.Decode(entryId);
+        if (decodedEntryId == Guid.Empty)
+            return ReturnIdDecodingBadRequest();
+
+        var imageResponses = await _imageService.Add(decodedEntryId, images, cancellationToken);
+        return Ok(await BuildUploadResults(imageResponses));
     }
 
 
-    private async Task<Dictionary<string, string>> BuildUploadResults(Dictionary<string, Guid> imageContainers)
+    private async Task<Dictionary<string, string>> BuildUploadResults(List<ImageResponse> imageResponses)
     {
-        var uploadResults = new Dictionary<string, string>(imageContainers.Count);
+        var uploadResults = new Dictionary<string, string>(imageResponses.Count);
 
-        foreach (var container in imageContainers)
+        foreach (var imageResponse in imageResponses)
         {
             var partialView = new PartialViewResult
             {
@@ -80,12 +87,12 @@ public sealed class ImageController : BaseController
                 ViewName = "Components/EditableImageContainer",
                 ViewData = new ViewDataDictionary(new EmptyModelMetadataProvider(), new ModelStateDictionary())
                 {
-                    Model = new EditableImageContainerModel(container.Value, null)
+                    Model = new EditableImageContainerModel(imageResponse.ImageInfo)
                 }
             };
 
             var html = await _partialViewRenderHelper.Render(ControllerContext, HttpContext, partialView);
-            uploadResults.Add(container.Key, html);
+            uploadResults.Add(imageResponse.ClientFileName, html);
         }
 
         return uploadResults;

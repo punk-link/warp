@@ -45,27 +45,42 @@ public class EntryInfoService : IEntryInfoService
     [TraceMethod]
     public Task<Result<EntryInfo, ProblemDetails>> Add(Creator creator, EntryRequest entryRequest, CancellationToken cancellationToken)
     {
+        var entryInfoId = entryRequest.Id;
         var now = DateTime.UtcNow;
-        var entryInfoId = Guid.NewGuid();
 
         return AddEntry()
+            .Bind(GetImageInfos)
             .Bind(BuildEntryInfo)
             .Bind(Validate)
-            // TODO: consider binding with a transaction
             .Bind(AttachToCreator)
             .Tap(CacheEntryInfo);
 
 
         Task<Result<Entry, ProblemDetails>> AddEntry()
-            => _entryService.Add(entryInfoId, entryRequest, cancellationToken);
+            => _entryService.Add(entryRequest, cancellationToken);
 
 
-        Result<EntryInfo, ProblemDetails> BuildEntryInfo(Entry entry)
+        async Task<Result<(Entry, List<ImageInfo>), ProblemDetails>> GetImageInfos(Entry entry)
+        {
+            var (_, isFailure, imageInfos, error) = await _imageService.GetAttached(entryInfoId, entryRequest.ImageIds, cancellationToken);
+            if (isFailure)
+                return error;
+
+            return (entry, imageInfos);
+        }
+
+
+        Result<EntryInfo, ProblemDetails> BuildEntryInfo((Entry Entry, List<ImageInfo> ImageInfos) tuple)
         {
             var expirationTime = now + entryRequest.ExpiresIn;
-            var description = _openGraphService.BuildDescription(entryInfoId, entry);
+
+            var previewImageUri = tuple.ImageInfos
+                .Select(imageInfo => imageInfo.Url)
+                .FirstOrDefault();
+        
+            var description = _openGraphService.BuildDescription(tuple.Entry.Content, previewImageUri);
             
-            return new EntryInfo(entryInfoId, creator.Id, now, expirationTime, entryRequest.EditMode, entry, description);
+            return new EntryInfo(entryInfoId, creator.Id, now, expirationTime, entryRequest.EditMode, tuple.Entry, tuple.ImageInfos, description, 0);
         }
 
 

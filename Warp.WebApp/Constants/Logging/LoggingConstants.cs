@@ -20,6 +20,7 @@ public static class LoggingConstants
     public const int PartialViewRenderingError = 12_102;
     public const int ActionContextNotFound = 12_103;
     public const int ImageControllerGetMethodNotFound = 12_104;
+    public const int ImageUploadError = 12_201;
 
     // Domain
     public const int WarpContentEmpty = 20_001;
