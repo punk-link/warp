@@ -19,13 +19,15 @@ public sealed class ImageController : BaseController
 {
     public ImageController(ICookieService cookieService, 
         ICreatorService creatorService,
-        IImageService imageService, 
-        IStringLocalizer<ServerResources> localizer,
-        IPartialViewRenderService partialViewRenderHelper) 
+        IEntryInfoService entryInfoService,
+        IPartialViewRenderService partialViewRenderHelper,
+        IUnauthorizedImageService unauthorizedImageService,
+        IStringLocalizer<ServerResources> localizer) 
         : base(localizer, cookieService, creatorService)
     {
-        _imageService = imageService;
+        _entryInfoService = entryInfoService;
         _partialViewRenderHelper = partialViewRenderHelper;
+        _unauthorizedImageService = unauthorizedImageService;
     }
 
 
@@ -41,7 +43,7 @@ public sealed class ImageController : BaseController
         if (decodedImageId == Guid.Empty)
             return ReturnIdDecodingBadRequest();
 
-        var (_, isFailure, value, error) = await _imageService.Get(decodedEntryId, decodedImageId, cancellationToken);
+        var (_, isFailure, value, error) = await _unauthorizedImageService.Get(decodedEntryId, decodedImageId, cancellationToken);
         if (isFailure)
             return BadRequest(error);
 
@@ -60,7 +62,11 @@ public sealed class ImageController : BaseController
         if (decodedImageId == Guid.Empty)
             return ReturnIdDecodingBadRequest();
 
-        await _imageService.Remove(decodedImageId, cancellationToken);
+        var creatorResult = await GetCreator(cancellationToken);
+        if (creatorResult.IsFailure)
+            return ReturnForbid();
+
+        await _entryInfoService.RemoveImage(creatorResult.Value, decodedEntryId, decodedImageId, cancellationToken);
         return NoContent();
     }
 
@@ -72,7 +78,7 @@ public sealed class ImageController : BaseController
         if (decodedEntryId == Guid.Empty)
             return ReturnIdDecodingBadRequest();
 
-        var imageResponses = await _imageService.Add(decodedEntryId, images, cancellationToken);
+        var imageResponses = await _unauthorizedImageService.Add(decodedEntryId, images, cancellationToken);
         return Ok(await BuildUploadResults(imageResponses));
     }
 
@@ -101,6 +107,7 @@ public sealed class ImageController : BaseController
     }
 
 
-    private readonly IImageService _imageService;
+    private readonly IEntryInfoService _entryInfoService;
     private readonly IPartialViewRenderService _partialViewRenderHelper;
+    private readonly IUnauthorizedImageService _unauthorizedImageService;
 }

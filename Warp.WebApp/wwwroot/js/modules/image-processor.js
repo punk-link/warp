@@ -8,18 +8,19 @@ const CLOCK_ICON = 'icofont-clock-time';
 
 function addImageDeleteEvent(entryId, containerElement) {
     let deleteButton = containerElement.querySelector('.delete-image-button');
-    //deleteButton.onclick = (e) => deleteImage(e);
+    deleteButton.onclick = (e) => deleteImage(e, entryId);
 
     return containerElement;
 }
 
 
-//function deleteImage(e) {
-//    let responce = await makeHttpRequest(`/api/entry-id/${entryId}/image-id/{imageId}`, DELETE);
+async function deleteImage(e, entryId) {
+    let imageId = e.target.closest('.image-container').dataset.imageId;
 
-//    if (responce.ok)
-//        e.target.closest('.image-container').remove();
-// }
+    let response = await makeHttpRequest(`/api/images/entry-id/${entryId}/image-id/${imageId}`, DELETE);
+    if (response.ok)
+        e.target.closest('.image-container').remove();
+ }
 
 
 async function dropImages(e) {

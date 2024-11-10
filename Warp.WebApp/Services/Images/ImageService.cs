@@ -7,7 +7,7 @@ using Warp.WebApp.Models.Files;
 
 namespace Warp.WebApp.Services.Images;
 
-public class ImageService : IImageService
+public class ImageService : IImageService, IUnauthorizedImageService
 {
     public ImageService(IS3FileStorage s3FileStorage)
     {
@@ -38,19 +38,14 @@ public class ImageService : IImageService
             using var contentStream = new MemoryStream();
             await file.CopyToAsync(contentStream, cancellationToken);
 
-            var imageRequest = new ImageRequest
-            {
-                Id = Guid.NewGuid(),
-                Content = contentStream,
-                ContentType = file.ContentType,
-                EntryId = entryId
-            };
+            var imageId = Guid.NewGuid();
+            var fileContent = new FileContent(contentStream, file.ContentType);
 
-            var result = await _s3FileStorage.Save(imageRequest, cancellationToken);
+            var result = await _s3FileStorage.Save(entryId.ToString(), imageId.ToString(), fileContent, cancellationToken);
             if (result.IsFailure)
                 return result.Error;
 
-            return (imageRequest.Id, file);
+            return (imageId, file);
         }
 
 
@@ -76,9 +71,9 @@ public class ImageService : IImageService
     }
 
 
-    public async Task<Result<Image, ProblemDetails>> Get(Guid entryId, Guid imageId, CancellationToken cancellationToken)
+    public Task<Result<Image, ProblemDetails>> Get(Guid entryId, Guid imageId, CancellationToken cancellationToken)
     {
-        return await GetImage(imageId, cancellationToken)
+        return GetImage(imageId, cancellationToken)
             .Bind(BuildImage);
 
 
@@ -128,8 +123,8 @@ public class ImageService : IImageService
     }
 
 
-    public async Task Remove(Guid imageId, CancellationToken cancellationToken)
-        => await _s3FileStorage.Delete(imageId, cancellationToken);
+    public Task<UnitResult<ProblemDetails>> Remove(Guid entryId, Guid imageId, CancellationToken cancellationToken) 
+        => _s3FileStorage.Delete(entryId.ToString(), imageId.ToString(), cancellationToken);
 
 
     private static Uri BuildUrl(string encodedEntryId, Guid imageId)

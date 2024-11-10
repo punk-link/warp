@@ -136,11 +136,12 @@ void AddServices(IServiceCollection services)
     services.AddTransient<IUrlService, UrlService>();
     services.AddTransient<IOpenGraphService, OpenGraphService>();
 
-    services.AddSingleton<IImageService, ImageService>();
-    services.AddSingleton<IDistributedStorage, KeyDbStorage>();
-    services.AddSingleton<IDataStorage, DataStorage>();
-    services.AddSingleton<IAmazonS3Factory, AmazonS3Factory>();
-    services.AddSingleton<IS3FileStorage, S3FileStorage>();
+    services.AddTransient<IUnauthorizedImageService, ImageService>();
+    services.AddTransient<IImageService, ImageService>();
+    services.AddTransient<IDistributedStorage, KeyDbStorage>();
+    services.AddTransient<IDataStorage, DataStorage>();
+    services.AddTransient<IAmazonS3Factory, AmazonS3Factory>();
+    services.AddTransient<IS3FileStorage, S3FileStorage>();
     services.AddTransient<IReportService, ReportService>();
     services.AddTransient<IViewCountService, ViewCountService>();
     services.AddTransient<IEntryInfoService, EntryInfoService>();

@@ -54,8 +54,11 @@ internal static partial class LogMessages
     [LoggerMessage(LoggingConstants.ImageDownloadError, LogLevel.Warning, "Error downloading image - '{ErrorMessage}'.")]
     public static partial void LogImageDownloadError(this ILogger logger, string errorMessage);
 
+    [LoggerMessage(LoggingConstants.ImageRemovalError, LogLevel.Warning, "Error removing image - '{ErrorMessage}'.")]
+    public static partial void LogImageRemovalError(this ILogger logger, string errorMessage);
+
 
     // Domain
-    [LoggerMessage(LoggingConstants.ImageRemovalError, LogLevel.Warning, "Error removing image {ImageId} - '{ErrorMessage}'.")]
-    public static partial void LogImageRemovalError(this ILogger logger, Guid imageId, string errorMessage);
+    [LoggerMessage(LoggingConstants.ImageRemovalDomainError, LogLevel.Warning, "Error removing image {ImageId} - '{ErrorMessage}'.")]
+    public static partial void LogImageRemovalDomainError(this ILogger logger, Guid imageId, string errorMessage);
 }

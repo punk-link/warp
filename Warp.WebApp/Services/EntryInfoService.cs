@@ -2,6 +2,7 @@
 using CSharpFunctionalExtensions.ValueTasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
+using System.Threading;
 using Warp.WebApp.Attributes;
 using Warp.WebApp.Data;
 using Warp.WebApp.Extensions;
@@ -14,6 +15,7 @@ using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
 using Warp.WebApp.Services.OpenGraph;
 using Warp.WebApp.Telemetry.Logging;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Warp.WebApp.Services;
 
@@ -187,33 +189,15 @@ public class EntryInfoService : IEntryInfoService
 
 
     [TraceMethod]
-    public async Task<UnitResult<ProblemDetails>> RemoveImage(Creator creator, Guid entryId, Guid imageId, CancellationToken cancellationToken)
-    {
-        return await GetEntryInfo(entryId, cancellationToken)
-            .Ensure(entryInfo => IsBelongsToCreator(entryInfo, creator), ProblemDetailsHelper.Create(_localizer["NoPermissionErrorMessage"]))
-            // Remove image from the entry 
-            .Tap(UpdateEntryInfo)
-            .Tap(RemoveImage)
-            .TapError(LogError);
+    public Task<UnitResult<ProblemDetails>> RemoveImage(Creator creator, Guid entryId, Guid imageId, CancellationToken cancellationToken) 
+        => GetEntryInfo(entryId, cancellationToken)
+            .Finally(result =>
+            {
+                if (result.IsFailure)
+                    return RemoveUnattachedImageInternally(entryId, imageId, cancellationToken);
 
-
-        Task RemoveImage(EntryInfo entry)
-            => _imageService.Remove(imageId, cancellationToken);
-
-
-        async Task<Result<EntryInfo, ProblemDetails>> UpdateEntryInfo(EntryInfo entryInfo)
-        {
-            var expiresAt = entryInfo.ExpiresAt - DateTime.UtcNow;
-            var cacheKey = CacheKeyBuilder.BuildEntryInfoCacheKey(entryInfo.Id);
-            await _dataStorage.Set(cacheKey, entryInfo, expiresAt, cancellationToken);
-
-            return entryInfo;
-        }
-
-
-        void LogError(ProblemDetails error)
-            => _logger.LogImageRemovalError(imageId, error.Detail!);
-    }
+                return RemoveAttachedImageInternally(result, creator, entryId, imageId, cancellationToken);
+            });
 
 
     private async Task<Result<EntryInfo, ProblemDetails>> GetEntryInfo(Guid entryId, CancellationToken cancellationToken)
@@ -229,6 +213,44 @@ public class EntryInfoService : IEntryInfoService
 
     private static bool IsBelongsToCreator(in EntryInfo entryInfo, in Creator creator)
         => entryInfo.CreatorId == creator.Id;
+
+
+    private Task<UnitResult<ProblemDetails>> RemoveAttachedImageInternally(Result<EntryInfo, ProblemDetails> entryInfoResult, Creator creator, Guid entryId, Guid imageId, CancellationToken cancellationToken)
+    {
+        return entryInfoResult
+            .Ensure(entryInfo => IsBelongsToCreator(entryInfo, creator), ProblemDetailsHelper.Create(_localizer["NoPermissionErrorMessage"]))
+            .Bind(UpdateEntryInfo)
+            .TapError(LogDomainError)
+            .Tap(CacheEntryInfo)
+            .Bind(RemoveImage);
+
+
+        Result<EntryInfo, ProblemDetails> UpdateEntryInfo(EntryInfo entryInfo)
+        { 
+            entryInfo.ImageInfos.RemoveAll(imageInfo => imageInfo.Id == imageId);
+            return entryInfo;
+        }
+
+
+        void LogDomainError(ProblemDetails error)
+            => _logger.LogImageRemovalDomainError(imageId, error.Detail!);
+
+
+        async Task CacheEntryInfo(EntryInfo entryInfo)
+        {
+            var expiresAt = entryInfo.ExpiresAt - DateTime.UtcNow;
+            var cacheKey = CacheKeyBuilder.BuildEntryInfoCacheKey(entryInfo.Id);
+            await _dataStorage.Set(cacheKey, entryInfo, expiresAt, cancellationToken);
+        }
+
+
+        Task<UnitResult<ProblemDetails>> RemoveImage(EntryInfo entry)
+            => _imageService.Remove(entryId, imageId, cancellationToken);
+    }
+
+
+    private Task<UnitResult<ProblemDetails>> RemoveUnattachedImageInternally(Guid entryId, Guid imageId, CancellationToken cancellationToken) 
+        => _imageService.Remove(entryId, imageId, cancellationToken);
 
 
     private readonly ICreatorService _creatorService;

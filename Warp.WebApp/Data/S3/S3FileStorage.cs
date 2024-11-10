@@ -2,10 +2,8 @@
 using Amazon.S3.Model;
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
-using Sentry.Protocol;
 using Warp.WebApp.Attributes;
 using Warp.WebApp.Helpers;
-using Warp.WebApp.Models;
 using Warp.WebApp.Models.Files;
 using Warp.WebApp.Telemetry.Logging;
 
@@ -25,7 +23,7 @@ public class S3FileStorage : IS3FileStorage
     [TraceMethod]
     public async Task<Result<HashSet<string>, ProblemDetails>> Contains(string prefix, List<string> keys, CancellationToken cancellationToken)
     {
-        prefix = prefix.TrimEnd('/') + '/';
+        prefix = BuildPrefix(prefix);
         var request = new ListObjectsV2Request
         {
             BucketName = _amazonS3Factory.GetBucketName(),
@@ -33,7 +31,7 @@ public class S3FileStorage : IS3FileStorage
         };
 
         var response = await _amazonS3Client.ListObjectsV2Async(request, cancellationToken);
-        if (response is null || response.HttpStatusCode is not System.Net.HttpStatusCode.OK)
+        if (!IsSuccess(response))
         {
             var error = "Failed to list objects in S3: " + response?.HttpStatusCode.ToString() ?? "unknown error";
             return Result.Failure<HashSet<string>, ProblemDetails>(ProblemDetailsHelper.CreateServerException(error));
@@ -53,23 +51,21 @@ public class S3FileStorage : IS3FileStorage
 
 
     [TraceMethod]
-    public async Task<UnitResult<ProblemDetails>> Save(ImageRequest imageRequest, CancellationToken cancellationToken)
+    public async Task<UnitResult<ProblemDetails>> Save(string prefix, string key, FileContent fileContent, CancellationToken cancellationToken)
     {
-        var key = $"{imageRequest.EntryId}/{imageRequest.Id}";
-
         var request = new PutObjectRequest
         {
             BucketName = _amazonS3Factory.GetBucketName(),
-            Key = key,
-            InputStream = imageRequest.Content,
-            ContentType = imageRequest.ContentType
+            Key = BuildPrefix(prefix) + key,
+            InputStream = fileContent.Content,
+            ContentType = fileContent.ContentType
         };
 
         var response = await _amazonS3Client.PutObjectAsync(request, cancellationToken);
-        if (response is not null && response.HttpStatusCode is System.Net.HttpStatusCode.OK)
+        if (IsSuccess(response))
             return UnitResult.Success<ProblemDetails>();
 
-        var error = "Failed to save image to S3: " + response?.HttpStatusCode.ToString() ?? "unknown error";
+        var error = "Failed to save an image to S3: " + response?.HttpStatusCode.ToString() ?? "unknown error";
         var problemDetails = ProblemDetailsHelper.CreateServerException(error);
 
         _logger.LogImageUploadError(error);
@@ -80,16 +76,14 @@ public class S3FileStorage : IS3FileStorage
     [TraceMethod]
     public async Task<Result<FileContent, ProblemDetails>> Get(string prefix, string key, CancellationToken cancellationToken)
     {
-        prefix = prefix.TrimEnd('/') + '/';
-
         var request = new GetObjectRequest
         {
             BucketName = _amazonS3Factory.GetBucketName(),
-            Key = prefix + key,
+            Key = BuildPrefix(prefix) + key,
         };
 
         using var response = await _amazonS3Client.GetObjectAsync(request, cancellationToken);
-        if (response is not null && response.HttpStatusCode is System.Net.HttpStatusCode.OK)
+        if (IsSuccess(response))
         {
             var contentStream = new MemoryStream();
             await response.ResponseStream.CopyToAsync(contentStream, cancellationToken);
@@ -98,7 +92,7 @@ public class S3FileStorage : IS3FileStorage
             return new FileContent(contentStream, response.Headers.ContentType);
         }
 
-        var error = "Failed to get image from S3: " + response?.HttpStatusCode.ToString() ?? "unknown error";
+        var error = "Failed to get an image from S3: " + response?.HttpStatusCode.ToString() ?? "unknown error";
         var problemDetails = ProblemDetailsHelper.CreateServerException(error);
 
         _logger.LogImageDownloadError(error);
@@ -107,16 +101,32 @@ public class S3FileStorage : IS3FileStorage
 
 
     [TraceMethod]
-    public async Task Delete(Guid imageId, CancellationToken cancellationToken)
+    public async Task<UnitResult<ProblemDetails>> Delete(string prefix, string key, CancellationToken cancellationToken)
     {
         var request = new DeleteObjectRequest
         {
             BucketName = _amazonS3Factory.GetBucketName(),
-            Key = imageId.ToString()
+            Key = BuildPrefix(prefix) + key
         };
 
-        await _amazonS3Client.DeleteObjectAsync(request, cancellationToken);
+        var response = await _amazonS3Client.DeleteObjectAsync(request, cancellationToken);
+        if (response is not null && response.HttpStatusCode is System.Net.HttpStatusCode.NoContent)
+            return UnitResult.Success<ProblemDetails>();
+
+        var error = "Failed to delete an image to S3: " + response?.HttpStatusCode.ToString() ?? "unknown error";
+        var problemDetails = ProblemDetailsHelper.CreateServerException(error);
+
+        _logger.LogImageRemovalError(error);
+        return UnitResult.Failure(problemDetails);
     }
+
+
+    private static string BuildPrefix(string key) 
+        => key.TrimEnd('/') + '/';
+
+
+    private static bool IsSuccess(Amazon.Runtime.AmazonWebServiceResponse response)
+        => response is not null && response.HttpStatusCode is System.Net.HttpStatusCode.OK;
 
 
     private readonly AmazonS3Client _amazonS3Client;
