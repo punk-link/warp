@@ -1,8 +1,19 @@
-﻿namespace Warp.WebApp.Models;
+﻿using System.Text.Json.Serialization;
+
+namespace Warp.WebApp.Models;
 
 public readonly record struct ImageInfo
 {
+    [JsonConstructor]
+    public ImageInfo(Guid id, Guid entryId, Uri url)
+    {
+        Id = id;
+        EntryId = entryId;
+        Url = url;
+    }
+
+
     public Guid Id { get; init; }
-    public byte[] Content { get; init; }
-    public string ContentType { get; init; }
+    public Guid EntryId { get; init; }
+    public Uri Url { get; init; }
 }

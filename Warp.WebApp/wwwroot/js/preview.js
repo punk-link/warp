@@ -4,13 +4,13 @@ import { repositionBackgroundImage } from '/js/functions/image-positioner.js';
 import { makeHttpRequest, DELETE } from '/js/functions/http-client.js';
 
 async function deleteEntry(entryId) {
-    let responce = await makeHttpRequest(`/api/entries/${entryId}`, DELETE);
+    let response = await makeHttpRequest(`/api/entries/${entryId}`, DELETE);
 
-    if (responce.ok)
+    if (response.ok)
         location.href = '/deleted';
 
-    if (!(responce.ok && responce.redirected)) {
-        let problemDetails = await responce.json();
+    if (!(response.ok && response.redirected)) {
+        let problemDetails = await response.json();
         let url = '/error?details=' + encodeURIComponent(JSON.stringify(problemDetails));
         
         location.href = url;

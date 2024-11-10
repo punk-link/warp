@@ -27,7 +27,7 @@
         const initEditMode = @((int)Model.EditMode);
 
         document.addEventListener('DOMContentLoaded', () => {
-            addIndexEvents(initEditMode);
+            addIndexEvents('@Model.Id', initEditMode);
         });
 
         window.addEventListener('load', () => {
@@ -79,6 +79,7 @@
                             </button>
                         </div>
                     </div>
+                    <input type="hidden" asp-for="Id" value="@Model.Id" />
                     <input class="edit-mode-state" type="hidden" asp-for="EditMode" value="@EditMode.Text" />
                 </div>
             </form>
@@ -122,6 +123,7 @@
                             </button>
                         </div>
                     </div>
+                    <input type="hidden" asp-for="Id" value="@Model.Id" />
                     <input class="edit-mode-state" type="hidden" asp-for="EditMode" value="@EditMode.Advanced"/>
                 </div>
             </form>

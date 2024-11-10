@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Mvc;
 using Warp.WebApp.Models;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
-using Warp.WebApp.Services.Infrastructure;
 using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Models.Creators;
 using Microsoft.Extensions.Localization;
@@ -17,12 +16,10 @@ public class PreviewModel : BasePageModel
         ICreatorService creatorService,
         IEntryInfoService entryInfoService,
         ILoggerFactory loggerFactory, 
-        IStringLocalizer<ServerResources> serverLocalizer, 
-        IUrlService urlService)
+        IStringLocalizer<ServerResources> serverLocalizer)
         : base(cookieService, creatorService, loggerFactory, serverLocalizer)
     {
         _entryInfoService = entryInfoService;
-        _urlService = urlService;
     }
 
 
@@ -46,8 +43,8 @@ public class PreviewModel : BasePageModel
             ExpiresIn = new DateTimeOffset(tuple.EntryInfo.ExpiresAt).ToUnixTimeMilliseconds();
             TextContent = tuple.EntryInfo.Entry.Content;
             
-            foreach (var imageId in tuple.EntryInfo.Entry.ImageIds)
-                ImageContainers.Add(new ReadOnlyImageContainerModel(_urlService.GetImageUrl(id, imageId)));
+            foreach (var imageInfo in tuple.EntryInfo.ImageInfos)
+                ImageContainers.Add(new ReadOnlyImageContainerModel(imageInfo));
         }
 
 
@@ -92,5 +89,4 @@ public class PreviewModel : BasePageModel
 
 
     private readonly IEntryInfoService _entryInfoService;
-    private readonly IUrlService _urlService;
 }

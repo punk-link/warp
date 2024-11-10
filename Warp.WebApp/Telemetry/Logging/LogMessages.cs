@@ -4,6 +4,7 @@ namespace Warp.WebApp.Telemetry.Logging;
 
 internal static partial class LogMessages
 {
+    // Generic
     [LoggerMessage(LoggingConstants.ServerError, LogLevel.Error, "An error occurred during the request {RequestId}.")]
     public static partial void LogGenericServerError(this ILogger logger, string? requestId);
 
@@ -14,6 +15,7 @@ internal static partial class LogMessages
     public static partial void LogServiceUnavailable(this ILogger logger, string? requestId, string errorMessage);
 
 
+    // Startup
     [LoggerMessage(LoggingConstants.RedisHostIsNotSnspecified, LogLevel.Critical, "Startup error: Redis host is not specified.")]
     public static partial void LogRedisHostIsNotSpecified(this ILogger logger);
 
@@ -30,6 +32,7 @@ internal static partial class LogMessages
     public static partial void LogVaultSecretCastException(this ILogger logger, string errorMessage);
 
 
+    // Infrastructure
     [LoggerMessage(LoggingConstants.DefaultCacheValueError, LogLevel.Warning, "Unable to store a default value {CacheValue}.")]
     public static partial void LogSetDefaultCacheValueError(this ILogger logger, string? cacheValue);
 
@@ -45,6 +48,17 @@ internal static partial class LogMessages
     [LoggerMessage(LoggingConstants.ImageControllerGetMethodNotFound, LogLevel.Critical, "Get image controller's method not found.")]
     public static partial void LogImageControllerGetMethodNotFound(this ILogger logger);
 
-    [LoggerMessage(LoggingConstants.ImageRemovalError, LogLevel.Warning, "Error removing image {ImageId} - '{ErrorMessage}'.")]
-    public static partial void LogImageRemovalError(this ILogger logger, Guid imageId, string errorMessage);
+    [LoggerMessage(LoggingConstants.ImageUploadError, LogLevel.Warning, "Error uploading image - '{ErrorMessage}'.")]
+    public static partial void LogImageUploadError(this ILogger logger, string errorMessage);
+
+    [LoggerMessage(LoggingConstants.ImageDownloadError, LogLevel.Warning, "Error downloading image - '{ErrorMessage}'.")]
+    public static partial void LogImageDownloadError(this ILogger logger, string errorMessage);
+
+    [LoggerMessage(LoggingConstants.ImageRemovalError, LogLevel.Warning, "Error removing image - '{ErrorMessage}'.")]
+    public static partial void LogImageRemovalError(this ILogger logger, string errorMessage);
+
+
+    // Domain
+    [LoggerMessage(LoggingConstants.ImageRemovalDomainError, LogLevel.Warning, "Error removing image {ImageId} - '{ErrorMessage}'.")]
+    public static partial void LogImageRemovalDomainError(this ILogger logger, Guid imageId, string errorMessage);
 }

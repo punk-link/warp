@@ -6,7 +6,6 @@ using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Creators;
-using Warp.WebApp.Services.Infrastructure;
 
 namespace Warp.WebApp.Pages;
 
@@ -16,12 +15,10 @@ public class EntryModel : BasePageModel
         ICreatorService creatorService,
         IEntryInfoService entryPresentationService,
         ILoggerFactory loggerFactory, 
-        IStringLocalizer<ServerResources> serverLocalizer, 
-        IUrlService urlService)
+        IStringLocalizer<ServerResources> serverLocalizer)
         : base(cookieService, creatorService, loggerFactory, serverLocalizer)
     {
         _entryPresentationService = entryPresentationService;
-        _urlService = urlService;
     }
 
 
@@ -54,8 +51,8 @@ public class EntryModel : BasePageModel
             TextContent = entryInfo.Entry.Content;
             ViewCount = entryInfo.ViewCount;
 
-            foreach (var imageId in entryInfo.Entry.ImageIds)
-                ImageContainers.Add(new ReadOnlyImageContainerModel(_urlService.GetImageUrl(id, imageId)));
+            foreach (var imageInfo in entryInfo.ImageInfos)
+                ImageContainers.Add(new ReadOnlyImageContainerModel(imageInfo));
 
             return entryInfo;
         }
@@ -73,5 +70,4 @@ public class EntryModel : BasePageModel
 
 
     private readonly IEntryInfoService _entryPresentationService;
-    private readonly IUrlService _urlService;
 }

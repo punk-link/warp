@@ -5,29 +5,22 @@ using Warp.WebApp.Attributes;
 using Warp.WebApp.Extensions;
 using Warp.WebApp.Models;
 using Warp.WebApp.Models.Validators;
-using Warp.WebApp.Services.Images;
-using Warp.WebApp.Services.Infrastructure;
 
 namespace Warp.WebApp.Services.Entries;
 
 public sealed class EntryService : IEntryService
 {
-    public EntryService(IStringLocalizer<ServerResources> localizer, 
-        IImageService imageService, 
-        IUrlService urlService)
+    public EntryService(IStringLocalizer<ServerResources> localizer)
     {
-        _imageService = imageService;
         _localizer = localizer;
-        _urlService = urlService;
     }
 
 
     [TraceMethod]
-    public async Task<Result<Entry, ProblemDetails>> Add(Guid entryInfoId, EntryRequest entryRequest, CancellationToken cancellationToken)
+    public async Task<Result<Entry, ProblemDetails>> Add(EntryRequest entryRequest, CancellationToken cancellationToken)
     {
         return await BuildEntry()
-            .Bind(Validate)
-            .Bind(AttachImages);
+            .Bind(Validate);
 
 
         Result<Entry, ProblemDetails> BuildEntry()
@@ -46,24 +39,8 @@ public sealed class EntryService : IEntryService
 
             return entry;
         }
-
-
-        async Task<Result<Entry, ProblemDetails>> AttachImages(Entry entry)
-        {
-            var attachedImageIds = await _imageService.Attach(entryRequest.ImageIds, cancellationToken);
-            var imageUrls = new List<Uri>(attachedImageIds.Count);
-            foreach (var imageId in attachedImageIds)
-            {
-                var url = _urlService.GetImageUrl(entryInfoId, in imageId);
-                imageUrls.Add(url);
-            }
-
-            return entry with { ImageIds = attachedImageIds };
-        }
     }
 
 
-    private readonly IImageService _imageService;
     private readonly IStringLocalizer<ServerResources> _localizer;
-    private readonly IUrlService _urlService;
 }

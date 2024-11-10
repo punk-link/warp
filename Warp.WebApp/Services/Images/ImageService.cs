@@ -1,113 +1,139 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
+using System.Collections.Concurrent;
 using Warp.WebApp.Data.S3;
-using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
+using Warp.WebApp.Models.Files;
 
 namespace Warp.WebApp.Services.Images;
 
-public class ImageService : IImageService
+public class ImageService : IImageService, IUnauthorizedImageService
 {
-    public ImageService(IStringLocalizer<ServerResources> localizer, IS3FileStorage s3FileStorage)
+    public ImageService(IS3FileStorage s3FileStorage)
     {
-        _localizer = localizer;
-
         _s3FileStorage = s3FileStorage;
     }
 
 
-    public async Task<Dictionary<string, Guid>> Add(List<IFormFile> files, CancellationToken cancellationToken)
+    public async Task<List<ImageResponse>> Add(Guid entryId, List<IFormFile> files, CancellationToken cancellationToken)
     {
         // TODO: add validation and a count check
 
-        var results = new Dictionary<string, Guid>(files.Count);
-        foreach (var file in files)
+        var encodedEntryId = IdCoder.Encode(entryId);
+
+        var results = new ConcurrentBag<ImageResponse>();
+        await Parallel.ForEachAsync(files, cancellationToken, async (file, ctx) =>
         {
-            var (clientFileName, id) = await Add(file, cancellationToken);
-            results.Add(clientFileName, id);
+            await Upload(file, ctx)
+                .Bind(BuildImageInfo)
+                .Bind(BuildImageResponse)
+                .Tap(AddToResults);
+        });
+
+        return [.. results];
+
+
+        async Task<Result<(Guid, IFormFile), ProblemDetails>> Upload(IFormFile file, CancellationToken cancellationToken)
+        {
+            using var contentStream = new MemoryStream();
+            await file.CopyToAsync(contentStream, cancellationToken);
+
+            var imageId = Guid.NewGuid();
+            var fileContent = new FileContent(contentStream, file.ContentType);
+
+            var result = await _s3FileStorage.Save(entryId.ToString(), imageId.ToString(), fileContent, cancellationToken);
+            if (result.IsFailure)
+                return result.Error;
+
+            return (imageId, file);
         }
 
-        return results;
-    }
 
-
-    public async Task<List<Guid>> Attach(List<Guid> imageIds, CancellationToken cancellationToken)
-    {
-        if (imageIds.Count == 0)
-            return Enumerable.Empty<Guid>().ToList();
-
-        // TODO: try to use a Redis set instead of a list
-        var imageInfos = new List<ImageInfo>(imageIds.Count);
-        foreach (var imageId in imageIds)
+        Result<(ImageInfo, IFormFile), ProblemDetails> BuildImageInfo((Guid ImageId, IFormFile File) tuple)
         {
-            var value = await GetImage(imageId, cancellationToken);
-
-            if (!value.Equals(default))
-                imageInfos.Add(value);
+            var url = BuildUrl(encodedEntryId, tuple.ImageId);
+            var imageInfo = new ImageInfo(tuple.ImageId, entryId, url);
+            
+            return (imageInfo, tuple.File);
         }
 
-        return imageInfos.Select(x => x.Id).ToList();
+
+        Result<ImageResponse, ProblemDetails> BuildImageResponse((ImageInfo ImageInfo, IFormFile File) tuple) 
+            => new ImageResponse
+            {
+                ImageInfo = tuple.ImageInfo,
+                ClientFileName = tuple.File.FileName
+            };
+
+
+        void AddToResults(ImageResponse imageInfo) 
+            => results.Add(imageInfo);
     }
 
 
-    public async Task<List<ImageInfo>> GetImageList(List<Guid> imageIds, CancellationToken cancellationToken)
+    public Task<Result<Image, ProblemDetails>> Get(Guid entryId, Guid imageId, CancellationToken cancellationToken)
     {
-        var values = new List<ImageInfo>();
-        foreach(var imageId in imageIds)
-        {
-            var value = await GetImage(imageId, cancellationToken);
+        return GetImage(imageId, cancellationToken)
+            .Bind(BuildImage);
 
-            if(value != default)
-                values.Add(value);
+
+        Task<Result<FileContent, ProblemDetails>> GetImage(Guid imageId, CancellationToken cancellationToken) 
+            => _s3FileStorage.Get(entryId.ToString(), imageId.ToString(), cancellationToken);
+
+
+        Result<Image, ProblemDetails> BuildImage(FileContent stream)
+            => new Image()
+            {
+                Id = imageId,
+                Content = stream.Content,
+                ContentType = stream.ContentType
+            };
+    }
+
+
+    public Task<Result<List<ImageInfo>, ProblemDetails>> GetAttached(Guid entryId, List<Guid> imageIds, CancellationToken cancellationToken)
+    { 
+        return GetUploaded()
+            .Bind(BuildImageInfo);
+
+
+        async Task<Result<List<Guid>, ProblemDetails>> GetUploaded()
+        {
+            var prefix = entryId.ToString();
+            var keys = imageIds.Select(imageId => imageId.ToString())
+                .ToList();
+            
+            var (_, isFailure, stringKeys, error) = await _s3FileStorage.Contains(prefix, keys, cancellationToken);
+            if (isFailure)
+                return error;
+
+            return stringKeys
+                .Select(key => Guid. TryParse(key, out var imageId) ? imageId : Guid.Empty)
+                .Where(imageId => imageId != Guid.Empty)
+                .ToList();
         }
 
-        return values;
+
+        Result<List<ImageInfo>, ProblemDetails> BuildImageInfo(List<Guid> imageIds) 
+            => imageIds.Select(imageId =>
+                {
+                    var url = BuildUrl(entryId, imageId);
+                    return new ImageInfo(imageId, entryId, url);
+                }).ToList();
     }
 
 
-    private async Task<ImageInfo> GetImage(Guid imageId, CancellationToken cancellationToken)
-        => await _s3FileStorage.Get(imageId, cancellationToken);
+    public Task<UnitResult<ProblemDetails>> Remove(Guid entryId, Guid imageId, CancellationToken cancellationToken) 
+        => _s3FileStorage.Delete(entryId.ToString(), imageId.ToString(), cancellationToken);
 
 
-    public async Task<Result<ImageInfo, ProblemDetails>> Get(Guid imageId, CancellationToken cancellationToken)
-    {
-        var image = await GetImage(imageId, cancellationToken);
-
-        return image != default
-            ? Result.Success<ImageInfo, ProblemDetails>(image)
-            : ResultHelper.NotFound<ImageInfo>(_localizer);
-    }
+    private static Uri BuildUrl(string encodedEntryId, Guid imageId)
+        => new(string.Format("/api/images/entry-id/{0}/image-id/{1}", encodedEntryId, IdCoder.Encode(imageId)), UriKind.Relative);
 
 
-    public async Task Remove(Guid imageId, CancellationToken cancellationToken)
-        => await _s3FileStorage.Delete(imageId, cancellationToken);
+    private static Uri BuildUrl(Guid entryId, Guid imageId)
+        => BuildUrl(IdCoder.Encode(entryId), imageId);
 
 
-    private async Task<(string, Guid)> Add(IFormFile file, CancellationToken cancellationToken)
-    {
-        using var memoryStream = new MemoryStream();
-        await file.CopyToAsync(memoryStream, cancellationToken);
-
-        var imageInfo = new ImageInfo
-        {
-            Id = Guid.NewGuid(),
-            Content = memoryStream.ToArray(),
-            ContentType = file.ContentType
-        };
-
-        await _s3FileStorage.Save(imageInfo, cancellationToken);
-
-        return (file.FileName, imageInfo.Id);
-    }
-
-
-    // TODO: make URL generation more flexible
-    public static List<string> BuildImageUrls(Guid id, List<Guid> imageIds)
-    => imageIds.Select(imageId => $"/api/images/entry-id/{IdCoder.Encode(id)}/image-id/{IdCoder.Encode(imageId)}")
-        .ToList();
-
-
-    private readonly IStringLocalizer<ServerResources> _localizer;
     private readonly IS3FileStorage _s3FileStorage;
 }
