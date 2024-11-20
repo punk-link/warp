@@ -11,7 +11,7 @@ trigger:
 steps:
 
 - name: Test application 
-  image: mcr.microsoft.com/dotnet/sdk:8.0
+  image: mcr.microsoft.com/dotnet/sdk:9.0
   environment:
     GITHUB_TOKEN:
       from_secret: GITHUB_TOKEN     
