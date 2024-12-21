@@ -51,21 +51,31 @@ public class S3FileStorage : IS3FileStorage
 
 
     [TraceMethod]
-    public async Task<UnitResult<ProblemDetails>> Save(string prefix, string key, FileContent fileContent, CancellationToken cancellationToken)
+    public async Task<UnitResult<ProblemDetails>> Save(string prefix, string key, AppFile appFile, CancellationToken cancellationToken)
     {
         var request = new PutObjectRequest
         {
+            AutoCloseStream = false,
             BucketName = _amazonS3Factory.GetBucketName(),
+            ContentType = appFile.ContentMimeType,
             Key = BuildPrefix(prefix) + key,
-            InputStream = fileContent.Content,
-            ContentType = fileContent.ContentType
+            InputStream = appFile.Content
         };
 
-        var response = await _amazonS3Client.PutObjectAsync(request, cancellationToken);
-        if (IsSuccess(response))
-            return UnitResult.Success<ProblemDetails>();
+        string error;
+        try
+        {
+            var response = await _amazonS3Client.PutObjectAsync(request, cancellationToken);
+            if (IsSuccess(response))
+                return UnitResult.Success<ProblemDetails>();
 
-        var error = "Failed to save an image to S3: " + response?.HttpStatusCode.ToString() ?? "unknown error";
+            error = "Failed to save an image to S3: " + response?.HttpStatusCode.ToString() ?? "unknown error";
+        }
+        catch (Exception ex)
+        {
+            error = $"Failed to save an image to S3: {ex.Message}";
+        }
+
         var problemDetails = ProblemDetailsHelper.CreateServerException(error);
 
         _logger.LogImageUploadError(error);
@@ -74,7 +84,7 @@ public class S3FileStorage : IS3FileStorage
 
 
     [TraceMethod]
-    public async Task<Result<FileContent, ProblemDetails>> Get(string prefix, string key, CancellationToken cancellationToken)
+    public async Task<Result<AppFile, ProblemDetails>> Get(string prefix, string key, CancellationToken cancellationToken)
     {
         var request = new GetObjectRequest
         {
@@ -89,14 +99,14 @@ public class S3FileStorage : IS3FileStorage
             await response.ResponseStream.CopyToAsync(contentStream, cancellationToken);
             contentStream.Position = 0;
 
-            return new FileContent(contentStream, response.Headers.ContentType);
+            return new AppFile(contentStream, response.Headers.ContentType);
         }
 
         var error = "Failed to get an image from S3: " + response?.HttpStatusCode.ToString() ?? "unknown error";
         var problemDetails = ProblemDetailsHelper.CreateServerException(error);
 
         _logger.LogImageDownloadError(error);
-        return Result.Failure<FileContent, ProblemDetails>(problemDetails);
+        return Result.Failure<AppFile, ProblemDetails>(problemDetails);
     }
 
 
