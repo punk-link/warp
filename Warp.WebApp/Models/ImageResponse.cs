@@ -2,7 +2,14 @@
 
 public readonly record struct ImageResponse
 {
-    public required ImageInfo ImageInfo { get; init; }
-    public required string ClientFileName { get; init; }
+    public ImageResponse(ImageInfo imageInfo, string clientFileName)
+    {
+        ClientFileName = clientFileName;
+        ImageInfo = imageInfo;
+    }
+
+
+    public ImageInfo ImageInfo { get; }
+    public string ClientFileName { get; }
 }
 

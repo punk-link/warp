@@ -32,26 +32,32 @@ async function dropImages(e) {
 }
 
 
-function getImageContainerElement(imageContainer) {
+function getImageContainerElement(uploadResult) {
     let domParser = new DOMParser();
-    let doc = domParser.parseFromString(imageContainer, 'text/html');
+    let doc = domParser.parseFromString(uploadResult, 'text/html');
 
     return doc.getElementsByClassName('image-container')[0];
 }
 
 
-function renderPreview(entryId, files, imageContainers) {
+function renderPreview(entryId, files, uploadResults) {
     let gallery = document.getElementsByClassName('upload-gallery')[0];
 
     files.forEach(file => {
         let reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onloadend = function () {
-            let imageContainer = imageContainers[file.name];
-            if (imageContainer === undefined) 
+            let uploadResult = uploadResults[file.name];
+            if (uploadResult === undefined) 
                 return;
 
-            let containerElement = getImageContainerElement(imageContainer);
+            let problemDetails = tryGetProblemDetails(uploadResult);
+            if (problemDetails !== null) {
+                console.error(`Error: ${problemDetails.title} - ${problemDetails.detail}`);
+                return;
+            }
+
+            let containerElement = getImageContainerElement(uploadResult);
             containerElement = replaceImagePreview(containerElement, reader);
             containerElement = addImageDeleteEvent(entryId, containerElement);
 
@@ -90,6 +96,22 @@ function toggleImageInUseStatus(element, removedState, addedState) {
 }
 
 
+function tryGetProblemDetails(uploadResult) {
+    try {
+        let parsedObject = JSON.parse(uploadResult);
+        if (typeof parsedObject !== 'object' || parsedObject === null) 
+            return null;
+
+        if (!parsedObject.hasOwnProperty('title') || !parsedObject.hasOwnProperty('detail')) 
+            return null;
+
+        return parsedObject;
+    } catch (e) {
+        return null;
+    }
+}
+
+
 function setImageInUseStatus(element) {
     toggleImageInUseStatus(element, PLUS_ICON, CLOCK_ICON);
 }
@@ -117,8 +139,8 @@ async function uploadImages(entryId, files) {
         return;
     }
         
-    let imageContainers = await response.json();
-    renderPreview(entryId, files, imageContainers);
+    let uploadResults = await response.json();
+    renderPreview(entryId, files, uploadResults);
 
     unsetImageInUseStatus(emptyImageContainer);
 }

@@ -8,6 +8,6 @@ public interface IS3FileStorage
 {
     Task<Result<HashSet<string>, ProblemDetails>> Contains(string prefix, List<string> keys, CancellationToken cancellationToken);
     public Task<UnitResult<ProblemDetails>> Delete(string prefix, string key, CancellationToken cancellationToken);
-    public Task<Result<FileContent, ProblemDetails>> Get(string prefix, string key, CancellationToken cancellationToken);
-    public Task<UnitResult<ProblemDetails>> Save(string prefix, string key, FileContent fileContent, CancellationToken cancellationToken);
+    public Task<Result<AppFile, ProblemDetails>> Get(string prefix, string key, CancellationToken cancellationToken);
+    public Task<UnitResult<ProblemDetails>> Save(string prefix, string key, AppFile appFile, CancellationToken cancellationToken);
 }

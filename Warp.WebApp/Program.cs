@@ -122,6 +122,7 @@ void AddConfiguration(ILogger<Program> logger, WebApplicationBuilder builder1)
 
 void AddOptions(IServiceCollection services, IConfiguration configuration)
 {
+    // TODO: add ImageUploadOptions
     services.Configure<AnalyticsOptions>(configuration.GetSection(nameof(AnalyticsOptions)));
     services.Configure<S3Options>(configuration.GetSection(nameof(S3Options)));
 }
