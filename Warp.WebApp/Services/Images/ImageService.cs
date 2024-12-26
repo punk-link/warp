@@ -44,14 +44,14 @@ public class ImageService : IImageService, IUnauthorizedImageService
         }
 
 
-        Result<ImageResponse, ProblemDetails> BuildImageInfo((Guid ImageId, AppFile FileContent) tuple)
+        Result<ImageResponse, ProblemDetails> BuildImageInfo((Guid ImageId, AppFile AppFile) tuple)
         {
             var encodedEntryId = IdCoder.Encode(entryId);
 
             var url = BuildUrl(encodedEntryId, tuple.ImageId);
             var imageInfo = new ImageInfo(tuple.ImageId, entryId, url);
             
-            return new ImageResponse(imageInfo, tuple.FileContent.UntrustedFileName);
+            return new ImageResponse(imageInfo, tuple.AppFile.UntrustedFileName);
         }
     }
 

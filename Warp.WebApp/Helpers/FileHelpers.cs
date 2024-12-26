@@ -9,7 +9,8 @@ namespace Warp.WebApp.Helpers;
 
 public static class FileHelpers
 {
-    public static async Task<Result<AppFile, ProblemDetails>> ProcessStreamedFile(
+    public static async Task<Result<AppFile, ProblemDetails>> ProcessStreamedFile
+    (
         MultipartSection section, 
         ContentDispositionHeaderValue contentDisposition, 
         string[] permittedExtensions, 
@@ -84,13 +85,15 @@ public static class FileHelpers
         [
             [0xFF, 0xD8, 0xFF, 0xDB],
             [0xFF, 0xD8, 0xFF, 0xE0],
-            [0xFF, 0xD8, 0xFF, 0xE1]
+            [0xFF, 0xD8, 0xFF, 0xE1],
+            [0xFF, 0xD8, 0xFF, 0xEE]
         ],
         [".jpg"] =
         [
             [0xFF, 0xD8, 0xFF, 0xDB],
             [0xFF, 0xD8, 0xFF, 0xE0],
-            [0xFF, 0xD8, 0xFF, 0xE1]
+            [0xFF, 0xD8, 0xFF, 0xE1],
+            [0xFF, 0xD8, 0xFF, 0xEE]
         ],
         [".png"] =
         [
@@ -100,6 +103,11 @@ public static class FileHelpers
         [".svg"] =
         [
             "<svg"u8.ToArray()
+        ],
+        [".tif"] =
+        [
+            [0x49, 0x49, 0x2A, 0x00],
+            [0x4D, 0x4D, 0x00, 0x2A]
         ],
         [".tiff"] =
         [
