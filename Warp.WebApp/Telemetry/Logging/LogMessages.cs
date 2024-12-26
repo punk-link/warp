@@ -57,6 +57,15 @@ internal static partial class LogMessages
     [LoggerMessage(LoggingConstants.ImageRemovalError, LogLevel.Warning, "Error removing image - '{ErrorMessage}'.")]
     public static partial void LogImageRemovalError(this ILogger logger, string errorMessage);
 
+    [LoggerMessage(LoggingConstants.FileUploadException, LogLevel.Critical, "Error uploading file - '{ErrorMessage}'.")]
+    public static partial void LogFileUploadException(this ILogger logger, string errorMessage);
+
+    [LoggerMessage(LoggingConstants.UnverifiedFileSignatureError, LogLevel.Warning, "Unverified file signature - '{FileExtension}'.")]
+    public static partial void LogUnverifiedFileSignatureError(this ILogger logger, string fileExtension);
+
+    [LoggerMessage(LoggingConstants.FileSignatureVerificationError, LogLevel.Error, "File signature verification error - '{FileExtension}, {Signature}'.")]
+    public static partial void LogFileSignatureVerificationError(this ILogger logger, string fileExtension, string signature);
+
 
     // Domain
     [LoggerMessage(LoggingConstants.ImageRemovalDomainError, LogLevel.Warning, "Error removing image {ImageId} - '{ErrorMessage}'.")]

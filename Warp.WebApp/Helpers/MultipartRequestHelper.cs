@@ -1,20 +1,21 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using Microsoft.Net.Http.Headers;
 
 namespace Warp.WebApp.Helpers;
 
 public class MultipartRequestHelper
 {
-    public static Result<string, ProblemDetails> GetBoundary(MediaTypeHeaderValue contentType, int lengthLimit)
+    public static Result<string, ProblemDetails> GetBoundary(IStringLocalizer<ServerResources> localizer, MediaTypeHeaderValue contentType, int lengthLimit)
     {
         var boundary = HeaderUtilities.RemoveQuotes(contentType.Boundary).Value;
 
         if (string.IsNullOrWhiteSpace(boundary))
-            return ProblemDetailsHelper.Create("Missing content-type boundary.");
+            return ProblemDetailsHelper.Create(localizer["Missing content-type boundary."]);
 
         if (boundary.Length > lengthLimit)
-            return ProblemDetailsHelper.Create("Multipart boundary length limit exceeded.");
+            return ProblemDetailsHelper.Create(localizer["Multipart boundary length limit exceeded."]);
 
         return boundary;
     }

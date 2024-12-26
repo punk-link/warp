@@ -1,51 +1,58 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Localization;
 using Microsoft.Net.Http.Headers;
 using System.Text;
 using Warp.WebApp.Models.Files;
+using Warp.WebApp.Telemetry.Logging;
 
 namespace Warp.WebApp.Helpers;
 
-public static class FileHelpers
+public class FileHelper
 {
-    public static async Task<Result<AppFile, ProblemDetails>> ProcessStreamedFile
-    (
-        MultipartSection section, 
-        ContentDispositionHeaderValue contentDisposition, 
-        string[] permittedExtensions, 
-        long sizeLimit
-    )
+    public FileHelper(ILoggerFactory loggerFactory, IStringLocalizer<ServerResources> localizer, string[] permittedExtensions, long fileSizeLimit)
+    {
+        _logger = loggerFactory.CreateLogger<FileHelper>();
+
+        _localizer = localizer;
+
+        _permittedExtensions = permittedExtensions;
+        _fileSizeLimit = fileSizeLimit;
+    }
+
+
+    public async Task<Result<AppFile, ProblemDetails>> ProcessStreamedFile(MultipartSection section, ContentDispositionHeaderValue contentDisposition)
     {
         try
         {
             var fileName = contentDisposition.FileName.Value;
             if (string.IsNullOrEmpty(fileName))
-                return Result.Failure<AppFile, ProblemDetails>(ProblemDetailsHelper.Create("The file is missing a name"));
+                return Result.Failure<AppFile, ProblemDetails>(ProblemDetailsHelper.Create(_localizer["The file is missing a name."]));
 
             var memoryStream = new MemoryStream();
             await section.Body.CopyToAsync(memoryStream);
 
             if (memoryStream.Length is 0)
-                return Result.Failure<AppFile, ProblemDetails>(ProblemDetailsHelper.Create("The file is empty"));
+                return Result.Failure<AppFile, ProblemDetails>(ProblemDetailsHelper.Create(_localizer["The file is empty."]));
         
-            if (memoryStream.Length > sizeLimit)
-                return Result.Failure<AppFile, ProblemDetails>(ProblemDetailsHelper.Create("The file exceeds the size limit"));
+            if (memoryStream.Length > _fileSizeLimit)
+                return Result.Failure<AppFile, ProblemDetails>(ProblemDetailsHelper.Create(_localizer["The file exceeds the size limit."]));
 
-            if(!IsValidFileExtensionAndSignature(contentDisposition.FileName.Value!, memoryStream, permittedExtensions))
-                return Result.Failure<AppFile, ProblemDetails>(ProblemDetailsHelper.Create("The file type isn't permitted"));
+            if(!IsValidFileExtensionAndSignature(_logger, contentDisposition.FileName.Value!, memoryStream, _permittedExtensions))
+                return Result.Failure<AppFile, ProblemDetails>(ProblemDetailsHelper.Create(_localizer["The file type isn't permitted."]));
 
             return new AppFile(memoryStream, section.ContentType!, contentDisposition.FileName.Value!);
         }
         catch (Exception ex)
         {
-            // TODO: log exception one level up
+            _logger.LogFileUploadException(ex.Message);
             return Result.Failure<AppFile, ProblemDetails>(ProblemDetailsHelper.CreateServerException(ex.Message));
         }
     }
 
 
-    private static bool IsValidFileExtensionAndSignature(string fileName, Stream data, string[] permittedExtensions)
+    private static bool IsValidFileExtensionAndSignature(ILogger<FileHelper> logger, string fileName, Stream data, string[] permittedExtensions)
     {
         var extension = Path.GetExtension(fileName).ToLowerInvariant();
         if (string.IsNullOrEmpty(extension) || !permittedExtensions.Contains(extension))
@@ -54,16 +61,19 @@ public static class FileHelpers
         data.Position = 0;
         using var reader = new BinaryReader(data, Encoding.UTF8, leaveOpen: true);
 
-        // TODO: temporary solution, add logs if this branch is taken
-        // if no signatures are defined, any file with the correct extension is valid
+        logger.LogUnverifiedFileSignatureError(extension);
         if (!_fileSignature.TryGetValue(extension, out var signatures))
             return true; 
 
         var headerBytes = reader.ReadBytes(signatures.Max(m => m.Length));
         data.Position = 0;
 
-        return signatures.Any(signature => headerBytes.Take(signature.Length)
+        var isValid = signatures.Any(signature => headerBytes.Take(signature.Length)
             .SequenceEqual(signature));
+        if (!isValid)
+            logger.LogFileSignatureVerificationError(extension, string.Join(", ", headerBytes));
+
+        return isValid;
     }
 
 
@@ -119,4 +129,10 @@ public static class FileHelpers
             "RIFF"u8.ToArray()
         ]
     };
+
+    
+    private readonly long _fileSizeLimit;
+    private readonly IStringLocalizer<ServerResources> _localizer;
+    private readonly ILogger<FileHelper> _logger;
+    private readonly string[] _permittedExtensions;
 }

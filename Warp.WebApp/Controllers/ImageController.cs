@@ -29,12 +29,15 @@ public sealed class ImageController : BaseController
         ICookieService cookieService, 
         ICreatorService creatorService,
         IEntryInfoService entryInfoService,
+        ILoggerFactory loggerFactory,
         IPartialViewRenderService partialViewRenderHelper,
         IUnauthorizedImageService unauthorizedImageService,
         IStringLocalizer<ServerResources> localizer) 
         : base(localizer, cookieService, creatorService)
     {
         _entryInfoService = entryInfoService;
+        _localizer = localizer;
+        _loggerFactory = loggerFactory;
         _options = options.Value;
         _partialViewRenderHelper = partialViewRenderHelper;
         _unauthorizedImageService = unauthorizedImageService;
@@ -90,19 +93,21 @@ public sealed class ImageController : BaseController
     [HttpPost("entry-id/{entryId}")]
     public async Task<IActionResult> Upload([FromRoute] string entryId, CancellationToken cancellationToken = default)
     {
-        Debug.Assert(Request.ContentType is not null, "Request.ContentType is not null because of the [MultipartFormData] attribute");
+        Debug.Assert(Request.ContentType is not null, "Content type is not null because of the [MultipartFormData] attribute");
 
         var decodedEntryId = IdCoder.Decode(entryId);
         if (decodedEntryId == Guid.Empty)
             return ReturnIdDecodingBadRequest();
 
-        var (_, isFailure, boundary, error) = MultipartRequestHelper.GetBoundary(MediaTypeHeaderValue.Parse(Request.ContentType), _options.RequestBoundaryLengthLimit);
+        var (_, isFailure, boundary, error) = MultipartRequestHelper.GetBoundary(_localizer, MediaTypeHeaderValue.Parse(Request.ContentType), _options.RequestBoundaryLengthLimit);
         if (isFailure)
             return BadRequest(error);
 
         var reader = new MultipartReader(boundary, HttpContext.Request.Body);
         if (reader is null)
-            return BadRequest(ProblemDetailsHelper.Create("Failed to create MultipartReader"));
+            return BadRequest(ProblemDetailsHelper.Create(_localizer["Failed to create MultipartReader"]));
+
+        var fileHelper = new FileHelper(_loggerFactory, _localizer, _options.AllowedExtensions, _options.MaxFileSize);
 
         var uploadResults = new List<Result<ImageResponse, ProblemDetails>>();
         var uploadedFilesCount = 0;
@@ -123,7 +128,7 @@ public sealed class ImageController : BaseController
             if (!MultipartRequestHelper.HasFileContentDisposition(contentDisposition))
                 continue;
 
-            var (_, isAppFileFailure, appFile, appFileError) = await FileHelpers.ProcessStreamedFile(section, contentDisposition, _options.AllowedExtensions, _options.MaxFileSize);
+            var (_, isAppFileFailure, appFile, appFileError) = await fileHelper.ProcessStreamedFile(section, contentDisposition);
             if (isAppFileFailure)
             {
                 uploadResults.Add(EnrichProblemDetails(contentDisposition, appFileError));
@@ -182,6 +187,8 @@ public sealed class ImageController : BaseController
     private const string ProblemDetailsFileNameExtensionKey = "fileName";
 
     private readonly IEntryInfoService _entryInfoService;
+    private readonly IStringLocalizer<ServerResources> _localizer;
+    private readonly ILoggerFactory _loggerFactory;
     private readonly ImageUploadOptions _options;
     private readonly IPartialViewRenderService _partialViewRenderHelper;
     private readonly IUnauthorizedImageService _unauthorizedImageService;

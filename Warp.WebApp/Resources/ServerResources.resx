@@ -168,4 +168,25 @@
   <data name="DefaultErrorMessage" xml:space="preserve">
     <value />
   </data>
+  <data name="Failed to create MultipartReader" xml:space="preserve">
+    <value />
+  </data>
+  <data name="Missing content-type boundary." xml:space="preserve">
+    <value />
+  </data>
+  <data name="Multipart boundary length limit exceeded." xml:space="preserve">
+    <value />
+  </data>
+  <data name="The file is missing a name." xml:space="preserve">
+    <value />
+  </data>
+  <data name="The file is empty." xml:space="preserve">
+    <value />
+  </data>
+  <data name="The file exceeds the size limit." xml:space="preserve">
+    <value />
+  </data>
+  <data name="The file type isn't permitted." xml:space="preserve">
+    <value />
+  </data>
 </root>
