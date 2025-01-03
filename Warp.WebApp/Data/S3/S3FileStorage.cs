@@ -2,6 +2,7 @@
 using Amazon.S3.Model;
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using Warp.WebApp.Attributes;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Models.Files;
@@ -11,8 +12,9 @@ namespace Warp.WebApp.Data.S3;
 
 public class S3FileStorage : IS3FileStorage
 {
-    public S3FileStorage(IAmazonS3Factory amazonS3Factory, ILoggerFactory loggerFactory)
+    public S3FileStorage(IStringLocalizer<ServerResources> localizer, IAmazonS3Factory amazonS3Factory, ILoggerFactory loggerFactory)
     {
+        _localizer = localizer;
         _logger = loggerFactory.CreateLogger<S3FileStorage>();
 
         _amazonS3Client = amazonS3Factory.CreateClient();
@@ -30,23 +32,31 @@ public class S3FileStorage : IS3FileStorage
             Prefix = prefix
         };
 
-        var response = await _amazonS3Client.ListObjectsV2Async(request, cancellationToken);
-        if (!IsSuccess(response))
+        string error;
+        try
         {
-            var error = "Failed to list objects in S3: " + response?.HttpStatusCode.ToString() ?? "unknown error";
-            return Result.Failure<HashSet<string>, ProblemDetails>(ProblemDetailsHelper.CreateServerException(error));
+            var response = await _amazonS3Client.ListObjectsV2Async(request, cancellationToken);
+            if (IsSuccess(response))
+            {
+                var objectIdsSet = keys.Select(key => prefix + key)
+                    .ToHashSet();
+
+                return response.S3Objects
+                    .Select(s3Object => s3Object.Key)
+                    .Where(objectIdsSet.Contains)
+                    .Select(key => key.Substring(prefix.Length))
+                    .ToHashSet();
+            }
+
+            error = response?.HttpStatusCode.ToString() ?? "unknown error";
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
         }
 
-        var objectIdsSet = keys.Select(key => prefix + key)
-            .ToHashSet();
-
-        var existingObjectIds = response.S3Objects
-            .Select(s3Object => s3Object.Key)
-            .Where(objectIdsSet.Contains)
-            .Select(key => key.Substring(prefix.Length))
-            .ToHashSet();
-
-        return existingObjectIds;
+        error = string.Format(_localizer["Failed to list objects in S3"], error);
+        return Result.Failure<HashSet<string>, ProblemDetails>(ProblemDetailsHelper.CreateServerException(error));
     }
 
 
@@ -69,13 +79,14 @@ public class S3FileStorage : IS3FileStorage
             if (IsSuccess(response))
                 return UnitResult.Success<ProblemDetails>();
 
-            error = "Failed to save an image to S3: " + response?.HttpStatusCode.ToString() ?? "unknown error";
+            error = response?.HttpStatusCode.ToString() ?? "unknown error";
         }
         catch (Exception ex)
         {
-            error = $"Failed to save an image to S3: {ex.Message}";
+            error = ex.Message;
         }
 
+        error = string.Format(_localizer["Failed to save an image to S3"], error);
         var problemDetails = ProblemDetailsHelper.CreateServerException(error);
 
         _logger.LogImageUploadError(error);
@@ -92,17 +103,27 @@ public class S3FileStorage : IS3FileStorage
             Key = BuildPrefix(prefix) + key,
         };
 
-        using var response = await _amazonS3Client.GetObjectAsync(request, cancellationToken);
-        if (IsSuccess(response))
+        string error;
+        try
         {
-            var contentStream = new MemoryStream();
-            await response.ResponseStream.CopyToAsync(contentStream, cancellationToken);
-            contentStream.Position = 0;
+            using var response = await _amazonS3Client.GetObjectAsync(request, cancellationToken);
+            if (IsSuccess(response))
+            {
+                var contentStream = new MemoryStream();
+                await response.ResponseStream.CopyToAsync(contentStream, cancellationToken);
+                contentStream.Position = 0;
 
-            return new AppFile(contentStream, response.Headers.ContentType);
+                return new AppFile(contentStream, response.Headers.ContentType);
+            }
+
+            error = response?.HttpStatusCode.ToString() ?? "unknown error";
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
         }
 
-        var error = "Failed to get an image from S3: " + response?.HttpStatusCode.ToString() ?? "unknown error";
+        error = string.Format(_localizer["Failed to get an image from S3"], error);
         var problemDetails = ProblemDetailsHelper.CreateServerException(error);
 
         _logger.LogImageDownloadError(error);
@@ -119,11 +140,21 @@ public class S3FileStorage : IS3FileStorage
             Key = BuildPrefix(prefix) + key
         };
 
-        var response = await _amazonS3Client.DeleteObjectAsync(request, cancellationToken);
-        if (response is not null && response.HttpStatusCode is System.Net.HttpStatusCode.NoContent)
-            return UnitResult.Success<ProblemDetails>();
+        string error;
+        try
+        {
+            var response = await _amazonS3Client.DeleteObjectAsync(request, cancellationToken);
+            if (response is not null && response.HttpStatusCode is System.Net.HttpStatusCode.NoContent)
+                return UnitResult.Success<ProblemDetails>();
 
-        var error = "Failed to delete an image to S3: " + response?.HttpStatusCode.ToString() ?? "unknown error";
+            error = response?.HttpStatusCode.ToString() ?? "unknown error";
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+        }
+
+        error = string.Format(_localizer["Failed to delete an image from S3"], error);
         var problemDetails = ProblemDetailsHelper.CreateServerException(error);
 
         _logger.LogImageRemovalError(error);
@@ -141,5 +172,6 @@ public class S3FileStorage : IS3FileStorage
 
     private readonly AmazonS3Client _amazonS3Client;
     private readonly IAmazonS3Factory _amazonS3Factory;
+    private readonly IStringLocalizer<ServerResources> _localizer;
     private readonly ILogger<S3FileStorage> _logger;
 }
