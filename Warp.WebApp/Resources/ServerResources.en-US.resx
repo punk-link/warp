@@ -136,7 +136,7 @@
     <value>Can`t remove entry cause of no permission.</value>
   </data>
   <data name="NoPermissionErrorMessage" xml:space="preserve">
-    <value>No permission to perform the operation</value>
+    <value>No permission to perform the operation.</value>
   </data>
   <data name="NoPreviewPermissionErrorMessage" xml:space="preserve">
     <value>Can't open the preview page, cause of no permission.</value>
@@ -188,5 +188,20 @@
   </data>
   <data name="The file type isn't permitted." xml:space="preserve">
     <value>The file type isn't permitted.</value>
+  </data>
+  <data name="Unsupported file extension." xml:space="preserve">
+    <value>Unsupported file extension.</value>
+  </data>
+  <data name="Failed to list objects in S3" xml:space="preserve">
+    <value>Failed to list objects in S3: {0}</value>
+  </data>
+  <data name="Failed to save an image to S3" xml:space="preserve">
+    <value>Failed to save an image to S3: {0}</value>
+  </data>
+  <data name="Failed to get an image from S3" xml:space="preserve">
+    <value>Failed to get an image from S3: {0}</value>
+  </data>
+  <data name="Failed to delete an image to S3" xml:space="preserve">
+    <value>Failed to delete an image to S3: {0}</value>
   </data>
 </root>

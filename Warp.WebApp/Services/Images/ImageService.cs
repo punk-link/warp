@@ -1,6 +1,7 @@
 ﻿using CSharpFunctionalExtensions;
 using CSharpFunctionalExtensions.ValueTasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using System.Diagnostics;
 using Warp.WebApp.Data.S3;
 using Warp.WebApp.Helpers;
@@ -11,19 +12,20 @@ namespace Warp.WebApp.Services.Images;
 
 public class ImageService : IImageService, IUnauthorizedImageService
 {
-    public ImageService(IS3FileStorage s3FileStorage)
+    public ImageService(IStringLocalizer<ServerResources> localizer, IS3FileStorage s3FileStorage)
     {
+        _localizer = localizer;
         _s3FileStorage = s3FileStorage;
     }
 
 
     public async Task<Result<ImageResponse, ProblemDetails>> Add(Guid entryId, AppFile appFile, CancellationToken cancellationToken)
     {
-        Debug.Assert(appFile.Content is not null, "A file content is null, because we checked it already at the controller level");
+        Debug.Assert(appFile.Content is not null, "A file content is null, because we checked it already at the controller level.");
         
         return await UnitResult.Success<ProblemDetails>()
             .Map(() => appFile)
-            .Ensure(IsImageMimeType, ProblemDetailsHelper.Create("Unsupported file extension"))
+            .Ensure(IsImageMimeType, ProblemDetailsHelper.Create(_localizer["Unsupported file extension."]))
             .Bind(Upload)
             .Bind(BuildImageInfo);
 
@@ -135,5 +137,6 @@ public class ImageService : IImageService, IUnauthorizedImageService
     ], StringComparer.OrdinalIgnoreCase);
 
 
+    private readonly IStringLocalizer<ServerResources> _localizer;
     private readonly IS3FileStorage _s3FileStorage;
 }
