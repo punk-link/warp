@@ -23,6 +23,9 @@ public static class LoggingConstants
     public const int ImageUploadError = 12_201;
     public const int ImageDownloadError = 12_202;
     public const int ImageRemovalError = 12_203;
+    public const int FileUploadException = 12_301;
+    public const int UnverifiedFileSignatureError = 12_302;
+    public const int FileSignatureVerificationError = 12_303;
 
     // Domain
     public const int WarpContentEmpty = 20_001;

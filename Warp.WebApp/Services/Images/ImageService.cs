@@ -1,7 +1,10 @@
 ﻿using CSharpFunctionalExtensions;
+using CSharpFunctionalExtensions.ValueTasks;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Concurrent;
+using Microsoft.Extensions.Localization;
+using System.Diagnostics;
 using Warp.WebApp.Data.S3;
+using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
 using Warp.WebApp.Models.Files;
 
@@ -9,65 +12,49 @@ namespace Warp.WebApp.Services.Images;
 
 public class ImageService : IImageService, IUnauthorizedImageService
 {
-    public ImageService(IS3FileStorage s3FileStorage)
+    public ImageService(IStringLocalizer<ServerResources> localizer, IS3FileStorage s3FileStorage)
     {
+        _localizer = localizer;
         _s3FileStorage = s3FileStorage;
     }
 
 
-    public async Task<List<ImageResponse>> Add(Guid entryId, List<IFormFile> files, CancellationToken cancellationToken)
+    public async Task<Result<ImageResponse, ProblemDetails>> Add(Guid entryId, AppFile appFile, CancellationToken cancellationToken)
     {
-        // TODO: add validation and a count check
+        Debug.Assert(appFile.Content is not null, "A file content is null, because we checked it already at the controller level.");
+        
+        return await UnitResult.Success<ProblemDetails>()
+            .Map(() => appFile)
+            .Ensure(IsImageMimeType, ProblemDetailsHelper.Create(_localizer["Unsupported file extension."]))
+            .Bind(Upload)
+            .Bind(BuildImageInfo);
 
-        var encodedEntryId = IdCoder.Encode(entryId);
 
-        var results = new ConcurrentBag<ImageResponse>();
-        await Parallel.ForEachAsync(files, cancellationToken, async (file, ctx) =>
+        bool IsImageMimeType(AppFile fileContent) 
+            => _imageMimeTypes.Contains(fileContent.ContentMimeType);
+
+
+        async Task<Result<(Guid, AppFile), ProblemDetails>> Upload(AppFile appFile)
         {
-            await Upload(file, ctx)
-                .Bind(BuildImageInfo)
-                .Bind(BuildImageResponse)
-                .Tap(AddToResults);
-        });
-
-        return [.. results];
-
-
-        async Task<Result<(Guid, IFormFile), ProblemDetails>> Upload(IFormFile file, CancellationToken cancellationToken)
-        {
-            using var contentStream = new MemoryStream();
-            await file.CopyToAsync(contentStream, cancellationToken);
-
             var imageId = Guid.NewGuid();
-            var fileContent = new FileContent(contentStream, file.ContentType);
 
-            var result = await _s3FileStorage.Save(entryId.ToString(), imageId.ToString(), fileContent, cancellationToken);
+            var result = await _s3FileStorage.Save(entryId.ToString(), imageId.ToString(), appFile, cancellationToken);
             if (result.IsFailure)
                 return result.Error;
 
-            return (imageId, file);
+            return (imageId, appFile);
         }
 
 
-        Result<(ImageInfo, IFormFile), ProblemDetails> BuildImageInfo((Guid ImageId, IFormFile File) tuple)
+        Result<ImageResponse, ProblemDetails> BuildImageInfo((Guid ImageId, AppFile AppFile) tuple)
         {
+            var encodedEntryId = IdCoder.Encode(entryId);
+
             var url = BuildUrl(encodedEntryId, tuple.ImageId);
             var imageInfo = new ImageInfo(tuple.ImageId, entryId, url);
             
-            return (imageInfo, tuple.File);
+            return new ImageResponse(imageInfo, tuple.AppFile.UntrustedFileName);
         }
-
-
-        Result<ImageResponse, ProblemDetails> BuildImageResponse((ImageInfo ImageInfo, IFormFile File) tuple) 
-            => new ImageResponse
-            {
-                ImageInfo = tuple.ImageInfo,
-                ClientFileName = tuple.File.FileName
-            };
-
-
-        void AddToResults(ImageResponse imageInfo) 
-            => results.Add(imageInfo);
     }
 
 
@@ -77,16 +64,16 @@ public class ImageService : IImageService, IUnauthorizedImageService
             .Bind(BuildImage);
 
 
-        Task<Result<FileContent, ProblemDetails>> GetImage(Guid imageId, CancellationToken cancellationToken) 
+        Task<Result<AppFile, ProblemDetails>> GetImage(Guid imageId, CancellationToken cancellationToken) 
             => _s3FileStorage.Get(entryId.ToString(), imageId.ToString(), cancellationToken);
 
 
-        Result<Image, ProblemDetails> BuildImage(FileContent stream)
+        Result<Image, ProblemDetails> BuildImage(AppFile stream)
             => new Image()
             {
                 Id = imageId,
                 Content = stream.Content,
-                ContentType = stream.ContentType
+                ContentType = stream.ContentMimeType
             };
     }
 
@@ -135,5 +122,21 @@ public class ImageService : IImageService, IUnauthorizedImageService
         => BuildUrl(IdCoder.Encode(entryId), imageId);
 
 
+    private static readonly HashSet<string> _imageMimeTypes = new(
+    [
+        "image/bmp",
+        "image/gif",
+        "image/jpeg",
+        "image/jpeg",
+        "image/png",
+        "image/svg+xml",
+        "image/tiff",
+        "image/tiff",
+        "image/webp",
+        "image/x-icon"
+    ], StringComparer.OrdinalIgnoreCase);
+
+
+    private readonly IStringLocalizer<ServerResources> _localizer;
     private readonly IS3FileStorage _s3FileStorage;
 }

@@ -3,8 +3,16 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.OutputCaching;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Options;
+using Microsoft.Net.Http.Headers;
+using System.Diagnostics;
+using System.Text.Json;
+using Warp.WebApp.Attributes;
+using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
+using Warp.WebApp.Models.Options;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Creators;
@@ -17,15 +25,20 @@ namespace Warp.WebApp.Controllers;
 [Route("/api/images")]
 public sealed class ImageController : BaseController
 {
-    public ImageController(ICookieService cookieService, 
+    public ImageController(IOptions<ImageUploadOptions> options,
+        ICookieService cookieService, 
         ICreatorService creatorService,
         IEntryInfoService entryInfoService,
+        ILoggerFactory loggerFactory,
         IPartialViewRenderService partialViewRenderHelper,
         IUnauthorizedImageService unauthorizedImageService,
         IStringLocalizer<ServerResources> localizer) 
         : base(localizer, cookieService, creatorService)
     {
         _entryInfoService = entryInfoService;
+        _localizer = localizer;
+        _loggerFactory = loggerFactory;
+        _options = options.Value;
         _partialViewRenderHelper = partialViewRenderHelper;
         _unauthorizedImageService = unauthorizedImageService;
     }
@@ -71,24 +84,88 @@ public sealed class ImageController : BaseController
     }
 
 
+    [MultipartFormData]
+    [DisableFormValueModelBinding]
+    [RequestFormLimits(MultipartBodyLengthLimit = 50 * 1024 * 1024)] // 50MB
+    [RequestSizeLimit(50 * 1024 * 1024)]
+    [ProducesResponseType(typeof(ImageResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [HttpPost("entry-id/{entryId}")]
-    public async Task<IActionResult> Upload([FromRoute] string entryId, [FromForm] List<IFormFile> images, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Upload([FromRoute] string entryId, CancellationToken cancellationToken = default)
     {
+        Debug.Assert(Request.ContentType is not null, "Content type is not null because of the [MultipartFormData] attribute");
+
         var decodedEntryId = IdCoder.Decode(entryId);
         if (decodedEntryId == Guid.Empty)
             return ReturnIdDecodingBadRequest();
 
-        var imageResponses = await _unauthorizedImageService.Add(decodedEntryId, images, cancellationToken);
-        return Ok(await BuildUploadResults(imageResponses));
+        var (_, isFailure, boundary, error) = MultipartRequestHelper.GetBoundary(_localizer, MediaTypeHeaderValue.Parse(Request.ContentType), _options.RequestBoundaryLengthLimit);
+        if (isFailure)
+            return BadRequest(error);
+
+        var reader = new MultipartReader(boundary, HttpContext.Request.Body);
+        if (reader is null)
+            return BadRequest(ProblemDetailsHelper.Create(_localizer["Failed to create MultipartReader"]));
+
+        var fileHelper = new FileHelper(_loggerFactory, _localizer, _options.AllowedExtensions, _options.MaxFileSize);
+
+        var uploadResults = new List<Result<ImageResponse, ProblemDetails>>();
+        var uploadedFilesCount = 0;
+        MultipartSection? section;
+
+        do
+        {
+            if (_options.MaxFileCount <= uploadedFilesCount)
+                break;
+
+            section = await reader.ReadNextSectionAsync(cancellationToken);
+            if (section is null)
+                break;
+
+            if (!ContentDispositionHeaderValue.TryParse(section.ContentDisposition, out var contentDisposition))
+                continue;
+
+            if (!MultipartRequestHelper.HasFileContentDisposition(contentDisposition))
+                continue;
+
+            var (_, isAppFileFailure, appFile, appFileError) = await fileHelper.ProcessStreamedFile(section, contentDisposition);
+            if (isAppFileFailure)
+            {
+                uploadResults.Add(EnrichProblemDetails(contentDisposition, appFileError));
+                continue;
+            }
+
+            var uploadResult = await _unauthorizedImageService.Add(decodedEntryId, appFile, cancellationToken);
+            uploadResults.Add(uploadResult);
+
+            uploadedFilesCount++;
+        } while (section is not null);
+
+        return Ok(await BuildUploadResults(uploadResults));
+
+
+        static ProblemDetails EnrichProblemDetails(ContentDispositionHeaderValue contentDisposition, ProblemDetails problemDetails)
+        {
+            problemDetails.Extensions.Add(ProblemDetailsFileNameExtensionKey, contentDisposition.FileName.Value);
+            return problemDetails;
+        }
     }
 
 
-    private async Task<Dictionary<string, string>> BuildUploadResults(List<ImageResponse> imageResponses)
+    private async Task<Dictionary<string, string>> BuildUploadResults(List<Result<ImageResponse, ProblemDetails>> uploadResults)
     {
-        var uploadResults = new Dictionary<string, string>(imageResponses.Count);
-
-        foreach (var imageResponse in imageResponses)
+        var results = new Dictionary<string, string>();
+        foreach (var (_, isFailure, imageResponse, error) in uploadResults)
         {
+            if (isFailure)
+            {
+                var fileName = error.Extensions[ProblemDetailsFileNameExtensionKey] as string ?? "unknown";
+
+                var errorJson = JsonSerializer.Serialize(error);
+                results.Add(fileName, errorJson);
+                continue;
+            }
+
             var partialView = new PartialViewResult
             {
                 
@@ -99,15 +176,20 @@ public sealed class ImageController : BaseController
                 }
             };
 
-            var html = await _partialViewRenderHelper.Render(ControllerContext, HttpContext, partialView);
-            uploadResults.Add(imageResponse.ClientFileName, html);
+            var renderResult = await _partialViewRenderHelper.Render(ControllerContext, HttpContext, partialView);
+            results.Add(imageResponse.ClientFileName, renderResult);
         }
 
-        return uploadResults;
+        return results;
     }
 
 
+    private const string ProblemDetailsFileNameExtensionKey = "fileName";
+
     private readonly IEntryInfoService _entryInfoService;
+    private readonly IStringLocalizer<ServerResources> _localizer;
+    private readonly ILoggerFactory _loggerFactory;
+    private readonly ImageUploadOptions _options;
     private readonly IPartialViewRenderService _partialViewRenderHelper;
     private readonly IUnauthorizedImageService _unauthorizedImageService;
 }

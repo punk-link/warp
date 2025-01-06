@@ -17,6 +17,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Extensions\Logging\**" />
+    <Content Remove="Extensions\Logging\**" />
+    <EmbeddedResource Remove="Extensions\Logging\**" />
+    <None Remove="Extensions\Logging\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="robots.txt" />
   </ItemGroup>
 
@@ -50,7 +57,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Extensions\Logging\" />
     <Folder Include="wwwroot\img\" />
   </ItemGroup>
 
