@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.Extensions.Options;
 using System.Globalization;
 using Warp.WebApp.Data;
 using Warp.WebApp.Data.Redis;
@@ -33,7 +34,7 @@ builder.AddLogging()
 
 builder.Services.AddSingleton(_ => DistributedCacheHelper.GetConnectionMultiplexer(startupLogger, builder.Configuration));
 
-AddOptions(builder.Services, builder.Configuration);
+AddOptions(startupLogger, builder.Services, builder.Configuration);
 AddServices(builder.Services);
 
 builder.Services.AddLocalization(o => o.ResourcesPath = "Resources");
@@ -59,7 +60,6 @@ builder.Services.AddResponseCaching();
 builder.Services.AddOutputCache();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
-
 
 var app = builder.Build();
 
@@ -104,27 +104,45 @@ app.MapControllers();
 app.MapRazorPages();
 
 app.Run();
+
 return;
 
 
-void AddConfiguration(ILogger<Program> logger, WebApplicationBuilder builder1)
+void AddConfiguration(ILogger<Program> logger, WebApplicationBuilder builder)
 {
     if (builder.Environment.IsLocal())
     {
-        builder1.Configuration.AddJsonFile($"appsettings.{builder1.Configuration["ASPNETCORE_ENVIRONMENT"]}.json", optional: true, reloadOnChange: true);
+        logger.LogLocalConfigurationIsInUse();
+        builder.Configuration.AddJsonFile($"appsettings.{builder.Configuration["ASPNETCORE_ENVIRONMENT"]}.json", optional: true, reloadOnChange: true);
         return;
     }
 
-    var secrets = VaultHelper.GetSecrets<ProgramSecrets>(logger, builder1.Configuration);
-    builder1.AddConsulConfiguration(secrets.ConsulAddress, secrets.ConsulToken);
+    var secrets = VaultHelper.GetSecrets<ProgramSecrets>(logger, builder.Configuration);
+    builder.AddConsulConfiguration(secrets.ConsulAddress, secrets.ConsulToken);
 }
 
 
-void AddOptions(IServiceCollection services, IConfiguration configuration)
+void AddOptions(ILogger<Program> logger, IServiceCollection services, IConfiguration configuration)
 {
-    // TODO: add ImageUploadOptions
-    services.Configure<AnalyticsOptions>(configuration.GetSection(nameof(AnalyticsOptions)));
-    services.Configure<S3Options>(configuration.GetSection(nameof(S3Options)));
+    try
+    {
+        services.Configure<AnalyticsOptions>(configuration.GetSection(nameof(AnalyticsOptions)));
+
+        services.AddOptions<S3Options>()
+            .Bind(configuration.GetSection(nameof(S3Options)))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddOptions<ImageUploadOptions>()
+            .Bind(configuration.GetSection(nameof(ImageUploadOptions)))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+    }
+    catch (OptionsValidationException ex)
+    {
+        logger.LogOptionsValidationException(ex.Message);
+        throw;
+    }
 }
 
 

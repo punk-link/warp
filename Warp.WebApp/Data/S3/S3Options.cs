@@ -1,8 +1,15 @@
-﻿namespace Warp.WebApp.Data.S3;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Warp.WebApp.Data.S3;
 
 public class S3Options
 {
-    public string AccessKey { get; set; }
-    public string SecretAccessKey { get; set; }
-    public string BucketName { get; set; }
+    [Required]
+    public required string AccessKey { get; set; }
+
+    [Required]
+    public required string SecretAccessKey { get; set; }
+
+    [Required]
+    public required string BucketName { get; set; }
 }
