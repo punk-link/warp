@@ -27,83 +27,91 @@ var builder = WebApplication.CreateBuilder(args);
 
 var startupLogger = builder.GetStartUpLogger();
 
-AddConfiguration(startupLogger, builder);
-
-builder.AddLogging()
-    .AddTelemetry();
-
-builder.Services.AddSingleton(_ => DistributedCacheHelper.GetConnectionMultiplexer(startupLogger, builder.Configuration));
-
-AddOptions(startupLogger, builder.Services, builder.Configuration);
-AddServices(builder.Services);
-
-builder.Services.AddLocalization(o => o.ResourcesPath = "Resources");
-
-builder.Services.AddMemoryCache();
-builder.Services.AddRazorPages()
-    .AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix)
-    .AddDataAnnotationsLocalization();
-builder.Services.AddControllers()
-    .AddControllersAsServices();
-builder.Services.AddHealthChecks()
-    .AddCheck<ControllerResolveHealthCheck>(nameof(ControllerResolveHealthCheck))
-    .AddCheck<RedisHealthCheck>(nameof(RedisHealthCheck));
-
-builder.Services.AddResponseCompression(options =>
+try
 {
-    options.EnableForHttps = true;
-    options.Providers.Add<BrotliCompressionProvider>();
-    options.Providers.Add<GzipCompressionProvider>();
-});
+    AddConfiguration(startupLogger, builder);
 
-builder.Services.AddResponseCaching();
-builder.Services.AddOutputCache();
+    builder.AddLogging()
+        .AddTelemetry();
 
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
+    builder.Services.AddSingleton(_ => DistributedCacheHelper.GetConnectionMultiplexer(startupLogger, builder.Configuration));
 
-var app = builder.Build();
+    AddOptions(startupLogger, builder.Services, builder.Configuration);
+    AddServices(builder.Services);
 
-var supportedCultures = new[] { new CultureInfo("en-US") };
-app.UseRequestLocalization(new RequestLocalizationOptions
-{
-    DefaultRequestCulture = new RequestCulture("en-US"),
-    SupportedCultures = supportedCultures,
-    SupportedUICultures = supportedCultures
-});
+    builder.Services.AddLocalization(o => o.ResourcesPath = "Resources");
 
-if (!app.Environment.IsDevelopmentOrLocal())
-{
-    app.UseExceptionHandler("/Error");
-    app.UseHsts();
+    builder.Services.AddMemoryCache();
+    builder.Services.AddRazorPages()
+        .AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix)
+        .AddDataAnnotationsLocalization();
+    builder.Services.AddControllers()
+        .AddControllersAsServices();
+    builder.Services.AddHealthChecks()
+        .AddCheck<ControllerResolveHealthCheck>(nameof(ControllerResolveHealthCheck))
+        .AddCheck<RedisHealthCheck>(nameof(RedisHealthCheck));
+
+    builder.Services.AddResponseCompression(options =>
+    {
+        options.EnableForHttps = true;
+        options.Providers.Add<BrotliCompressionProvider>();
+        options.Providers.Add<GzipCompressionProvider>();
+    });
+
+    builder.Services.AddResponseCaching();
+    builder.Services.AddOutputCache();
+
+    builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
+
+    var app = builder.Build();
+
+    var supportedCultures = new[] { new CultureInfo("en-US") };
+    app.UseRequestLocalization(new RequestLocalizationOptions
+    {
+        DefaultRequestCulture = new RequestCulture("en-US"),
+        SupportedCultures = supportedCultures,
+        SupportedUICultures = supportedCultures
+    });
+
+    if (!app.Environment.IsDevelopmentOrLocal())
+    {
+        app.UseExceptionHandler("/Error");
+        app.UseHsts();
+    }
+
+    app.UseMiddleware<ApiExceptionHandlerMiddleware>();
+    app.UseMiddleware<TraceMethodMiddleware>();
+
+    app.UseHttpsRedirection();
+    app.UseResponseCompression();
+    app.UseResponseCaching();
+    app.UseOutputCache();
+
+    app.UseHealthChecks("/health");
+    app.UseMiddleware<CancellationExceptionHandlerMiddleware>();
+    app.UseMiddleware<RobotsMiddleware>();
+    app.UseStaticFiles();
+    app.UseCookiePolicy(new CookiePolicyOptions()
+    {
+        Secure = CookieSecurePolicy.Always,
+        MinimumSameSitePolicy = SameSiteMode.Strict
+    });
+
+    app.UseRouting();
+
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    app.MapControllers();
+    app.MapRazorPages();
+
+    app.Run();
 }
-
-app.UseMiddleware<ApiExceptionHandlerMiddleware>();
-app.UseMiddleware<TraceMethodMiddleware>();
-
-app.UseHttpsRedirection();
-app.UseResponseCompression();
-app.UseResponseCaching();
-app.UseOutputCache();
-
-app.UseHealthChecks("/health");
-app.UseMiddleware<CancellationExceptionHandlerMiddleware>();
-app.UseMiddleware<RobotsMiddleware>();
-app.UseStaticFiles();
-app.UseCookiePolicy(new CookiePolicyOptions()
+catch (Exception ex)
 {
-    Secure = CookieSecurePolicy.Always,
-    MinimumSameSitePolicy = SameSiteMode.Strict
-});
-
-app.UseRouting();
-
-app.UseAuthentication();
-app.UseAuthorization();
-
-app.MapControllers();
-app.MapRazorPages();
-
-app.Run();
+    startupLogger.LogCritical(ex, ex.Message);
+    throw;
+}
 
 return;
 
