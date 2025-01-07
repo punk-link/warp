@@ -31,6 +31,12 @@ internal static partial class LogMessages
     [LoggerMessage(LoggingConstants.VaultSecretCastException, LogLevel.Critical, "Startup error: Unable to cast obtained secrets to a typed object - '{ErrorMessage}'.")]
     public static partial void LogVaultSecretCastException(this ILogger logger, string errorMessage);
 
+    [LoggerMessage(LoggingConstants.LocalConfigurationIsInUse, LogLevel.Warning, "Local configuration is in use.")]
+    public static partial void LogLocalConfigurationIsInUse(this ILogger logger);
+
+    [LoggerMessage(LoggingConstants.OptionsValidationException, LogLevel.Critical, "Options validation exception occurred - '{ErrorMessage}'.")]
+    public static partial void LogOptionsValidationException(this ILogger logger, string errorMessage);
+
 
     // Infrastructure
     [LoggerMessage(LoggingConstants.DefaultCacheValueError, LogLevel.Warning, "Unable to store a default value {CacheValue}.")]

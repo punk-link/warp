@@ -13,6 +13,8 @@ public static class LoggingConstants
     public const int RedisConnectionException = 11_003;
     public const int VaultConnectionException = 11_101;
     public const int VaultSecretCastException = 11_102;
+    public const int LocalConfigurationIsInUse = 11_201;
+    public const int OptionsValidationException = 11_301;
 
     // Infrastructure
     public const int DefaultCacheValueError = 12_001;
