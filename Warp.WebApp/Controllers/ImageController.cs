@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 using System.Diagnostics;
@@ -106,6 +107,9 @@ public sealed class ImageController : BaseController
         var reader = new MultipartReader(boundary, HttpContext.Request.Body);
         if (reader is null)
             return BadRequest(ProblemDetailsHelper.Create(_localizer["Failed to create MultipartReader"]));
+
+        var logger = _loggerFactory.CreateLogger<ImageController>();
+        logger.LogError(string.Join(", ", _options.AllowedExtensions));
 
         var fileHelper = new FileHelper(_loggerFactory, _localizer, _options.AllowedExtensions, _options.MaxFileSize);
 
