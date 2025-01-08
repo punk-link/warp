@@ -22,7 +22,7 @@ public static class DistributedCacheHelper
             {
                 { host, port }
             },
-            ReconnectRetryPolicy = new ExponentialRetry(5000),
+            ReconnectRetryPolicy = new ExponentialRetry(5_000, 20_000),
             Ssl = false
         };
 
