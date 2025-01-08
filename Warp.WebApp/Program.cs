@@ -141,12 +141,6 @@ void AddOptions(ILogger<Program> logger, IServiceCollection services, IConfigura
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        var imageUploadOptionsSection = configuration.GetSection("ImageUploadOptions");
-        foreach (var child in imageUploadOptionsSection.GetChildren())
-        {
-            logger.LogInformation("Key: {Key}, Value: {Value}", child.Path, child.Value);
-        }
-
         services.AddOptions<ImageUploadOptions>()
             .Bind(configuration.GetSection(nameof(ImageUploadOptions)))
             .ValidateDataAnnotations()
