@@ -134,19 +134,28 @@ void AddOptions(ILogger<Program> logger, IServiceCollection services, IConfigura
 {
     try
     {
-        services.Configure<AnalyticsOptions>(configuration.GetSection(nameof(AnalyticsOptions)));
+        services.AddOptions<AnalyticsOptions>()
+            .BindConfiguration(nameof(AnalyticsOptions));
 
         services.AddOptions<S3Options>()
-            .Bind(configuration.GetSection(nameof(S3Options)))
+            .BindConfiguration(nameof(S3Options))
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
         services.AddOptions<ImageUploadOptions>()
-            .Bind(configuration.GetSection(nameof(ImageUploadOptions)))
+            .Configure(options =>
+            {
+                var allowedExtensions = configuration.GetSection("ImageUploadOptions:AllowedExtensions").Get<string[]>()!;
+
+                options.AllowedExtensions = allowedExtensions;
+                options.MaxFileCount = configuration.GetValue<int>("ImageUploadOptions:MaxFileCount");
+                options.MaxFileSize = configuration.GetValue<long>("ImageUploadOptions:MaxFileSize");
+                options.RequestBoundaryLengthLimit = configuration.GetValue<int>("ImageUploadOptions:RequestBoundaryLengthLimit");
+            })
             .ValidateDataAnnotations()
             .ValidateOnStart();
     }
-    catch (OptionsValidationException ex)
+    catch (Exception ex)
     {
         logger.LogOptionsValidationException(ex.Message);
         throw;
