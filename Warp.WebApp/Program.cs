@@ -145,8 +145,9 @@ void AddOptions(ILogger<Program> logger, IServiceCollection services, IConfigura
         services.AddOptions<ImageUploadOptions>()
             .Configure(options =>
             {
-                var allowedExtensions = configuration.GetSection("ImageUploadOptions:AllowedExtensions").Get<string[]>()!;
-
+                var allowedExtensions = configuration.GetSection("ImageUploadOptions:AllowedExtensions").Get<string[]>();
+                ArgumentNullException.ThrowIfNull(allowedExtensions, "ImageUploadOptions:AllowedExtensions");
+                
                 options.AllowedExtensions = allowedExtensions;
                 options.MaxFileCount = configuration.GetValue<int>("ImageUploadOptions:MaxFileCount");
                 options.MaxFileSize = configuration.GetValue<long>("ImageUploadOptions:MaxFileSize");
