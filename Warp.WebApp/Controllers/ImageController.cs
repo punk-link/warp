@@ -100,10 +100,12 @@ public sealed class ImageController : BaseController
         if (decodedEntryId == Guid.Empty)
             return ReturnIdDecodingBadRequest();
 
+        // TODO: add logging
         var (_, isFailure, boundary, error) = MultipartRequestHelper.GetBoundary(_localizer, MediaTypeHeaderValue.Parse(Request.ContentType), _options.RequestBoundaryLengthLimit);
         if (isFailure)
             return BadRequest(error);
 
+        // TODO: add logging
         var reader = new MultipartReader(boundary, HttpContext.Request.Body);
         if (reader is null)
             return BadRequest(ProblemDetailsHelper.Create(_localizer["Failed to create MultipartReader"]));
