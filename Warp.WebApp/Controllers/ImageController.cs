@@ -42,9 +42,6 @@ public sealed class ImageController : BaseController
         _options = options.Value;
         _partialViewRenderHelper = partialViewRenderHelper;
         _unauthorizedImageService = unauthorizedImageService;
-
-        if (_options.AllowedExtensions is null || _options.AllowedExtensions.Length is 0)
-            throw new ArgumentException("AllowedExtensions must be set in the configuration.");
     }
 
 
@@ -112,9 +109,6 @@ public sealed class ImageController : BaseController
         var reader = new MultipartReader(boundary, HttpContext.Request.Body);
         if (reader is null)
             return BadRequest(ProblemDetailsHelper.Create(_localizer["Failed to create MultipartReader"]));
-
-        var logger = _loggerFactory.CreateLogger<ImageController>();
-        logger.LogError(string.Join(", ", _options.AllowedExtensions));
 
         var fileHelper = new FileHelper(_loggerFactory, _localizer, _options.AllowedExtensions, _options.MaxFileSize);
 

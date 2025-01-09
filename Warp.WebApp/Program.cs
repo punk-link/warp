@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Options;
 using System.Globalization;
+using System.Text.Json;
 using Warp.WebApp.Data;
 using Warp.WebApp.Data.Redis;
 using Warp.WebApp.Data.S3;
@@ -118,12 +119,12 @@ return;
 
 void AddConfiguration(ILogger<Program> logger, WebApplicationBuilder builder)
 {
-    if (builder.Environment.IsLocal())
-    {
-        logger.LogLocalConfigurationIsInUse();
-        builder.Configuration.AddJsonFile($"appsettings.{builder.Configuration["ASPNETCORE_ENVIRONMENT"]}.json", optional: true, reloadOnChange: true);
-        return;
-    }
+    //if (builder.Environment.IsLocal())
+    //{
+    //    logger.LogLocalConfigurationIsInUse();
+    //    builder.Configuration.AddJsonFile($"appsettings.{builder.Configuration["ASPNETCORE_ENVIRONMENT"]}.json", optional: true, reloadOnChange: true);
+    //    return;
+    //}
 
     var secrets = VaultHelper.GetSecrets<ProgramSecrets>(logger, builder.Configuration);
     builder.AddConsulConfiguration(secrets.ConsulAddress, secrets.ConsulToken);
@@ -145,9 +146,17 @@ void AddOptions(ILogger<Program> logger, IServiceCollection services, IConfigura
         services.AddOptions<ImageUploadOptions>()
             .Configure(options =>
             {
-                var allowedExtensions = configuration.GetSection("ImageUploadOptions:AllowedExtensions").Get<string[]>();
-                ArgumentNullException.ThrowIfNull(allowedExtensions, "ImageUploadOptions:AllowedExtensions");
-                
+                // AppSettings configuration provider returns an array of string,
+                // but Consul configuration provider returns a single string.
+                // So we need to handle both cases differently.
+                var allowedExtensionsSection = configuration.GetSection("ImageUploadOptions:AllowedExtensions");
+                var allowedExtensions = Array.Empty<string>();
+
+                if (allowedExtensionsSection.Value is not null)
+                    allowedExtensions = JsonSerializer.Deserialize<string[]>(allowedExtensionsSection.Value)!;
+                else if (allowedExtensionsSection.GetChildren().Any())
+                    allowedExtensions = allowedExtensionsSection.Get<string[]>() ?? [];
+
                 options.AllowedExtensions = allowedExtensions;
                 options.MaxFileCount = configuration.GetValue<int>("ImageUploadOptions:MaxFileCount");
                 options.MaxFileSize = configuration.GetValue<long>("ImageUploadOptions:MaxFileSize");
