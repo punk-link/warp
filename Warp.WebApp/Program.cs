@@ -119,12 +119,12 @@ return;
 
 void AddConfiguration(ILogger<Program> logger, WebApplicationBuilder builder)
 {
-    //if (builder.Environment.IsLocal())
-    //{
-    //    logger.LogLocalConfigurationIsInUse();
-    //    builder.Configuration.AddJsonFile($"appsettings.{builder.Configuration["ASPNETCORE_ENVIRONMENT"]}.json", optional: true, reloadOnChange: true);
-    //    return;
-    //}
+    if (builder.Environment.IsLocal())
+    {
+        logger.LogLocalConfigurationIsInUse();
+        builder.Configuration.AddJsonFile($"appsettings.{builder.Configuration["ASPNETCORE_ENVIRONMENT"]}.json", optional: true, reloadOnChange: true);
+        return;
+    }
 
     var secrets = VaultHelper.GetSecrets<ProgramSecrets>(logger, builder.Configuration);
     builder.AddConsulConfiguration(secrets.ConsulAddress, secrets.ConsulToken);
