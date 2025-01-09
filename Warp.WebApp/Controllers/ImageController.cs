@@ -42,6 +42,9 @@ public sealed class ImageController : BaseController
         _options = options.Value;
         _partialViewRenderHelper = partialViewRenderHelper;
         _unauthorizedImageService = unauthorizedImageService;
+
+        if (_options.AllowedExtensions is null || _options.AllowedExtensions.Length is 0)
+            throw new ArgumentException("AllowedExtensions must be set in the configuration.");
     }
 
 
