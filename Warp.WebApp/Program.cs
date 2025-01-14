@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.ResponseCompression;
-using Microsoft.Extensions.Options;
 using System.Globalization;
 using System.Text.Json;
 using Warp.WebApp.Data;
