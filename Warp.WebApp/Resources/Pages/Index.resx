@@ -117,19 +117,25 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="CopyLinkButton" xml:space="preserve">
-    <value>Copy Link</value>
+  <data name="AdvancedModeButton" xml:space="preserve">
+    <value />
   </data>
   <data name="CreateButton" xml:space="preserve">
-    <value>Create New</value>
+    <value />
   </data>
-  <data name="DeleteButton" xml:space="preserve">
-    <value>Delete</value>
+  <data name="ExpirationPeriodLabel" xml:space="preserve">
+    <value />
   </data>
-  <data name="Logo" xml:space="preserve">
-    <value>warplyn</value>
+  <data name="MetaDescription" xml:space="preserve">
+    <value>Warplyn allows you to share short-lived massages and media with your friends, family and colleagues.</value>
   </data>
-  <data name="Title" xml:space="preserve">
-    <value>Warplyn. Share the moments instantly, knowing they'll disappear in no time.</value>
+  <data name="TextModeButton" xml:space="preserve">
+    <value />
+  </data>
+  <data name="TextAreaLabel" xml:space="preserve">
+    <value />
+  </data>
+  <data name="ImageAreaLabel" xml:space="preserve">
+    <value />
   </data>
 </root>
