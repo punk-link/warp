@@ -1,14 +1,31 @@
 services:
   keydb:
-    image: eqalpha/keydb
+    image: eqalpha/keydb:latest
     ports:
-      - 6379:6379
+      - "6379:6379"
     volumes:
       - ./data:/data
     command: keydb-server
+    restart: unless-stopped
 
   aspire-dashboard:
-    image: mcr.microsoft.com/dotnet/aspire-dashboard
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:latest
     ports:
-      - 18888:18888
-      - 4317:18889
+      - "18888:18888"
+      - "4317:18889"
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: warpdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
