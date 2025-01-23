@@ -3,10 +3,12 @@ using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.EntityFrameworkCore;
 using System.Globalization;
 using System.Text.Json;
 using Warp.WebApp.Data;
 using Warp.WebApp.Data.Redis;
+using Warp.WebApp.Data.Relational;
 using Warp.WebApp.Data.S3;
 using Warp.WebApp.Helpers.Configuration;
 using Warp.WebApp.Helpers.HealthChecks;
@@ -37,6 +39,16 @@ try
     builder.Services.AddSingleton(_ => DistributedCacheHelper.GetConnectionMultiplexer(startupLogger, builder.Configuration));
 
     AddOptions(startupLogger, builder.Services, builder.Configuration);
+    builder.Services.AddDbContext<WarpDbContext>(options =>
+        options.UseNpgsql(
+            builder.Configuration.GetConnectionString("PersistentConnection"),
+            options =>
+            {
+                options.EnableRetryOnFailure();
+                options.MigrationsAssembly(typeof(Program).Assembly.FullName);
+            }
+        ));
+
     AddServices(builder.Services);
 
     builder.Services.AddLocalization(o => o.ResourcesPath = "Resources");
@@ -47,9 +59,11 @@ try
         .AddDataAnnotationsLocalization();
     builder.Services.AddControllers()
         .AddControllersAsServices();
+
     builder.Services.AddHealthChecks()
         .AddCheck<ControllerResolveHealthCheck>(nameof(ControllerResolveHealthCheck))
-        .AddCheck<RedisHealthCheck>(nameof(RedisHealthCheck));
+        .AddCheck<RedisHealthCheck>(nameof(RedisHealthCheck))
+        .AddDbContextCheck<WarpDbContext>(nameof(WarpDbContext));
 
     builder.Services.AddResponseCompression(options =>
     {
