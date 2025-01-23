@@ -16,6 +16,7 @@ To run the service you have to pass the following environment variables:
 |PNKL_VAULT_TOKEN|String|     |An access token of a Vault instance|
 |DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS|Boolean|Local env only| Dsiables the telemetry dashboard login|
 
+
 ### Docker Compose
 
 Run the compose file inside the root directory. It sets up external dependencies like a database etc.
@@ -26,6 +27,32 @@ Run the compose file inside the root directory. It sets up external dependencies
 :exclamation: You may use _appSettings.Local.json_ for local runs.
 
 Also you might need to override DB settings to run locally. Set up the _Redis_ section of your _appSettings.Local.json_.
+
+
+## Database Migrations
+
+### Requirements
+- .NET EF Core tools: `dotnet tool install --global dotnet-ef`
+- PostgreSQL running (see [docker-compose.yml](https://github.com/punk-link/warp/blob/master/docker-compose.yml))
+
+
+### Creating Migrations
+
+1. Go to the application folder.
+2. Set environment:
+```powershell
+$env:ASPNETCORE_ENVIRONMENT = "Local"
+```
+3. Create migration:
+```powershell
+dotnet ef migrations add <MigrationName> --project Warp.WebApp.csproj --configuration Local --context WarpDbContext --output-dir Data/Relational/Migrations
+```
+4. Apply migration:
+```powershell
+dotnet ef database update
+```
+\
+Migrations are stored in [Migrations](https://github.com/punk-link/warp/tree/master/Warp.WebApp/Data/Relational/Migrations).
 
 
 ## Styles
