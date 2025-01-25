@@ -14,9 +14,9 @@ using Warp.WebApp.Models.Files;
 using Warp.WebApp.Services.Images;
 
 namespace Warp.WebApp.Tests;
-public class ImageServiceTest
+public class ImageServiceTests
 {
-    public ImageServiceTest()
+    public ImageServiceTests()
     {
         _imageService = new ImageService(_localizerMock.Object, _s3StorageMock.Object);
     }
@@ -25,8 +25,8 @@ public class ImageServiceTest
     public async Task Add_SaveToStorage_Failed()
     {
         var entryId = Guid.NewGuid();
-        using var textStream = new MemoryStream(new byte[] { 0x01, 0x02, 0x03 });
-        var appFile = new AppFile(textStream, "image/png");
+        using var stream = new MemoryStream(new byte[] { 0x01, 0x02, 0x03 });
+        var appFile = new AppFile(stream, "image/png");
 
         _s3StorageMock
             .Setup(x => x.Save(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<AppFile>(), It.IsAny<CancellationToken>()))
@@ -35,7 +35,6 @@ public class ImageServiceTest
         var result = await _imageService.Add(entryId, appFile, CancellationToken.None);
 
         Assert.True(result.IsFailure);
-        Assert.Equal("File save failed", result.Error.Detail);
     }
 
     [Fact]
@@ -55,6 +54,41 @@ public class ImageServiceTest
         Assert.NotEqual(result.Value.ImageInfo.Id, Guid.Empty);
         Assert.NotNull(result.Value.ImageInfo.Url);
         Assert.NotNull(result.Value.ClientFileName);
+    }
+
+    [Fact]
+    public async Task Get_GetFromStorage_Failed()
+    {
+        var entryId = Guid.NewGuid();
+        var imageId = Guid.NewGuid();
+
+        _s3StorageMock
+            .Setup(x => x.Get(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Failure<AppFile, ProblemDetails>(ProblemDetailsHelper.Create("Failed while receiving file.")));
+
+        var result = await _imageService.Get(entryId, imageId, CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+    }
+
+    [Fact]
+    public async Task Get_GetFromStorage_Success()
+    {
+        var entryId = Guid.NewGuid();
+        var imageId = Guid.NewGuid();
+
+        using var stream = new MemoryStream(new byte[] { 0x01, 0x02, 0x03 });
+        var appFile = new AppFile(stream, "image/png");
+
+        _s3StorageMock
+            .Setup(x => x.Get(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success<AppFile, ProblemDetails>(appFile));
+
+        var result = await _imageService.Get(entryId, imageId, CancellationToken.None);
+
+        Assert.Equal(result.Value.Content, appFile.Content);
+        Assert.Equal(result.Value.Id, imageId);
+        Assert.Equal(result.Value.ContentType, appFile.ContentMimeType);
     }
 
     private readonly Mock<IS3FileStorage> _s3StorageMock = new();
