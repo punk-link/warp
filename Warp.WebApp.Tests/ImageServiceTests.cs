@@ -91,6 +91,69 @@ public class ImageServiceTests
         Assert.Equal(result.Value.ContentType, appFile.ContentMimeType);
     }
 
+    [Fact]
+    public async Task Get_GetAttached_ContainsFailed()
+    {
+        var entryId = Guid.NewGuid();
+
+        var imageIds = new List<Guid>() { Guid.NewGuid(), Guid.NewGuid() };
+
+        _s3StorageMock
+            .Setup(x => x.Contains(It.IsAny<string>(), It.IsAny<List<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Failure<HashSet<string>, ProblemDetails>(ProblemDetailsHelper.Create("Error")));
+
+        var result = await _imageService.GetAttached(entryId, imageIds, CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+    }
+
+    [Fact]
+    public async Task Get_GetAttached_ContainsSuccess()
+    {
+        var entryId = Guid.NewGuid();
+
+        var imageIds = new List<Guid>() { Guid.NewGuid(), Guid.NewGuid() };
+
+        _s3StorageMock
+            .Setup(x => x.Contains(It.IsAny<string>(), It.IsAny<List<string>>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Result.Success<HashSet<string>, ProblemDetails>(new HashSet<string>()));
+
+        var result = await _imageService.GetAttached(entryId, imageIds, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.NotNull(result.Value);
+    }
+
+    [Fact]
+    public async Task Get_Remove_Success()
+    {
+        var entryId = Guid.NewGuid();
+        var imageId =  Guid.NewGuid();
+
+        _s3StorageMock
+            .Setup(x => x.Delete(entryId.ToString(), imageId.ToString(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UnitResult.Success<ProblemDetails>());
+
+        var result = await _imageService.Remove(entryId, imageId, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task Get_Remove_Failed()
+    {
+        var entryId = Guid.NewGuid();
+        var imageId = Guid.NewGuid();
+
+        _s3StorageMock
+            .Setup(x => x.Delete(entryId.ToString(), imageId.ToString(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(UnitResult.Failure<ProblemDetails>(ProblemDetailsHelper.Create("Error")));
+
+        var result = await _imageService.Remove(entryId, imageId, CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+    }
+
     private readonly Mock<IS3FileStorage> _s3StorageMock = new();
     private readonly Mock<IStringLocalizer<ServerResources>> _localizerMock = new();
     private readonly ImageService _imageService;
