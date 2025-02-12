@@ -1,4 +1,6 @@
-﻿@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+﻿@using Microsoft.Extensions.Localization
+@inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
+@inject IStringLocalizer<SharedResources> SharedLocalizer
 
 <footer class="mb-5">
     <div id="roaming-image" class="background-image-container d-none">
@@ -7,7 +9,7 @@
         </div>
     </div>
     <h1 class="logo text-lighter hs-1 mb-1">
-        warp
+        @SharedLocalizer["Logo"]
     </h1>
     <p class="hs-2 text-body mt-1">
         <strong>
@@ -27,6 +29,6 @@
         </a>
     </nav>
     <p class="text-light fs-5">
-        © synonym.fans 2024 | @Localizer["all rights reserved"]
+        © warplyn.com 2024&ndash;2025 | @Localizer["all rights reserved"]
     </p>
 </footer>
