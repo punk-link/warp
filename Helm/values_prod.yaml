@@ -61,7 +61,7 @@ ingress:
         - path: /
           pathType: Prefix
   tls:
-   - secretName: warplyn-tls
+   - secretName: warplynPROD-tls
      hosts:
        - warplyn.punk.link
 
