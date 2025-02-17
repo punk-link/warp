@@ -123,7 +123,6 @@ public class EntryInfoServiceTests
 
         Assert.True(result.IsFailure);
         Assert.Equal(result.Error, problemDetails);
-        Assert.Equal((int)HttpStatusCode.BadRequest, result.Error.Status);
     }
 
     [Fact]

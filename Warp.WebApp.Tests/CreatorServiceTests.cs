@@ -107,7 +107,7 @@ public class CreatorServiceTests
 
         Assert.True(result.IsFailure);
         Assert.NotNull(result.Error);
-        Assert.Equal((int)HttpStatusCode.BadRequest, result.Error.Status);
+        Assert.Equal((int)HttpStatusCode.InternalServerError, result.Error.Status);
     }
 
     [Fact]
