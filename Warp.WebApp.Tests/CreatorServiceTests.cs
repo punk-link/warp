@@ -1,49 +1,43 @@
 ﻿using CSharpFunctionalExtensions;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Localization;
-using Moq;
 using NSubstitute;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Net;
+using Xunit;
 using Warp.WebApp.Data;
-using Warp.WebApp.Extensions;
 using Warp.WebApp.Models;
 using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Creators;
 
 namespace Warp.WebApp.Tests;
+
 public class CreatorServiceTests
 {
     public CreatorServiceTests()
-    {    
-        _creatorService = new CreatorService(_localizerMock.Object, _dataStorageMock.Object);
+    {
+        _creatorService = new CreatorService(_localizerSubstitute, _dataStorageSubstitute);
+        _creator = new Creator(Guid.NewGuid());
     }
 
     [Fact]
     public async Task Add_Default()
     {
         var creator = await _creatorService.Add(CancellationToken.None);
-        Assert.NotNull<Creator>(creator);
+        Assert.NotNull(creator);
     }
 
     [Fact]
     public async Task Get_CreatorIdNotFound_ReturnsProblemDetails()
     {
-        var creatorId = Guid.NewGuid();
+        _dataStorageSubstitute
+            .TryGet<Creator>(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(default(Creator));
 
-        _dataStorageMock
-            .Setup(x => x.TryGet<Creator>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(default(Creator));
-
-        var result = await _creatorService.Get(creatorId, CancellationToken.None);
+        var result = await _creatorService.Get(_creator.Id, CancellationToken.None);
 
         Assert.False(result.IsSuccess);
         Assert.NotNull(result.Error);
-        Assert.Equal(400, result.Error.Status);
+        Assert.Equal((int)HttpStatusCode.BadRequest, result.Error.Status);
     }
 
     [Fact]
@@ -53,35 +47,34 @@ public class CreatorServiceTests
 
         Assert.False(result.IsSuccess);
         Assert.NotNull(result.Error);
-        Assert.Equal(400, result.Error.Status);
+        Assert.Equal((int)HttpStatusCode.BadRequest, result.Error.Status);
     }
 
     [Fact]
     public async Task AttachEntry_WithoutExistingEntries_AttachesSuccessfully()
     {
-        var creator = new Creator(Guid.NewGuid());
         var entryInfo = new EntryInfo(
             Guid.NewGuid(),
             Guid.NewGuid(),
-            DateTime.Now, 
-            DateTime.Now.AddDays(1), 
-            Models.Entries.Enums.EditMode.Text, 
-            new Entry("Some content"), 
-            new List<ImageInfo>(), 
+            DateTime.Now,
+            DateTime.Now.AddDays(1),
+            Models.Entries.Enums.EditMode.Text,
+            new Entry("Some content"),
+            new List<ImageInfo>(),
             new Models.Entries.EntryOpenGraphDescription("Some content", "Some content", null),
             0);
 
-        var userIdCacheKey = CacheKeyBuilder.BuildCreatorsEntrySetCacheKey(creator.Id);
+        var userIdCacheKey = CacheKeyBuilder.BuildCreatorsEntrySetCacheKey(_creator.Id);
 
-        _dataStorageMock
-            .Setup(x => x.TryGetSet<Guid>(userIdCacheKey, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new HashSet<Guid>());
+        _dataStorageSubstitute
+            .TryGetSet<Guid>(userIdCacheKey, Arg.Any<CancellationToken>())
+            .Returns(new HashSet<Guid>());
 
-        _dataStorageMock
-            .Setup(x => x.AddToSet<Guid>(userIdCacheKey, entryInfo.Id, It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result.Success());
+        _dataStorageSubstitute
+            .AddToSet<Guid>(userIdCacheKey, entryInfo.Id, Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success());
 
-        var result = await _creatorService.AttachEntry(creator, entryInfo, CancellationToken.None);
+        var result = await _creatorService.AttachEntry(_creator, entryInfo, CancellationToken.None);
 
         Assert.True(result.IsSuccess);
     }
@@ -89,7 +82,6 @@ public class CreatorServiceTests
     [Fact]
     public async Task AttachEntry_AttachFails_ReturnsProblemDetails()
     {
-        var creator = new Creator(Guid.NewGuid());
         var entryInfo = new EntryInfo(
             Guid.NewGuid(),
             Guid.NewGuid(),
@@ -101,24 +93,26 @@ public class CreatorServiceTests
             new Models.Entries.EntryOpenGraphDescription("Some content", "Some content", null),
             0);
 
+        var userIdCacheKey = CacheKeyBuilder.BuildCreatorsEntrySetCacheKey(_creator.Id);
 
-        var userIdCacheKey = CacheKeyBuilder.BuildCreatorsEntrySetCacheKey(creator.Id);
+        _dataStorageSubstitute
+            .TryGetSet<Guid>(userIdCacheKey, Arg.Any<CancellationToken>())
+            .Returns(new HashSet<Guid>());
 
-        _dataStorageMock.Setup(ds => ds.TryGetSet<Guid>(userIdCacheKey, It.IsAny<CancellationToken>()))
-                        .ReturnsAsync(new HashSet<Guid>());
+        _dataStorageSubstitute
+            .AddToSet(userIdCacheKey, entryInfo.Id, Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Failure("Failure"));
 
-        _dataStorageMock.Setup(ds => ds.AddToSet(userIdCacheKey, entryInfo.Id, It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()))
-                        .ReturnsAsync(Result.Failure("Failure"));
-
-        var result = await _creatorService.AttachEntry(creator, entryInfo, CancellationToken.None);
+        var result = await _creatorService.AttachEntry(_creator, entryInfo, CancellationToken.None);
 
         Assert.True(result.IsFailure);
+        Assert.NotNull(result.Error);
+        Assert.Equal((int)HttpStatusCode.BadRequest, result.Error.Status);
     }
 
     [Fact]
     public async Task AttachEntry_WithExistingEntries_AttachesSuccessfully()
     {
-        var creator = new Creator(Guid.NewGuid());
         var entryInfo = new EntryInfo(
             Guid.NewGuid(),
             Guid.NewGuid(),
@@ -130,7 +124,7 @@ public class CreatorServiceTests
             new Models.Entries.EntryOpenGraphDescription("Some content", "Some content", null),
             0);
 
-        var userIdCacheKey = CacheKeyBuilder.BuildCreatorsEntrySetCacheKey(creator.Id);
+        var userIdCacheKey = CacheKeyBuilder.BuildCreatorsEntrySetCacheKey(_creator.Id);
 
         var existingEntryIds = new HashSet<Guid> { Guid.NewGuid(), Guid.NewGuid() };
 
@@ -156,28 +150,33 @@ public class CreatorServiceTests
             new Models.Entries.EntryOpenGraphDescription("Some content", "Some content", null),
             0);
 
-        _dataStorageMock.Setup(ds => ds.TryGetSet<Guid>(userIdCacheKey, It.IsAny<CancellationToken>()))
-                        .ReturnsAsync(existingEntryIds);
+        _dataStorageSubstitute
+            .TryGetSet<Guid>(userIdCacheKey, Arg.Any<CancellationToken>())
+            .Returns(existingEntryIds);
 
-        _dataStorageMock.Setup(ds => ds.TryGet<EntryInfo>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-                        .ReturnsAsync((string key, CancellationToken _) =>
-                        {
-                            if (key.Contains(existingEntryInfoFirst.Id.ToString()))
-                                return existingEntryInfoFirst;
-                            if (key.Contains(existingEntryInfoFirst.Id.ToString()))
-                                return existingEntryInfoFirst;
-                            return default;
-                        });
+        _dataStorageSubstitute
+            .TryGet<EntryInfo>(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(args =>
+            {
+                var key = args.Arg<string>();
+                if (key.Contains(existingEntryInfoFirst.Id.ToString()))
+                    return existingEntryInfoFirst;
+                if (key.Contains(existingEntryInfoSecond.Id.ToString()))
+                    return existingEntryInfoSecond;
+                return default;
+            });
 
-        _dataStorageMock.Setup(ds => ds.AddToSet(userIdCacheKey, entryInfo.Id, It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()))
-                        .ReturnsAsync(Result.Success());
+        _dataStorageSubstitute
+            .AddToSet(userIdCacheKey, entryInfo.Id, Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>())
+            .Returns(Result.Success());
 
-        var result = await _creatorService.AttachEntry(creator, entryInfo, CancellationToken.None);
+        var result = await _creatorService.AttachEntry(_creator, entryInfo, CancellationToken.None);
 
         Assert.True(result.IsSuccess);
     }
 
-    private readonly Mock<IDataStorage> _dataStorageMock = new();
-    private readonly Mock<IStringLocalizer<ServerResources>> _localizerMock = new();
+    private readonly IDataStorage _dataStorageSubstitute = Substitute.For<IDataStorage>();
+    private readonly IStringLocalizer<ServerResources> _localizerSubstitute = Substitute.For<IStringLocalizer<ServerResources>>();
     private readonly CreatorService _creatorService;
+    private readonly Creator _creator;
 }

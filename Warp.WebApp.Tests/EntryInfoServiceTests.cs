@@ -1,16 +1,12 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using NSubstitute;
+using System.Net;
 using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Models.Entries.Enums;
 using Warp.WebApp.Models;
 using Warp.WebApp.Models.Entries;
 using Microsoft.Extensions.Localization;
-using Moq;
 using Warp.WebApp.Data;
 using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Entries;
@@ -18,69 +14,88 @@ using Warp.WebApp.Services.Images;
 using Warp.WebApp.Services.OpenGraph;
 using Warp.WebApp.Services;
 using Microsoft.Extensions.Logging;
+using Warp.WebApp.Helpers;
 
 namespace Warp.WebApp.Tests;
+
 public class EntryInfoServiceTests
 {
     public EntryInfoServiceTests()
     {
-        _loggerMock = new();
-        _openGraphServiceMock = new();
-        _dataStorageMock = new();
-        _reportServiceMock = new();
-        _viewCountServiceMock = new();
-        _imageServiceMock = new();
-        _entryServiceMock = new();
-        _creatorServiceMock = new();
-        _localizerMock = new();
-
-        _entryInfoService = new EntryInfoService(_creatorServiceMock.Object, _dataStorageMock.Object, _entryServiceMock.Object, _imageServiceMock.Object, _loggerMock.Object, _openGraphServiceMock.Object, _reportServiceMock.Object, _localizerMock.Object, _viewCountServiceMock.Object);
+        _entryInfoService = new EntryInfoService(
+            _creatorServiceSubstitute,
+            _dataStorageSubstitute,
+            _entryServiceSubstitute,
+            _imageServiceSubstitute,
+            _loggerSubstitute,
+            _openGraphServiceSubstitute,
+            _reportServiceSubstitute,
+            _localizerSubstitute,
+            _viewCountServiceSubstitute
+        );
+        _creator = new Creator(Guid.NewGuid());
     }
 
     [Fact]
     public async Task Add_ShouldReturnEntryInfo_EntryIsAddedSuccessfully()
     {
-        var creator = new Creator(Guid.NewGuid());
-        var entryRequest = new EntryRequest() { Id = Guid.NewGuid(), ExpiresIn = TimeSpan.FromDays(1), EditMode = EditMode.Advanced, TextContent = "Test", ImageIds = new List<Guid>() { new Guid() } };
+        var entryRequest = new EntryRequest
+        {
+            Id = Guid.NewGuid(),
+            ExpiresIn = TimeSpan.FromDays(1),
+            EditMode = EditMode.Advanced,
+            TextContent = "Test",
+            ImageIds = new List<Guid> { Guid.NewGuid() }
+        };
         var cancellationToken = CancellationToken.None;
 
         var entry = new Entry("Test");
-        var imageInfos = new List<ImageInfo> { new ImageInfo { Id = Guid.NewGuid(), Url = new Uri("http://example.com/image.jpg") } };
-        var entryInfo = new EntryInfo(entryRequest.Id, creator.Id, DateTime.UtcNow, DateTime.UtcNow + entryRequest.ExpiresIn, EditMode.Advanced, entry, imageInfos, new EntryOpenGraphDescription("Test", "Test", imageInfos[0].Url) , 0);
+        var imageInfos = new List<ImageInfo>
+        {
+            new ImageInfo { Id = Guid.NewGuid(), Url = new Uri("http://example.com/image.jpg") }
+        };
+        var entryInfo = new EntryInfo(
+            entryRequest.Id,
+            _creator.Id,
+            DateTime.UtcNow,
+            DateTime.UtcNow + entryRequest.ExpiresIn,
+            EditMode.Advanced,
+            entry,
+            imageInfos,
+            new EntryOpenGraphDescription("Test", "Test", imageInfos[0].Url),
+            0
+        );
 
-        _localizerMock.Setup(x => x["EntryExpirationPeriodEmptyErrorMessage"])
+        _localizerSubstitute["EntryExpirationPeriodEmptyErrorMessage"]
             .Returns(new LocalizedString("EntryExpirationPeriodEmptyErrorMessage", "Entry period is empty."));
 
         var imageUrl = imageInfos.Select(x => x.Url).FirstOrDefault();
-        _openGraphServiceMock
-            .Setup(x => x.BuildDescription(entry.Content, imageUrl))
+        _openGraphServiceSubstitute
+            .BuildDescription(entry.Content, imageUrl)
             .Returns(new EntryOpenGraphDescription(entry.Content, entry.Content, imageUrl));
 
-        _entryServiceMock
-            .Setup(x => x.Add(entryRequest, cancellationToken))
-            .ReturnsAsync(Result.Success<Entry, ProblemDetails>(entry));
+        _entryServiceSubstitute
+            .Add(entryRequest, cancellationToken)
+            .Returns(Result.Success<Entry, ProblemDetails>(entry));
 
-        _imageServiceMock
-            .Setup(x => x.GetAttached(entryRequest.Id, entryRequest.ImageIds, cancellationToken))
-            .ReturnsAsync(Result.Success<List<ImageInfo>, ProblemDetails>((imageInfos)));
+        _imageServiceSubstitute
+            .GetAttached(entryRequest.Id, entryRequest.ImageIds, cancellationToken)
+            .Returns(Result.Success<List<ImageInfo>, ProblemDetails>(imageInfos));
 
+        _creatorServiceSubstitute
+            .AttachEntry(_creator, entryInfo, cancellationToken)
+            .Returns(Result.Success<EntryInfo, ProblemDetails>(entryInfo));
 
-        _creatorServiceMock
-            .Setup(x => x.AttachEntry(creator, entryInfo, cancellationToken))
-            .ReturnsAsync(Result.Success<EntryInfo, ProblemDetails>(entryInfo));
+        _dataStorageSubstitute
+            .Set(Arg.Any<string>(), entryInfo, entryRequest.ExpiresIn, cancellationToken)
+            .Returns(Result.Success());
 
-        _dataStorageMock
-            .Setup(x => x.Set(It.IsAny<string>(), entryInfo, entryRequest.ExpiresIn, cancellationToken))
-            .ReturnsAsync(Result.Success());
-
-        var result = await _entryInfoService.Add(creator, entryRequest, cancellationToken);
-
+        var result = await _entryInfoService.Add(_creator, entryRequest, cancellationToken);
 
         var tolerance = TimeSpan.FromSeconds(5);
 
         Assert.Equal(result.Value.CreatedAt, entryInfo.CreatedAt, tolerance);
         Assert.Equal(result.Value.ExpiresAt, entryInfo.ExpiresAt, tolerance);
-
         Assert.Equal(result.Value.Id, entryInfo.Id);
         Assert.Equal(result.Value.CreatorId, entryInfo.CreatorId);
         Assert.Equal(result.Value.EditMode, entryInfo.EditMode);
@@ -95,30 +110,65 @@ public class EntryInfoServiceTests
     [Fact]
     public async Task Add_ShouldReturnProblemDetails_EntryServiceFails()
     {
-        var creator = new Creator(Guid.NewGuid());
         var entryRequest = new EntryRequest { Id = Guid.NewGuid(), ExpiresIn = TimeSpan.FromDays(1) };
         var cancellationToken = CancellationToken.None;
 
         var problemDetails = new ProblemDetails { Title = "Error", Detail = "Error" };
 
-        _entryServiceMock
-            .Setup(x => x.Add(entryRequest, cancellationToken))
-            .ReturnsAsync(Result.Failure<Entry, ProblemDetails>(problemDetails));
+        _entryServiceSubstitute
+            .Add(entryRequest, cancellationToken)
+            .Returns(Result.Failure<Entry, ProblemDetails>(problemDetails));
 
-        var result = await _entryInfoService.Add(creator, entryRequest, cancellationToken);
+        var result = await _entryInfoService.Add(_creator, entryRequest, cancellationToken);
 
         Assert.True(result.IsFailure);
         Assert.Equal(result.Error, problemDetails);
+        Assert.Equal((int)HttpStatusCode.BadRequest, result.Error.Status);
+    }
+
+    [Fact]
+    public async Task Remove_ShouldReturnProblemDetails_DataStorageRemoveFails()
+    {
+        var creator = new Creator(Guid.NewGuid());
+        var entryId = Guid.NewGuid();
+        var cancellationToken = CancellationToken.None;
+
+        var entryInfoForSubstitute = new EntryInfo(
+            Arg.Any<Guid>(),
+            creator.Id,
+            Arg.Any<DateTime>(), 
+            Arg.Any<DateTime>(), 
+            EditMode.Text,
+            new Entry("Content"),
+            null,
+            new EntryOpenGraphDescription("Title", "Content", null),
+            Arg.Any<long>()
+        );
+
+        _dataStorageSubstitute
+            .TryGet<EntryInfo?>(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new ValueTask<EntryInfo?>(entryInfoForSubstitute));
+
+        _dataStorageSubstitute
+            .Remove<EntryInfo>(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromException(new Exception()));
+
+        var result = await _entryInfoService.Remove(creator, entryId, cancellationToken);
+
+        Assert.True(result.IsFailure);
+        Assert.NotNull(result.Error);
+        Assert.Equal((int)HttpStatusCode.BadRequest, result.Error.Status);
     }
 
     private readonly IEntryInfoService _entryInfoService;
-    private readonly Mock<ILoggerFactory> _loggerMock;
-    private readonly Mock<IOpenGraphService> _openGraphServiceMock;
-    private readonly Mock<IDataStorage> _dataStorageMock;
-    private readonly Mock<IReportService> _reportServiceMock;
-    private readonly Mock<IViewCountService> _viewCountServiceMock;
-    private readonly Mock<IImageService> _imageServiceMock;
-    private readonly Mock<IEntryService> _entryServiceMock;
-    private readonly Mock<ICreatorService> _creatorServiceMock;
-    private readonly Mock<IStringLocalizer<ServerResources>> _localizerMock;
+    private readonly Creator _creator;
+    private readonly ILoggerFactory _loggerSubstitute = Substitute.For<ILoggerFactory>();
+    private readonly IOpenGraphService _openGraphServiceSubstitute = Substitute.For<IOpenGraphService>();
+    private readonly IDataStorage _dataStorageSubstitute = Substitute.For<IDataStorage>();
+    private readonly IReportService _reportServiceSubstitute = Substitute.For<IReportService>();
+    private readonly IViewCountService _viewCountServiceSubstitute = Substitute.For<IViewCountService>();
+    private readonly IImageService _imageServiceSubstitute = Substitute.For<IImageService>();
+    private readonly IEntryService _entryServiceSubstitute = Substitute.For<IEntryService>();
+    private readonly ICreatorService _creatorServiceSubstitute = Substitute.For<ICreatorService>();
+    private readonly IStringLocalizer<ServerResources> _localizerSubstitute = Substitute.For<IStringLocalizer<ServerResources>>();
 }
