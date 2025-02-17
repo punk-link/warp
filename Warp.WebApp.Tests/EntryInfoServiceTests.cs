@@ -15,6 +15,7 @@ using Warp.WebApp.Services.OpenGraph;
 using Warp.WebApp.Services;
 using Microsoft.Extensions.Logging;
 using Warp.WebApp.Helpers;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Warp.WebApp.Tests;
 
@@ -133,16 +134,15 @@ public class EntryInfoServiceTests
         var cancellationToken = CancellationToken.None;
 
         var entryInfoForSubstitute = new EntryInfo(
-            Arg.Any<Guid>(),
+            Guid.NewGuid(),
             creator.Id,
-            Arg.Any<DateTime>(), 
-            Arg.Any<DateTime>(), 
+            DateTime.Now,
+            DateTime.Now.AddDays(1),
             EditMode.Text,
-            new Entry("Content"),
-            null,
-            new EntryOpenGraphDescription("Title", "Content", null),
-            Arg.Any<long>()
-        );
+            new Entry("Some content"),
+            new List<ImageInfo>(),
+            new EntryOpenGraphDescription("Some content", "Some content", null),
+            0);
 
         _dataStorageSubstitute
             .TryGet<EntryInfo?>(Arg.Any<string>(), Arg.Any<CancellationToken>())
