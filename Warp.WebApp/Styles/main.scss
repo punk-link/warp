@@ -17,8 +17,8 @@ root {
     font-size: $font-size-base;
 }
 
-a {
-    text-decoration: none;
+body {
+    min-width: 320px;
 }
 
 div {
