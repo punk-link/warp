@@ -13,44 +13,46 @@
     <meta name="robots" content="noindex, noarchive">
 }
 
-<div class="row align-items-baseline">
-    <div class="col-12 text-secondary">
+<div class="flex items-baseline px-3">
+    <div class="w-full text-gray-400">
         <h1 class="logo">
-            <a class="text-lighter" asp-area="" asp-page="/Index">
+            <a class="text-gray-300 hover:underline" asp-area="" asp-page="/Index">
                 @SharedLocalizer["Logo"]
             </a>
         </h1>
     </div>
 </div>
 
-<section class="mb-5">
+<section class="mb-12 px-3 flex flex-col justify-between">
     <div>
-        <a class="btn btn-link align-items-center ps-0 text-white" asp-area="" asp-page="/Index">
-            <i class="icofont-simple-left"></i>@SharedLocalizer["CreateButton"]
-        </a>
-    </div>
-    <div class="error-code text-white">
-        @Model.Status
-    </div>
-    <div class="error-message text-body">
-        <p class="text-white mt-0 mb-5">@Model.Detail</p>
-        <div class="request-id">
+        <div class="mb-6">
+            <a class="text-blue-500 hover:underline flex items-center px-0" asp-area="" asp-page="/Index">
+                <i class="icofont-simple-left mr-2"></i>@SharedLocalizer["CreateButton"]
+            </a>
+        </div>
+        <div class="error-code text-white text-6xl font-bold mb-4">
+            @Model.Status
+        </div>
+        <div class="error-message text-gray-200">
+            <p class="mt-0 mb-5">@Model.Detail</p>
             @if (Model.ShowRequestId)
             {
-                <strong>@Localizer["Request ID"]:</strong>
-                <code>@Model.RequestId</code>
+                <div class="request-id text-gray-400">
+                    <strong>@Localizer["Request ID"]:</strong>
+                    <code>@Model.RequestId</code>
+                </div>
             }
-        </div>
-        <div class="error-list">
-            @if (Model.ShowErrors)
+            @if (Model.ShowErrors && Model.Errors.Any())
             {
-                <h3 class="mb-3">Errors:</h3>
-                @foreach (var error in Model.Errors)
-                {
-                    <p class="mb-2">
-                        <strong>@error.Code.</strong> @error.Message
-                    </p>
-                }
+                <div class="error-list mt-4">
+                    <h3 class="mb-3 text-xl">Errors:</h3>
+                    @foreach (var error in Model.Errors)
+                    {
+                        <p class="mb-2 text-gray-300">
+                            <strong>@error.Code.</strong> @error.Message
+                        </p>
+                    }
+                </div>
             }
         </div>
     </div>
