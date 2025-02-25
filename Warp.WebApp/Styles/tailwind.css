@@ -1,1 +1,8 @@
 @import "tailwindcss";
+
+@theme {
+    --color-primary: #A762FF;
+    --color-secondary: #88D723;
+    --font-logo: 'Krona One', serif;
+    --font-sans-serif: 'Montserrat', 'sans serif';
+}

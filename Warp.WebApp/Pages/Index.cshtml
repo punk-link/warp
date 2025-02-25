@@ -68,10 +68,8 @@
                     <div class="flex justify-between w-full md:w-1/2 pb-3 sticky bottom-0 bg-transparent">
                         <div class="bg-white rounded-sm">
                             <label asp-for="SelectedExpirationPeriod">@Localizer["ExpirationPeriodLabel"]</label>
-                            <div class="flex items-center">
-                                <span class="text-primary">
-                                    <i class="icofont-close"></i>
-                                </span>
+                            <div class="flex items-baseline">
+                                <i class="icofont-close text-primary text-2xl"></i>
                                 <select asp-for="SelectedExpirationPeriod" asp-items="Model.ExpirationPeriodOptions" tabindex="4" class="ml-2"></select>
                             </div>
                         </div>
@@ -97,7 +95,7 @@
                                 <textarea id="warp-advanced" class="bg-transparent" asp-for="TextContent" placeholder=" "></textarea>
                             </div>
                             <div class="flex flex-col mb-5">
-                                <i class="icofont-hill-sunny text-secondary text-xl mb-2"></i>
+                                <i class="icofont-hill-sunny text-secondary text-2xl mb-2"></i>
                                 <label class="pl-0 mb-3">@Localizer["ImageAreaLabel"]</label>
                                 <div class="flex flex-row flex-wrap upload-gallery">
                                     @foreach (var imageContainer in Model.ImageContainers)
@@ -112,10 +110,8 @@
                     <div class="flex justify-between w-full md:w-1/2 pb-3 sticky bottom-0 bg-transparent">
                         <div class="bg-white rounded-sm">
                             <label asp-for="SelectedExpirationPeriod">@Localizer["ExpirationPeriodLabel"]</label>
-                            <div class="flex items-center">
-                                <span class="text-primary">
-                                    <i class="icofont-close"></i>
-                                </span>
+                            <div class="flex items-baseline">
+                                <i class="icofont-close text-primary text-2xl"></i>
                                 <select asp-for="SelectedExpirationPeriod" asp-items="Model.ExpirationPeriodOptions" tabindex="4" class="ml-2"></select>
                             </div>
                         </div>
