@@ -2,11 +2,47 @@
 
 @layer components {
     .btn {
-        @apply flex items-start border-none rounded cursor-pointer gap-2.5 px-6 py-2 font-sans-serif text-lg font-bold leading-normal text-center lowercase disabled:cursor-auto;
+        @apply flex items-start border-none rounded cursor-pointer gap-2.5 px-6 py-2 font-sans-serif text-lg font-semibold leading-normal text-center lowercase disabled:cursor-auto;
     }
 
     .btn.btn-primary {
         @apply bg-primary text-gray-50 hover:bg-primary/80 focus:bg-primary/80 active:bg-primary/80 disabled:bg-primary/40;
+    }
+
+    .floating-label {
+        @apply transition-all duration-200 ease-in-out;
+    }
+
+    .form-label {
+        @apply block text-gray-400 font-sans-serif text-sm font-normal tracking-wide mb-1 lowercase;
+    }
+
+    .form-select {
+        @apply border-none text-primary text-lg font-sans-serif font-semibold leading-normal cursor-pointer focus:outline-none;
+    }
+
+    .form-select option {
+        @apply border-none outline-none shadow-none;
+    }
+
+    .form-textarea {
+        @apply w-full border-0 border-b-2 border-primary rounded-none box-border font-sans-serif text-lg font-normal leading-normal focus:outline-none focus:border-primary/80 active:outline-none active:border-primary/80 transition-all duration-200 ease-in-out;
+    }
+
+    .form-textarea:placeholder-shown + .floating-label {
+        @apply cursor-text max-w-[66.66%] whitespace-nowrap overflow-hidden text-ellipsis origin-bottom-left translate-y-[2.125rem] scale-150;
+    }
+
+    .image-button {
+        @apply absolute -top-3 flex justify-center items-center bg-white rounded-full w-6 h-6 hover:bg-gray-50 transition-colors duration-200;
+    }
+
+    .image-container {
+        @apply relative w-18 h-18 border-2 border-primary rounded-sm overflow-hidden;
+    }
+
+    .image-container img {
+        @apply w-full h-full object-cover;
     }
 
     .logo-style {

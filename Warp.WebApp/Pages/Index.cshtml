@@ -44,6 +44,7 @@
                     @SharedLocalizer["Logo"]
                 </a>
             </h1>
+            <span class="px-2 text-gray-400 text-sm">beta</span>
         </div>
         <div class="w-full sm:w-1/2 flex justify-end md:justify-center">
             <button id="mode-text" class="nav-button">
@@ -61,19 +62,19 @@
                 <div class="flex flex-col items-center justify-around min-h-[75vh]">
                     <div class="w-full md:w-1/2 mb-5">
                         <div class="flex flex-col">
-                            <textarea id="warp-text" class="order-2 bg-transparent" asp-for="TextContent" placeholder=" "></textarea>
-                            <label class="order-1 pl-0" for="warp-text">@Localizer["TextAreaLabel"]</label>
+                            <textarea id="warp-text" class="form-textarea order-2 bg-transparent" asp-for="TextContent" placeholder=" "></textarea>
+                            <label class="form-label floating-label order-1" for="warp-text">@Localizer["TextAreaLabel"]</label>
                         </div>
                     </div>
-                    <div class="flex justify-between w-full md:w-1/2 pb-3 sticky bottom-0 bg-transparent">
+                    <div class="flex justify-between items-center w-full md:w-1/2 pb-3 sticky bottom-0 bg-transparent">
                         <div class="bg-white rounded-sm">
-                            <label asp-for="SelectedExpirationPeriod">@Localizer["ExpirationPeriodLabel"]</label>
+                            <label class="form-label" asp-for="SelectedExpirationPeriod">@Localizer["ExpirationPeriodLabel"]</label>
                             <div class="flex items-baseline">
                                 <i class="icofont-close text-primary text-2xl"></i>
-                                <select asp-for="SelectedExpirationPeriod" asp-items="Model.ExpirationPeriodOptions" tabindex="4" class="ml-2"></select>
+                                <select asp-for="SelectedExpirationPeriod" asp-items="Model.ExpirationPeriodOptions" tabindex="4" class="form-select ml-2"></select>
                             </div>
                         </div>
-                        <div>
+                        <div class="bg-white rounded-sm">
                             <button class="btn btn-primary create-button" tabindex="5" type="submit" disabled>
                                 @Localizer["CreateButton"]
                             </button>
@@ -89,15 +90,15 @@
                 <div class="flex flex-col items-center justify-around min-h-[75vh]">
                     <div class="w-full p-2 md:w-1/2 mb-5">
                         <div class="flex flex-col">
-                            <div class="flex flex-col mb-5">
+                            <div class="flex flex-col mb-15">
                                 <i class="icofont-align-left text-secondary text-2xl mb-2"></i>
-                                <label class="pl-0" for="warp-advanced">@Localizer["TextAreaLabel"]</label>
-                                <textarea id="warp-advanced" class="bg-transparent" asp-for="TextContent" placeholder=" "></textarea>
+                                <label class="form-label" for="warp-advanced">@Localizer["TextAreaLabel"]</label>
+                                <textarea id="warp-advanced" class="form-textarea bg-transparent" asp-for="TextContent" placeholder=" "></textarea>
                             </div>
                             <div class="flex flex-col mb-5">
                                 <i class="icofont-hill-sunny text-secondary text-2xl mb-2"></i>
-                                <label class="pl-0 mb-3">@Localizer["ImageAreaLabel"]</label>
-                                <div class="flex flex-row flex-wrap upload-gallery">
+                                <label class="form-label mb-3">@Localizer["ImageAreaLabel"]</label>
+                                <div class="flex flex-row flex-wrap gap-3 upload-gallery">
                                     @foreach (var imageContainer in Model.ImageContainers)
                                     {
                                         <partial name="Shared/Components/EditableImageContainer" model="imageContainer" />
@@ -107,15 +108,15 @@
                             </div>
                         </div>
                     </div>
-                    <div class="flex justify-between w-full md:w-1/2 pb-3 sticky bottom-0 bg-transparent">
+                    <div class="flex justify-between items-center w-full md:w-1/2 pb-3 sticky bottom-0 bg-transparent">
                         <div class="bg-white rounded-sm">
-                            <label asp-for="SelectedExpirationPeriod">@Localizer["ExpirationPeriodLabel"]</label>
+                            <label class="form-label" asp-for="SelectedExpirationPeriod">@Localizer["ExpirationPeriodLabel"]</label>
                             <div class="flex items-baseline">
                                 <i class="icofont-close text-primary text-2xl"></i>
-                                <select asp-for="SelectedExpirationPeriod" asp-items="Model.ExpirationPeriodOptions" tabindex="4" class="ml-2"></select>
+                                <select asp-for="SelectedExpirationPeriod" asp-items="Model.ExpirationPeriodOptions" tabindex="4" class="form-select ml-2"></select>
                             </div>
                         </div>
-                        <div>
+                        <div class="bg-white rounded-sm">
                             <button class="btn btn-primary create-button" tabindex="5" type="submit" disabled>
                                 @Localizer["CreateButton"]
                             </button>

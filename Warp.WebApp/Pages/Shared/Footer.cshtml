@@ -2,7 +2,7 @@
 @inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
 @inject IStringLocalizer<SharedResources> SharedLocalizer
 
-<footer class="mb-12">
+<footer class="my-15">
     <div id="roaming-image" class="fixed top-[60vh] left-[50vw] w-0 h-0 -z-10">
         <div class="absolute h-[75vh]">
             <img src="~/img/warp.svg" alt="background illustration" class="opacity-50" 
@@ -15,8 +15,9 @@
     </h1>
     <p class="text-xl text-gray-600 mt-4">
         <strong>
-            @Localizer["snap, share and say goodbye"] <br>
+            @Localizer["snap, share and say goodbye"]
         </strong>
+        <br>
         @Localizer["share the moments instantly, knowing they'll disappear in no time"]
     </p>
     <nav class="text-gray-400 text-sm mt-3">
