@@ -38,18 +38,18 @@
 
 <div class="min-h-screen">
     <div class="flex flex-col sm:flex-row items-baseline px-3">
-        <div class="w-full sm:w-1/2">
-            <h1 class="logo">
-                <a class="text-primary" asp-page="/Index">
+        <div class="w-full sm:w-1/2 flex justify-start md:justify-center">
+            <h1 class="logo-style">
+                <a asp-page="/Index">
                     @SharedLocalizer["Logo"]
                 </a>
             </h1>
         </div>
-        <div class="w-full sm:w-1/2 flex justify-end">
-            <button id="mode-text" class="nav nav-tab">
+        <div class="w-full sm:w-1/2 flex justify-end md:justify-center">
+            <button id="mode-text" class="nav-button">
                 @Localizer["TextModeButton"]
             </button>
-            <button id="mode-advanced" class="nav nav-tab">
+            <button id="mode-advanced" class="nav-button">
                 @Localizer["AdvancedModeButton"]
             </button>
         </div>

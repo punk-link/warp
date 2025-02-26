@@ -1,8 +1,30 @@
 @import "tailwindcss";
 
+@layer components {
+    .btn {
+        @apply flex items-start border-none rounded cursor-pointer gap-2.5 px-6 py-2 font-sans-serif text-lg font-bold leading-normal text-center lowercase disabled:cursor-auto;
+    }
+
+    .btn.btn-primary {
+        @apply bg-primary text-gray-50 hover:bg-primary/80 focus:bg-primary/80 active:bg-primary/80 disabled:bg-primary/40;
+    }
+
+    .logo-style {
+        @apply font-logo line-through lowercase text-primary text-4xl;
+    }
+
+    .nav-button {
+        @apply bg-transparent border-0 text-gray-400 font-medium font-sans-serif text-lg cursor-pointer m-4 p-0 lowercase hover:text-gray-600 focus:text-gray-600 active:text-gray-600 disabled:text-gray-300 disabled:cursor-auto;
+    }
+
+    .nav-button.active {
+        @apply text-gray-600 border-b-2 border-secondary;
+    }
+}
+
 @theme {
     --color-primary: #A762FF;
     --color-secondary: #88D723;
     --font-logo: 'Krona One', serif;
-    --font-sans-serif: 'Montserrat', 'sans serif';
+    --font-sans-serif: 'Montserrat', sans-serif;
 }
