@@ -1,132 +1,122 @@
+import { dom, uiState } from '/js/utils/ui-core.js';
 import { eventNames } from '/js/events/events.js';
 import { adjustTextareaSize } from '/js/components/textarea.js';
 import { repositionBackgroundImage } from '/js/functions/image-positioner.js';
 import { addDropAreaEvents, pasteImages } from './modules/image-processor.js';
 
 
-const EditMode = { 
-    Unknown: 0, 
-    Text: 1, 
+const EditMode = Object.freeze({
+    Unknown: 0,
+    Simple: 1,
     Advanced: 2
+});
+
+
+const elements = {
+    getCreateButton: () => dom.get('create-button'),
+    getImageElements: () => ({
+        dropArea: dom.query('.drop-area'),
+        fileInput: dom.get('file'),
+        uploadButton: dom.get('empty-image-container')
+    }),
+    getModeElements: () => ({
+        advancedButton: dom.get('advanced-mode-nav-button'),
+        simpleButton: dom.get('simple-mode-nav-button'),
+        advancedContainer: dom.get('advanced-mode-container'),
+        simpleContainer: dom.get('simple-mode-container'),
+        advancedTextarea: dom.get('advanced-text-content'),
+        simpleTextarea: dom.get('simple-text-content'),
+        editModeInput: dom.get('edit-mode-state')
+    }),
+    getRoamingImage: () => dom.get('roaming-image')
 };
 
 
-function addPasteImageEventListener() {
-    document.body.addEventListener('keydown', async function (e) {
-    if (e.ctrlKey && (e.key === 'v' || e.key === 'V'))
-        await pasteImages();
-    });
-}
+const handlers = {
+    createButton: {
+        init: () => {
+            const createButton = elements.getCreateButton();
+            const { advancedTextarea, simpleTextarea, advancedButton, simpleButton } = elements.getModeElements();
 
+            const updateButtonState = () => {
+                const isAdvancedMode = advancedButton.classList.contains('active');
+                const activeTextarea = isAdvancedMode ? advancedTextarea : simpleTextarea;
 
-function addEntryContainerEvents(advancedModeButton, textModeButton, editMode) {
-    let advancedModeContainer = document.getElementById('advanced-mode');
-    let textModeContainer = document.getElementById('text-mode');
+                uiState.setElementDisabled(createButton, !activeTextarea.value);
+            };
 
-    addShowEntryContainerEvent(advancedModeButton, textModeButton, advancedModeContainer, textModeContainer, EditMode.Advanced);
-    addShowEntryContainerEvent(textModeButton, advancedModeButton, textModeContainer, advancedModeContainer, EditMode.Text);
-}
+            [advancedTextarea, simpleTextarea].forEach(textarea => {
+                textarea.addEventListener('input', updateButtonState);
+            });
 
+            [advancedButton, simpleButton].forEach(button => {
+                button.addEventListener('click', updateButtonState);
+            });
 
-function addShowEntryContainerEvent(displayedButton, hiddenButton, displayedContainer, hiddenContainer, mode) {
-    let editModeInputs = document.getElementsByClassName('edit-mode-state');
+            document.addEventListener(eventNames.uploadFinished, () => uiState.setElementDisabled(createButton, false));
+
+            updateButtonState();
+        }
+    },
     
-    for (let editModeInput of editModeInputs) {
-        displayedButton.addEventListener('click', () => {
-            hiddenContainer.classList.add('d-none');
-            hiddenButton.classList.remove('active');
+    mode: {
+        init: (editMode) => {
+            const { advancedButton, simpleButton } = elements.getModeElements();
+            const activeButton = editMode === EditMode.Advanced ? advancedButton : simpleButton;
+            uiState.toggleClasses(activeButton, { add: ['active'] });
+        },
 
-            displayedButton.classList.add('active');
-            displayedContainer.classList.remove('d-none');
+        switch: (displayedButton, hiddenButton, displayedContainer, hiddenContainer, mode) => {
+            return () => {
+                uiState.toggleClasses(hiddenButton, { remove: ['active'] });
+                uiState.toggleClasses(displayedButton, { add: ['active'] });
+        
+                uiState.toggleClasses(hiddenContainer, { add: ['hidden'] });
+                uiState.toggleClasses(displayedContainer, { remove: ['hidden'] });
+                
+                const { editModeInput } = elements.getModeElements();
+                uiState.setElementValue(editModeInput, mode);
+            };
+        }
+    },
 
-            editModeInput.value = mode;
-        });
+    paste: {
+        init: () => {
+            const handlePaste = async e => {
+                if (e.ctrlKey && e.key.toLowerCase() === 'v') {
+                    await pasteImages();
+                }
+            };
+
+            document.body.addEventListener('keydown', handlePaste);
+        }
     }
-}
+};
 
 
-function addCreateButtonEvents(advancedModeButton, textModeButton) {
-    let advancedModeTextarea = document.getElementById('warp-advanced');
-    let textModeTextarea = document.getElementById('warp-text');
+export const addIndexEvents = (entryId, editMode) => {
+    const roamingImage = elements.getRoamingImage();
+    repositionBackgroundImage(roamingImage);
     
-    let createButtons = document.getElementsByClassName('create-button');
-    for (let createButton of createButtons) {
-        if (advancedModeTextarea.value !== '' && textModeTextarea.value !== '') 
-            createButton.disabled = false;
-
-        toggleCreateButtonState(createButton, advancedModeButton, advancedModeTextarea);
-        toggleCreateButtonState(createButton, textModeButton, textModeTextarea);
-
-        document.addEventListener(eventNames.uploadFinished, () => {
-            createButton.disabled = false;
-        });
-    }
-}
-
-
-function initializeEditModes(editMode) {
-    let advancedModeButton = document.getElementById('mode-advanced');
-    let textModeButton = document.getElementById('mode-text');
-
-    switch (editMode) {
-        case EditMode.Advanced:
-            advancedModeButton.classList.add('active');
-            break;
-        case EditMode.Unknown:
-        case EditMode.Text:
-            textModeButton.classList.add('active');
-            break;
-    }
-
-    addEntryContainerEvents(advancedModeButton, textModeButton, editMode);
-    addCreateButtonEvents(advancedModeButton, textModeButton);    
-}
-
-
-function toggleCreateButtonState(createButton, targetModeButton, targetTextarea) {
-    targetTextarea.addEventListener('input', () => {
-        if (!targetModeButton.classList.contains('active'))
-            return;
-
-        if (targetTextarea.value === '') 
-            createButton.disabled = true;
-        else 
-            createButton.disabled = false;
-    }, false);
-}
-
-
-export function addIndexEvents(entryId, editMode) {
-    let backgroundImageContainer = document.getElementById('roaming-image');
-    repositionBackgroundImage(backgroundImageContainer);
-
-    initializeEditModes(editMode);
-
-    let dropArea = document.getElementsByClassName('drop-area')[0];
-    let fileInput = document.getElementById('file');
-    let uploadButton = document.getElementById('empty-image-container');
+    handlers.mode.init(editMode);
     
+    const { advancedButton, simpleButton, advancedContainer, simpleContainer } = elements.getModeElements();
+    
+    advancedButton.addEventListener('click', handlers.mode.switch(advancedButton, simpleButton, advancedContainer, simpleContainer, EditMode.Advanced));
+    simpleButton.addEventListener('click', handlers.mode.switch(simpleButton, advancedButton, simpleContainer, advancedContainer, EditMode.Simple));
+    
+    handlers.createButton.init();
+    
+    const { dropArea, fileInput, uploadButton } = elements.getImageElements();
     addDropAreaEvents(entryId, dropArea, fileInput, uploadButton);
-    addPasteImageEventListener(entryId);
-}
+    handlers.paste.init();
+};
 
 
-export function adjustTextareaSizes(editMode) {
-    let textareas = document.getElementsByTagName('textarea');
-    for (let textarea of textareas) {
-        adjustTextareaSize(textarea);
-    }
-
-    let advancedModeContainer = document.getElementById('advanced-mode');
-    let textModeContainer = document.getElementById('text-mode');
-
-    switch (editMode) {
-        case EditMode.Advanced:
-            textModeContainer.classList.add('d-none');
-            break;
-        case EditMode.Unknown:
-        case EditMode.Text:
-            advancedModeContainer.classList.add('d-none');
-            break;
-    }
-}
+export const adjustTextareaSizes = (editMode) => {
+    dom.queryAll('textarea').forEach(adjustTextareaSize);
+    
+    const { advancedContainer, simpleContainer } = elements.getModeElements();
+    const containerToHide = editMode === EditMode.Advanced ? simpleContainer : advancedContainer;
+    uiState.toggleClasses(containerToHide, { add: ['hidden'] });
+};
