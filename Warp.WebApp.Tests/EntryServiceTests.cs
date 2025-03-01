@@ -33,7 +33,7 @@ public class EntryServiceTests
         var result = await entryService.Add(entryRequest, CancellationToken.None);
 
         Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Value);
+        Assert.Contains(entryRequest.TextContent, result.Value.Content);
     }
 
     [Fact]

@@ -127,7 +127,7 @@ public class EntryInfoServiceTests
     }
 
     [Fact]
-    public async Task Remove_ShouldReturnProblemDetails_DataStorageRemoveFails()
+    public async Task Remove_ShouldThrowException_DataStorageRemoveFails()
     {
         var creator = new Creator(Guid.NewGuid());
         var entryId = Guid.NewGuid();
@@ -152,12 +152,74 @@ public class EntryInfoServiceTests
             .Remove<EntryInfo>(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException(new Exception()));
 
+        await Assert.ThrowsAsync<Exception>(() => _entryInfoService.Remove(creator, entryId, cancellationToken));
+    }
+
+    [Fact]
+    public async Task Remove_ShouldReturnSuccess()
+    {
+        var creator = new Creator(Guid.NewGuid());
+        var entryId = Guid.NewGuid();
+        var cancellationToken = CancellationToken.None;
+
+        var entryInfoForSubstitute = new EntryInfo(
+            Guid.NewGuid(),
+            creator.Id,
+            DateTime.Now,
+            DateTime.Now.AddDays(1),
+            EditMode.Text,
+            new Entry("Some content"),
+            new List<ImageInfo>(),
+            new EntryOpenGraphDescription("Some content", "Some content", null),
+            0);
+
+        _dataStorageSubstitute
+            .TryGet<EntryInfo?>(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new ValueTask<EntryInfo?>(entryInfoForSubstitute));
+
+        _dataStorageSubstitute
+            .Remove<EntryInfo>(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+
+        var result = await _entryInfoService.Remove(creator, entryId, cancellationToken);
+
+        Assert.True(result.IsSuccess);
+    }
+
+    [Fact]
+    public async Task Remove_ShouldReturnProblemDetails_EntryDoesntBelongToCreator()
+    {
+        var creator = new Creator(Guid.NewGuid());
+        var entryId = Guid.NewGuid();
+        var cancellationToken = CancellationToken.None;
+
+        var entryInfoForSubstitute = new EntryInfo(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            DateTime.Now,
+            DateTime.Now.AddDays(1),
+            EditMode.Text,
+            new Entry("Some content"),
+            new List<ImageInfo>(),
+            new EntryOpenGraphDescription("Some content", "Some content", null),
+            0);
+
+        _dataStorageSubstitute
+            .TryGet<EntryInfo?>(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new ValueTask<EntryInfo?>(entryInfoForSubstitute));
+
+        var localizedString = new LocalizedString("NoPermissionErrorMessage", "Entry does not belong to creator.");
+        _localizerSubstitute["NoPermissionErrorMessage"]
+            .Returns(localizedString);
+
         var result = await _entryInfoService.Remove(creator, entryId, cancellationToken);
 
         Assert.True(result.IsFailure);
-        Assert.NotNull(result.Error);
+        Assert.Equal(localizedString.Value ,result.Error.Detail);
         Assert.Equal((int)HttpStatusCode.BadRequest, result.Error.Status);
     }
+
+
 
     private readonly IEntryInfoService _entryInfoService;
     private readonly Creator _creator;

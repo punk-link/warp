@@ -23,7 +23,7 @@ public class CreatorServiceTests
     public async Task Add_Default()
     {
         var creator = await _creatorService.Add(CancellationToken.None);
-        Assert.NotNull(creator);
+        Assert.NotEqual(creator.Id, Guid.Empty);
     }
 
     [Fact]
