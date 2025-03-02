@@ -12,6 +12,14 @@ const EditMode = Object.freeze({
 });
 
 
+const DISABLED_STATE_EXCLUDED_INPUT_IDS = new Set([
+    'id',
+    'create-button',
+    'edit-mode-state', 
+    'expiration-selector'
+]);
+
+
 const elements = {
     getCreateButton: () => dom.get('create-button'),
     getImageElements: () => ({
@@ -59,26 +67,56 @@ const handlers = {
         }
     },
     
-    mode: {
-        init: (editMode) => {
-            const { advancedButton, simpleButton } = elements.getModeElements();
-            const activeButton = editMode === EditMode.Advanced ? advancedButton : simpleButton;
-            uiState.toggleClasses(activeButton, { add: ['active'] });
-        },
-
-        switch: (displayedButton, hiddenButton, displayedContainer, hiddenContainer, mode) => {
-            return () => {
-                uiState.toggleClasses(hiddenButton, { remove: ['active'] });
-                uiState.toggleClasses(displayedButton, { add: ['active'] });
-        
-                uiState.toggleClasses(hiddenContainer, { add: ['hidden'] });
-                uiState.toggleClasses(displayedContainer, { remove: ['hidden'] });
+    mode: (() => {
+        const setContainerInputsState = (container, isDisabled) => {
+            if (!container) 
+                return;
+            
+            const inputs = container.querySelectorAll('input, textarea, select');
+            inputs.forEach(input => {
+                if (DISABLED_STATE_EXCLUDED_INPUT_IDS.has(input.id)) 
+                    return;
                 
-                const { editModeInput } = elements.getModeElements();
-                uiState.setElementValue(editModeInput, mode);
-            };
-        }
-    },
+                uiState.setElementDisabled(input, isDisabled);
+            });
+        };
+
+        return {
+            init: (editMode) => {
+                const { 
+                    advancedButton, 
+                    simpleButton,
+                    advancedContainer,
+                    simpleContainer 
+                } = elements.getModeElements();
+
+                const activeButton = editMode === EditMode.Advanced ? advancedButton : simpleButton;
+                uiState.toggleClasses(activeButton, { add: ['active'] });
+
+                const activeContainer = editMode === EditMode.Advanced ? advancedContainer : simpleContainer;
+                const inactiveContainer = editMode === EditMode.Advanced ? simpleContainer : advancedContainer;
+                
+                setContainerInputsState(inactiveContainer, true);
+                setContainerInputsState(activeContainer, false);
+            },
+
+            switch: (displayedButton, hiddenButton, displayedContainer, hiddenContainer, mode) => {
+                return () => {
+                    uiState.toggleClasses(hiddenButton, { remove: ['active'] });
+                    uiState.toggleClasses(displayedButton, { add: ['active'] });
+            
+                    uiState.toggleClasses(hiddenContainer, { add: ['hidden'] });
+                    uiState.toggleClasses(displayedContainer, { remove: ['hidden'] });
+
+                    setContainerInputsState(hiddenContainer, true);
+                    setContainerInputsState(displayedContainer, false);
+                    
+                    const { editModeInput } = elements.getModeElements();
+                    uiState.setElementValue(editModeInput, mode);
+                };
+            }
+        };
+    })(),
 
     paste: {
         init: () => {
