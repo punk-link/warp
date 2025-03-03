@@ -5,7 +5,7 @@ import { repositionBackgroundImage } from '/js/functions/image-positioner.js';
 import { addDropAreaEvents, pasteImages } from './modules/image-processor.js';
 
 
-const EditMode = Object.freeze({
+const EDIT_MODE = Object.freeze({
     Unknown: 0,
     Simple: 1,
     Advanced: 2
@@ -90,11 +90,11 @@ const handlers = {
                     simpleContainer 
                 } = elements.getModeElements();
 
-                const activeButton = editMode === EditMode.Advanced ? advancedButton : simpleButton;
+                const activeButton = editMode === EDIT_MODE.Advanced ? advancedButton : simpleButton;
                 uiState.toggleClasses(activeButton, { add: ['active'] });
 
-                const activeContainer = editMode === EditMode.Advanced ? advancedContainer : simpleContainer;
-                const inactiveContainer = editMode === EditMode.Advanced ? simpleContainer : advancedContainer;
+                const activeContainer = editMode === EDIT_MODE.Advanced ? advancedContainer : simpleContainer;
+                const inactiveContainer = editMode === EDIT_MODE.Advanced ? simpleContainer : advancedContainer;
                 
                 setContainerInputsState(inactiveContainer, true);
                 setContainerInputsState(activeContainer, false);
@@ -140,8 +140,8 @@ export const addIndexEvents = (entryId, editMode) => {
     
     const { advancedButton, simpleButton, advancedContainer, simpleContainer } = elements.getModeElements();
     
-    advancedButton.addEventListener('click', handlers.mode.switch(advancedButton, simpleButton, advancedContainer, simpleContainer, EditMode.Advanced));
-    simpleButton.addEventListener('click', handlers.mode.switch(simpleButton, advancedButton, simpleContainer, advancedContainer, EditMode.Simple));
+    advancedButton.addEventListener('click', handlers.mode.switch(advancedButton, simpleButton, advancedContainer, simpleContainer, EDIT_MODE.Advanced));
+    simpleButton.addEventListener('click', handlers.mode.switch(simpleButton, advancedButton, simpleContainer, advancedContainer, EDIT_MODE.Simple));
     
     handlers.createButton.init();
     
@@ -155,6 +155,6 @@ export const adjustTextareaSizes = (editMode) => {
     dom.queryAll('textarea').forEach(adjustTextareaSize);
     
     const { advancedContainer, simpleContainer } = elements.getModeElements();
-    const containerToHide = editMode === EditMode.Advanced ? simpleContainer : advancedContainer;
+    const containerToHide = editMode === EDIT_MODE.Advanced ? simpleContainer : advancedContainer;
     uiState.toggleClasses(containerToHide, { add: ['hidden'] });
 };
