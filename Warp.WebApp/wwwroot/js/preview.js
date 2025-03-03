@@ -1,48 +1,92 @@
+import { dom, uiState } from '/js/utils/ui-core.js';
+import { ROUTES, redirectTo } from '/js/utils/routes.js';
 import { copyUrl } from '/js/functions/copier.js';
-import Countdown from '/js/components/countdown.js';
+import { initializeCountdown } from '/js/components/countdown.js';
 import { repositionBackgroundImage } from '/js/functions/image-positioner.js';
 import { makeHttpRequest, DELETE } from '/js/functions/http-client.js';
 
-async function deleteEntry(entryId) {
-    let response = await makeHttpRequest(`/api/entries/${entryId}`, DELETE);
 
-    if (response.ok)
-        location.href = '/deleted';
-
-    if (!(response.ok && response.redirected)) {
-        let problemDetails = await response.json();
-        let url = '/error?details=' + encodeURIComponent(JSON.stringify(problemDetails));
-        
-        location.href = url;
-    }
-}
+const elements = {
+    getActionButtons: () => ({
+        copyLink: dom.get('copy-link-button'),
+        edit: dom.get('edit-button'),
+        delete: dom.get('delete-button')
+    }),
+    getGalleryItems: () => dom.queryAll('[data-fancybox]'),
+    getRoamingImage: () => dom.get('roaming-image')
+};
 
 
-export function addPreviewEvents(entryId, expirationDate) {
-    let backgroundImageContainer = document.getElementById('roaming-image');
-    repositionBackgroundImage(backgroundImageContainer);
+const handlers = {
+    actions: (() => {
+        const handleError = async (response) => {
+            const problemDetails = await response.json();
+            redirectTo(ROUTES.ERROR, { 
+                details: JSON.stringify(problemDetails) 
+            });
+        };
 
-    let countdownElement = document.getElementsByClassName('countdown')[0];
-    let countdown = new Countdown(countdownElement, expirationDate);
+        const handleDelete = async (entryId) => {
+            const response = await makeHttpRequest(`${ROUTES.ENTRY}/${entryId}`, DELETE);
+            if (response.ok)
+                return redirectTo(ROUTES.DELETED);
 
-    let copyLinkButton = document.getElementById('copy-link-button');
-    let editButton = document.getElementById('edit-button');
-    let deleteButton = document.getElementById('delete-button');
+            if (!(response.ok && response.redirected)) 
+                await handleError(response);
+        };
 
-    copyLinkButton.addEventListener('click', function () {
-        copyUrl(window.location.origin + /entry/ + entryId);
+        const handleCopyLink = (entryId, editButton) => {
+            const entryUrl = `${window.location.origin}${ROUTES.ENTRY}/${entryId}`;
+            copyUrl(entryUrl);
+            
+            uiState.toggleClasses(editButton, { 
+                remove: ['hidden'], 
+                add: ['catchy-fade-in'] 
+            });
+        };
 
-        editButton.classList.remove('d-none');
-        editButton.classList.add('catchy-fade-in');
-    });
+        return {
+            init: (entryId) => {
+                const { copyLink, edit, delete: deleteButton } = elements.getActionButtons();
 
-    editButton.onclick = () => location.href = '/?id=' + entryId;
+                copyLink.addEventListener('click', () => handleCopyLink(entryId, edit));
+                edit.addEventListener('click', () => redirectTo(ROUTES.ROOT, { id: entryId }));
+                deleteButton.addEventListener('click', () => handleDelete(entryId));
+            }
+        };
+    })(),
 
-    deleteButton.onclick = async () => await deleteEntry(entryId);
+    gallery: {
+        init: () => {
+            const galleryItems = elements.getGalleryItems();
+            if (!galleryItems.length) 
+                return;
 
-    Fancybox.bind("[data-fancybox]", {
-        caption: function (fancybox, slide) {
-            return slide.thumbEl?.alt || "";
+            Fancybox.bind("[data-fancybox]", { caption: (fancybox, slide) => slide.thumbEl?.alt || "" });
         }
-    });
-}
+    },
+
+    background: {
+        init: () => {
+            const roamingImage = elements.getRoamingImage();
+            if (!roamingImage) 
+                return;
+
+            repositionBackgroundImage(roamingImage);
+        }
+    },
+
+    countdown: {
+        init: (expirationDate) => {
+            initializeCountdown(expirationDate);
+        }
+    }
+};
+
+
+export const addPreviewEvents = (entryId, expirationDate) => {
+    handlers.background.init();
+    handlers.countdown.init(expirationDate);
+    handlers.actions.init(entryId);
+    handlers.gallery.init();
+};
