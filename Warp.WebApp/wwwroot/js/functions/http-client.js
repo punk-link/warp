@@ -1,18 +1,98 @@
-﻿const HttpMethod = { POST: 'POST', GET: 'GET', PUT: 'PUT', PATCH: 'PATCH', DELETE: 'DELETE' };
-export const { POST, GET, PUT, PATCH, DELETE } = HttpMethod;
+﻿import { ROUTES, buildUrl } from '/js/utils/routes.js';
 
 
-const headers = {
-    'Accept': 'application/json; charset=utf-8',
-    'Content-Type': 'application/json; charset=utf-8'
-}
+const HTTP_METHOD = Object.freeze({
+    POST: 'POST',
+    GET: 'GET',
+    PUT: 'PUT',
+    PATCH: 'PATCH',
+    DELETE: 'DELETE'
+});
 
 
-export async function makeHttpRequest(URL, method, body = null) {
-    let response = await fetch(URL, {
-        method: method,
-        body: body
-    });
+const HTTP_HEADERS = Object.freeze({
+    JSON: {
+        'Accept': 'application/json; charset=utf-8',
+        'Content-Type': 'application/json; charset=utf-8'
+    }
+});
 
-    return response;
-}
+
+const HTTP_ERROR = Object.freeze({
+    MISSING_URL: 'URL is required',
+    INVALID_METHOD: 'Invalid HTTP method',
+    REQUEST_FAILED: 'HTTP Request failed'
+});
+
+
+const handlers = {
+    request: (() => {
+        const validateRequest = (url, method) => {
+            if (!url) 
+                throw new Error(HTTP_ERROR.MISSING_URL);
+            
+            if (!Object.values(HTTP_METHOD).includes(method)) 
+                throw new Error(HTTP_ERROR.INVALID_METHOD);
+        };
+
+        const buildRequestOptions = (method, body = null, headers = HTTP_HEADERS.JSON) => ({
+            method,
+            headers,
+            ...(body && {
+                body: typeof body === 'string' ? body : JSON.stringify(body)
+            })
+        });
+
+        const handleRequestError = async (response, url) => {
+            if (response.ok) 
+                return response;
+
+            const problemDetails = await response.json();
+            location.href = buildUrl(ROUTES.ERROR, { 
+                details: JSON.stringify(problemDetails) 
+            });
+            
+            throw new Error(HTTP_ERROR.REQUEST_FAILED);
+        };
+
+        return {
+            execute: async (url, method, body = null) => {
+                try {
+                    validateRequest(url, method);
+                    
+                    const options = buildRequestOptions(method, body);
+                    const response = await fetch(url, options);
+
+                    return response;
+                } catch (error) {
+                    handleRequestError(error, url);
+                }
+            }
+        };
+    })()
+};
+
+
+export const { POST, GET, PUT, PATCH, DELETE } = HTTP_METHOD;
+
+
+export const makeHttpRequest = async (url, method, body = null) => 
+    handlers.request.execute(url, method, body);
+
+
+export const http = {
+    get: (url) => 
+        makeHttpRequest(url, GET),
+    
+    post: (url, data) => 
+        makeHttpRequest(url, POST, data),
+    
+    put: (url, data) => 
+        makeHttpRequest(url, PUT, data),
+    
+    patch: (url, data) => 
+        makeHttpRequest(url, PATCH, data),
+    
+    delete: (url) => 
+        makeHttpRequest(url, DELETE)
+};
