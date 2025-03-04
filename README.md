@@ -1,4 +1,4 @@
-# Warp
+# Warp..
 
 Warp is a service where you can share short-lived texts and media with your friends and colleagues and be sure the data will be removed whenever you expect. The solution based on Asp.Net Core service and backed with KeyDB as a storage for sensitive user data.
 
