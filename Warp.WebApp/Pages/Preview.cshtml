@@ -24,12 +24,20 @@
 }
 
 <div class="min-h-screen">
-    <div class="flex items-baseline px-3">
-        <h1 class="logo-style">
-            <a asp-page="/Index">
-                @SharedLocalizer["Logo"]
-            </a>
-        </h1>
+    <div class="flex flex-col sm:flex-row items-baseline px-3">
+        <div class="w-full sm:w-1/2 flex justify-start md:justify-center">
+            <h1 class="logo-style">
+                <a asp-page="/Index" class="text-xl">
+                    @SharedLocalizer["Logo"]
+                </a>
+            </h1>
+            <span class="px-2 text-gray-400 text-xs">beta</span>
+        </div>
+        <div class="w-full sm:w-1/2 flex justify-end md:justify-center">
+            <span class="text-secondary font-semibold text-base">
+                @Localizer["entry successfully created"]
+            </span>
+        </div>
     </div>
 
     <section class="px-3 my-5">
@@ -37,8 +45,8 @@
             <!-- Countdown -->
             <div class="w-full md:w-1/2 flex justify-end mb-5">
                 <div class="text-right">
-                    <div class="countdown text-gray-800 text-2xl font-sans-serif font-semibold">&nbsp;</div>
-                    <div class="text-gray-400">
+                    <div class="countdown text-gray-700 text-3xl font-sans-serif font-semibold">&nbsp;</div>
+                    <div class="text-gray-400 text-xs">
                         @Localizer["the entry expires in"]
                     </div>
                 </div>
@@ -55,7 +63,7 @@
                         }
                     </div>
                 }
-                <div class="font-sans-serif text-lg">
+                <div class="font-sans-serif text-base">
                     @Html.Raw(Model.TextContent)
                 </div>
             </article>
@@ -74,7 +82,7 @@
                 </div>
                 <div class="bg-white rounded-sm">
                     <button id="copy-link-button" class="btn btn-primary" title="@SharedLocalizer["CopyLinkButton"]">
-                        <i class="icofont-link mr-2"></i>
+                        <i class="icofont-link text-white/50"></i>
                         @SharedLocalizer["CopyLinkButton"]
                     </button>
                 </div>

@@ -120,7 +120,13 @@
   <data name="CopyButton" xml:space="preserve">
     <value>Copy Entry</value>
   </data>
+  <data name="entry successfully created" xml:space="preserve">
+    <value>entry successfully created</value>
+  </data>
   <data name="the entry expires in" xml:space="preserve">
     <value>the entry expires in</value>
+  </data>
+  <data name="the link was copied successfully" xml:space="preserve">
+    <value>the link was copied successfully</value>
   </data>
 </root>
