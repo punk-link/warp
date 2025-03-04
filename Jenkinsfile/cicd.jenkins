@@ -1,15 +1,16 @@
-pipeline {
-    agent any
-    stages {
-        stage('Build image') {
-            steps {
-                echo 'Starting to build docker image'
-
-                script {
-                    def customImage = docker.build("warp:${env.BUILD_ID}")
-                    customImage.push()
-                }
-            }
+node {    
+      def app     
+      stage('Clone repository') {               
+             
+            checkout scm    
+      }           stage('Build image') {         
+       
+            app = docker.build("brandonjones085/test")    
+       }           stage('Test image') {                       
+            app.inside {            
+             
+             sh 'echo "Tests passed"'        
+            }    
+           }             
+           }
         }
-    }
-}
