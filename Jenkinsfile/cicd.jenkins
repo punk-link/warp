@@ -7,12 +7,14 @@ node {
         checkout scm
     }
 
-    stage('Build image') {
-        /* This builds the actual image; synonymous to
-         * docker build on the command line */
+        stage('Build image') {
+            steps {
+                echo 'Starting to build docker image'
 
-        app = docker.build("getintodevops/hellonode")
-    }
+                script {
+                    def customImage = docker.build("my-image:${env.BUILD_ID}")
+        
+                }
 
     stage('Test image') {
         /* Ideally, we would run a test framework against our image.
