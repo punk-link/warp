@@ -15,7 +15,7 @@ node {
                     def customImage = docker.build("my-image:${env.BUILD_ID}")
         
                 }
-
+              }
     stage('Test image') {
         /* Ideally, we would run a test framework against our image.
          * For this example, we're using a Volkswagen-type approach ;-) */
