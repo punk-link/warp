@@ -9,7 +9,6 @@ node {
 
 stage('Build image') {
                 echo 'Starting to build docker image '
-                echo $PNKL_VAULT_TOKEN
                 script {
                     def customImage = docker.build ("registry.punk.link/warp-webapp:${env.BUILD_ID}-DEV" )
                     docker.withRegistry('https://registry.punk.link', 'docker_auth'){ 
