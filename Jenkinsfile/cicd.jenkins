@@ -1,15 +1,16 @@
-node {
-    def app
+pipeline {
+    agent any
+    stages {
+        stage(Build image) {
+            steps {
+                echo 'Starting to build docker image'
 
-    stage('Clone repository') {
-        /* Let's make sure we have the repository cloned to our workspace */
-
-        checkout scm
+                script {
+                    def customImage = docker.build("my-image:${env.BUILD_ID}")
+                }
+            }
+        }
     }
-
-
-
-    }
-
+}
 
 
