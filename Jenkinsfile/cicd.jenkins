@@ -7,7 +7,7 @@ node {
         checkout scm
     }
 
-        stage('Build image') {
+        stage(Build image) {
             steps {
                 echo 'Starting to build docker image'
 
