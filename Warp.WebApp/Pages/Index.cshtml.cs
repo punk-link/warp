@@ -207,7 +207,7 @@ public class IndexModel : BasePageModel
     public string Id { get; set; }
 
     [BindProperty]
-    public EditMode EditMode { get; set; } = EditMode.Text;
+    public EditMode EditMode { get; set; } = EditMode.Simple;
 
     [BindProperty]
     public List<string> ImageIds { get; set; } = [];

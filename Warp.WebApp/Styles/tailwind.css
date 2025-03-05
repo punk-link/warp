@@ -14,11 +14,11 @@
     }
 
     .form-label {
-        @apply block text-gray-400 font-sans-serif text-sm font-normal tracking-wide mb-1 lowercase;
+        @apply block text-gray-400 font-sans-serif text-xs font-normal tracking-wide mb-1 lowercase;
     }
 
     .form-select {
-        @apply border-none text-primary text-lg font-sans-serif font-semibold leading-normal cursor-pointer focus:outline-none;
+        @apply border-none text-primary text-base font-sans-serif font-semibold leading-normal cursor-pointer focus:outline-none lowercase;
     }
 
     .form-select option {
@@ -26,7 +26,7 @@
     }
 
     .form-textarea {
-        @apply w-full border-0 border-b-2 border-primary rounded-none box-border font-sans-serif text-lg font-normal leading-normal focus:outline-none focus:border-primary/80 active:outline-none active:border-primary/80 transition-all duration-200 ease-in-out;
+        @apply w-full border-0 border-b-2 border-primary rounded-none box-border font-sans-serif text-base font-normal leading-normal focus:outline-none focus:border-primary/80 active:outline-none active:border-primary/80 transition-all duration-200 ease-in-out;
     }
 
     .form-textarea:placeholder-shown + .floating-label {
@@ -50,7 +50,7 @@
     }
 
     .nav-button {
-        @apply bg-transparent border-0 text-gray-400 font-medium font-sans-serif text-lg cursor-pointer m-4 p-0 lowercase hover:text-gray-600 focus:text-gray-600 active:text-gray-600 disabled:text-gray-300 disabled:cursor-auto;
+        @apply bg-transparent border-0 text-gray-400 font-medium font-sans-serif text-sm cursor-pointer m-4 p-0 lowercase hover:text-gray-600 focus:text-gray-600 active:text-gray-600 disabled:text-gray-300 disabled:cursor-auto;
     }
 
     .nav-button.active {
