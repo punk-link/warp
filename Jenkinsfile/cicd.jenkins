@@ -11,9 +11,9 @@ stage('Build image') {
                 echo 'Starting to build docker image'
 
                 script {
-                    def customImage = docker.build("registry.punk.link/warp-webapp:${env.GIT_COMMIT}-DEV")
-                    /* customImage.push() */
-                }
-            }
+                    def customImage = docker.build("registry.punk.link/warp-webapp:${env.BUILD_ID}-DEV")
+                    customImage.push() 
+        }
+    }
 }
 
