@@ -11,6 +11,10 @@ const HTTP_METHOD = Object.freeze({
 
 
 const HTTP_HEADERS = Object.freeze({
+    FORM_DATA: {
+        'Accept': 'application/json; charset=utf-8'
+        // Note: Content-Type is automatically set by the browser when using FormData
+    },
     JSON: {
         'Accept': 'application/json; charset=utf-8',
         'Content-Type': 'application/json; charset=utf-8'
@@ -35,13 +39,22 @@ const handlers = {
                 throw new Error(HTTP_ERROR.INVALID_METHOD);
         };
 
-        const buildRequestOptions = (method, body = null, headers = HTTP_HEADERS.JSON) => ({
-            method,
-            headers,
-            ...(body && {
-                body: typeof body === 'string' ? body : JSON.stringify(body)
-            })
-        });
+        const buildRequestOptions = (method, body = null, headers = HTTP_HEADERS.JSON) => {
+            const options = { method, headers };
+
+            if (body) {
+                if (body instanceof FormData) {
+                    options.headers = HTTP_HEADERS.FORM_DATA;
+                    options.body = body;
+                } else {
+                    options.body = typeof body === 'string' 
+                        ? body 
+                        : JSON.stringify(body);
+                }
+            }
+
+            return options;
+        };
 
         const handleRequestError = async (response, url) => {
             if (response.ok) 
@@ -76,8 +89,7 @@ const handlers = {
 export const { POST, GET, PUT, PATCH, DELETE } = HTTP_METHOD;
 
 
-export const makeHttpRequest = async (url, method, body = null) => 
-    handlers.request.execute(url, method, body);
+export const makeHttpRequest = async (url, method, body = null) => handlers.request.execute(url, method, body);
 
 
 export const http = {
