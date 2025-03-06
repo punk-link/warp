@@ -81,7 +81,7 @@
                             <div class="flex flex-col mb-5">
                                 <i class="icofont-hill-sunny text-secondary text-2xl mb-2"></i>
                                 <label class="form-label mb-3">@Localizer["ImageAreaLabel"]</label>
-                                <div class="flex flex-row flex-wrap gap-3 upload-gallery">
+                                <div class="gallery">
                                     @foreach (var imageContainer in Model.ImageContainers)
                                     {
                                         <partial name="Shared/Components/EditableImageContainer" model="imageContainer" />

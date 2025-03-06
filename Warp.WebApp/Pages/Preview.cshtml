@@ -56,7 +56,7 @@
             <article class="w-full md:w-1/2 bg-yellow-50 p-3 rounded-sm mb-5">
                 @if (Model.ImageContainers.Count > 0)
                 {
-                    <div class="flex flex-row flex-wrap gap-3 upload-gallery mb-5">
+                    <div class="gallery mb-5">
                         @foreach (var imageContainer in Model.ImageContainers)
                         {
                             <partial name="Shared/Components/ReadOnlyImageContainer" model="imageContainer" />

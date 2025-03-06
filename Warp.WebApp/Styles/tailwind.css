@@ -33,12 +33,20 @@
         @apply cursor-text max-w-[66.66%] whitespace-nowrap overflow-hidden text-ellipsis origin-bottom-left translate-y-[2.125rem] scale-150;
     }
 
+    .gallery {
+        @apply grid grid-cols-3 gap-3 w-full;
+    }
+
     .image-button {
         @apply absolute -top-3 flex justify-center items-center bg-white rounded-full w-6 h-6 hover:bg-gray-50 transition-colors duration-200;
     }
 
     .image-container {
-        @apply relative w-18 h-18 border-2 border-primary rounded-sm overflow-hidden;
+        @apply relative aspect-square w-full border-2 border-primary rounded-sm overflow-hidden;
+    }
+
+    .image-container:empty {
+        @apply flex items-center justify-center;
     }
 
     .image-container img {
