@@ -22,7 +22,7 @@
 
 @section Scripts {
     <script type="module" defer>
-        import { addIndexEvents, adjustTextareaSizes } from '/js/index.js';
+        import { addIndexEvents, setupTextareas } from '/js/features/index/index.js';
 
         const initEditMode = @((int)Model.EditMode);
 
@@ -31,7 +31,7 @@
         });
 
         window.addEventListener('load', () => {
-            adjustTextareaSizes(initEditMode);
+            setupTextareas(initEditMode);
         });
     </script>
 }

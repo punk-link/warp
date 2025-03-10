@@ -15,7 +15,7 @@ else
         <img src="@Model.ImageUrl" alt="Uploaded image" class="rounded-sm">
         <input type="hidden" name="ImageIds" value="@IdCoder.Encode(Model.ImageId)" />
         <div class="absolute -top-3 w-full flex justify-center">
-            <a href="javascript:void(0);" class="image-button"title="@SharedLocalizer["DeleteButton"]">
+            <a href="javascript:void(0);" class="round-button delete-image-button" title="@SharedLocalizer["DeleteButton"]">
                 <i class="icofont-bin text-gray-400"></i>
             </a>
         </div>
