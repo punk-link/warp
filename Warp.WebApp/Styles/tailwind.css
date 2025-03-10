@@ -42,11 +42,7 @@
     }
 
     .image-container {
-        @apply relative aspect-square w-full border-2 border-primary rounded-sm overflow-hidden;
-    }
-
-    .image-container:empty {
-        @apply flex items-center justify-center;
+        @apply relative aspect-square w-full border-2 border-primary rounded-sm overflow-hidden cursor-pointer;
     }
 
     .image-container img {
