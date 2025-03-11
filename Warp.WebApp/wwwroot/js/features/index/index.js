@@ -2,7 +2,6 @@ import { elements } from './elements.js';
 import { createButton } from './create-button.js';
 import { editMode } from './edit-mode.js';
 import { adjustTextareaSizes } from './textarea.js';
-import { dom } from '/js/utils/ui-core.js';
 import { EDIT_MODE } from '/js/constants/enums.js';
 import { addDropAreaEvents, pasteImages } from '/js/components/gallery/upload.js';
 import { repositionBackgroundImage } from '/js/components/background/image-positioner.js';
