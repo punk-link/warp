@@ -14,41 +14,49 @@
 
 @section Scripts {
     <script type="module" defer>
+        import { redirectTo } from '/js/utils/routes.js';
+
         document.addEventListener('DOMContentLoaded', () => {
-            let createButton = document.getElementById('create-button');
+            const createButton = document.getElementById('create-button');
             createButton.addEventListener('click', () => {
-                window.location.href = '/';
+                redirectTo('/');
             });
         });
     </script>
 }
 
-<div class="min-h-screen flex flex-col">
+<div class="min-h-screen">
     <!-- Header -->
-    <div class="flex items-baseline px-3">
-        <h1 class="logo">
-            <a class="text-blue-500 hover:underline" asp-area="" asp-page="/Index">
-                @SharedLocalizer["Logo"]
-            </a>
-        </h1>
+    <div class="flex flex-col sm:flex-row items-baseline px-3">
+        <div class="w-full sm:w-1/2 flex justify-start md:justify-center">
+            <h1 class="logo-style">
+                <a asp-page="/Index" class="text-xl">
+                    @SharedLocalizer["Logo"]
+                </a>
+            </h1>
+            <span class="px-2 text-gray-400 text-xs">beta</span>
+        </div>
     </div>
 
     <!-- Main Content -->
-    <section class="flex-1 min-h-[75vh] px-3 mb-5 flex flex-col justify-between">
-        <!-- Message -->
-        <div class="flex flex-col items-center my-5">
-            <i class="icofont-bin text-gray-400 mb-3 text-6xl"></i>
-            <span class="text-gray-600 text-xl">
-                @Localizer["the entry was deleted"]
-            </span>
-        </div>
+    <section class="px-3 my-5">
+        <div class="flex flex-col items-center justify-around min-h-[75vh]">
+            <div class="w-full md:w-1/2 flex flex-col justify-center items-center mb-5">
+                <i class="icofont-bin text-gray-400 text-6xl mb-5"></i>
+                <span class="text-gray-400 text-base font-semibold">
+                    @Localizer["the entry was deleted"]
+                </span>
+            </div>
 
-        <!-- Action Button -->
-        <div class="flex justify-center items-center w-full md:w-1/2 mx-auto sticky bottom-0 bg-transparent pb-3">
-            <button id="create-button" class="bg-blue-500 text-white flex items-center px-4 py-2 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400">
-                <i class="icofont-plus text-white mr-2"></i>
-                @SharedLocalizer["CreateButton"]
-            </button>
+            <!-- Action Button -->
+            <div class="flex justify-center items-center w-full md:w-1/2 pb-3 sticky bottom-0 bg-transparent">
+                <div class="bg-white rounded-sm">
+                    <button id="create-button" class="btn btn-primary">
+                        <i class="icofont-plus text-white/50 mr-2"></i>
+                        @SharedLocalizer["CreateButton"]
+                    </button>
+                </div>
+            </div>
         </div>
     </section>
 </div>
