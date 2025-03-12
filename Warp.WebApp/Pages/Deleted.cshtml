@@ -29,12 +29,7 @@
     <!-- Header -->
     <div class="flex flex-col sm:flex-row items-baseline px-3">
         <div class="w-full sm:w-1/2 flex justify-start md:justify-center">
-            <h1 class="logo-style">
-                <a asp-page="/Index" class="text-xl">
-                    @SharedLocalizer["Logo"]
-                </a>
-            </h1>
-            <span class="px-2 text-gray-400 text-xs">beta</span>
+            <partial name="Shared/Logo" />
         </div>
     </div>
 
@@ -42,7 +37,7 @@
     <section class="px-3 my-5">
         <div class="flex flex-col items-center justify-around min-h-[75vh]">
             <div class="w-full md:w-1/2 flex flex-col justify-center items-center mb-5">
-                <i class="icofont-bin text-gray-400 text-6xl mb-5"></i>
+                <i class="icofont-bin text-gray-300 text-7xl mb-5"></i>
                 <span class="text-gray-400 text-base font-semibold">
                     @Localizer["the entry was deleted"]
                 </span>
@@ -52,7 +47,7 @@
             <div class="flex justify-center items-center w-full md:w-1/2 pb-3 sticky bottom-0 bg-transparent">
                 <div class="bg-white rounded-sm">
                     <button id="create-button" class="btn btn-primary">
-                        <i class="icofont-plus text-white/50 mr-2"></i>
+                        <i class="icofont-plus text-white/50"></i>
                         @SharedLocalizer["CreateButton"]
                     </button>
                 </div>

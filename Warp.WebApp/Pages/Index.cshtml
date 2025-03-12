@@ -39,12 +39,7 @@
 <div class="min-h-screen">
     <div class="flex flex-col sm:flex-row items-baseline px-3">
         <div class="w-full sm:w-1/2 flex justify-start md:justify-center">
-            <h1 class="logo-style">
-                <a asp-page="/Index" class="text-xl">
-                    @SharedLocalizer["Logo"]
-                </a>
-            </h1>
-            <span class="px-2 text-gray-400 text-xs">beta</span>
+            <partial name="Shared/Logo" />
         </div>
         <div class="w-full sm:w-1/2 flex justify-end md:justify-center">
             <button id="simple-mode-nav-button" class="nav-button">
