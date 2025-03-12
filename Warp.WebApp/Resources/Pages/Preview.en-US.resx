@@ -117,8 +117,8 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="CopyButton" xml:space="preserve">
-    <value>Copy Entry</value>
+  <data name="CloneAndEditButton" xml:space="preserve">
+    <value>Clone and Edit</value>
   </data>
   <data name="entry successfully created" xml:space="preserve">
     <value>entry successfully created</value>

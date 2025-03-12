@@ -7,5 +7,9 @@ export const elements = {
         delete: dom.get('delete-button')
     }),
     getGalleryItems: () => dom.queryAll('[data-fancybox]'),
-    getRoamingImage: () => dom.get('roaming-image')
+    getRoamingImage: () => dom.get('roaming-image'),
+    getServiceMessages: () => ({
+        created: dom.query('.service-message-container #entry-created-message'),
+        copied: dom.query('.service-message-container #link-copied-message')
+    })
 };

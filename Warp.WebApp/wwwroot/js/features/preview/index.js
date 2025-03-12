@@ -19,7 +19,7 @@ const handlers = {
         };
 
         const handleDelete = async (entryId) => {
-            const response = await http.delete(`${ROUTES.ENTRY}/${entryId}`);
+            const response = await http.delete(`${ROUTES.API.ENTRIES}/${entryId}`);
 
             if (response.ok)
                 return redirectTo(ROUTES.DELETED);
@@ -28,14 +28,33 @@ const handlers = {
                 await handleError(response);
         };
 
-        const handleCopyLink = (entryId, editButton) => {
+        const handleCopyLink = async (entryId, editButton) => {
             const entryUrl = `${window.location.origin}${ROUTES.ENTRY}/${entryId}`;
-            copyUrl(entryUrl);
+            const success = await copyUrl(entryUrl);
 
-            uiState.toggleClasses(editButton, {
-                remove: [CSS_CLASSES.HIDDEN],
-                add: [CSS_CLASSES.ANIMATE]
-            });
+            if (success) {
+                uiState.toggleClasses(editButton, {
+                    remove: [CSS_CLASSES.HIDDEN],
+                    add: [CSS_CLASSES.ANIMATE]
+                });
+
+                const { created, copied } = elements.getServiceMessages();
+                if (created && copied) {
+                    uiState.toggleClasses(created, { add: [CSS_CLASSES.HIDDEN] });
+                    uiState.toggleClasses(copied, {
+                        remove: [CSS_CLASSES.HIDDEN],
+                        add: [CSS_CLASSES.ANIMATE]
+                    });
+
+                    setTimeout(() => {
+                        uiState.toggleClasses(copied, {
+                            add: [CSS_CLASSES.HIDDEN],
+                            remove: [CSS_CLASSES.ANIMATE]
+                        });
+                        uiState.toggleClasses(created, { remove: [CSS_CLASSES.HIDDEN] });
+                    }, 3000);
+                }
+            }
         };
 
         return {
