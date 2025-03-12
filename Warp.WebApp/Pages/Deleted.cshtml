@@ -14,13 +14,10 @@
 
 @section Scripts {
     <script type="module" defer>
-        import { redirectTo } from '/js/utils/routes.js';
+        import { addDeletedEvents } from '/js/features/deleted/index.js';
 
         document.addEventListener('DOMContentLoaded', () => {
-            const createButton = document.getElementById('create-button');
-            createButton.addEventListener('click', () => {
-                redirectTo('/');
-            });
+            addDeletedEvents();
         });
     </script>
 }
