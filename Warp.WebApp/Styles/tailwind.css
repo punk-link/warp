@@ -5,12 +5,20 @@
         @apply flex items-center border-none rounded cursor-pointer gap-2.5 px-4 py-2 font-sans-serif text-base font-semibold leading-normal text-center lowercase disabled:cursor-auto;
     }
 
+    .btn.btn-round {
+        @apply justify-center !border-1 !border-gray-200 !border-solid rounded-full px-2 py-2 bg-white text-gray-400 hover:text-gray-400/80 focus:text-gray-400/80 active:text-gray-400/80 disabled:text-gray-400/40;
+    }
+
     .btn.btn-gray {
         @apply bg-gray-400 text-gray-50 hover:bg-gray-400/80 focus:bg-gray-400/80 active:bg-gray-400/80 disabled:bg-gray-400/40;
     }
 
+    .btn.btn-round i {
+        @apply m-auto;
+    }
+
     .btn.btn-outline-gray {
-        @apply text-gray-400 hover:text-gray-600 focus:text-gray-600 active:text-gray-600 disabled:text-gray-600;
+        @apply text-gray-400 hover:text-gray-400/80 focus:text-gray-400/80 active:text-gray-400/80 disabled:text-gray-400/80;
     }
 
     .btn.btn-primary {
@@ -50,7 +58,7 @@
     }
 
     .image-container {
-        @apply relative aspect-square w-full border-2 border-primary rounded-sm overflow-hidden cursor-pointer;
+        @apply relative aspect-square w-full border-1 border-gray-300 rounded-sm overflow-hidden cursor-pointer;
     }
 
     .image-container img {

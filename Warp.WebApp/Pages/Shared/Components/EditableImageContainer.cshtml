@@ -5,18 +5,18 @@
 
 @if (Model.ImageId == Guid.Empty)
 {
-    <div id="empty-image-container" class="image-container flex items-center justify-center">
+    <div id="empty-image-container" class="image-container flex items-center justify-center border-primary border-2">
         <i class="icofont-plus text-gray-300 text-4xl"></i>
     </div>
 }
 else
 {
-    <div id="image-container-@IdCoder.Encode(Model.ImageId)" class="image-container" data-image-id="@IdCoder.Encode(Model.ImageId)">
+    <div id="image-container-@IdCoder.Encode(Model.ImageId)" class="image-container overflow-visible" data-image-id="@IdCoder.Encode(Model.ImageId)">
         <img src="@Model.ImageUrl" alt="Uploaded image" class="rounded-sm">
         <input type="hidden" name="ImageIds" value="@IdCoder.Encode(Model.ImageId)" />
-        <div class="absolute -top-3 w-full flex justify-center">
-            <a href="javascript:void(0);" class="round-button delete-image-button" title="@SharedLocalizer["DeleteButton"]">
-                <i class="icofont-bin text-gray-400"></i>
+        <div class="absolute bottom-0 w-full flex justify-center" style="transform: translateY(50%);">
+            <a href="javascript:void(0);" class="delete-image-button btn btn-round" title="@SharedLocalizer["DeleteButton"]">
+                <i class="icofont-bin text-xl"></i>
             </a>
         </div>
     </div>
