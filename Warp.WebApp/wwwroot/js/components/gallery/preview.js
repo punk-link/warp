@@ -34,8 +34,17 @@ const handlers = {
         };
 
         const animateContainer = (container, gallery) => {
+            const emptyContainer = elements.getUploadContainer();
+            if (emptyContainer && emptyContainer.classList.contains(CSS_CLASSES.HIDDEN)) 
+                emptyContainer.classList.remove(CSS_CLASSES.HIDDEN);
+
             uiState.toggleClasses(container, { add: [CSS_CLASSES.HIDDEN] });
-            gallery.prepend(container);
+
+            if (emptyContainer && gallery.contains(emptyContainer)) {
+                gallery.insertBefore(container, emptyContainer);
+            } else {
+                gallery.prepend(container);
+            }
 
             uiState.toggleClasses(container, {
                 remove: [CSS_CLASSES.HIDDEN],

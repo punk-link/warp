@@ -2,7 +2,7 @@
 
 @layer components {
     .btn {
-        @apply flex items-center border-none rounded cursor-pointer gap-2.5 px-4 py-2 font-sans-serif text-base font-semibold leading-normal text-center lowercase disabled:cursor-auto;
+        @apply flex items-center border-none rounded cursor-pointer gap-2.5 px-4 py-2 font-sans-serif text-base font-semibold leading-normal text-center lowercase disabled:cursor-auto transition-colors duration-200;
     }
 
     .btn.btn-round {
@@ -50,11 +50,7 @@
     }
 
     .gallery {
-        @apply grid grid-cols-3 gap-3 w-full;
-    }
-
-    .image-button {
-        @apply absolute -top-3 flex justify-center items-center bg-white rounded-full w-6 h-6 hover:bg-gray-50 transition-colors duration-200;
+        @apply grid grid-cols-3 gap-x-3 gap-y-6 w-full;
     }
 
     .image-container {
@@ -70,7 +66,7 @@
     }
 
     .nav-button {
-        @apply bg-transparent border-0 text-gray-400 font-medium font-sans-serif text-sm cursor-pointer m-4 p-0 lowercase hover:text-gray-600 focus:text-gray-600 active:text-gray-600 disabled:text-gray-300 disabled:cursor-auto;
+        @apply bg-transparent border-0 text-gray-400 font-medium font-sans-serif text-sm cursor-pointer m-4 p-0 lowercase hover:text-gray-600 focus:text-gray-600 active:text-gray-600 disabled:text-gray-300 disabled:cursor-auto transition-colors duration-200;
     }
 
     .nav-button.active {

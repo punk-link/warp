@@ -3,7 +3,7 @@
 
 export const elements = {
     getGallery: () => dom.query('.gallery'),
-    getUploadButton: () => dom.get('empty-image-container'),
+    getUploadContainer: () => dom.get('empty-image-container'),
     getImageContainer: (element) => ({
         container: element,
         deleteButton: element.querySelector('.delete-image-button'),

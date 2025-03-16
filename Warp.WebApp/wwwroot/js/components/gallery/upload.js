@@ -21,28 +21,19 @@ const handlers = {
 
         toggleUploadState: (element, isUploading) => {
             const { icon } = elements.getImageContainer(element);
-            const [oldState, newState] = isUploading 
+            const [oldIconClass, newIconClass] = isUploading 
                 ? [ICONS.PLUS, ICONS.CLOCK]
                 : [ICONS.CLOCK, ICONS.PLUS];
-            
-            uiState.toggleClasses(element, { 
-                add: [CSS_CLASSES.HIDDEN],
-                remove: [oldState] 
-            });
 
-            uiState.toggleClasses(icon, { 
-                add: [newState],
-                remove: [CSS_CLASSES.HIDDEN] 
-            });
-
-            uiState.toggleClasses(element, { 
-                add: [CSS_CLASSES.ANIMATE] 
+            uiState.toggleClasses(icon, {
+                add: [newIconClass],
+                remove: [oldIconClass]
             });
         },
 
         upload: async (entryId, files) => {
-            const uploadButton = elements.getUploadButton();
-            handlers.image.toggleUploadState(uploadButton, true);
+            const uploadContainer = elements.getUploadContainer();
+            handlers.image.toggleUploadState(uploadContainer, true);
 
             const formData = new FormData();
             files.forEach(file => formData.append('Images', file, file.name));
@@ -50,7 +41,7 @@ const handlers = {
             const response = await http.post(`/api/images/entry-id/${entryId}`, formData);
 
             if (!response.ok) {
-                handlers.image.toggleUploadState(uploadButton, false);
+                handlers.image.toggleUploadState(uploadContainer, false);
                 console.error(response.status, response.statusText);
                 return;
             }
@@ -58,7 +49,7 @@ const handlers = {
             const results = await response.json();
             preview.render(entryId, files, results, handlers.image.delete);
             
-            handlers.image.toggleUploadState(uploadButton, false);
+            handlers.image.toggleUploadState(uploadContainer, false);
             dispatchEvent.uploadFinished();
         }
     },
