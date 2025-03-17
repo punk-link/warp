@@ -1,6 +1,3 @@
-import { uiState } from '/js/utils/ui-core.js';
-
-
 const handlers = {
     clipboard: (() => {
         const setCursor = (state) => {
@@ -21,6 +18,22 @@ const handlers = {
                 } finally {
                     setCursor('auto');
                 }
+            },
+
+            copyText: async (textContainer) => {
+                try {
+                    setCursor('wait');
+
+                    const textToCopy = textContainer.textContent.trim();
+                    await navigator.clipboard.writeText(textToCopy);
+
+                    return true;
+                } catch (error) {
+                    console.error('Copy to clipboard failed: ', error);
+                    return false;
+                } finally {
+                    setCursor('auto');
+                }
             }
         };
     })()
@@ -28,3 +41,4 @@ const handlers = {
 
 
 export const copyUrl = handlers.clipboard.copyUrl;
+export const copyText = handlers.clipboard.copyText;

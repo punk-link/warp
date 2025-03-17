@@ -25,6 +25,10 @@
         @apply bg-primary text-gray-50 hover:bg-primary/80 focus:bg-primary/80 active:bg-primary/80 disabled:bg-primary/40;
     }
 
+    .btn.btn-outline-primary {
+        @apply text-primary hover:text-primary/80 focus:text-primary/80 active:text-primary/80 disabled:text-primary/80;
+    }
+
     .floating-label {
         @apply transition-all duration-200 ease-in-out;
     }
@@ -63,6 +67,10 @@
 
     .logo-style {
         @apply font-logo line-through lowercase text-primary;
+    }
+
+    .layout-dark .logo-style {
+        @apply font-logo line-through lowercase text-gray-200;
     }
 
     .nav-button {

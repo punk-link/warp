@@ -5,5 +5,9 @@
     FADE: 'fade',
     HIDDEN: 'hidden',
     HIGHLIGHTED: 'highlighted',
-    SHOW: 'show'
+    SHOW: 'show',
+    SUCCESS: {
+        BG: 'bg-green-100',
+        BORDER: 'border-primary'
+    }
 });
