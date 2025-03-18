@@ -29,6 +29,14 @@
         @apply text-primary hover:text-primary/80 focus:text-primary/80 active:text-primary/80 disabled:text-primary/80;
     }
 
+    .btn.btn-secondary {
+        @apply bg-secondary text-white hover:bg-secondary/80 focus:bg-secondary/80 active:bg-secondary/80 disabled:bg-secondary/40;
+    }
+
+    .btn.btn-outline-secondary {
+        @apply text-secondary hover:text-secondary/80 focus:text-secondary/80 active:text-secondary/80 disabled:text-secondary/80;
+    }
+
     .floating-label {
         @apply transition-all duration-200 ease-in-out;
     }

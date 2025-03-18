@@ -21,8 +21,7 @@ const handlers = {
 
             const hide = () => {
                 uiState.toggleClasses(modalElement, {
-                    remove: [CSS_CLASSES.SHOW],
-                    add: [CSS_CLASSES.FADE]
+                    add: [CSS_CLASSES.HIDDEN]
                 });
 
                 isShown = false;
@@ -30,8 +29,7 @@ const handlers = {
 
             const show = () => {
                 uiState.toggleClasses(modalElement, {
-                    remove: [CSS_CLASSES.FADE],
-                    add: [CSS_CLASSES.SHOW]
+                    remove: [CSS_CLASSES.HIDDEN]
                 });
 
                 isShown = true;

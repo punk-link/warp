@@ -7,7 +7,8 @@
     // API routes
     ENTRY: '/entry',
     API: {
-        ENTRIES: '/api/entries'
+        ENTRIES: '/api/entries',
+        REPORT: (entryId) => `/api/entries/${entryId}/report`
     }
 });
 
