@@ -19,7 +19,7 @@ const handlers = {
         };
 
         const handleDelete = async (entryId) => {
-            const response = await http.delete(`${ROUTES.API.ENTRIES}/${entryId}`);
+            const response = await http.delete(ROUTES.API.ENTRIES.DELETE(entryId));
 
             if (response.ok)
                 return redirectTo(ROUTES.DELETED);

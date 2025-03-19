@@ -7,14 +7,10 @@ import { addDropAreaEvents, pasteImages } from '/js/components/gallery/upload.js
 import { repositionBackgroundImage } from '/js/components/background/image-positioner.js';
 
 
-const initPaste = () => {
-    const handlePaste = async e => {
-        if (e.ctrlKey && e.key.toLowerCase() === 'v') {
-            await pasteImages();
-        }
-    };
-
-    document.body.addEventListener('keydown', handlePaste);
+const initPaste = (entryId) => {
+    document.addEventListener('paste', async (e) => {
+        await pasteImages(entryId, e);
+    });
 };
 
 
@@ -33,7 +29,7 @@ export const addIndexEvents = (entryId, currentEditMode) => {
     
     const { dropArea, fileInput, uploadButton } = elements.getImageElements();
     addDropAreaEvents(entryId, dropArea, fileInput, uploadButton);
-    initPaste();
+    initPaste(entryId);
 };
 
 

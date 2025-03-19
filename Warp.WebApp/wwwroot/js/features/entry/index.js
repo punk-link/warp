@@ -31,7 +31,7 @@ const handlers = {
 
     modal: (() => {
         const handleReport = async (entryId) => {
-            const response = await http.post(ROUTES.API.REPORT(entryId));
+            const response = await http.post(ROUTES.API.ENTRIES.REPORT(entryId));
             if (response.status === 204)
                 redirectTo(ROUTES.ROOT);
         };

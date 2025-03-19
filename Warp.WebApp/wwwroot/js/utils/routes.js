@@ -7,8 +7,16 @@
     // API routes
     ENTRY: '/entry',
     API: {
-        ENTRIES: '/api/entries',
-        REPORT: (entryId) => `/api/entries/${entryId}/report`
+        ENTRIES: {
+            ROOT: '/api/entries',
+            DELETE: (entryId) => `/api/entries/${entryId}`,
+            REPORT: (entryId) => `/api/entries/${entryId}/report`
+        },
+
+        IMAGES: {
+            ADD: (entryId) => `/api/images/entry-id/${entryId}`,
+            DELETE: (entryId, imageId) => `/api/images/entry-id/${entryId}/image-id/${imageId}`
+        }
     }
 });
 
