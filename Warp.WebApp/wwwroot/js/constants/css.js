@@ -1,7 +1,8 @@
 ﻿export const CSS_CLASSES = Object.freeze({
     ACTIVE: 'active',
-    ANIMATE: 'catchy-fade-in',
-    ANIMATE_SLOW: 'slow-fade-in',
+    ANIMATE: 'animate-catchy-fade-in',
+    ANIMATE_SLOW: 'animate-slow-fade-in',
+    ANIMATE_SLOW_OUT: 'animate-slow-fade-out',
     FADE: 'fade',
     HIDDEN: 'hidden',
     HIGHLIGHTED: 'highlighted',

@@ -43,7 +43,7 @@ const handlers = {
                     uiState.toggleClasses(created, { add: [CSS_CLASSES.HIDDEN] });
                     uiState.toggleClasses(copied, {
                         remove: [CSS_CLASSES.HIDDEN],
-                        add: [CSS_CLASSES.ANIMATE]
+                        add: [CSS_CLASSES.ANIMATE, CSS_CLASSES.ANIMATE_SLOW_OUT]
                     });
 
                     setTimeout(() => {
@@ -51,8 +51,11 @@ const handlers = {
                             add: [CSS_CLASSES.HIDDEN],
                             remove: [CSS_CLASSES.ANIMATE]
                         });
-                        uiState.toggleClasses(created, { remove: [CSS_CLASSES.HIDDEN] });
-                    }, 3000);
+                        uiState.toggleClasses(created, { 
+                            remove: [CSS_CLASSES.HIDDEN], 
+                            add: [CSS_CLASSES.ANIMATE_SLOW]
+                        });
+                    }, 4000);
                 }
             }
         };
