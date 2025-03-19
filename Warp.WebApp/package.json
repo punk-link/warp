@@ -4,27 +4,20 @@
     "last 2 versions",
     "not dead"
   ],
-  "dependencies": {
-    "bootstrap": "5.3.3"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@tailwindcss/postcss": "4.0.7",
     "autoprefixer": "10.4.20",
     "eslint": "9.21.0",
     "postcss": "8.5.3",
     "postcss-cli": "11.0.0",
-    "sass": "1.85.0",
     "tailwindcss": "4.0.7"
   },
   "license": "MIT",
   "scripts": {
     "build": "yarn build:styles",
-    "build:styles": "yarn build:tailwind && yarn build:main",
-    "build:main": "yarn build:main:sass && yarn build:main:process && yarn clean:temp",
-    "build:main:sass": "sass ./Styles/main.scss ./Styles/temp-main.css",
-    "build:main:process": "postcss ./Styles/temp-main.css -o ./wwwroot/css/main.min.css --env production",
-    "build:tailwind": "postcss ./Styles/tailwind.css -o ./wwwroot/css/tailwind.min.css --env production",
-    "clean:temp": "node ./BuildScripts/clean-temp-main-css.js"
+    "build:styles": "yarn build:tailwind",
+    "build:tailwind": "postcss ./Styles/tailwind.css -o ./wwwroot/css/tailwind.min.css --env production"
   },
   "type": "module"
 }
