@@ -1,4 +1,5 @@
 ﻿import { uiState } from '/js/utils/ui-core.js';
+import { ROUTES } from '/js/utils/routes.js'; 
 import { http } from '/js/services/http/client.js';
 import { CSS_CLASSES } from '/js/constants/css.js';
 import { ICONS } from '/js/utils/icons.js';
@@ -13,7 +14,7 @@ const handlers = {
             const container = e.target.closest('.image-container');
             const { imageId } = elements.getImageContainer(container);
 
-            const response = await http.delete(`/api/images/entry-id/${entryId}/image-id/${imageId}`);
+            const response = await http.delete(ROUTES.API.IMAGES.DELETE(entryId, imageId));
             
             if (response.ok) 
                 container.remove();
@@ -31,14 +32,23 @@ const handlers = {
             });
         },
 
+        isValidImageFile: (file) => {
+            return file && file.type && file.type.startsWith('image/');
+        },
+
         upload: async (entryId, files) => {
             const uploadContainer = elements.getUploadContainer();
+
+            const validImageFiles = files.filter(handlers.image.isValidImageFile);
+            if (validImageFiles.length === 0) 
+                return;
+
             handlers.image.toggleUploadState(uploadContainer, true);
 
             const formData = new FormData();
-            files.forEach(file => formData.append('Images', file, file.name));
+            validImageFiles.forEach(file => formData.append('Images', file, file.name));
 
-            const response = await http.post(`/api/images/entry-id/${entryId}`, formData);
+            const response = await http.post(ROUTES.API.IMAGES.ADD(entryId), formData);
 
             if (!response.ok) {
                 handlers.image.toggleUploadState(uploadContainer, false);
@@ -47,7 +57,7 @@ const handlers = {
             }
 
             const results = await response.json();
-            preview.render(entryId, files, results, handlers.image.delete);
+            preview.render(entryId, validImageFiles, results, handlers.image.delete);
             
             handlers.image.toggleUploadState(uploadContainer, false);
             dispatchEvent.uploadFinished();
@@ -100,25 +110,62 @@ const handlers = {
     },
 
     clipboard: {
-        init: async (entryId) => {
-            try {
-                await navigator.permissions.query({ name: 'clipboard-read' });
-                const items = await navigator.clipboard.read();
-                
-                const files = await Promise.all(
-                    items.flatMap(async item => {
-                        const imageTypes = item.types
-                            .filter(type => type.startsWith('image/'));
-                        
-                        return Promise.all(
-                            imageTypes.map(type => item.getType(type))
-                        );
-                    })
-                );
+        handlePasteEvent: async (entryId, pasteEvent) => {
+            if (pasteEvent?.clipboardData?.files.length > 0) {
+                const files = Array.from(pasteEvent.clipboardData.files);
+                await handlers.image.upload(entryId, files);
 
-                await handlers.image.upload(entryId, files.flat());
+                return true;
+            }
+
+            return false;
+        },
+
+        createFileFromBlob: async (item, type, index) => {
+            try {
+                const blob = await item.getType(type);
+                if (!handlers.image.isValidImageFile(blob)) 
+                    return null;
+
+                const extension = type.split('/')[1] || 'png';
+                const timestamp = new Date().getTime();
+                const fileName = `clipboard-image-${timestamp}-${index}.${extension}`;
+
+                return new File([blob], fileName, { type: blob.type });
             } catch (error) {
-                console.error('Paste failed:', error);
+                console.error(`Error processing clipboard item: ${error}`);
+                return null;
+            }
+        },
+
+        getImagesFromClipboard: async () => {
+            await navigator.permissions.query({ name: 'clipboard-read' });
+            const clipboardItems = await navigator.clipboard.read();
+
+            let fileCounter = 1;
+            const filePromises = [];
+
+            for (const item of clipboardItems) {
+                const imageTypes = item.types.filter(type => type.startsWith('image/'));
+
+                for (const type of imageTypes) 
+                    filePromises.push(handlers.clipboard.createFileFromBlob(item, type, fileCounter++));
+            }
+
+            const files = await Promise.all(filePromises);
+            return files.filter(Boolean);
+        },
+
+        init: async (entryId, pasteEvent) => {
+            try {
+                let isPasteEventHandled = await handlers.clipboard.handlePasteEvent(entryId, pasteEvent);
+                if (isPasteEventHandled) 
+                    return;
+
+                const files = await handlers.clipboard.getImagesFromClipboard();
+                await handlers.image.upload(entryId, files);
+            } catch (error) {
+                console.error('Paste operation failed:', error);
             }
         }
     }
