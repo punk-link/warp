@@ -11,7 +11,15 @@ export const createButton = {
         const updateButtonState = () => {
             const isAdvancedMode = advancedButton.classList.contains(CSS_CLASSES.ACTIVE);
             const activeTextarea = isAdvancedMode ? advancedTextarea : simpleTextarea;
-            uiState.setElementDisabled(createButton, !activeTextarea.value);
+
+            if (activeTextarea.value) {
+                uiState.setElementDisabled(createButton, false);
+                return;
+            }
+
+            const imageContainers = elements.getActualImageContainers();
+            const hasImages = imageContainers.length > 0;
+            uiState.setElementDisabled(createButton, !hasImages);
         };
 
         [advancedTextarea, simpleTextarea].forEach(textarea => {
@@ -22,8 +30,12 @@ export const createButton = {
             button.addEventListener('click', updateButtonState);
         });
 
-        document.addEventListener(eventNames.uploadFinished, 
-            () => uiState.setElementDisabled(createButton, false));
+        document.addEventListener(eventNames.imageDeleted, updateButtonState); 
+        
+        // Add slight delay to ensure DOM is updated after upload
+        document.addEventListener(eventNames.uploadFinished, () => {
+            setTimeout(updateButtonState, 50);
+        });
 
         updateButtonState();
     }

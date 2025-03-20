@@ -3,23 +3,13 @@ import { ROUTES } from '/js/utils/routes.js';
 import { http } from '/js/services/http/client.js';
 import { CSS_CLASSES } from '/js/constants/css.js';
 import { ICONS } from '/js/utils/icons.js';
+import { dispatchEvent } from '/js/services/events.js';
 import { elements } from './elements.js';
 import { preview } from './preview.js';
-import { dispatchEvent } from '/js/services/events.js';
 
 
 const handlers = {
     image: {
-        delete: async (e, entryId) => {
-            const container = e.target.closest('.image-container');
-            const { imageId } = elements.getImageContainer(container);
-
-            const response = await http.delete(ROUTES.API.IMAGES.DELETE(entryId, imageId));
-            
-            if (response.ok) 
-                container.remove();
-        },
-
         toggleUploadState: (element, isUploading) => {
             const { icon } = elements.getImageContainer(element);
             const [oldIconClass, newIconClass] = isUploading 
@@ -57,8 +47,8 @@ const handlers = {
             }
 
             const results = await response.json();
-            preview.render(entryId, validImageFiles, results, handlers.image.delete);
-            
+            preview.render(entryId, validImageFiles, results);
+
             handlers.image.toggleUploadState(uploadContainer, false);
             dispatchEvent.uploadFinished();
         }

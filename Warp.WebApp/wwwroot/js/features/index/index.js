@@ -1,10 +1,11 @@
+import { EDIT_MODE } from '/js/constants/enums.js';
+import { addDropAreaEvents, pasteImages } from '/js/components/gallery/upload.js';
+import { repositionBackgroundImage } from '/js/components/background/image-positioner.js';
+import { preview } from '/js/components/gallery/preview.js'; 
 import { elements } from './elements.js';
 import { createButton } from './create-button.js';
 import { editMode } from './edit-mode.js';
 import { adjustTextareaSizes } from './textarea.js';
-import { EDIT_MODE } from '/js/constants/enums.js';
-import { addDropAreaEvents, pasteImages } from '/js/components/gallery/upload.js';
-import { repositionBackgroundImage } from '/js/components/background/image-positioner.js';
 
 
 const initPaste = (entryId) => {
@@ -30,6 +31,8 @@ export const addIndexEvents = (entryId, currentEditMode) => {
     const { dropArea, fileInput, uploadButton } = elements.getImageElements();
     addDropAreaEvents(entryId, dropArea, fileInput, uploadButton);
     initPaste(entryId);
+
+    preview.initPreloadedImages(entryId);
 };
 
 

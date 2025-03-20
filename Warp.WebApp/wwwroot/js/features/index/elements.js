@@ -18,5 +18,10 @@ export const elements = {
         editModeInput: dom.get('edit-mode-state')
     }),
     getRoamingImage: () => dom.get('roaming-image'),
-    getTextareas: () => dom.queryAll('textarea')
+    getTextareas: () => dom.queryAll('textarea'),
+    getGallery: () => dom.query('.gallery'),
+    getActualImageContainers: () => {
+        const gallery = elements.getGallery();
+        return gallery ? gallery.querySelectorAll('.image-container:not(#empty-image-container)') : [];
+    }
 };
