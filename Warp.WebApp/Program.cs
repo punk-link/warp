@@ -24,6 +24,11 @@ using Warp.WebApp.Telemetry.Logging;
 
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Host.UseDefaultServiceProvider((context, options) =>
+{
+    options.ValidateScopes = true;
+    options.ValidateOnBuild = true;
+});
 
 var startupLogger = builder.GetStartUpLogger();
 
@@ -48,7 +53,7 @@ try
     builder.Services.AddControllers()
         .AddControllersAsServices();
     builder.Services.AddHealthChecks()
-        .AddCheck<ControllerResolveHealthCheck>(nameof(ControllerResolveHealthCheck))
+        //.AddCheck<ControllerResolveHealthCheck>(nameof(ControllerResolveHealthCheck))
         .AddCheck<RedisHealthCheck>(nameof(RedisHealthCheck));
 
     builder.Services.AddResponseCompression(options =>
