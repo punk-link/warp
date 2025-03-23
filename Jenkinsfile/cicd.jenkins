@@ -1,0 +1,23 @@
+PNKL_VAULT_TOKEN = 'string'
+def PNKL_VAULT_TOKEN
+
+node {
+    def app
+
+    stage('Clone repository') {
+        /* Let's make sure we have the repository cloned to our workspace */
+
+        checkout scm
+    }
+
+stage('Build image') {
+                echo 'Starting to build docker image '
+                script {
+                    PNKL_VAULT_TOKEN  = "${PNKL_VAULT_TOKEN }"
+                    def customImage = docker.build ("registry.punk.link/warp-webapp:${env.BUILD_ID}-DEV", "--build-arg PNKL_VAULT_TOKEN=${PNKL_VAULT_TOKEN} ." )
+                    docker.withRegistry('https://registry.punk.link', 'docker_auth'){ 
+                    customImage.push()} 
+        }
+    }
+}
+
