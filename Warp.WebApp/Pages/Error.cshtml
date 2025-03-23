@@ -13,45 +13,81 @@
     <meta name="robots" content="noindex, noarchive">
 }
 
-<div class="row align-items-baseline">
-    <div class="col-12 text-secondary">
-        <h1 class="logo">
-            <a class="text-lighter" asp-area="" asp-page="/Index">
-                @SharedLocalizer["Logo"]
-            </a>
-        </h1>
+@section Scripts {
+    <script type="module" defer>
+        import { addErrorEvents } from '/js/features/error/index.js';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            addErrorEvents();
+        });
+    </script>
+}
+
+<div class="min-h-screen">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row items-baseline px-3">
+        <div class="w-full sm:w-1/2 flex justify-start md:justify-center">
+            <partial name="Shared/Logo" />
+        </div>
     </div>
+
+    <!-- Main Content -->
+    <section class="px-3 my-5">
+        <div class="flex flex-col items-center justify-around min-h-[75vh]">
+            <div class="w-full md:w-1/2 mb-5">
+                
+                <!-- Error Content -->
+                <div class="flex flex-col">
+                    <div class="text-white text-9xl font-sans-serif">
+                        @Model.Status
+                    </div>
+
+                    <div class="mb-8">
+                        <p class="mb-10 text-white text-xl">@Model.Detail</p>
+
+                        @if (Model.ShowRequestId)
+                        {
+                            <div class="text-base text-gray-700 text-sm relative">
+                                <span class="font-semibold">@Localizer["Request ID"]:</span>
+                                <code id="request-id-code"
+                                      class="bg-gray-100 p-1 rounded border border-transparent hover:bg-gray-50 hover:border-secondary cursor-pointer transition-all duration-200"
+                                      title="@Localizer["Click to copy"]">
+                                    @Model.RequestId
+                                </code>
+                                <span id="copy-tooltip"
+                                      class="hidden absolute -top-8 left-1/2 transform -translate-x-1/2 text-xs font-semibold text-white bg-secondary px-2 py-1 rounded shadow-md">
+                                    @Localizer["Copied!"]
+                                </span>
+                            </div>
+                        }
+                    </div>
+
+                    @if (Model.ShowErrors && Model.Errors.Any())
+                    {
+                        <div class="mt-4">
+                            <h3 class="text-xl text-gray-700 font-semibold">Errors:</h3>
+                            @foreach (var error in Model.Errors)
+                            {
+                                <div class="mb-2 text-base text-gray-700">
+                                    <span class="font-semibold">@error.Code.</span> @error.Message
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Action Button -->
+            <div class="flex justify-center items-center w-full md:w-1/2 pb-3 sticky bottom-0 bg-transparent">
+                <div>
+                    <a asp-page="/Index" class="btn btn-primary">
+                        <i class="icofont-simple-left text-white/50"></i>
+                        @SharedLocalizer["GoMainButton"]
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
 </div>
 
-<section class="mb-5">
-    <div>
-        <a class="btn btn-link align-items-center ps-0 text-white" asp-area="" asp-page="/Index">
-            <i class="icofont-simple-left"></i>@SharedLocalizer["CreateButton"]
-        </a>
-    </div>
-    <div class="error-code text-white">
-        @Model.Status
-    </div>
-    <div class="error-message text-body">
-        <p class="text-white mt-0 mb-5">@Model.Detail</p>
-        <div class="request-id">
-            @if (Model.ShowRequestId)
-            {
-                <strong>@Localizer["Request ID"]:</strong>
-                <code>@Model.RequestId</code>
-            }
-        </div>
-        <div class="error-list">
-            @if (Model.ShowErrors)
-            {
-                <h3 class="mb-3">Errors:</h3>
-                @foreach (var error in Model.Errors)
-                {
-                    <p class="mb-2">
-                        <strong>@error.Code.</strong> @error.Message
-                    </p>
-                }
-            }
-        </div>
-    </div>
-</section>
+<partial name="Shared/Footer" />

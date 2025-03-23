@@ -30,11 +30,21 @@ Also you might need to override DB settings to run locally. Set up the _Redis_ s
 
 ## Styles
 
-The project uses Sass to build its styles. To compile the styles:
-1. Install Sass `npm install --global sass`
-2. Install Yarn `npm install --global yarn`
-3. Go to the root project folder and update project dependencies `yarn upgrade`
-4. Go to _Warp.WebApp/Styles_ folder and execute the following command `sass --style compressed main.scss ../wwwroot/css/main.min.css`
+The project uses a modern build process for its styles, leveraging both Sass and Tailwind CSS. All style assets are generated via a series of npm scripts defined in the _package.json_. Follow these steps to build the styles:
+1. **Install Node Modules**
+
+   Make sure you have Node.js and Yarn installed. Then, from the root **project** folder, run:
+
+   ```bash
+   yarn install
+   ```
+2. **Build Styles**
+
+   To compile all styles (both Sass and Tailwind), simply run:
+
+   ```bash
+   yarn build
+   ```
 
 
 ## Project Icons

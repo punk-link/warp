@@ -118,24 +118,24 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AdvancedModeButton" xml:space="preserve">
-    <value />
+    <value>Advanced</value>
   </data>
   <data name="CreateButton" xml:space="preserve">
-    <value />
+    <value>Create</value>
   </data>
   <data name="ExpirationPeriodLabel" xml:space="preserve">
-    <value />
+    <value>Expires in</value>
   </data>
   <data name="MetaDescription" xml:space="preserve">
     <value>Warplyn allows you to share short-lived massages and media with your friends, family and colleagues.</value>
   </data>
   <data name="TextModeButton" xml:space="preserve">
-    <value />
+    <value>Text</value>
   </data>
   <data name="TextAreaLabel" xml:space="preserve">
-    <value />
+    <value>Type or paste your text here</value>
   </data>
   <data name="ImageAreaLabel" xml:space="preserve">
-    <value />
+    <value>Drag and drop or browse for images</value>
   </data>
 </root>

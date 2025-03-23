@@ -17,7 +17,7 @@ public class EntryValidator : AbstractValidator<Entry>
                     .WithMessage(localizer["EntryBodyEmptyErrorMessage"]);
                 break;
             // Business rule: Entry content must not be empty if the edit mode is Text.
-            case EditMode.Text:
+            case EditMode.Simple:
                 RuleFor(x => x.Content).NotEmpty()
                     .WithErrorCode(LoggingConstants.WarpContentEmpty.ToString())
                     .WithMessage(localizer["EntryBodyEmptyErrorMessage"]);

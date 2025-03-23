@@ -3,6 +3,6 @@
 public enum EditMode
 {
     Unknown = 0,
-    Text = 1,
+    Simple = 1,
     Advanced = 2
 }

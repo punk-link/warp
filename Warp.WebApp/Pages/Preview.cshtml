@@ -15,7 +15,7 @@
 @section Scripts {
     <script type="module" src="~/js/components/modal.js" defer></script>
     <script type="module" defer>
-        import { addPreviewEvents } from '/js/preview.js';
+        import { addPreviewEvents } from '/js/features/preview/index.js';
 
         document.addEventListener('DOMContentLoaded', () => {
             addPreviewEvents('@Model.Id', '@Model.ExpiresIn');
@@ -23,55 +23,67 @@
     </script>
 }
 
-<div class="min-vh-100">
-    <div class="row align-items-baseline px-3">
-        <h1 class="logo">
-            <a class="text-primary" asp-area="" asp-page="./Index">
-                @SharedLocalizer["Logo"]
-            </a>
-        </h1>
+<div class="min-h-screen">
+    <div class="flex flex-col sm:flex-row items-baseline px-3">
+        <div class="w-full sm:w-1/2 flex justify-start md:justify-center">
+            <partial name="Shared/Logo" />
+        </div>
+        <div class="service-message-container w-full sm:w-1/2 flex justify-end md:justify-center">
+            <span id="entry-created-message" class="text-secondary font-semibold text-base">
+                @Localizer["entry successfully created"]
+            </span>
+            <span id="link-copied-message" class="text-secondary font-semibold text-base hidden">
+                @Localizer["the link was copied successfully"]
+            </span>
+        </div>
     </div>
 
-    <section class="min-vh-75 px-3 mb-5 d-flex flex-column justify-content-between">
-        <div>
-            <div class="row">
-                <div class="row align-items-end">
-                    <div class="col-6">
-                    </div>
-                    <div class="col-6 d-flex flex-column">
-                        <div class="text-right countdown">&nbsp;</div>
-                        <div class="text-right text-light fs-4">@Localizer["the entry expires in"]</div>
+    <section class="px-3 my-5">
+        <div class="flex flex-col items-center justify-around min-h-[75vh]">
+            <!-- Countdown -->
+            <div class="w-full md:w-1/2 flex justify-end mb-5">
+                <div class="text-right">
+                    <div class="countdown text-gray-700 text-3xl font-sans-serif font-semibold">&nbsp;</div>
+                    <div class="text-gray-400 text-xs">
+                        @Localizer["the entry expires in"]
                     </div>
                 </div>
             </div>
-            <article class="bg-light-secondary p-3 my-5">
+
+            <!-- Content -->
+            <article class="w-full md:w-1/2 bg-yellow-50 p-3 rounded-sm mb-10">
                 @if (Model.ImageContainers.Count > 0)
                 {
-                <div class="d-flex flex-row flex-wrap upload-gallery">
-                    @foreach (var imageContainer in Model.ImageContainers)
-                    {
-                        <partial name="Shared/Components/ReadOnlyImageContainer" model="imageContainer" />
-                    }
-                </div>
+                    <div class="gallery mb-5">
+                        @foreach (var imageContainer in Model.ImageContainers)
+                        {
+                            <partial name="Shared/Components/ReadOnlyImageContainer" model="imageContainer" />
+                        }
+                    </div>
                 }
-                @Html.Raw(Model.TextContent)
+                <div class="font-sans-serif text-base">
+                    @Html.Raw(Model.TextContent)
+                </div>
             </article>
-        </div>
-        <div class="d-flex justify-content-between align-items-center col-12 offset-md-3 col-md-6 sticky-bottom bg-transparent pb-3">
-            <div class="bg-white border-radius-sm">
-                <a id="delete-button" class="btn btn-link" title="@SharedLocalizer["DeleteButton"]">
-                        <i class="icofont-bin text-lighter"></i>
-                    </a>
-            </div>
-            <div class="bg-white border-radius-sm">
-                <a id="edit-button" class="btn btn-link d-none" title="@Localizer["CopyButton"]">
-                    <i class="icofont-loop text-lighter"></i>
-                </a>
-            </div>
-            <div>
-                <a id="copy-link-button" class="btn btn-primary align-items-center">
-                    <i class="icofont-link text-lighter"></i>@SharedLocalizer["CopyLinkButton"]
-                </a>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-between items-center w-full md:w-1/2 pb-3 sticky bottom-0 bg-transparent">
+                <div class="bg-white rounded-sm">
+                    <button id="delete-button" class="btn btn-outline-gray" title="@SharedLocalizer["DeleteButton"]">
+                        <i class="icofont-bin text-xl"></i>
+                    </button>
+                </div>
+                <div class="bg-white rounded-sm">
+                    <button id="edit-button" class="btn btn-outline-gray hidden" title="@Localizer["CloneAndEditButton"]">
+                        <i class="icofont-loop text-xl"></i>
+                    </button>
+                </div>
+                <div class="bg-white rounded-sm">
+                    <button id="copy-link-button" class="btn btn-primary" title="@SharedLocalizer["CopyLinkButton"]">
+                        <i class="icofont-link text-white/50"></i>
+                        @SharedLocalizer["CopyLinkButton"]
+                    </button>
+                </div>
             </div>
         </div>
     </section>

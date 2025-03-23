@@ -1,68 +1,101 @@
- class Countdown {
-    constructor(countdownElement, targetDate) {
-        this.countdownElement = countdownElement;
-        this.targetDate = targetDate;
+import { dom, uiState } from '/js/utils/ui-core.js';
 
-        this.#setCountdown();
-    }
+const EMPTY_COUNTDOWN = '<span class="text-gray-400">00:00:00<span>';
+const MILLISECONDS = Object.freeze({
+    SECOND: 1000,
+    MINUTE: 1000 * 60,
+    HOUR: 1000 * 60 * 60
+});
 
+const UPDATE_INTERVAL = 1000;
 
-    #getValuableIndex(timeString) {
-        for (let i = 0; i < timeString.length; i++) {
-            if (timeString[i] !== '0' && timeString[i] !== ':') {
-                return i;
-            }
-        }
-
-        return 0;
-    }
+const elements = {
+    getCountdown: () => dom.query('.countdown')
+};
 
 
-    #buildDisplayDigits(hours, minutes, seconds) {
-        const emptyCountdown = '<span class="text-lighter">00:00:00<span>';
-        
-        if (hours <= 0 && minutes <= 0 && seconds <= 0) 
-            return emptyCountdown;
+const handlers = {
+    countdown: (() => {
+        const formatTimeSection = timeSection => 
+            timeSection.toString().padStart(2, '0');
 
-        let timeString = `${this.#pad(hours)}:${this.#pad(minutes)}:${this.#pad(seconds)}`;
-        let valuableIndex = this.#getValuableIndex(timeString);
-        if (valuableIndex === 0) 
-            return emptyCountdown;
+        const findFirstSignificantDigitIndex = timeString => {
+            const significantIndex = timeString
+                .split('')
+                .findIndex(char => char !== '0' && char !== ':');
 
-        let valuableText = timeString.substring(valuableIndex);
-        valuableText = valuableText.replace(/:/g, '<span class="text-secondary">:</span>');
-
-        return `<span class="text-lighter">${timeString.substring(0, valuableIndex)}</span>${valuableText}`;
-    }
-
-
-    #pad(timeSection) {
-        return timeSection.toString().padStart(2, '0')
-    }
-
-
-    #setCountdown() {
-        let updateCountdown = () => {
-            let currentDate = new Date().getTime();
-            let remainingTime = this.targetDate - currentDate;
-
-            if (remainingTime <= 0) {
-                this.countdownElement.innerHTML = this.#buildDisplayDigits(0, 0, 0);
-                clearInterval(countdownInterval);
-
-                location.reload();
-            }
-
-            let seconds = Math.floor((remainingTime / 1000) % 60);
-            let minutes = Math.floor((remainingTime / 1000 / 60) % 60);
-            let hours = Math.floor((remainingTime / (1000 * 60 * 60)) % 24);
-
-            this.countdownElement.innerHTML = this.#buildDisplayDigits(hours, minutes, seconds);
+            return significantIndex === -1 ? 0 : significantIndex;
         };
 
-        let countdownInterval = setInterval(updateCountdown, 1000);
-    }
-}
+        const calculateTimeSegments = remainingTime => ({
+            hours: Math.floor((remainingTime / MILLISECONDS.HOUR) % 24),
+            minutes: Math.floor((remainingTime / MILLISECONDS.MINUTE) % 60),
+            seconds: Math.floor((remainingTime / MILLISECONDS.SECOND) % 60)
+        });
+
+        const hasTimeRemaining = ({ hours, minutes, seconds }) => 
+            hours > 0 || minutes > 0 || seconds > 0;
+
+        const formatCountdown = (hours, minutes, seconds) => {
+            if (!hasTimeRemaining({ hours, minutes, seconds })) 
+                return EMPTY_COUNTDOWN;
+
+            const timeString = [hours, minutes, seconds]
+                .map(formatTimeSection)
+                .join(':');
+
+            const significantIndex = findFirstSignificantDigitIndex(timeString);
+            if (significantIndex === 0) 
+                return EMPTY_COUNTDOWN;
+
+            const insignificantPart = timeString.substring(0, significantIndex);
+            const significantPart = timeString
+                .substring(significantIndex)
+                .replace(/:/g, '<span class="text-secondary">:</span>');
+
+            return `<span class="text-gray-400">${insignificantPart}</span>${significantPart}`;
+        };
+
+        const updateDisplay = (countdownElement, targetDate, interval) => {
+            const currentTime = new Date().getTime();
+            const remainingTime = targetDate - currentTime;
+
+            if (remainingTime <= 0) {
+                uiState.setElementHtml(countdownElement, EMPTY_COUNTDOWN);
+                clearInterval(interval);
+                location.reload();
+
+                return;
+            }
+
+            const timeSegments = calculateTimeSegments(remainingTime);
+            const formattedDisplay = formatCountdown(
+                timeSegments.hours,
+                timeSegments.minutes,
+                timeSegments.seconds
+            );
+
+            uiState.setElementHtml(countdownElement, formattedDisplay);
+        };
+
+        return {
+            init: (targetDate) => {
+                const countdownElement = elements.getCountdown();
+                if (!countdownElement) 
+                    return;
+
+                const interval = setInterval(
+                    () => updateDisplay(countdownElement, targetDate, interval), 
+                    UPDATE_INTERVAL
+                );
+
+                updateDisplay(countdownElement, targetDate, interval);
+            }
+        };
+    })()
+};
 
 
-export default Countdown;
+export const initializeCountdown = targetDate => {
+    handlers.countdown.init(targetDate);
+};

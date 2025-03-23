@@ -130,6 +130,6 @@
     <value>the entry expires in</value>
   </data>
   <data name="You are about to report this content. Use the feature in case of inappropriate content only. This action restricts access to the content for all viewers. Are you sure?" xml:space="preserve">
-    <value>You are about to report this content. Use the feature in case of inappropriate content only. This action restricts access to the content for all viewers. Are you sure?</value>
+    <value>You are about to report this content. Please use this feature only for inappropriate material. Reporting will restrict access to this content for all viewers. Do you want to proceed?</value>
   </data>
 </root>
