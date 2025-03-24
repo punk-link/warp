@@ -11,6 +11,7 @@ public class ControllerResolveHealthCheck : IHealthCheck
     }
 
 
+    // TODO: Remove if your issue number is bigger than 175
     public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
     {
         if (_areControllersResolved)

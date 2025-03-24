@@ -22,7 +22,7 @@ public class EntryServiceTests
     [Fact]
     public async Task Add_ValidationSuccess()
     {
-        var entryRequest = new EntryRequest { EditMode = Models.Entries.Enums.EditMode.Text, TextContent = "Text" };
+        var entryRequest = new EntryRequest { EditMode = Models.Entries.Enums.EditMode.Simple, TextContent = "Text" };
 
         var substituteLocalizer = Substitute.For<IStringLocalizer<ServerResources>>();
         substituteLocalizer["EntryBodyEmptyErrorMessage"]
@@ -39,7 +39,7 @@ public class EntryServiceTests
     [Fact]
     public async Task Add_ValidationFailure()
     {
-        var entryRequest = new EntryRequest { EditMode = Models.Entries.Enums.EditMode.Text, TextContent = string.Empty };
+        var entryRequest = new EntryRequest { EditMode = Models.Entries.Enums.EditMode.Simple, TextContent = string.Empty };
 
         var substituteLocalizer = Substitute.For<IStringLocalizer<ServerResources>>();
         substituteLocalizer["EntryBodyEmptyErrorMessage"]

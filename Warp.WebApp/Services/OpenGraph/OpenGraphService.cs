@@ -1,5 +1,7 @@
 ﻿using Microsoft.Extensions.Localization;
+using System.Globalization;
 using System.Net;
+using System.Text;
 using System.Text.RegularExpressions;
 using Warp.WebApp.Models.Entries;
 
@@ -13,6 +15,12 @@ public partial class OpenGraphService : IOpenGraphService
     }
 
 
+    /// <summary>
+    /// Builds an OpenGraph description from the provided description source and preview image URL.
+    /// </summary>
+    /// <param name="descriptionSource"></param>
+    /// <param name="previewImageUrl"></param>
+    /// <returns></returns>
     public EntryOpenGraphDescription BuildDescription(string descriptionSource, Uri? previewImageUrl)
     {
         var description = GetDescription(descriptionSource);
@@ -20,43 +28,106 @@ public partial class OpenGraphService : IOpenGraphService
     }
 
 
-    public EntryOpenGraphDescription GetDefaultDescription()
-    {
-        var description = GetDescription(string.Empty);
-        return new EntryOpenGraphDescription(Title, description, _defaultImageUrl);
-    }
+    /// <summary>
+    /// Returns the default OpenGraph description for the application.
+    /// </summary>
+    /// <returns></returns>
+    public EntryOpenGraphDescription GetDefaultDescription() 
+        => new(Title, _localizer["DefaultOpenGraphDescriptionText"], _defaultImageUrl);
 
 
     private string GetDescription(string description)
     {
-        const int maxDescriptionLength = 200;
-
         if (string.IsNullOrWhiteSpace(description))
             return _localizer["DefaultOpenGraphDescriptionText"];
 
-        var decodedDescription = WebUtility.HtmlDecode(description);
-        var descriptionWithoutTags = HtmlTagsExpression().Replace(maxDescriptionLength <= decodedDescription.Length
-            ? decodedDescription[..maxDescriptionLength]
-            : decodedDescription, string.Empty);
+        var processedText = ProcessText(description);
+        if (string.IsNullOrWhiteSpace(processedText))
+            return _localizer["DefaultOpenGraphDescriptionText"];
 
-        var trimmedDescription = descriptionWithoutTags.Trim();
-        if (trimmedDescription.Length < maxDescriptionLength)
-            return trimmedDescription;
+        return TrimDescription(processedText);
+    }
 
-        var doubleTrimmedDescription = trimmedDescription[..maxDescriptionLength]
-            .TrimEnd();
 
-        var dotIndex = doubleTrimmedDescription.LastIndexOf('.');
-        if (dotIndex != -1)
-            return doubleTrimmedDescription[..(dotIndex + 1)];
+    private static string ProcessText(string text)
+    {
+        var textWithoutTags = HtmlTagsExpression().Replace(text, " ");
+        var decodedText = WebUtility.HtmlDecode(textWithoutTags);
+        
+        return NormalizeWhitespace(decodedText);
+    }
 
-        var spaceIndex = doubleTrimmedDescription.LastIndexOf(' ');
-        var descriptionWithoutLastWord = doubleTrimmedDescription[..spaceIndex];
-        if (descriptionWithoutLastWord.Length < maxDescriptionLength - 3)
-            return descriptionWithoutLastWord + "...";
 
-        spaceIndex = descriptionWithoutLastWord.LastIndexOf(' ');
-        return descriptionWithoutLastWord[..spaceIndex] + "...";
+    private static string NormalizeWhitespace(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+            return string.Empty;
+        
+        var sb = new StringBuilder(text.Length);
+        
+        foreach (var c in text)
+        {
+            if (ShouldReplaceWithSpace(c))
+                sb.Append(' ');
+            else
+                sb.Append(c);
+        }
+        
+        var normalized = ExtraSpaces().Replace(sb.ToString().Trim(), " ");
+        // Fix spaces before punctuation
+        var result = SpacesBeforePunctuation().Replace(normalized, "$1");
+        
+        return result;
+
+
+        static bool ShouldReplaceWithSpace(char c)
+        {
+            var category = CharUnicodeInfo.GetUnicodeCategory(c);
+    
+            return category == UnicodeCategory.Control || 
+                   category == UnicodeCategory.Format || 
+                   category == UnicodeCategory.LineSeparator || 
+                   category == UnicodeCategory.ParagraphSeparator ||
+                   category == UnicodeCategory.SpaceSeparator ||
+                   // Zero-width characters
+                   c == '\u200B' || c == '\u200C' || c == '\u200D' || 
+                   c == '\u2060' || c == '\uFEFF';
+        }
+    }
+
+
+    /// <summary>
+    /// Trims the description to a maximum length of 200 characters. 
+    /// If the text is longer, it tries to end at a sentence boundary or a word boundary.
+    /// Also triest to avoid cutting off words.
+    /// </summary>
+    private static string TrimDescription(string text)
+    {
+        const int maxDescriptionLength = 200;
+        
+        if (text.Length <= maxDescriptionLength)
+            return text;
+
+        var trimmed = text[..maxDescriptionLength].TrimEnd();
+        
+        var lastSentenceEnd = trimmed.LastIndexOf('.');
+        if (lastSentenceEnd != -1 && lastSentenceEnd > maxDescriptionLength * 0.7)
+            return trimmed[..(lastSentenceEnd + 1)];
+        
+        var lastSpace = trimmed.LastIndexOf(' ');
+        if (lastSpace == -1)
+            return trimmed + "...";
+            
+        var withoutLastWord = trimmed[..lastSpace];
+        
+        if (trimmed.Length - withoutLastWord.Length < 10 && withoutLastWord.Length > 50)
+        {
+            var prevSpace = withoutLastWord.LastIndexOf(' ');
+            if (prevSpace > maxDescriptionLength * 0.7)
+                return withoutLastWord[..prevSpace] + "...";
+        }
+        
+        return withoutLastWord + "...";
     }
 
 
@@ -65,7 +136,9 @@ public partial class OpenGraphService : IOpenGraphService
         if (url is null)
             return _defaultImageUrl;
 
-        // TODO: check if the url is not a relative path
+        if (!url.IsAbsoluteUri)
+            return _defaultImageUrl;
+            
         return url;
     }
 
@@ -74,8 +147,14 @@ public partial class OpenGraphService : IOpenGraphService
     private const string Title = "Warp";
 
 
-    [GeneratedRegex("<.*?>")]
+    [GeneratedRegex(@"<(?:[^""'<>]|""[^""]*""|'[^']*')*?>", RegexOptions.Compiled)]
     private static partial Regex HtmlTagsExpression();
+
+    [GeneratedRegex(@"\s+", RegexOptions.Compiled)]
+    private static partial Regex ExtraSpaces();
+    
+    [GeneratedRegex(@"\s+([.,;:!?)])", RegexOptions.Compiled)]
+    private static partial Regex SpacesBeforePunctuation();
 
 
     private readonly IStringLocalizer<ServerResources> _localizer;
