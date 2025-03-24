@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Localization;
+using System.Globalization;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -63,14 +64,35 @@ public partial class OpenGraphService : IOpenGraphService
             return string.Empty;
         
         var sb = new StringBuilder(text.Length);
+        
         foreach (var c in text)
         {
-            if (!char.IsControl(c) || c == ' ')
+            if (ShouldReplaceWithSpace(c))
+                sb.Append(' ');
+            else
                 sb.Append(c);
         }
         
-        var normalizedText = ExtraSpaces().Replace(sb.ToString().Trim(), " ");
-        return normalizedText.Trim();
+        var normalized = ExtraSpaces().Replace(sb.ToString().Trim(), " ");
+        // Fix spaces before punctuation
+        var result = SpacesBeforePunctuation().Replace(normalized, "$1");
+        
+        return result;
+
+
+        static bool ShouldReplaceWithSpace(char c)
+        {
+            var category = CharUnicodeInfo.GetUnicodeCategory(c);
+    
+            return category == UnicodeCategory.Control || 
+                   category == UnicodeCategory.Format || 
+                   category == UnicodeCategory.LineSeparator || 
+                   category == UnicodeCategory.ParagraphSeparator ||
+                   category == UnicodeCategory.SpaceSeparator ||
+                   // Zero-width characters
+                   c == '\u200B' || c == '\u200C' || c == '\u200D' || 
+                   c == '\u2060' || c == '\uFEFF';
+        }
     }
 
 
@@ -130,6 +152,9 @@ public partial class OpenGraphService : IOpenGraphService
 
     [GeneratedRegex(@"\s+", RegexOptions.Compiled)]
     private static partial Regex ExtraSpaces();
+    
+    [GeneratedRegex(@"\s+([.,;:!?)])", RegexOptions.Compiled)]
+    private static partial Regex SpacesBeforePunctuation();
 
 
     private readonly IStringLocalizer<ServerResources> _localizer;
