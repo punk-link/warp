@@ -1,4 +1,4 @@
-﻿@page 
+﻿@page
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using Microsoft.Extensions.Localization
 @using Warp.WebApp.Models.Entries.Enums
@@ -22,8 +22,8 @@
 
 @section Scripts {
     <script type="module" defer>
-        import { addIndexEvents, adjustTextareaSizes } from '/js/index.js';
-        
+        import { addIndexEvents, setupTextareas } from '/js/features/index/index.js';
+
         const initEditMode = @((int)Model.EditMode);
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -31,106 +31,84 @@
         });
 
         window.addEventListener('load', () => {
-            adjustTextareaSizes(initEditMode);
+            setupTextareas(initEditMode);
         });
     </script>
 }
 
-<div class="min-vh-100">
-    <div class="row align-items-baseline px-3">
-        <div class="col-6">
-            <h1 class="logo">
-                <a class="text-primary" asp-page="/Index">
-                    @SharedLocalizer["Logo"]
-                </a>
-            </h1>
+<div class="min-h-screen">
+    <div class="flex flex-col sm:flex-row items-baseline px-3">
+        <div class="w-full sm:w-1/2 flex justify-start md:justify-center">
+            <partial name="Shared/Logo" />
         </div>
-        <div class="col-6 d-flex justify-content-end">
-            <button id="mode-text" class="nav nav-tab">
+        <div class="w-full sm:w-1/2 flex justify-end md:justify-center">
+            <button id="simple-mode-nav-button" class="nav-button">
                 @Localizer["TextModeButton"]
             </button>
-            <button id="mode-advanced" class="nav nav-tab">
+            <button id="advanced-mode-nav-button" class="nav-button">
                 @Localizer["AdvancedModeButton"]
             </button>
         </div>
     </div>
 
     <section class="px-3 my-5">
-        <div id="text-mode">
-            <form method="post">
-                <div class="d-flex flex-column align-items-center justify-content-around min-vh-75">
-                    <div class="col-12 col-md-6 mb-5">
-                        <div class="d-flex flex-column">
-                            <textarea id="warp-text" class="order-2 bg-transparent" asp-for="TextContent" placeholder=" "></textarea>
-                            <label class="order-1 ps-0" for="warp-text">@Localizer["TextAreaLabel"]</label>
+        <form method="post">
+            <div class="flex flex-col items-center justify-around min-h-[75vh]">
+                <!-- Simple Mode Container -->
+                <div id="simple-mode-container" class="w-full">
+                    <div class="w-full md:w-1/2 mb-5 mx-auto">
+                        <div class="flex flex-col">
+                            <textarea id="simple-text-content" class="form-textarea order-2 bg-transparent" asp-for="TextContent" placeholder=" "></textarea>
+                            <label class="form-label floating-label order-1" for="simple-text-content">@Localizer["TextAreaLabel"]</label>
                         </div>
                     </div>
-                    <div class="d-flex justify-content-between col-12 col-md-6 pb-3 sticky-bottom bg-transparent">
-                        <div class="bg-white border-radius-sm">
-                            <label asp-for="SelectedExpirationPeriod">@Localizer["ExpirationPeriodLabel"]</label>
-                            <div class="input-group">
-                                <span class="input-group-text primary">
-                                    <i class="icofont-close"></i>
-                                </span>
-                                <select asp-for="SelectedExpirationPeriod" asp-items="Model.ExpirationPeriodOptions" tabindex="4"></select>
-                            </div>
-                        </div>
-                        <div>
-                            <button class="btn btn-primary create-button" tabindex="5" type="submit" disabled>
-                                @Localizer["CreateButton"]
-                            </button>
-                        </div>
-                    </div>
-                    <input type="hidden" asp-for="Id" value="@Model.Id" />
-                    <input class="edit-mode-state" type="hidden" asp-for="EditMode" value="@EditMode.Text" />
                 </div>
-            </form>
-        </div>
-        <div id="advanced-mode">
-            <form method="post">
-                <div class="d-flex flex-column align-items-center justify-content-around min-vh-75">
-                    <div class="col-12 p-2 col-md-6 mb-5 drop-area">
-                        <div class="d-flex flex-column">
-                            <div class="d-flex flex-column mb-5">
-                                <i class="icofont-align-left text-danger fs-2 mb-2"></i>
-                                <label class="ps-0" for="warp-advanced">@Localizer["TextAreaLabel"]</label>
-                                <textarea id="warp-advanced" class="bg-transparent" asp-for="TextContent" placeholder=" "></textarea>
+
+                <!-- Advanced Mode Container -->
+                <div id="advanced-mode-container" class="w-full">
+                    <div class="drop-area w-full p-2 md:w-1/2 mb-5 mx-auto">
+                        <div class="flex flex-col">
+                            <div class="flex flex-col mb-15">
+                                <i class="icofont-align-left text-secondary text-2xl mb-2"></i>
+                                <label class="form-label" for="advanced-text-content">@Localizer["TextAreaLabel"]</label>
+                                <textarea id="advanced-text-content" class="form-textarea bg-transparent" asp-for="TextContent" placeholder=" "></textarea>
                             </div>
-                            <div class="d-flex flex-column mb-5">
-                                <i class="icofont-hill-sunny text-danger fs-1 mb-2"></i>
-                                <label class="ps-0 mb-3">@Localizer["ImageAreaLabel"]</label>
-                                <div class="d-flex flex-row flex-wrap upload-gallery">
+                            <div class="flex flex-col mb-5">
+                                <i class="icofont-hill-sunny text-secondary text-2xl mb-2"></i>
+                                <label class="form-label mb-3">@Localizer["ImageAreaLabel"]</label>
+                                <div class="gallery">
                                     @foreach (var imageContainer in Model.ImageContainers)
                                     {
-                                        <partial name="Shared/Components/EditableImageContainer" model="imageContainer"/>
+                                        <partial name="Shared/Components/EditableImageContainer" model="imageContainer" />
                                     }
                                 </div>
-                                <input type="file" id="file" class="file-input d-none" multiple="multiple" accept="image/*">
+                                <input type="file" id="file" class="file-input hidden" multiple="multiple" accept="image/*">
                             </div>
                         </div>
                     </div>
-                    <div class="d-flex justify-content-between col-12 col-md-6 pb-3 sticky-bottom bg-transparent">
-                        <div class="bg-white border-radius-sm">
-                            <label asp-for="SelectedExpirationPeriod">@Localizer["ExpirationPeriodLabel"]</label>
-                            <div class="input-group">
-                                <span class="input-group-text primary">
-                                    <i class="icofont-close"></i>
-                                </span>
-                                <select asp-for="SelectedExpirationPeriod" asp-items="Model.ExpirationPeriodOptions" tabindex="4"></select>
-                            </div>
-                        </div>
-                        <div>
-                            <button class="btn btn-primary create-button" tabindex="5" type="submit" disabled>
-                                @Localizer["CreateButton"]
-                            </button>
-                        </div>
-                    </div>
-                    <input type="hidden" asp-for="Id" value="@Model.Id" />
-                    <input class="edit-mode-state" type="hidden" asp-for="EditMode" value="@EditMode.Advanced"/>
                 </div>
-            </form>
-        </div>
+
+                <!-- Shared Form Controls -->
+                <div class="flex justify-between items-center w-full md:w-1/2 pb-3 sticky bottom-0 bg-transparent">
+                    <div class="bg-white rounded-sm">
+                        <label class="form-label" asp-for="SelectedExpirationPeriod">@Localizer["ExpirationPeriodLabel"]</label>
+                        <div class="flex items-baseline">
+                            <i class="icofont-close text-primary text-base mr-2"></i>
+                            <select id="expiration-selector" class="form-select" asp-for="SelectedExpirationPeriod" asp-items="Model.ExpirationPeriodOptions"></select>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-sm">
+                        <button id="create-button" class="btn btn-primary" type="submit" disabled>
+                            @Localizer["CreateButton"]
+                        </button>
+                    </div>
+                </div>
+
+                <input type="hidden" asp-for="Id" value="@Model.Id" />
+                <input id="edit-mode-state" type="hidden" asp-for="EditMode" />
+            </div>
+        </form>
     </section>
 </div>
 
-<partial name="Shared/Footer"/>
+<partial name="Shared/Footer" />

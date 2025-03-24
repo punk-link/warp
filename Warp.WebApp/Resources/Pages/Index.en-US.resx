@@ -133,9 +133,9 @@
     <value>Text</value>
   </data>
   <data name="TextAreaLabel" xml:space="preserve">
-    <value>Type or paste text here</value>
+    <value>Type or paste your text here</value>
   </data>
   <data name="ImageAreaLabel" xml:space="preserve">
-    <value>Drag &amp; drop or browse images</value>
+    <value>Drag and drop or browse for images</value>
   </data>
 </root>

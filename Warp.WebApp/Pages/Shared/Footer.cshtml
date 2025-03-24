@@ -2,33 +2,38 @@
 @inject Microsoft.AspNetCore.Mvc.Localization.IViewLocalizer Localizer
 @inject IStringLocalizer<SharedResources> SharedLocalizer
 
-<footer class="mb-5">
-    <div id="roaming-image" class="background-image-container d-none">
-        <div>
-            <img src="~/img/warp.svg" alt="background illustration">
+<footer class="my-15">
+    <div id="roaming-image" class="fixed top-[60vh] left-[50vw] w-0 h-0 -z-10">
+        <div class="absolute h-[75vh]">
+            <img src="~/img/warp.svg" alt="background illustration" class="opacity-50" 
+                style="filter: invert(97%) sepia(3%) saturate(2195%) hue-rotate(344deg) brightness(106%) contrast(102%);"
+            >
         </div>
     </div>
-    <h1 class="logo text-lighter hs-1 mb-1">
+    <h1 class="logo-style text-gray-400 text-4xl mb-4">
         @SharedLocalizer["Logo"]
     </h1>
-    <p class="hs-2 text-body mt-1">
+    <p class="text-3xl text-gray-600 font-light mt-4">
         <strong>
-            @Localizer["snap, share and say goodbye"] <br>
+            @Localizer["snap, share and say goodbye"]
         </strong>
+        <br>
         @Localizer["share the moments instantly, knowing they'll disappear in no time"]
     </p>
-    <nav class="text-light fs-5">
-        <a asp-page="/Index">
+    <nav class="text-gray-400 text-sm mt-3">
+        <a asp-page="/Index" class="hover:underline">
             @Localizer["IndexLink"]
-        </a> |
-        <a asp-page="/Privacy">
+        </a>
+        <span class="mx-2">|</span>
+        <a asp-page="/Privacy" class="hover:underline">
             @Localizer["PrivacyLink"]
-        </a> |
-        <a href="https://github.com/punk-link/warp" target="_blank">
+        </a>
+        <span class="mx-2">|</span>
+        <a href="https://github.com/punk-link/warp" target="_blank" class="hover:underline">
             @Localizer["SourcesLink"]
         </a>
     </nav>
-    <p class="text-light fs-5">
+    <p class="text-gray-300 text-sm mt-3">
         © warplyn.com 2024&ndash;2025 | @Localizer["all rights reserved"]
     </p>
 </footer>

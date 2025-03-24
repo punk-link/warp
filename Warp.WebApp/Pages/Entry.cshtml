@@ -16,85 +16,103 @@
 @section Scripts {
     <script type="module" src="~/js/components/modal.js" defer></script>
     <script type="module" defer>
-        import { addEntryEvents } from '/js/entry.js';
+        import { addEntryEvents } from '/js/features/entry/index.js';
 
         document.addEventListener('DOMContentLoaded', () => {
             addEntryEvents('@Model.Id', '@Model.ExpiresIn');
         });
-    
+
     </script>
 }
 
-<div class="min-vh-100">
-    <div class="row align-items-baseline px-3">
-        <h1 class="logo">
-            <a class="text-primary" asp-area="" asp-page="/Index">
-                @SharedLocalizer["Logo"]
-            </a>
-        </h1>
+<div class="min-h-screen">
+    <div class="flex flex-col sm:flex-row items-baseline px-3">
+        <div class="w-full sm:w-1/2 flex justify-start md:justify-center">
+            <partial name="Shared/Logo" />
+        </div>
+        <div class="w-full sm:w-1/2 flex justify-end md:justify-center">
+            <!-- A blank div to align the logo -->
+        </div>
     </div>
 
-    <section class="min-vh-75 px-3 mb-5 d-flex flex-column justify-content-between">
-        <div>
-            <div class="row">
-                <div class="row align-items-end">
-                    <div class="col-6">
-                        <i class="icofont-eye me-2 text-light"></i>@Model.ViewCount
-                    </div>
-                    <div class="col-6 d-flex flex-column">
-                        <div class="text-right countdown">&nbsp;</div>
-                        <div class="text-right text-light fs-4">@Localizer["the entry expires in"]</div>
+    <section class="px-3 my-5">
+        <div class="flex flex-col items-center justify-around min-h-[75vh]">
+            <!-- Stats Bar: View Counter and Countdown -->
+            <div class="w-full md:w-1/2 flex justify-between items-baseline mb-5">
+                <div class="flex items-center">
+                    <i class="icofont-eye text-gray-400 mr-2"></i>
+                    <span class="text-gray-600 font-semibold">@Model.ViewCount</span>
+                </div>
+                <div class="text-right">
+                    <div class="countdown text-gray-700 text-3xl font-sans-serif font-semibold">&nbsp;</div>
+                    <div class="text-gray-400 text-xs">
+                        @Localizer["the entry expires in"]
                     </div>
                 </div>
             </div>
-            <article class="my-5">
-                @if (Model.ImageContainers.Count > 0) 
+
+            <!-- Content -->
+            <article class="w-full md:w-1/2 p-3 rounded-sm mb-10">
+                @if (Model.ImageContainers.Count > 0)
                 {
-                <div class="d-flex flex-row flex-wrap upload-gallery">
-                    @foreach (var imageContainer in Model.ImageContainers)
-                    {
-                        <partial name="Shared/Components/ReadOnlyImageContainer" model="imageContainer" />
-                    }
-                </div>
+                    <div class="gallery mb-5">
+                        @foreach (var imageContainer in Model.ImageContainers)
+                        {
+                            <partial name="Shared/Components/ReadOnlyImageContainer" model="imageContainer" />
+                        }
+                    </div>
                 }
-                @Html.Raw(Model.TextContent)
+                <div class="font-sans-serif text-base">
+                    @Html.Raw(Model.TextContent)
+                </div>
             </article>
-        </div>
-        <div class="d-flex justify-content-between align-items-center col-12 offset-md-3 col-md-6 sticky-bottom bg-transparent pb-3">
-            <div class="bg-white border-radius-sm">
-                <a class="btn btn-link" data-toggle="modal" data-target="#report-modal" title="@Localizer["ReportButton"]">
-                    <i class="icofont-exclamation-tringle text-danger"></i>
-                </a>
-            </div>
-            <div>
-                <button id="page-close-button" class="btn btn-lighter">@Localizer["CloseButton"]</button>
-            </div>
-            <div class="bg-white border-radius-sm">
-                <a id="copy-url-button" class="btn btn-link" title="@SharedLocalizer["CopyLinkButton"]">
-                    <i class="icofont-link text-lighter"></i>
-                </a>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-between items-center w-full md:w-1/2 pb-3 sticky bottom-0 bg-transparent">
+                <div class="bg-white rounded-sm">
+                    <button id="show-report-modal-button" data-toggle="modal" data-target="#report-modal" class="btn btn-outline-secondary" title="@Localizer["ReportButton"]">
+                        <i class="icofont-exclamation-tringle text-xl"></i>
+                    </button>
+                </div>
+                <div class="bg-white rounded-sm">
+                    <button id="page-close-button" class="btn btn-gray">
+                        @Localizer["CloseButton"]
+                    </button>
+                </div>
+                <div class="bg-white rounded-sm">
+                    <button id="copy-link-button" class="btn btn-outline-gray" title="@SharedLocalizer["CopyLinkButton"]">
+                        <i class="icofont-link text-xl"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </section>
 </div>
 
-<div id="report-modal" class="modal fade">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-body">
-                <div class="d-flex flex-column align-items-center mb-3 text-danger illustration-icon">
-                    <i class="icofont-exclamation-tringle"></i>
-                </div>
-                <div class="offset-1 col-10 offset-md-3 col-md-6">
-                    <p>
-                        @Localizer["You are about to report this content. Use the feature in case of inappropriate content only. This action restricts access to the content for all viewers. Are you sure?"]
-                    </p>
-                </div>
+<!-- Modal -->
+<div id="report-modal" class="fixed inset-0 flex items-center justify-center hidden">
+    <!-- Semi-transparent backdrop -->
+    <div class="absolute inset-0 bg-black opacity-20"></div>
+
+    <!-- Modal content -->
+    <div class="bg-white rounded-lg w-11/12 md:w-1/3 shadow-lg z-10">
+        <div class="p-6">
+            <div class="flex flex-col items-center mb-10">
+                <i class="icofont-exclamation-tringle text-7xl text-secondary"></i>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-light" data-dismiss="modal" tabindex="5" type="button">@Localizer["CancelButton"]</button>
-                <button id="report-button" class="btn btn-primary" tabindex="4" type="button">@Localizer["ReportButton"]</button>
+            <div class="text-center px-4">
+                <p class="font-sans-serif text-lg text-gray-600 mb-4">
+                    @Localizer["You are about to report this content. Use the feature in case of inappropriate content only. This action restricts access to the content for all viewers. Are you sure?"]
+                </p>
             </div>
+        </div>
+        <div class="flex justify-end gap-3 p-4 border-t border-gray-200">
+            <button class="btn btn-outline-gray" data-dismiss="modal" type="button">
+                @Localizer["CancelButton"]
+            </button>
+            <button id="report-button" class="btn btn-primary" type="button">
+                @Localizer["ReportButton"]
+            </button>
         </div>
     </div>
 </div>
