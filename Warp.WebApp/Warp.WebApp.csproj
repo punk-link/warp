@@ -57,6 +57,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="wwwroot\css\" />
     <Folder Include="wwwroot\img\" />
     <Folder Include="wwwroot\js\core\" />
   </ItemGroup>
@@ -72,5 +73,13 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
+
+  <Target Name="NpmInstall" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' ">
+    <Exec Command="yarn install" WorkingDirectory="$(ProjectDir)" />
+  </Target>
+
+  <Target Name="NpmRunBuild" AfterTargets="NpmInstall" Condition=" '$(Configuration)' == 'Debug' ">
+    <Exec Command="yarn build" WorkingDirectory="$(ProjectDir)" />
+  </Target>
 
 </Project>
