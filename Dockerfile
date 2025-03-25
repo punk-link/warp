@@ -1,7 +1,12 @@
-FROM node:18-alpine AS css-builder
-WORKDIR /src
+FROM node:18-alpine AS node-dependencies
+WORKDIR /dependencies
 COPY ["Warp.WebApp/package.json", "Warp.WebApp/yarn.lock", "./"]
 RUN yarn install
+
+FROM node:18-alpine AS css-builder
+WORKDIR /src
+COPY --from=node-dependencies /dependencies/node_modules ./node_modules
+COPY ["Warp.WebApp/package.json", "Warp.WebApp/postcss.config.js", "./"]
 COPY ["Warp.WebApp/Styles", "./Styles"]
 RUN yarn build
 
