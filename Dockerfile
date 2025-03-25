@@ -1,3 +1,10 @@
+FROM node:18-alpine AS css-builder
+WORKDIR /src
+COPY ["Warp.WebApp/package.json", "Warp.WebApp/yarn.lock", "./"]
+RUN yarn install
+COPY ["Warp.WebApp/Styles", "./Styles"]
+RUN yarn build
+
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 USER app
 WORKDIR /app
@@ -11,6 +18,7 @@ COPY ["Warp.WebApp/Warp.WebApp.csproj", "Warp.WebApp/"]
 RUN dotnet restore "./Warp.WebApp/./Warp.WebApp.csproj"
 COPY . .
 WORKDIR "/src/Warp.WebApp"
+COPY --from=css-builder /src/wwwroot/css ./wwwroot/css
 RUN dotnet build "./Warp.WebApp.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
