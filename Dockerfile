@@ -6,7 +6,12 @@ RUN yarn install
 FROM node:18-alpine AS css-builder
 WORKDIR /src
 COPY --from=node-dependencies /dependencies/node_modules ./node_modules
-COPY ["Warp.WebApp/package.json", "Warp.WebApp/postcss.config.js", "./"]
+COPY ["Warp.WebApp/package.json", "Warp.WebApp/postcss.config.js", "Warp.WebApp/tailwind.config.js", "./"]
+# Copy all content that Tailwind needs to scan
+COPY ["Warp.WebApp/Pages", "./Pages"]
+COPY ["Warp.WebApp/Views", "./Views"]
+COPY ["Warp.WebApp/wwwroot/js", "./wwwroot/js"]
+COPY ["Warp.WebApp/Components", "./Components"]
 COPY ["Warp.WebApp/Styles", "./Styles"]
 RUN yarn build
 
