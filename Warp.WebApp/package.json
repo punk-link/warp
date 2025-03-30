@@ -4,7 +4,10 @@
     "last 2 versions",
     "not dead"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "@fancyapps/ui": "5.0.36",
+    "vite": "6.2.3"
+  },
   "devDependencies": {
     "@tailwindcss/postcss": "4.0.7",
     "autoprefixer": "10.4.20",
@@ -15,9 +18,11 @@
   },
   "license": "MIT",
   "scripts": {
-    "build": "yarn build:styles",
+    "build": "yarn build:styles && yarn build:js",
     "build:styles": "yarn build:tailwind",
-    "build:tailwind": "postcss ./Styles/tailwind.css -o ./wwwroot/css/tailwind.min.css --env production"
+    "build:tailwind": "postcss ./Styles/tailwind.css -o ./wwwroot/css/tailwind.min.css --env production",
+    "build:js": "vite build",
+    "dev:js": "vite"
   },
   "type": "module"
 }
