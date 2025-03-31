@@ -7,8 +7,10 @@ export default defineConfig({
         emptyOutDir: true,
         rollupOptions: {
             input: {
-                'main': resolve(__dirname, 'wwwroot/js/features/index/index.js'),
+                'deleted': resolve(__dirname, 'wwwroot/js/features/deleted/index.js'),
+                'error': resolve(__dirname, 'wwwroot/js/features/error/index.js'),
                 'entry': resolve(__dirname, 'wwwroot/js/features/entry/index.js'),
+                'main': resolve(__dirname, 'wwwroot/js/features/index/index.js'),
                 'preview': resolve(__dirname, 'wwwroot/js/features/preview/index.js'),
 
                 'fancybox': resolve(__dirname, 'node_modules/@fancyapps/ui/dist/fancybox/fancybox.css')

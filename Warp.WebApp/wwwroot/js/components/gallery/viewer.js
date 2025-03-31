@@ -1,4 +1,6 @@
-﻿const handlers = {
+﻿import { Fancybox } from '@fancyapps/ui';
+
+const handlers = {
     viewer: (() => {
         const initializeFancybox = (selector = '[data-fancybox]') => {
             Fancybox.bind(selector, {

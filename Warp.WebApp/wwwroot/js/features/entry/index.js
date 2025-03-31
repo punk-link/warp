@@ -106,3 +106,6 @@ export const addEntryEvents = (entryId, expirationDate) => {
     handlers.actions.init(entryId);
     handlers.modal.init(entryId);
 };
+
+
+window.addEntryEvents = addEntryEvents;

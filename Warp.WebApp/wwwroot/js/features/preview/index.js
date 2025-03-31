@@ -114,3 +114,6 @@ export const addPreviewEvents = (entryId, expirationDate) => {
     handlers.actions.init(entryId);
     handlers.gallery.init();
 };
+
+
+window.addPreviewEvents = addPreviewEvents;

@@ -49,3 +49,6 @@ const handlers = {
 export const addErrorEvents = () => {
     handlers.clipboard.init();
 };
+
+
+window.addErrorEvents = addErrorEvents;

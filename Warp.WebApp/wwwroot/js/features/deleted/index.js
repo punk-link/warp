@@ -21,3 +21,6 @@ const handlers = {
 export const addDeletedEvents = () => {
     handlers.actions.init();
 };
+
+
+window.addDeletedEvents = addDeletedEvents;

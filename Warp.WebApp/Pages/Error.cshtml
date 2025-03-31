@@ -14,11 +14,13 @@
 }
 
 @section Scripts {
+    <script type="module" src="~/dist/error.js" defer></script>
     <script type="module" defer>
-        import { addErrorEvents } from '/js/features/error/index.js';
-
         document.addEventListener('DOMContentLoaded', () => {
-            addErrorEvents();
+            if (typeof window.addErrorEvents === 'function')
+                window.addErrorEvents();
+            else
+                console.error('addErrorEvents function not available');
         });
     </script>
 }
