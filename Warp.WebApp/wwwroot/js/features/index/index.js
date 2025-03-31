@@ -40,3 +40,7 @@ export const setupTextareas = (currentEditMode) => {
     const textareas = elements.getTextareas();
     adjustTextareaSizes(textareas, elements, currentEditMode);
 };
+
+
+window.addIndexEvents = addIndexEvents;
+window.setupTextareas = setupTextareas;

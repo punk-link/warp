@@ -21,17 +21,22 @@
 }
 
 @section Scripts {
+    <script type="module" src="~/dist/main.js" asp-append-version="true"></script>
     <script type="module" defer>
-        import { addIndexEvents, setupTextareas } from '/js/features/index/index.js';
-
         const initEditMode = @((int)Model.EditMode);
 
         document.addEventListener('DOMContentLoaded', () => {
-            addIndexEvents('@Model.Id', initEditMode);
+            if (typeof window.addIndexEvents === 'function')
+                window.addIndexEvents('@Model.Id', initEditMode);
+            else
+                console.error('addIndexEvents function not available');
         });
 
         window.addEventListener('load', () => {
-            setupTextareas(initEditMode);
+            if (typeof window.setupTextareas === 'function')
+                window.setupTextareas(initEditMode);
+            else
+                console.error('setupTextareas function not available');
         });
     </script>
 }

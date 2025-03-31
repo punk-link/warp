@@ -5,7 +5,7 @@
     ANIMATE_SLOW_OUT: 'animate-slow-fade-out',
     FADE: 'fade',
     HIDDEN: 'hidden',
-    HIGHLIGHTED: 'highlighted',
+    PASTE_AREA_HIGHLIGHTED: 'paste-area-highlighted',
     SHOW: 'show',
     SUCCESS: {
         BG: 'bg-green-100',

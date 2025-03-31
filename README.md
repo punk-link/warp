@@ -55,6 +55,7 @@ The project uses these [icofont](https://icofont.com) glyphs:
 - bin
 - clock
 - close
+- copy
 - exclamation-tringle
 - eye
 - hill-sunny

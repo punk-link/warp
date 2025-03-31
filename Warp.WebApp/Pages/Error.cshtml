@@ -14,11 +14,13 @@
 }
 
 @section Scripts {
+    <script type="module" src="~/dist/error.js" defer></script>
     <script type="module" defer>
-        import { addErrorEvents } from '/js/features/error/index.js';
-
         document.addEventListener('DOMContentLoaded', () => {
-            addErrorEvents();
+            if (typeof window.addErrorEvents === 'function')
+                window.addErrorEvents();
+            else
+                console.error('addErrorEvents function not available');
         });
     </script>
 }
@@ -52,12 +54,17 @@
                                 <code id="request-id-code"
                                       class="bg-gray-100 p-1 rounded border border-transparent hover:bg-gray-50 hover:border-secondary cursor-pointer transition-all duration-200"
                                       title="@Localizer["Click to copy"]">
-                                    @Model.RequestId
+                                    <span class="text-gray-400 select-none">REQ-</span><span>@(Model.RequestId?.Substring(0, Math.Min(8, Model.RequestId.Length)))</span><span class="text-gray-500">...</span>
+                                    <span id="request-id-value" class="hidden">@Model.RequestId</span>
+                                    <i class="icofont-copy ml-1 text-gray-400"></i>
                                 </code>
                                 <span id="copy-tooltip"
                                       class="hidden absolute -top-8 left-1/2 transform -translate-x-1/2 text-xs font-semibold text-white bg-secondary px-2 py-1 rounded shadow-md">
                                     @Localizer["Copied!"]
                                 </span>
+                                <p class="text-xs text-gray-500 mt-1">
+                                    @Localizer["Include this ID when reporting issues"]
+                                </p>
                             </div>
                         }
                     </div>

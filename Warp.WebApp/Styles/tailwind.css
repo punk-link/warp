@@ -142,6 +142,10 @@
     .nav-button.active {
         @apply text-gray-600 border-b-2 border-secondary;
     }
+
+    .paste-area-highlighted {
+        @apply border-2 border-dashed border-secondary/70 bg-secondary/5 transition-all duration-200 ease-in-out;
+    }
 }
 
 @theme {

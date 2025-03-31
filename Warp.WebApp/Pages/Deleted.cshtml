@@ -13,11 +13,13 @@
 }
 
 @section Scripts {
+    <script type="module" src="~/dist/deleted.js" defer></script>
     <script type="module" defer>
-        import { addDeletedEvents } from '/js/features/deleted/index.js';
-
         document.addEventListener('DOMContentLoaded', () => {
-            addDeletedEvents();
+            if (typeof window.addDeletedEvents === 'function')
+                window.addDeletedEvents();
+            else
+                console.error('addDeletedEvents function not available');
         });
     </script>
 }

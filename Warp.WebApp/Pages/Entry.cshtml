@@ -14,12 +14,13 @@
 }
 
 @section Scripts {
-    <script type="module" src="~/js/components/modal.js" defer></script>
+    <script type="module" src="~/dist/entry.js" defer></script>
     <script type="module" defer>
-        import { addEntryEvents } from '/js/features/entry/index.js';
-
         document.addEventListener('DOMContentLoaded', () => {
-            addEntryEvents('@Model.Id', '@Model.ExpiresIn');
+            if (typeof window.addEntryEvents === 'function')
+                window.addEntryEvents('@Model.Id', '@Model.ExpiresIn');
+            else
+                console.error('addEntryEvents function not available');
         });
 
     </script>
