@@ -3,14 +3,15 @@ WORKDIR /dependencies
 COPY ["Warp.WebApp/package.json", "Warp.WebApp/yarn.lock", "./"]
 RUN yarn install
 
-FROM node:18-alpine AS css-builder
+FROM node:18-alpine AS frontend-builder
 WORKDIR /src
 COPY --from=node-dependencies /dependencies/node_modules ./node_modules
-COPY ["Warp.WebApp/package.json", "Warp.WebApp/postcss.config.js", "Warp.WebApp/tailwind.config.js", "./"]
+COPY ["Warp.WebApp/package.json", "Warp.WebApp/postcss.config.js", "Warp.WebApp/tailwind.config.js", "Warp.WebApp/vite.config.js", "./"]
 # Copy all content that Tailwind needs to scan
 COPY ["Warp.WebApp/Pages", "./Pages"]
 COPY ["Warp.WebApp/wwwroot/js", "./wwwroot/js"]
 COPY ["Warp.WebApp/Styles", "./Styles"]
+RUN mkdir -p ./wwwroot/css ./wwwroot/dist
 RUN yarn build
 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
@@ -26,7 +27,8 @@ COPY ["Warp.WebApp/Warp.WebApp.csproj", "Warp.WebApp/"]
 RUN dotnet restore "./Warp.WebApp/./Warp.WebApp.csproj"
 COPY . .
 WORKDIR "/src/Warp.WebApp"
-COPY --from=css-builder /src/wwwroot/css ./wwwroot/css
+COPY --from=frontend-builder /src/wwwroot/css ./wwwroot/css
+COPY --from=frontend-builder /src/wwwroot/dist ./wwwroot/dist
 RUN dotnet build "./Warp.WebApp.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
