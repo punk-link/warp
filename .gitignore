@@ -364,3 +364,4 @@ FodyWeavers.xsd
 /Warp.WebApp/appsettings.Local.json
 /data
 /Warp.WebApp/wwwroot/css/
+/Warp.WebApp/wwwroot/dist
