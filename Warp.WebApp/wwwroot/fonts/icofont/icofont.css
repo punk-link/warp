@@ -2,7 +2,7 @@
 * @package IcoFont 
 * @version 1.0.1 
 * @author   
-* @copyright 2024 
+* @copyright 2025 
 * @license - https://icofont.com/license/
 */
 
@@ -33,34 +33,9 @@ url("./fonts/icofont.woff") format("woff");
   -webkit-font-smoothing: antialiased;
 }
 
-.icofont-clock-time:before
+.icofont-copy:before
 {
-  content: "\eedc";
-}
-
-.icofont-link:before
-{
-  content: "\ef71";
-}
-
-.icofont-plus:before
-{
-  content: "\efc2";
-}
-
-.icofont-eye:before
-{
-  content: "\ef24";
-}
-
-.icofont-close:before
-{
-  content: "\eee4";
-}
-
-.icofont-simple-left:before
-{
-  content: "\eab5";
+  content: "\edea";
 }
 
 .icofont-align-left:before
@@ -68,19 +43,34 @@ url("./fonts/icofont.woff") format("woff");
   content: "\ede0";
 }
 
+.icofont-bin:before
+{
+  content: "\eebb";
+}
+
+.icofont-clock-time:before
+{
+  content: "\eedc";
+}
+
+.icofont-exclamation-tringle:before
+{
+  content: "\ef1b";
+}
+
+.icofont-eye:before
+{
+  content: "\ef24";
+}
+
 .icofont-hill-sunny:before
 {
   content: "\ee63";
 }
 
-.icofont-pencil-alt-2:before
+.icofont-link:before
 {
-  content: "\ebf6";
-}
-
-.icofont-bin:before
-{
-  content: "\eebb";
+  content: "\ef71";
 }
 
 .icofont-loop:before
@@ -88,14 +78,29 @@ url("./fonts/icofont.woff") format("woff");
   content: "\ef80";
 }
 
+.icofont-pencil-alt-2:before
+{
+  content: "\ebf6";
+}
+
+.icofont-plus:before
+{
+  content: "\efc2";
+}
+
+.icofont-simple-left:before
+{
+  content: "\eab5";
+}
+
 .icofont-worried:before
 {
   content: "\eb07";
 }
 
-.icofont-exclamation-tringle:before
+.icofont-close:before
 {
-  content: "\ef1b";
+  content: "\eee4";
 }
 
 [class^="icofont-"].icofont-duotone,

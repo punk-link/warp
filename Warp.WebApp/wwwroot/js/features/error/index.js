@@ -7,11 +7,11 @@ import { elements } from './elements.js';
 const handlers = {
     clipboard: (() => {
         const handleCopy = async () => {
-            const { code, tooltip } = elements.getRequestId();
+            const { code, tooltip, value } = elements.getRequestId();
             if (!code)
                 return;
 
-            const success = await copyText(code);
+            const success = await copyText(value);
             if (success) {
                 uiState.toggleClasses(tooltip, {
                     remove: [CSS_CLASSES.HIDDEN],

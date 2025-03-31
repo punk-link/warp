@@ -4,6 +4,7 @@
 export const elements = {
     getRequestId: () => ({
         code: dom.get('request-id-code'),
-        tooltip: dom.get('copy-tooltip')
+        tooltip: dom.get('copy-tooltip'),
+        value: dom.get('request-id-value')
     })
 };
