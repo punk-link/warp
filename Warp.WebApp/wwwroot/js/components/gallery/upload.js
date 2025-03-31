@@ -62,7 +62,7 @@ const handlers = {
 
         toggleHighlight: (dropArea, isHighlighted) => {
             uiState.toggleClasses(dropArea, { 
-                [isHighlighted ? 'add' : 'remove']: [CSS_CLASSES.HIGHLIGHTED] 
+                [isHighlighted ? 'add' : 'remove']: [CSS_CLASSES.PASTE_AREA_HIGHLIGHTED] 
             });
         },
 
