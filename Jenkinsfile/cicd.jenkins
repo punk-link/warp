@@ -1,5 +1,5 @@
 
-node{
+pipeline {
 
         environment {
         // Telegram configuration
@@ -8,6 +8,7 @@ node{
         JOB_NAME = "${env.JOB_NAME}"
         BUILD_NUMBER = "${env.BUILD_NUMBER}"
       }
+    stages {
     stage('Clone repository') {
         /* Let's make sure we have the repository cloned to our workspace */
 
@@ -22,7 +23,7 @@ stage('Build image') {
                     customImage.push()} 
         }
     }
-
+}
  post {
         success {
             script {
