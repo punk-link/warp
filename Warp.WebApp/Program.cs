@@ -68,6 +68,8 @@ try
 
     builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
 
+    builder.Services.AddHttpClient();
+
     var app = builder.Build();
 
     var supportedCultures = new[] { new CultureInfo("en-US") };
@@ -139,6 +141,9 @@ void AddOptions(ILogger<Program> logger, IServiceCollection services, IConfigura
 {
     try
     {
+        services.AddOptions<RoutesWarmupOptions>()
+            .BindConfiguration(nameof(RoutesWarmupOptions));
+
         services.AddOptions<AnalyticsOptions>()
             .BindConfiguration(nameof(AnalyticsOptions));
 
@@ -198,6 +203,7 @@ void AddServices(IServiceCollection services)
     services.AddTransient<IEntryService, EntryService>();
     services.AddTransient<ICreatorService, CreatorService>();
     services.AddTransient<ICookieService, CookieService>();
-
+    
+    services.AddSingleton<IRouteWarmer, RouteWarmerService>();
     services.AddHostedService<WarmupService>();
 }
