@@ -32,9 +32,7 @@ stage('Build image') {
 
         success {
             script {
-                       sh  ("""
-            curl -s -X POST https://api.telegram.org/bot${TOKEN}/sendMessage -d chat_id=${CHAT_ID} -d parse_mode=markdown -d text='*${env.JOB_NAME}* : POC *Branch*: ${env.BUILD_NUMBER} *Build* : OK *Published* = YES'
-        """)
+                sh "curl --location --request POST 'https://api.telegram.org/bot${TOKEN}/sendMessage' --form text='kazino' --form chat_id='${CHAT_ID}'"
             }
         }
         failure {
