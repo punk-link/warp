@@ -1,6 +1,6 @@
 
-pipeline {
-    def app
+node{
+
         environment {
         // Telegram configuration
         TOKEN = credentials('telegram_api')
