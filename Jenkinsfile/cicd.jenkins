@@ -1,8 +1,12 @@
-PNKL_VAULT_TOKEN = 'string'
-def PNKL_VAULT_TOKEN
 
 node {
     def app
+        environment {
+        // Telegram configuration
+        TOKEN = credentials('telegram_api')
+        CHAT_ID = credentials('telegram_chatid')
+        JOB_NAME = "${env.JOB_NAME}"
+        BUILD_NUMBER = "${env.BUILD_NUMBER}"
 
     stage('Clone repository') {
         /* Let's make sure we have the repository cloned to our workspace */
@@ -18,6 +22,26 @@ stage('Build image') {
                     docker.withRegistry('https://registry.punk.link', 'docker_auth'){ 
                     customImage.push()} 
         }
+    }
+
+ post {
+        success {
+            script {
+                sh "curl -X POST -H 'Content-Type: application/json' -d '{\"chat_id\": \"${CHAT_ID}\", \"text\": \"${JOB_NAME}: #${BUILD_NUMBER}\n✅ Deploy succeeded! \", \"disable_notification\": false}' \"https://api.telegram.org/bot${TOKEN}/sendMessage\""
+            }
+        }
+        failure {
+            script {
+                sh "curl -X POST -H 'Content-Type: application/json' -d '{\"chat_id\": \"${CHAT_ID}\", \"text\": \"${JOB_NAME}: #${BUILD_NUMBER}\n❌Deploy failure!\", \"disable_notification\": false}' \"https://api.telegram.org/bot${TOKEN}/sendMessage\""
+            }
+        }
+
+       aborted {
+            script {
+                sh "curl -X POST -H 'Content-Type: application/json' -d '{\"chat_id\": \"${CHAT_ID}\", \"text\": \"${JOB_NAME}: #${BUILD_NUMBER}\n❌Deploy aborted!\", \"disable_notification\": false}' \"https://api.telegram.org/bot${TOKEN}/sendMessage\""
+            }
+        }    
+
     }
 }
 
