@@ -11,17 +11,19 @@ pipeline {
     stages {
     stage('Clone repository') {
         /* Let's make sure we have the repository cloned to our workspace */
-
+        steps {
         checkout scm
     }
-
+   }
 stage('Build image') {
+                steps {
                 echo 'Starting to build docker image '
                 script {
                     def customImage = docker.build ("registry.punk.link/warp-webapp:${env.BUILD_ID}-DEV" )
                     docker.withRegistry('https://registry.punk.link', 'docker_auth'){ 
                     customImage.push()} 
         }
+     }
     }
 }
  post {
