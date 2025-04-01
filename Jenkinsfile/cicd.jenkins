@@ -44,4 +44,4 @@ stage('Build image') {
 
     }
 }
-
+}
