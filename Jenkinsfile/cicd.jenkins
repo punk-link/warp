@@ -17,7 +17,7 @@ node {
 stage('Build image') {
                 echo 'Starting to build docker image '
                 script {
-                    def customImage = docker.build ("registry.punk.link/warp-webapp:${env.BUILD_ID}-DEV", "--build-arg  ." )
+                    def customImage = docker.build ("registry.punk.link/warp-webapp:${env.BUILD_ID}-DEV" )
                     docker.withRegistry('https://registry.punk.link', 'docker_auth'){ 
                     customImage.push()} 
         }
