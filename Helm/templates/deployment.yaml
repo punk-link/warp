@@ -67,6 +67,12 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ .Chart.Name }}-env
+          env:
+          - name: PNKL_VAULT_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: docker-secrets
+                key: PNKL_VAULT_TOKEN                  
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

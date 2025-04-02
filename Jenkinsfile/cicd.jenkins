@@ -1,23 +1,53 @@
-PNKL_VAULT_TOKEN = 'string'
-def PNKL_VAULT_TOKEN
 
-node {
-    def app
-
+pipeline {
+        agent any
+        environment {
+        // Telegram configuration
+        TOKEN = credentials('telegram-api')
+        CHAT_ID = credentials('telegram_chatid')
+        JOB_NAME = "${env.JOB_NAME}"
+        BUILD_NUMBER = "${env.BUILD_NUMBER}"
+      }
+    stages {
     stage('Clone repository') {
         /* Let's make sure we have the repository cloned to our workspace */
-
+        steps {
         checkout scm
     }
-
+   }
 stage('Build image') {
+                steps {
                 echo 'Starting to build docker image '
                 script {
-                    PNKL_VAULT_TOKEN  = "${PNKL_VAULT_TOKEN }"
-                    def customImage = docker.build ("registry.punk.link/warp-webapp:${env.BUILD_ID}-DEV", "--build-arg PNKL_VAULT_TOKEN=${PNKL_VAULT_TOKEN} ." )
+                    def customImage = docker.build ("registry.punk.link/warp-webapp:${env.BUILD_ID}-DEV" )
                     docker.withRegistry('https://registry.punk.link', 'docker_auth'){ 
                     customImage.push()} 
         }
+     }
+    }
+}
+ post {
+
+
+
+        success {
+            script {
+                sh "curl --location --request POST 'https://api.telegram.org/bot${TOKEN}/sendMessage' --form text='kazino' --form chat_id='${CHAT_ID}'"
+            }
+        }
+        failure {
+            script {
+                sh "curl -X POST -H 'Content-Type: application/json' -d '{\"chat_id\": \"${CHAT_ID}\", \"text\": \"${JOB_NAME}: #${BUILD_NUMBER}\n❌Deploy failure!\", \"disable_notification\": false}' \"https://api.telegram.org/bot${TOKEN}/sendMessage\""
+   }
+       }
+
+       aborted {
+           script {
+                sh "curl -X POST -H 'Content-Type: application/json' -d '{\"chat_id\": \"${CHAT_ID}\", \"text\": \"${JOB_NAME}: #${BUILD_NUMBER}\n❌Deploy aborted!\", \"disable_notification\": false}' \"https://api.telegram.org/bot${TOKEN}/sendMessage\""
+
+            }
+
+        }    
     }
 }
 
