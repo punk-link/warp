@@ -6,19 +6,12 @@ namespace Warp.WebApp.Helpers.Warmups;
 public class RoutesWarmupOptions
 {
     /// <summary>
-    /// Base URL for the application (defaults to http://localhost)
+    /// Base URL for the application (defaults to http://localhost:8080)
     /// </summary>
-    public string BaseUrl { get; set; } = "http://localhost";
+    public string BaseUrl { get; set; } = "http://localhost:8080";
 
     /// <summary>
     /// Collection of routes to warm up
     /// </summary>
-    public List<string> Routes { get; set; } = new List<string>
-    {
-        "/",
-        "/deleted",
-        "/error",
-        "/health",
-        "/api/entries"
-    };
+    public List<string> Routes { get; set; } = [ ];
 }

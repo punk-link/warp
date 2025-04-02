@@ -1,35 +1,63 @@
 ﻿using System.Diagnostics;
-using Warp.WebApp.Attributes;
 
 namespace Warp.WebApp.Helpers.Warmups;
 
+/// <summary>
+/// Service that handles the warmup process for the application.
+/// Waits for the application to fully start before initiating warmup.
+/// </summary>
 public class WarmupService : IHostedService
 {
     public WarmupService(
-        IServiceCollection serviceCollection, 
-        IServiceProvider serviceProvider, 
-        IRouteWarmer routeWarmer,
-        ILogger<WarmupService> logger)
+        ILogger<WarmupService> logger,
+        IHostApplicationLifetime applicationLifetime,
+        IServiceWarmer serviceWarmer,
+        IRouteWarmer routeWarmer)
     {
+        _applicationLifetime = applicationLifetime;
         _logger = logger;
-        _serviceCollection = serviceCollection;
-        _serviceProvider = serviceProvider;
+        _serviceWarmer = serviceWarmer;
         _routeWarmer = routeWarmer;
     }
 
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    public Task StartAsync(CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Starting application warmup process...");
-        var stopwatch = Stopwatch.StartNew();
-        
-        // Warm up services
-        await Task.Run(() => WarmUp(_serviceCollection, _serviceProvider, _logger, cancellationToken), cancellationToken);
-        
-        await _routeWarmer.WarmUpRoutes(cancellationToken);
-        
-        stopwatch.Stop();
-        _logger.LogInformation("Application warmup completed in {ElapsedMilliseconds}ms", stopwatch.ElapsedMilliseconds);
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                // Wait for application startup
+                var startedTcs = new TaskCompletionSource<object>();
+                using var registration = _applicationLifetime.ApplicationStarted.Register(() => startedTcs.TrySetResult(null));
+                await startedTcs.Task;
+            
+                // Delay briefly to allow the application to stabilize after startup
+                await Task.Delay(TimeSpan.FromSeconds(2), cancellationToken);
+            
+                _logger.LogInformation("Starting application warmup process...");
+                var stopwatch = Stopwatch.StartNew();
+            
+                using var warmupCts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, warmupCts.Token);
+
+                await _serviceWarmer.WarmUpServices(linkedCts.Token);
+                await _routeWarmer.WarmUpRoutes(linkedCts.Token);
+            
+                stopwatch.Stop();
+                _logger.LogInformation($"Application warmup completed in {stopwatch.ElapsedMilliseconds}ms");
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogWarning("Application warmup was canceled or timed out");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during application warmup");
+            }
+        });
+
+        return Task.CompletedTask;
     }
 
 
@@ -40,57 +68,8 @@ public class WarmupService : IHostedService
     }
 
 
-    [TraceMethod]
-    private static void WarmUp(IServiceCollection services, IServiceProvider serviceProvider, ILogger logger, CancellationToken cancellationToken)
-    {
-        try
-        {
-            using var scope = serviceProvider.CreateScope();
-            var serviceTypes = GetServiceTypes(services).ToList();
-            
-            logger.LogInformation("Warming up {Count} services", serviceTypes.Count);
-            
-            int warmedUpCount = 0;
-            foreach (var serviceType in serviceTypes)
-            {
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    logger.LogWarning("Warmup process was canceled before completion");
-                    break;
-                }
-                
-                try
-                {
-                    scope.ServiceProvider.GetService(serviceType);
-                    warmedUpCount++;
-                }
-                catch (Exception ex)
-                {
-                    logger.LogWarning(ex, "Failed to warm up service {ServiceType}", serviceType.FullName);
-                }
-            }
-            
-            logger.LogInformation("Successfully warmed up {WarmedUpCount} of {TotalCount} services",  warmedUpCount, serviceTypes.Count);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Error during application warmup");
-            throw;
-        }
-    }
-
-
-    private static IEnumerable<Type> GetServiceTypes(IServiceCollection services)
-        => services
-            .Where(descriptor => descriptor.ImplementationType != typeof(WarmupService))
-            .Where(descriptor => descriptor.ServiceType.ContainsGenericParameters is false)
-            .Where(descriptor => descriptor.ServiceType.IsInterface)
-            .Select(descriptor => descriptor.ServiceType)
-            .Distinct();
-
-
+    private readonly IHostApplicationLifetime _applicationLifetime;
     private readonly ILogger<WarmupService> _logger;
-    private readonly IServiceCollection _serviceCollection;
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IServiceWarmer _serviceWarmer;
     private readonly IRouteWarmer _routeWarmer;
 }

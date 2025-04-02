@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.ResponseCompression;
 using System.Globalization;
 using System.Text.Json;
+using Warp.WebApp.Constants;
 using Warp.WebApp.Data;
 using Warp.WebApp.Data.Redis;
 using Warp.WebApp.Data.S3;
@@ -68,7 +69,7 @@ try
 
     builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
 
-    builder.Services.AddHttpClient();
+    builder.Services.AddHttpClient(HttpClients.Warmup);
 
     var app = builder.Build();
 
@@ -205,5 +206,6 @@ void AddServices(IServiceCollection services)
     services.AddTransient<ICookieService, CookieService>();
     
     services.AddSingleton<IRouteWarmer, RouteWarmerService>();
+    services.AddSingleton<IServiceWarmer, ServiceWarmerService>();
     services.AddHostedService<WarmupService>();
 }
