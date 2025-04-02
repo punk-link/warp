@@ -23,7 +23,9 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS restore
 WORKDIR /src
 COPY ["Warp.WebApp/Warp.WebApp.csproj", "Warp.WebApp/"]
+COPY ["Warp.WebApp.Tests/Warp.WebApp.Tests.csproj", "Warp.WebApp.Tests/"]
 RUN dotnet restore "./Warp.WebApp/./Warp.WebApp.csproj"
+RUN dotnet restore "./Warp.WebApp.Tests/Warp.WebApp.Tests.csproj"
 
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
@@ -38,7 +40,7 @@ RUN dotnet build "./Warp.WebApp.csproj" -c $BUILD_CONFIGURATION -o /app/build
 FROM build AS test
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-RUN dotnet test --no-build --verbosity normal --configuration $BUILD_CONFIGURATION
+RUN dotnet test --verbosity normal --configuration $BUILD_CONFIGURATION
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
