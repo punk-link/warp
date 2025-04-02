@@ -36,7 +36,8 @@ COPY --from=frontend-builder /src/wwwroot/dist ./wwwroot/dist
 RUN dotnet build "./Warp.WebApp.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS test
-WORKDIR "/src"
+ARG BUILD_CONFIGURATION=Release
+WORKDIR /src
 RUN dotnet test --no-build --verbosity normal --configuration $BUILD_CONFIGURATION
 
 FROM build AS publish
