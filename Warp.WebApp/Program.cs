@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.ResponseCompression;
 using System.Globalization;
 using System.Text.Json;
+using Warp.WebApp.Constants;
 using Warp.WebApp.Data;
 using Warp.WebApp.Data.Redis;
 using Warp.WebApp.Data.S3;
@@ -67,6 +68,8 @@ try
     builder.Services.AddOutputCache();
 
     builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
+
+    builder.Services.AddHttpClient(HttpClients.Warmup);
 
     var app = builder.Build();
 
@@ -139,6 +142,9 @@ void AddOptions(ILogger<Program> logger, IServiceCollection services, IConfigura
 {
     try
     {
+        services.AddOptions<RoutesWarmupOptions>()
+            .BindConfiguration(nameof(RoutesWarmupOptions));
+
         services.AddOptions<AnalyticsOptions>()
             .BindConfiguration(nameof(AnalyticsOptions));
 
@@ -198,6 +204,8 @@ void AddServices(IServiceCollection services)
     services.AddTransient<IEntryService, EntryService>();
     services.AddTransient<ICreatorService, CreatorService>();
     services.AddTransient<ICookieService, CookieService>();
-
+    
+    services.AddSingleton<IRouteWarmer, RouteWarmerService>();
+    services.AddSingleton<IServiceWarmer, ServiceWarmerService>();
     services.AddHostedService<WarmupService>();
 }
