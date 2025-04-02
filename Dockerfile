@@ -20,16 +20,24 @@ WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
-ARG BUILD_CONFIGURATION=Release
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS restore
 WORKDIR /src
 COPY ["Warp.WebApp/Warp.WebApp.csproj", "Warp.WebApp/"]
 RUN dotnet restore "./Warp.WebApp/./Warp.WebApp.csproj"
+
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+ARG BUILD_CONFIGURATION=Release
+WORKDIR /src
+COPY --from=restore /src .
 COPY . .
 WORKDIR "/src/Warp.WebApp"
 COPY --from=frontend-builder /src/wwwroot/css ./wwwroot/css
 COPY --from=frontend-builder /src/wwwroot/dist ./wwwroot/dist
 RUN dotnet build "./Warp.WebApp.csproj" -c $BUILD_CONFIGURATION -o /app/build
+
+FROM build AS test
+WORKDIR "/src"
+RUN dotnet test --no-build --verbosity normal --configuration $BUILD_CONFIGURATION
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
