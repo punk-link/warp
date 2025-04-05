@@ -204,4 +204,7 @@
   <data name="Failed to delete an image to S3" xml:space="preserve">
     <value>Failed to delete an image to S3: {0}</value>
   </data>
+  <data name="This image has already been uploaded." xml:space="preserve">
+    <value>This image has already been uploaded.</value>
+  </data>
 </root>

@@ -11,6 +11,7 @@ using Microsoft.Net.Http.Headers;
 using System.Diagnostics;
 using System.Text.Json;
 using Warp.WebApp.Attributes;
+using Warp.WebApp.Constants;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
 using Warp.WebApp.Models.Options;
@@ -176,7 +177,7 @@ public sealed class ImageController : BaseController
         {
             if (isFailure)
             {
-                var fileName = error.Extensions[ProblemDetailsFileNameExtensionKey] as string ?? "unknown";
+                var fileName = error.Extensions[ProblemDetailsExtensionKeys.FileName] as string ?? "unknown";
 
                 var errorJson = JsonSerializer.Serialize(error);
                 results.Add(fileName, errorJson);
@@ -251,13 +252,11 @@ public sealed class ImageController : BaseController
 
         static ProblemDetails EnrichProblemDetails(ContentDispositionHeaderValue contentDisposition, ProblemDetails problemDetails)
         {
-            problemDetails.Extensions.Add(ProblemDetailsFileNameExtensionKey, contentDisposition.FileName.Value);
+            problemDetails.Extensions.Add(ProblemDetailsExtensionKeys.FileName, contentDisposition.FileName.Value);
             return problemDetails;
         }
     }
 
-
-    private const string ProblemDetailsFileNameExtensionKey = "fileName";
 
     private readonly IEntryInfoService _entryInfoService;
     private readonly IStringLocalizer<ServerResources> _localizer;

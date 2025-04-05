@@ -50,6 +50,7 @@
     <PackageReference Include="Sentry.AspNetCore" Version="5.4.0" />
     <PackageReference Include="StackExchange.Redis" Version="2.8.31" />
     <PackageReference Include="System.Formats.Asn1" Version="9.0.3" />
+    <PackageReference Include="System.IO.Hashing" Version="9.0.3" />
     <PackageReference Include="System.Text.Json" Version="9.0.3" />
   </ItemGroup>
 
