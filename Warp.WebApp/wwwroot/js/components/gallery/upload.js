@@ -27,7 +27,7 @@ const handlers = {
         },
 
         upload: async (entryId, files) => {
-            const uploadContainer = elements.getUploadContainer();
+            const { uploadContainer } = elements.getUploadElements();
 
             const validImageFiles = files.filter(handlers.image.isValidImageFile);
             if (validImageFiles.length === 0) 
@@ -49,6 +49,10 @@ const handlers = {
             const results = await response.json();
             preview.render(entryId, validImageFiles, results);
 
+            const fileInput = elements.getUploadElements().fileInput;
+            if (fileInput) 
+                fileInput.value = '';
+
             handlers.image.toggleUploadState(uploadContainer, false);
             dispatchEvent.uploadFinished();
         }
@@ -66,7 +70,9 @@ const handlers = {
             });
         },
 
-        init: (entryId, dropArea, fileInput, uploadButton) => {
+        init: (entryId) => {
+            const { dropArea, fileInput, uploadContainer } = elements.getUploadElements();
+
             ['dragenter', 'dragover', 'dragleave', 'drop']
                 .forEach(event => dropArea.addEventListener(
                     event, 
@@ -95,7 +101,10 @@ const handlers = {
                 await handlers.image.upload(entryId, files);
             });
 
-            uploadButton.addEventListener('click', () => fileInput.click());
+            uploadContainer.addEventListener('click', () => {
+                fileInput.value = '';
+                fileInput.click();
+            });
         }
     },
 

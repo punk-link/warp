@@ -28,8 +28,7 @@ export const addIndexEvents = (entryId, currentEditMode) => {
     
     createButton.init(elements);
     
-    const { dropArea, fileInput, uploadButton } = elements.getImageElements();
-    addDropAreaEvents(entryId, dropArea, fileInput, uploadButton);
+    addDropAreaEvents(entryId);
     initPaste(entryId);
 
     preview.initPreloadedImages(entryId);

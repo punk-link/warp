@@ -57,7 +57,7 @@ const handlers = {
         };
 
         const animateContainer = (container, gallery) => {
-            const emptyContainer = elements.getUploadContainer();
+            const emptyContainer = elements.getUploadElements().uploadContainer;
             if (emptyContainer && emptyContainer.classList.contains(CSS_CLASSES.HIDDEN)) 
                 emptyContainer.classList.remove(CSS_CLASSES.HIDDEN);
 
