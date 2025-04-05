@@ -5,6 +5,7 @@ export default defineConfig({
     build: {
         outDir: 'wwwroot/dist',
         emptyOutDir: true,
+        sourcemap: true, 
         rollupOptions: {
             input: {
                 'deleted': resolve(__dirname, 'wwwroot/js/features/deleted/index.js'),
