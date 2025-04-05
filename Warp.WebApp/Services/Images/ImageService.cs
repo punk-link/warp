@@ -2,7 +2,6 @@
 using CSharpFunctionalExtensions.ValueTasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
-using System;
 using System.Diagnostics;
 using System.IO.Hashing;
 using Warp.WebApp.Constants;
@@ -15,8 +14,19 @@ using Warp.WebApp.Models.Files;
 
 namespace Warp.WebApp.Services.Images;
 
+/// <summary>
+/// Service responsible for managing images in the application.
+/// Implements both <see cref="IImageService"/> for authorized image operations and 
+/// <see cref="IUnauthorizedImageService"/> for operations that don't require authorization.
+/// </summary>
 public class ImageService : IImageService, IUnauthorizedImageService
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ImageService"/> class.
+    /// </summary>
+    /// <param name="localizer">The string localizer for retrieving localized resources.</param>
+    /// <param name="dataStorage">The data storage provider for caching operations.</param>
+    /// <param name="s3FileStorage">The S3 file storage provider for image persistence.</param>
     public ImageService(IStringLocalizer<ServerResources> localizer, IDataStorage dataStorage, IS3FileStorage s3FileStorage)
     {
         _dataStorage = dataStorage;
@@ -25,6 +35,7 @@ public class ImageService : IImageService, IUnauthorizedImageService
     }
 
 
+    /// <inheritdoc cref="IUnauthorizedImageService.Add"/>
     public async Task<Result<ImageResponse, ProblemDetails>> Add(Guid entryId, AppFile appFile, CancellationToken cancellationToken)
     {
         Debug.Assert(appFile.Content is not null, "A file content is null, because we checked it already at the controller level.");
@@ -116,6 +127,7 @@ public class ImageService : IImageService, IUnauthorizedImageService
     }
 
 
+    /// <inheritdoc cref="IUnauthorizedImageService.Get"/>
     public Task<Result<Image, ProblemDetails>> Get(Guid entryId, Guid imageId, CancellationToken cancellationToken)
     {
         return GetImage(imageId, cancellationToken)
@@ -136,6 +148,7 @@ public class ImageService : IImageService, IUnauthorizedImageService
     }
 
 
+    /// <inheritdoc cref="IImageService.GetAttached"/>
     public Task<Result<List<ImageInfo>, ProblemDetails>> GetAttached(Guid entryId, List<Guid> imageIds, CancellationToken cancellationToken)
     { 
         return GetUploaded()
@@ -168,6 +181,7 @@ public class ImageService : IImageService, IUnauthorizedImageService
     }
 
 
+    /// <inheritdoc cref="IImageService.Remove"/>
     public Task<UnitResult<ProblemDetails>> Remove(Guid entryId, Guid imageId, CancellationToken cancellationToken)
     {
         return GetImageHash()
