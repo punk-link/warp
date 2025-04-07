@@ -2,7 +2,6 @@
 using CSharpFunctionalExtensions.ValueTasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
-using System.Threading;
 using Warp.WebApp.Attributes;
 using Warp.WebApp.Data;
 using Warp.WebApp.Extensions;
@@ -15,7 +14,6 @@ using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
 using Warp.WebApp.Services.OpenGraph;
 using Warp.WebApp.Telemetry.Logging;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Warp.WebApp.Services;
 
