@@ -4,11 +4,64 @@ using Warp.WebApp.Models;
 using Warp.WebApp.Models.Creators;
 
 namespace Warp.WebApp.Services;
+
+/// <summary>
+/// Service responsible for managing entry information including creation, 
+/// retrieval, copying, and removal of entries and their associated images.
+/// </summary>
 public interface IEntryInfoService
 {
+    /// <summary>
+    /// Adds a new entry to the system for a specific creator.
+    /// </summary>
+    /// <param name="creator">The creator who is adding the entry.</param>
+    /// <param name="entryRequest">The request containing the entry data to be added.</param>
+    /// <returns>
+    /// A result containing the newly created entry information if successful,
+    /// or problem details if the operation fails.
+    /// </returns>
     Task<Result<EntryInfo, ProblemDetails>> Add(Creator creator, EntryRequest entryRequest, CancellationToken cancellationToken);
+    
+    /// <summary>
+    /// Creates a copy of an existing entry for a specific creator.
+    /// </summary>
+    /// <param name="creator">The creator who is making the copy.</param>
+    /// <param name="entryId">The ID of the entry to copy.</param>
+    /// <returns>
+    /// A result containing the newly copied entry information if successful,
+    /// or problem details if the operation fails.
+    /// </returns>
     Task<Result<EntryInfo, ProblemDetails>> Copy(Creator creator, Guid entryId, CancellationToken cancellationToken);
+    
+    /// <summary>
+    /// Retrieves entry information by its ID.
+    /// </summary>
+    /// <param name="creator">The creator requesting the entry information.</param>
+    /// <param name="entryId">The ID of the entry to retrieve.</param>
+    /// <returns>
+    /// A result containing the requested entry information if successful,
+    /// or problem details if the operation fails.
+    /// </returns>
     Task<Result<EntryInfo, ProblemDetails>> Get(Creator creator, Guid entryId, CancellationToken cancellationToken);
+    
+    /// <summary>
+    /// Removes an entry from the system.
+    /// </summary>
+    /// <param name="creator">The creator who is removing the entry.</param>
+    /// <param name="entryId">The ID of the entry to remove.</param>
+    /// <returns>
+    /// A unit result indicating success, or problem details if the operation fails.
+    /// </returns>
     Task<UnitResult<ProblemDetails>> Remove(Creator creator, Guid entryId, CancellationToken cancellationToken);
+    
+    /// <summary>
+    /// Removes a specific image from an entry.
+    /// </summary>
+    /// <param name="creator">The creator who is removing the image.</param>
+    /// <param name="entryId">The ID of the entry containing the image.</param>
+    /// <param name="imageId">The ID of the image to remove.</param>
+    /// <returns>
+    /// A unit result indicating success, or problem details if the operation fails.
+    /// </returns>
     Task<UnitResult<ProblemDetails>> RemoveImage(Creator creator, Guid entryId, Guid imageId, CancellationToken cancellationToken);
 }

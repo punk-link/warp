@@ -17,8 +17,24 @@ using Warp.WebApp.Telemetry.Logging;
 
 namespace Warp.WebApp.Services;
 
+/// <summary>
+/// Service responsible for managing entry information including creation, 
+/// retrieval, copying, and removal of entries and their associated images.
+/// </summary>
 public class EntryInfoService : IEntryInfoService
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="EntryInfoService"/> class.
+    /// </summary>
+    /// <param name="creatorService">The service for managing creators.</param>
+    /// <param name="dataStorage">The data storage service for persisting entry information.</param>
+    /// <param name="entryService">The service for managing entry content.</param>
+    /// <param name="imageService">The service for managing images.</param>
+    /// <param name="loggerFactory">The factory for creating loggers.</param>
+    /// <param name="openGraphService">The service for generating OpenGraph descriptions.</param>
+    /// <param name="reportService">The service for handling entry reports.</param>
+    /// <param name="localizer">The string localizer for retrieving localized resources.</param>
+    /// <param name="viewCountService">The service for tracking entry view counts.</param>
     public EntryInfoService(ICreatorService creatorService, 
         IDataStorage dataStorage,
         IEntryService entryService,
@@ -42,6 +58,7 @@ public class EntryInfoService : IEntryInfoService
     }
 
 
+    /// <inheritdoc/>
     [TraceMethod]
     public Task<Result<EntryInfo, ProblemDetails>> Add(Creator creator, EntryRequest entryRequest, CancellationToken cancellationToken)
     {
@@ -113,6 +130,7 @@ public class EntryInfoService : IEntryInfoService
     }
 
 
+    /// <inheritdoc/>
     [TraceMethod]
     public Task<Result<EntryInfo, ProblemDetails>> Copy(Creator creator, Guid entryId, CancellationToken cancellationToken)
     {
@@ -158,6 +176,7 @@ public class EntryInfoService : IEntryInfoService
     }
 
 
+    /// <inheritdoc/>
     [TraceMethod]
     public async Task<Result<EntryInfo, ProblemDetails>> Get(Creator creator, Guid entryId, CancellationToken cancellationToken)
     {
@@ -189,6 +208,7 @@ public class EntryInfoService : IEntryInfoService
     }
 
 
+    /// <inheritdoc/>
     [TraceMethod]
     public async Task<UnitResult<ProblemDetails>> Remove(Creator creator, Guid entryId, CancellationToken cancellationToken)
     {
@@ -205,6 +225,7 @@ public class EntryInfoService : IEntryInfoService
     }
 
 
+    /// <inheritdoc/>
     [TraceMethod]
     public Task<UnitResult<ProblemDetails>> RemoveImage(Creator creator, Guid entryId, Guid imageId, CancellationToken cancellationToken) 
         => GetEntryInfo(entryId, cancellationToken)
