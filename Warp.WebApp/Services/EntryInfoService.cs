@@ -116,20 +116,39 @@ public class EntryInfoService : IEntryInfoService
     [TraceMethod]
     public Task<Result<EntryInfo, ProblemDetails>> Copy(Creator creator, Guid entryId, CancellationToken cancellationToken)
     {
+        var newEntryId = Guid.CreateVersion7();
+
         return GetEntryInfo(entryId, cancellationToken)
             .Ensure(entryInfo => IsBelongsToCreator(entryInfo, creator), ProblemDetailsHelper.Create(_localizer["NoPermissionErrorMessage"]))
-            .Map(BuildEntryRequest)
+            .Bind(CopyImages)
+            .Bind(BuildEntryRequest)
             .Bind(AddEntryInfo);
 
 
-        static EntryRequest BuildEntryRequest(EntryInfo entryInfo)
+        async Task<Result<(EntryInfo, List<Guid>), ProblemDetails>> CopyImages(EntryInfo entryInfo)
         {
-            var expiresIn = entryInfo.ExpiresAt - entryInfo.CreatedAt;
+            if (entryInfo.ImageInfos.Count == 0)
+                return (entryInfo, []);
+
+            var copyResult = await _imageService.Copy(entryInfo.Id, newEntryId, entryInfo.ImageInfos, cancellationToken);
+            if (copyResult.IsFailure)
+                return copyResult.Error;
+
+            var newImageIds = copyResult.Value.Select(img => img.Id).ToList();
+            return (entryInfo, newImageIds);
+        }
+
+
+        Result<EntryRequest, ProblemDetails> BuildEntryRequest((EntryInfo EntryInfo, List<Guid> NewImageIds) tuple)
+        {
+            var expiresIn = tuple.EntryInfo.ExpiresAt - tuple.EntryInfo.CreatedAt;
             return new EntryRequest
             {
-                TextContent = entryInfo.Entry.Content,
+                Id = newEntryId,
+                TextContent = tuple.EntryInfo.Entry.Content,
                 ExpiresIn = expiresIn,
-                ImageIds = [] // TODO: add image ids when the feature is implemented
+                EditMode = tuple.EntryInfo.EditMode,
+                ImageIds = tuple.NewImageIds
             };
         }
 
