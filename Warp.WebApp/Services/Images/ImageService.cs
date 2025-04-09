@@ -130,16 +130,22 @@ public class ImageService : IImageService, IUnauthorizedImageService
     /// <inheritdoc cref="IImageService.Copy"/>
     public async Task<Result<List<ImageInfo>, ProblemDetails>> Copy(Guid sourceEntryId, Guid targetEntryId, List<ImageInfo> sourceImages, CancellationToken cancellationToken)
     {
-        var results = new List<ImageInfo>();
+        if (sourceImages.Count == 0)
+            return Result.Success<List<ImageInfo>, ProblemDetails>([]);
 
+        var results = new List<ImageInfo>();
         foreach (var sourceImage in sourceImages)
         {
-            await Get(sourceEntryId, sourceImage.Id, cancellationToken)
+            var result = await Get(sourceEntryId, sourceImage.Id, cancellationToken)
                 .Map(CreateAppFile)
-                .Bind(CopyToTarget)
-                .Tap(results.Add);
-        }
+                .Bind(CopyToTarget);
 
+            if (result.IsFailure)
+                return result.Error;
+            
+            results.Add(result.Value);
+        }
+        
         return results;
 
 
