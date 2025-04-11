@@ -2,7 +2,7 @@
 
 public enum EditMode
 {
-    Unknown = 0,
+    Unset = 0,
     Simple = 1,
     Advanced = 2
 }

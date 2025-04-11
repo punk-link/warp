@@ -11,7 +11,7 @@ public class EntryValidator : AbstractValidator<Entry>
     {
         switch (entryRequest.EditMode)
         {
-            case EditMode.Unknown:
+            case EditMode.Unset:
                 RuleFor(x => x.Content).NotEmpty()
                     .WithErrorCode(LoggingConstants.WarpContentEmpty.ToString())
                     .WithMessage(localizer["EntryBodyEmptyErrorMessage"]);

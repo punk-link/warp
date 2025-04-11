@@ -32,7 +32,7 @@ public readonly record struct EntryInfo
     public Guid Id { get; }
     public DateTime CreatedAt { get; }
     public Guid CreatorId { get; }
-    public EditMode EditMode { get; } = EditMode.Unknown;
+    public EditMode EditMode { get; } = EditMode.Unset;
     public Entry Entry { get; }
     public DateTime ExpiresAt { get; }
     public List<ImageInfo> ImageInfos { get; init; }

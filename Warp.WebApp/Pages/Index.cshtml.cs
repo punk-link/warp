@@ -89,7 +89,7 @@ public class IndexModel : BasePageModel
             var openGraphDescription = _openGraphService.GetDefaultDescription();
             OpenGraphModel = new OpenGraphModel(openGraphDescription);
 
-            Id = IdCoder.Encode(Guid.NewGuid());
+            Id = IdCoder.Encode(Guid.CreateVersion7());
             ImageContainers.Add(EditableImageContainerModel.Empty);
 
             return Page();
@@ -207,7 +207,7 @@ public class IndexModel : BasePageModel
     public string Id { get; set; }
 
     [BindProperty]
-    public EditMode EditMode { get; set; } = EditMode.Simple;
+    public EditMode EditMode { get; set; } = EditMode.Unset;
 
     [BindProperty]
     public List<string> ImageIds { get; set; } = [];
