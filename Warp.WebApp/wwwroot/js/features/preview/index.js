@@ -65,7 +65,6 @@ const handlers = {
                 const { copyLink, edit, delete: deleteButton } = elements.getActionButtons();
 
                 copyLink.addEventListener('click', () => handleCopyLink(entryId, edit));
-                edit.addEventListener('click', () => redirectTo(ROUTES.ROOT, { id: entryId }));
                 deleteButton.addEventListener('click', () => handleDelete(entryId));
             }
         };

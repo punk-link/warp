@@ -127,6 +127,42 @@ public class ImageService : IImageService, IUnauthorizedImageService
     }
 
 
+    /// <inheritdoc cref="IImageService.Copy"/>
+    public async Task<Result<List<ImageInfo>, ProblemDetails>> Copy(Guid sourceEntryId, Guid targetEntryId, List<ImageInfo> sourceImages, CancellationToken cancellationToken)
+    {
+        if (sourceImages.Count == 0)
+            return Result.Success<List<ImageInfo>, ProblemDetails>([]);
+
+        var results = new List<ImageInfo>();
+        foreach (var sourceImage in sourceImages)
+        {
+            var result = await Get(sourceEntryId, sourceImage.Id, cancellationToken)
+                .Map(CreateAppFile)
+                .Bind(CopyToTarget)
+                .Tap(results.Add);
+
+            if (result.IsFailure)
+                return result.Error;
+        }
+        
+        return results;
+
+
+        static AppFile CreateAppFile(Image image) 
+            => new(image.Content, image.ContentType);
+
+
+        async Task<Result<ImageInfo, ProblemDetails>> CopyToTarget(AppFile appFile)
+        {
+            var addResult = await Add(targetEntryId, appFile, cancellationToken);
+            if (addResult.IsFailure)
+                return Result.Failure<ImageInfo, ProblemDetails>(addResult.Error);
+
+            return addResult.Value.ImageInfo;
+        }
+    }
+
+
     /// <inheritdoc cref="IUnauthorizedImageService.Get"/>
     public Task<Result<Image, ProblemDetails>> Get(Guid entryId, Guid imageId, CancellationToken cancellationToken)
     {
@@ -220,8 +256,8 @@ public class ImageService : IImageService, IUnauthorizedImageService
 
     private static Uri BuildUrl(Guid entryId, Guid imageId)
         => BuildUrl(IdCoder.Encode(entryId), imageId);
-
-
+    
+    
     private static readonly HashSet<string> _imageMimeTypes = new(
     [
         "image/bmp",

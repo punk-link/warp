@@ -2,7 +2,6 @@
 using CSharpFunctionalExtensions.ValueTasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
-using System.Threading;
 using Warp.WebApp.Attributes;
 using Warp.WebApp.Data;
 using Warp.WebApp.Extensions;
@@ -15,12 +14,27 @@ using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
 using Warp.WebApp.Services.OpenGraph;
 using Warp.WebApp.Telemetry.Logging;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace Warp.WebApp.Services;
 
+/// <summary>
+/// Service responsible for managing entry information including creation, 
+/// retrieval, copying, and removal of entries and their associated images.
+/// </summary>
 public class EntryInfoService : IEntryInfoService
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="EntryInfoService"/> class.
+    /// </summary>
+    /// <param name="creatorService">The service for managing creators.</param>
+    /// <param name="dataStorage">The data storage service for persisting entry information.</param>
+    /// <param name="entryService">The service for managing entry content.</param>
+    /// <param name="imageService">The service for managing images.</param>
+    /// <param name="loggerFactory">The factory for creating loggers.</param>
+    /// <param name="openGraphService">The service for generating OpenGraph descriptions.</param>
+    /// <param name="reportService">The service for handling entry reports.</param>
+    /// <param name="localizer">The string localizer for retrieving localized resources.</param>
+    /// <param name="viewCountService">The service for tracking entry view counts.</param>
     public EntryInfoService(ICreatorService creatorService, 
         IDataStorage dataStorage,
         IEntryService entryService,
@@ -44,6 +58,7 @@ public class EntryInfoService : IEntryInfoService
     }
 
 
+    /// <inheritdoc/>
     [TraceMethod]
     public Task<Result<EntryInfo, ProblemDetails>> Add(Creator creator, EntryRequest entryRequest, CancellationToken cancellationToken)
     {
@@ -115,23 +130,43 @@ public class EntryInfoService : IEntryInfoService
     }
 
 
+    /// <inheritdoc/>
     [TraceMethod]
     public Task<Result<EntryInfo, ProblemDetails>> Copy(Creator creator, Guid entryId, CancellationToken cancellationToken)
     {
+        var newEntryId = Guid.CreateVersion7();
+
         return GetEntryInfo(entryId, cancellationToken)
             .Ensure(entryInfo => IsBelongsToCreator(entryInfo, creator), ProblemDetailsHelper.Create(_localizer["NoPermissionErrorMessage"]))
-            .Map(BuildEntryRequest)
+            .Bind(CopyImages)
+            .Bind(BuildEntryRequest)
             .Bind(AddEntryInfo);
 
 
-        static EntryRequest BuildEntryRequest(EntryInfo entryInfo)
+        async Task<Result<(EntryInfo, List<Guid>), ProblemDetails>> CopyImages(EntryInfo entryInfo)
         {
-            var expiresIn = entryInfo.ExpiresAt - entryInfo.CreatedAt;
+            if (entryInfo.ImageInfos.Count == 0)
+                return (entryInfo, []);
+
+            var copyResult = await _imageService.Copy(entryInfo.Id, newEntryId, entryInfo.ImageInfos, cancellationToken);
+            if (copyResult.IsFailure)
+                return copyResult.Error;
+
+            var newImageIds = copyResult.Value.Select(img => img.Id).ToList();
+            return (entryInfo, newImageIds);
+        }
+
+
+        Result<EntryRequest, ProblemDetails> BuildEntryRequest((EntryInfo EntryInfo, List<Guid> NewImageIds) tuple)
+        {
+            var expiresIn = tuple.EntryInfo.ExpiresAt - tuple.EntryInfo.CreatedAt;
             return new EntryRequest
             {
-                TextContent = entryInfo.Entry.Content,
+                Id = newEntryId,
+                TextContent = tuple.EntryInfo.Entry.Content,
                 ExpiresIn = expiresIn,
-                ImageIds = [] // TODO: add image ids when the feature is implemented
+                EditMode = tuple.EntryInfo.EditMode,
+                ImageIds = tuple.NewImageIds
             };
         }
 
@@ -141,6 +176,7 @@ public class EntryInfoService : IEntryInfoService
     }
 
 
+    /// <inheritdoc/>
     [TraceMethod]
     public async Task<Result<EntryInfo, ProblemDetails>> Get(Creator creator, Guid entryId, CancellationToken cancellationToken)
     {
@@ -172,6 +208,7 @@ public class EntryInfoService : IEntryInfoService
     }
 
 
+    /// <inheritdoc/>
     [TraceMethod]
     public async Task<UnitResult<ProblemDetails>> Remove(Creator creator, Guid entryId, CancellationToken cancellationToken)
     {
@@ -188,6 +225,7 @@ public class EntryInfoService : IEntryInfoService
     }
 
 
+    /// <inheritdoc/>
     [TraceMethod]
     public Task<UnitResult<ProblemDetails>> RemoveImage(Creator creator, Guid entryId, Guid imageId, CancellationToken cancellationToken) 
         => GetEntryInfo(entryId, cancellationToken)
