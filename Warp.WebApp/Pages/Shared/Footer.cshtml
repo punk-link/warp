@@ -3,12 +3,10 @@
 @inject IStringLocalizer<SharedResources> SharedLocalizer
 
 <footer class="my-15">
-    <div id="roaming-image" class="fixed top-[60vh] left-[50vw] w-0 h-0 -z-10">
-        <div class="absolute h-[75vh]">
-            <img src="~/img/warp.svg" alt="background illustration" class="opacity-50" 
-                style="filter: invert(97%) sepia(3%) saturate(2195%) hue-rotate(344deg) brightness(106%) contrast(102%);"
-            >
-        </div>
+    <div id="roaming-image" class="hidden fixed -right-[35vh] -bottom-[25vh] w-[75vh] h-[75vh] max-h-[75vh] overflow-hidden -z-10">
+        <img src="~/img/warp.svg" alt="background illustration" class="opacity-50 w-full h-full object-contain"
+            style="filter: invert(97%) sepia(3%) saturate(2195%) hue-rotate(344deg) brightness(106%) contrast(102%);"
+        >
     </div>
     <h1 class="logo-style text-gray-400 text-4xl mb-4">
         @SharedLocalizer["Logo"]

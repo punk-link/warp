@@ -4,7 +4,7 @@ import { ROUTES, redirectTo } from '/js/utils/routes.js';
 import { copyUrl } from '/js/utils/clipboard.js';
 import { initializeCountdown } from '/js/components/countdown.js'; 
 import { galleryViewer } from '/js/components/gallery/viewer.js';
-import { repositionBackgroundImage } from '/js/components/background/image-positioner.js';
+import { animateBackgroundImage } from '/js/components/background/image-positioner.js';
 import { http } from '/js/services/http/client.js';
 import { elements } from './elements.js';
 
@@ -90,7 +90,7 @@ const handlers = {
                 if (!roamingImage)
                     return;
 
-                repositionBackgroundImage(roamingImage);
+                animateBackgroundImage(roamingImage);
             }
         };
     })(),

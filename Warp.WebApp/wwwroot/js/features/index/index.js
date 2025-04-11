@@ -1,6 +1,6 @@
 import { EDIT_MODE } from '/js/constants/enums.js';
 import { addDropAreaEvents, pasteImages } from '/js/components/gallery/upload.js';
-import { repositionBackgroundImage } from '/js/components/background/image-positioner.js';
+import { animateBackgroundImage } from '/js/components/background/image-positioner.js';
 import { preview } from '/js/components/gallery/preview.js'; 
 import { elements } from './elements.js';
 import { createButton } from './create-button.js';
@@ -17,7 +17,7 @@ const initPaste = (entryId) => {
 
 export const addIndexEvents = (entryId, currentEditMode) => {
     const roamingImage = elements.getRoamingImage();
-    repositionBackgroundImage(roamingImage);
+    animateBackgroundImage(roamingImage);
     
     editMode.init(currentEditMode, elements);
     

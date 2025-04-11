@@ -28,6 +28,13 @@ const handlers = {
         };
 
         return {
+            animateOnly: (element) => {
+                if (!element)
+                    return;
+
+                showWithAnimation(element);
+            },
+
             reposition: (element) => {
                 if (!element) 
                     return;
@@ -40,6 +47,10 @@ const handlers = {
     })()
 };
 
+
+export const animateBackgroundImage = (element) => {
+    handlers.background.animateOnly(element);
+};
 
 export const repositionBackgroundImage = (element) => {
     handlers.background.reposition(element);
