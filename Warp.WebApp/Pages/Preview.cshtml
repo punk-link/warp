@@ -24,6 +24,8 @@
     </script>
 }
 
+<form method="post" id="copy-form" asp-page-handler="Copy" asp-route-id="@Model.Id"></form>
+
 <div class="min-h-screen">
     <div class="flex flex-col sm:flex-row items-baseline px-3">
         <div class="w-full sm:w-1/2 flex justify-start md:justify-center">
@@ -75,7 +77,7 @@
                     </button>
                 </div>
                 <div class="bg-white rounded-sm">
-                    <button id="edit-button" class="btn btn-outline-gray hidden" title="@Localizer["CloneAndEditButton"]">
+                    <button id="edit-button" class="btn btn-outline-gray hidden" title="@Localizer["CloneAndEditButton"]" form="copy-form">
                         <i class="icofont-loop text-xl"></i>
                     </button>
                 </div>
