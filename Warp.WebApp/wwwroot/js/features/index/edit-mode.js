@@ -11,8 +11,39 @@ const DISABLED_STATE_EXCLUDED_INPUT_IDS = new Set([
 ]);
 
 
+const STORAGE_KEY = 'warp_edit_mode';
+
+
+const saveEditModeToStorage = (mode) => {
+    try {
+        localStorage.setItem(STORAGE_KEY, mode);
+    } catch (e) {
+        console.warn('Failed to save edit mode to localStorage:', e);
+    }
+};
+
+
+const loadEditModeFromStorage = () => {
+    try {
+        const savedMode = localStorage.getItem(STORAGE_KEY);
+        if (savedMode !== null) {
+            const parsedMode = parseInt(savedMode, 10);
+
+            if (parsedMode === EDIT_MODE.Advanced) 
+                return EDIT_MODE.Advanced;
+        }
+
+        return EDIT_MODE.Simple;
+    } catch (e) {
+        console.warn('Failed to load edit mode from localStorage:', e);
+        return EDIT_MODE.Simple;
+    }
+};
+
+
 const setContainerInputsState = (container, isDisabled) => {
-    if (!container) return;
+    if (!container) 
+        return;
     
     const inputs = container.querySelectorAll('input, textarea, select');
     inputs.forEach(input => {
@@ -24,18 +55,17 @@ const setContainerInputsState = (container, isDisabled) => {
 
 export const editMode = {
     init: (editMode, elements) => {
-        const { 
-            advancedButton, 
-            simpleButton,
-            advancedContainer,
-            simpleContainer 
-        } = elements.getModeElements();
+        const { editModeInput } = elements.getModeElements();
+        const modeToUse = editMode === EDIT_MODE.Unset ? loadEditModeFromStorage() : editMode;
+        uiState.setElementValue(editModeInput, modeToUse);
 
-        const activeButton = editMode === EDIT_MODE.Advanced ? advancedButton : simpleButton;
+        const { advancedButton, simpleButton, advancedContainer, simpleContainer } = elements.getModeElements();
+
+        const activeButton = modeToUse === EDIT_MODE.Advanced ? advancedButton : simpleButton;
         uiState.toggleClasses(activeButton, { add: [CSS_CLASSES.ACTIVE] });
 
-        const activeContainer = editMode === EDIT_MODE.Advanced ? advancedContainer : simpleContainer;
-        const inactiveContainer = editMode === EDIT_MODE.Advanced ? simpleContainer : advancedContainer;
+        const activeContainer = modeToUse === EDIT_MODE.Advanced ? advancedContainer : simpleContainer;
+        const inactiveContainer = modeToUse === EDIT_MODE.Advanced ? simpleContainer : advancedContainer;
         
         setContainerInputsState(inactiveContainer, true);
         setContainerInputsState(activeContainer, false);
@@ -54,6 +84,8 @@ export const editMode = {
             
             const { editModeInput } = elements.getModeElements();
             uiState.setElementValue(editModeInput, mode);
+
+            saveEditModeToStorage(mode);
         };
     }
 };
