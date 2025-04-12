@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Warp.KeyManager": {
+      "commandName": "Project",
+      "commandLineArgs": "generate --base64 --output C:\\temp\\encryption-key.txt"
+    }
+  }
+}
