@@ -27,33 +27,29 @@ class Program
     static void GenerateKey(string output, bool base64)
     {
         using var aes = Aes.Create();
+        // Generate a deterministic key for development (NOT FOR PRODUCTION)
+        // A 32-byte array to be used as AES-256 key. 256 bits = 32 bytes
         aes.KeySize = 256;
         aes.GenerateKey();
+
+        if (string.IsNullOrEmpty(output))
+        {
+            Console.WriteLine("No output path specified. Key will not be saved.");
+            return;
+        }
         
+        Directory.CreateDirectory(Path.GetDirectoryName(output)!);
         if (base64)
         {
             var keyBase64 = Convert.ToBase64String(aes.Key);
+            File.WriteAllText(output, keyBase64);
             Console.WriteLine($"Key (Base64): {keyBase64}");
-            
-            if (!string.IsNullOrEmpty(output))
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(output));
-                File.WriteAllText(output, keyBase64);
-                Console.WriteLine($"Key saved to {output}");
-            }
         }
         else
         {
-            if (!string.IsNullOrEmpty(output))
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(output));
-                File.WriteAllBytes(output, aes.Key);
-                Console.WriteLine($"Key saved to {output}");
-            }
-            else
-            {
-                Console.WriteLine("Binary key generated but not saved (no output path specified)");
-            }
+            File.WriteAllBytes(output, aes.Key);
         }
+
+        Console.WriteLine($"Key saved to {output}");
     }
 }
