@@ -56,8 +56,6 @@ try
     builder.Services.AddControllers()
         .AddControllersAsServices();
     builder.Services.AddHealthChecks()
-        // TODO: remove
-        //.AddCheck<ControllerResolveHealthCheck>(nameof(ControllerResolveHealthCheck)) 
         .AddCheck<RedisHealthCheck>(nameof(RedisHealthCheck));
 
     builder.Services.AddResponseCompression(options =>
