@@ -6,20 +6,23 @@ using Warp.WebApp.Models.Options;
 namespace Warp.WebApp.Services.Encryption;
 
 /// <summary>
-/// AES-256 implementation of the encryption service
+/// AES-256 implementation of the encryption service.
+/// This service provides strong symmetric encryption using the Advanced Encryption Standard (AES) algorithm
+/// with a 256-bit key length, CBC mode, and PKCS7 padding.
+/// Encrypted data includes a header with a marker byte and version byte, followed by the initialization vector (IV),
+/// and then the encrypted payload.
 /// </summary>
 public class AesEncryptionService : IEncryptionService
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="AesEncryptionService"/> class
     /// </summary>
-    /// <param name="options">The encryption options</param>
-    /// <param name="loggerFactory">The logger factory</param>
-    public AesEncryptionService(IFeatureManager featureManager, IOptions<EncryptionOptions> options, ILoggerFactory loggerFactory)
+    /// <param name="featureManager">The feature manager to check if encryption is enabled</param>
+    /// <param name="options">The encryption options containing the encryption key</param>
+    public AesEncryptionService(IFeatureManager featureManager, IOptions<EncryptionOptions> options)
     {
         _encryptionKey = options.Value.EncryptionKey!;
         _isDisabled = !featureManager.IsEnabledAsync("EntryEncription").GetAwaiter().GetResult();
-        _logger = loggerFactory.CreateLogger<AesEncryptionService>();
     }
 
 
@@ -32,33 +35,25 @@ public class AesEncryptionService : IEncryptionService
         if (_isDisabled)
             return decryptedData;
 
-        try
-        {
-            using var aes = Aes.Create();
-            aes.Key = _encryptionKey;
-            aes.Mode = CipherMode.CBC;
-            aes.Padding = PaddingMode.PKCS7;
+        using var aes = Aes.Create();
+        aes.Key = _encryptionKey;
+        aes.Mode = CipherMode.CBC;
+        aes.Padding = PaddingMode.PKCS7;
             
-            aes.GenerateIV();
+        aes.GenerateIV();
             
-            using var memoryStream = new MemoryStream();
-            memoryStream.WriteByte(EncriptionMarker);
-            memoryStream.WriteByte(EncriptionVersion);
-            memoryStream.Write(aes.IV, 0, aes.IV.Length);
+        using var memoryStream = new MemoryStream();
+        memoryStream.WriteByte(EncryptionMarker);
+        memoryStream.WriteByte(EncryptionVersion);
+        memoryStream.Write(aes.IV, 0, aes.IV.Length);
             
-            using var encryptor = aes.CreateEncryptor();
-            using var cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write);
+        using var encryptor = aes.CreateEncryptor();
+        using var cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write);
             
-            cryptoStream.Write(decryptedData, 0, decryptedData.Length);
-            cryptoStream.FlushFinalBlock();
+        cryptoStream.Write(decryptedData, 0, decryptedData.Length);
+        cryptoStream.FlushFinalBlock();
             
-            return memoryStream.ToArray();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error encrypting data");
-            throw new CryptographicException("Failed to encrypt data", ex);
-        }
+        return memoryStream.ToArray();
     }
 
 
@@ -71,42 +66,29 @@ public class AesEncryptionService : IEncryptionService
         if (_isDisabled || !IsEncrypted(encryptedData))
             return encryptedData;
 
-        try
-        {
-            using var aes = Aes.Create();
-            aes.Key = _encryptionKey;
-            aes.Mode = CipherMode.CBC;
-            aes.Padding = PaddingMode.PKCS7;
+        using var aes = Aes.Create();
+        aes.Key = _encryptionKey;
+        aes.Mode = CipherMode.CBC;
+        aes.Padding = PaddingMode.PKCS7;
         
-            byte[] iv = new byte[aes.IV.Length];
-            if (encryptedData.Length < iv.Length + EncryptionHeaderSize)
-                throw new ArgumentException("Encrypted data is too short to contain an IV");
+        var iv = new byte[aes.IV.Length];
+        if (encryptedData.Length < iv.Length + EncryptionHeaderSize)
+            throw new ArgumentException("Encrypted data is too short to contain an IV");
         
-            Buffer.BlockCopy(encryptedData, EncryptionHeaderSize, iv, 0, iv.Length);
-            aes.IV = iv;
+        Buffer.BlockCopy(encryptedData, EncryptionHeaderSize, iv, 0, iv.Length);
+        aes.IV = iv;
         
-            var encryptedSize = encryptedData.Length - iv.Length - EncryptionHeaderSize;
-            var cipherText = new byte[encryptedSize];
-            Buffer.BlockCopy(encryptedData, iv.Length + EncryptionHeaderSize, cipherText, 0, encryptedSize);
+        var encryptedSize = encryptedData.Length - iv.Length - EncryptionHeaderSize;
+        var cipherText = new byte[encryptedSize];
+        Buffer.BlockCopy(encryptedData, iv.Length + EncryptionHeaderSize, cipherText, 0, encryptedSize);
         
-            using var memoryStream = new MemoryStream();
-            using var decryptor = aes.CreateDecryptor();
-            using var cryptoStream = new CryptoStream(new MemoryStream(cipherText), decryptor, CryptoStreamMode.Read);
+        using var memoryStream = new MemoryStream();
+        using var decryptor = aes.CreateDecryptor();
+        using var cryptoStream = new CryptoStream(new MemoryStream(cipherText), decryptor, CryptoStreamMode.Read);
         
-            cryptoStream.CopyTo(memoryStream);
+        cryptoStream.CopyTo(memoryStream);
         
-            return memoryStream.ToArray();
-        }
-        catch (CryptographicException cryptoEx)
-        {
-            _logger.LogError(cryptoEx, "Cryptographic error while decrypting data");
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error decrypting data");
-            throw new CryptographicException("Failed to decrypt data", ex);
-        }
+        return memoryStream.ToArray();
     }
 
 
@@ -117,23 +99,20 @@ public class AesEncryptionService : IEncryptionService
         if (data == null || data.Length < minimumEncryptedLength)
             return false;
     
-        return data[0] == EncriptionMarker && data[1] == EncriptionVersion;
+        return data[0] == EncryptionMarker && data[1] == EncryptionVersion;
     }
 
 
-    private const byte EncriptionMarker = 0xE5;
-    private const byte EncriptionVersion = 0x01;
+    public const byte EncryptionMarker = 0xE5;
+    public const byte EncryptionVersion = 0x01;
+
     private const int EncryptionHeaderSize = sizeof(byte) * 2;
     
     private readonly byte[] _encryptionKey;
     private readonly bool _isDisabled;
-    private readonly ILogger<AesEncryptionService> _logger;
 }
 
-// TODO: Add proper error handling and logging
 
 // TODO: Add Vault integration to store the encryption key
-
-// TODO: Add unit tests for the encryption and decryption methods
 
 // TODO: Investigate why all entries go to the ImageService database
