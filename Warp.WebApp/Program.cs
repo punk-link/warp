@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.FeatureManagement;
 using System.Globalization;
 using System.Text.Json;
 using Warp.WebApp.Constants;
@@ -132,11 +133,14 @@ void AddConfiguration(ILogger<Program> logger, WebApplicationBuilder builder)
     {
         logger.LogLocalConfigurationIsInUse();
         builder.Configuration.AddJsonFile($"appsettings.{builder.Configuration["ASPNETCORE_ENVIRONMENT"]}.json", optional: true, reloadOnChange: true);
-        return;
+    }
+    else
+    {
+        var secrets = VaultHelper.GetSecrets<ProgramSecrets>(logger, builder.Configuration);
+        builder.AddConsulConfiguration(secrets.ConsulAddress, secrets.ConsulToken);
     }
 
-    var secrets = VaultHelper.GetSecrets<ProgramSecrets>(logger, builder.Configuration);
-    builder.AddConsulConfiguration(secrets.ConsulAddress, secrets.ConsulToken);
+    builder.Services.AddFeatureManagement();
 }
 
 
