@@ -47,44 +47,60 @@ const setContainerInputsState = (container, isDisabled) => {
     
     const inputs = container.querySelectorAll('input, textarea, select');
     inputs.forEach(input => {
-        if (DISABLED_STATE_EXCLUDED_INPUT_IDS.has(input.id)) return;
+        if (DISABLED_STATE_EXCLUDED_INPUT_IDS.has(input.id)) 
+            return;
+        
         uiState.setElementDisabled(input, isDisabled);
     });
 };
 
 
+const determineActiveElements = (mode, elements) => {
+    const { advancedButton, simpleButton, advancedContainer, simpleContainer } = elements.getModeElements();
+
+    if (mode === EDIT_MODE.Advanced) {
+        return {
+            activeButton: advancedButton,
+            inactiveButton: simpleButton,
+            activeContainer: advancedContainer,
+            inactiveContainer: simpleContainer
+        };
+    } else {
+        return {
+            activeButton: simpleButton,
+            inactiveButton: advancedButton,
+            activeContainer: simpleContainer,
+            inactiveContainer: advancedContainer
+        };
+    }
+};
+
+function applyModeUIState(mode, elements) {
+    const { activeButton, inactiveButton, activeContainer, inactiveContainer } = determineActiveElements(mode, elements);
+        
+    uiState.toggleClasses(activeButton, { add: [CSS_CLASSES.ACTIVE] });
+    uiState.toggleClasses(inactiveButton, { remove: [CSS_CLASSES.ACTIVE] });
+
+    uiState.toggleClasses(activeContainer, { remove: [CSS_CLASSES.HIDDEN] });
+    uiState.toggleClasses(inactiveContainer, { add: [CSS_CLASSES.HIDDEN] });
+
+    setContainerInputsState(inactiveContainer, true);
+    setContainerInputsState(activeContainer, false);
+
+    const { editModeInput } = elements.getModeElements();
+    uiState.setElementValue(editModeInput, mode);
+}
+
+
 export const editMode = {
     init: (editMode, elements) => {
-        const { editModeInput } = elements.getModeElements();
         const modeToUse = editMode === EDIT_MODE.Unset ? loadEditModeFromStorage() : editMode;
-        uiState.setElementValue(editModeInput, modeToUse);
-
-        const { advancedButton, simpleButton, advancedContainer, simpleContainer } = elements.getModeElements();
-
-        const activeButton = modeToUse === EDIT_MODE.Advanced ? advancedButton : simpleButton;
-        uiState.toggleClasses(activeButton, { add: [CSS_CLASSES.ACTIVE] });
-
-        const activeContainer = modeToUse === EDIT_MODE.Advanced ? advancedContainer : simpleContainer;
-        const inactiveContainer = modeToUse === EDIT_MODE.Advanced ? simpleContainer : advancedContainer;
-        
-        setContainerInputsState(inactiveContainer, true);
-        setContainerInputsState(activeContainer, false);
+        applyModeUIState(modeToUse, elements);
     },
 
-    switch: (displayedButton, hiddenButton, displayedContainer, hiddenContainer, mode, elements) => {
+    switch: (mode, elements) => {
         return () => {
-            uiState.toggleClasses(hiddenButton, { remove: [CSS_CLASSES.ACTIVE] });
-            uiState.toggleClasses(displayedButton, { add: [CSS_CLASSES.ACTIVE] });
-    
-            uiState.toggleClasses(hiddenContainer, { add: [CSS_CLASSES.HIDDEN] });
-            uiState.toggleClasses(displayedContainer, { remove: [CSS_CLASSES.HIDDEN] });
-
-            setContainerInputsState(hiddenContainer, true);
-            setContainerInputsState(displayedContainer, false);
-            
-            const { editModeInput } = elements.getModeElements();
-            uiState.setElementValue(editModeInput, mode);
-
+            applyModeUIState(mode, elements);
             saveEditModeToStorage(mode);
         };
     }
