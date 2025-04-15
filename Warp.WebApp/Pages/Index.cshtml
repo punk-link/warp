@@ -23,18 +23,17 @@
 @section Scripts {
     <script type="module" src="~/dist/main.js" asp-append-version="true"></script>
     <script type="module" defer>
-        const initEditMode = @((int)Model.EditMode);
-
         document.addEventListener('DOMContentLoaded', () => {
             if (typeof window.addIndexEvents === 'function')
-                window.addIndexEvents('@Model.Id', initEditMode);
+                window.addIndexEvents('@Model.Id', @((int)Model.EditMode));
             else
                 console.error('addIndexEvents function not available');
         });
 
         window.addEventListener('load', () => {
+            const editMode = document.getElementById('edit-mode-state').value;
             if (typeof window.setupTextareas === 'function')
-                window.setupTextareas(initEditMode);
+                window.setupTextareas(parseInt(editMode, 10));
             else
                 console.error('setupTextareas function not available');
         });

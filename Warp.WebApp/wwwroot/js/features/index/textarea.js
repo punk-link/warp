@@ -75,8 +75,12 @@ const handlers = {
             const containerToHide = currentEditMode === EDIT_MODE.Advanced
                 ? simpleContainer
                 : advancedContainer;
+            const containerToShow = currentEditMode !== EDIT_MODE.Advanced
+                ? simpleContainer
+                : advancedContainer;
 
             uiState.toggleClasses(containerToHide, { add: [CSS_CLASSES.HIDDEN] });
+            uiState.toggleClasses(containerToShow, { remove: [CSS_CLASSES.HIDDEN] });
         };
 
         return {

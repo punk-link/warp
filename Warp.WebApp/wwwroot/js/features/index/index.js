@@ -21,10 +21,9 @@ export const addIndexEvents = (entryId, currentEditMode) => {
     
     editMode.init(currentEditMode, elements);
     
-    const { advancedButton, simpleButton, advancedContainer, simpleContainer } = elements.getModeElements();
-    
-    advancedButton.addEventListener('click', editMode.switch(advancedButton, simpleButton, advancedContainer, simpleContainer, EDIT_MODE.Advanced, elements));
-    simpleButton.addEventListener('click', editMode.switch(simpleButton, advancedButton, simpleContainer, advancedContainer, EDIT_MODE.Simple, elements));
+    const { advancedButton, simpleButton } = elements.getModeElements();
+    advancedButton.addEventListener('click', editMode.switch(EDIT_MODE.Advanced, elements));
+    simpleButton.addEventListener('click', editMode.switch(EDIT_MODE.Simple, elements));
     
     createButton.init(elements);
     
