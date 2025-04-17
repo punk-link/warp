@@ -238,6 +238,17 @@ public class EntryInfoService : IEntryInfoService
             });
 
 
+    /// <inheritdoc/>
+    [TraceMethod]
+    public Task<Result<EntryInfo, ProblemDetails>> Update(Creator creator, EntryRequest entryRequest, CancellationToken cancellationToken)
+    {
+        return GetEntryInfo(entryRequest.Id, cancellationToken)
+            .Ensure(entryInfo => IsBelongsToCreator(entryInfo, creator), ProblemDetailsHelper.Create(_localizer["NoPermissionErrorMessage"]))
+            .Ensure(entryInfo => entryInfo.ViewCount == 0, ProblemDetailsHelper.Create(_localizer["EntryCannotBeEditedAfterViewed"]))
+            .Bind(_ => Add(creator, entryRequest, cancellationToken));
+    }
+
+
     private async Task<Result<EntryInfo, ProblemDetails>> GetEntryInfo(Guid entryId, CancellationToken cancellationToken)
     {
         var cacheKey = CacheKeyBuilder.BuildEntryInfoCacheKey(entryId);
