@@ -245,6 +245,7 @@ public class EntryInfoService : IEntryInfoService
     {
         return GetEntryInfo(entryRequest.Id, cancellationToken)
             .Ensure(entryInfo => IsBelongsToCreator(entryInfo, creator), ProblemDetailsHelper.Create(_localizer["NoPermissionErrorMessage"]))
+            .Ensure(entryInfo => entryInfo.EditMode == entryRequest.EditMode, ProblemDetailsHelper.Create(_localizer["EntryEditModeMismatch"]))
             .Bind(GetViews)
             .Ensure(entryInfo => entryInfo.ViewCount == 0, ProblemDetailsHelper.Create(_localizer["EntryCannotBeEditedAfterViewed"]))
             .Bind(_ => Add(creator, entryRequest, cancellationToken));

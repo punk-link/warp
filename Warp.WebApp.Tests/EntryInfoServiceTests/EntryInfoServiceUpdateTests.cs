@@ -203,6 +203,41 @@ public class EntryInfoServiceUpdateTests
     }
 
 
+    [Fact]
+    public async Task Update_ShouldReturnProblemDetails_WhenEditModeIsDifferent()
+    {
+        var entryId = Guid.NewGuid();
+        var cancellationToken = CancellationToken.None;
+        var entryRequest = new EntryRequest
+        {
+            Id = entryId,
+            ExpiresIn = TimeSpan.FromDays(1),
+            EditMode = EditMode.Advanced,
+            TextContent = "Updated Text"
+        };
+
+        var existingEntryInfo = new EntryInfo(entryId, _creator.Id, DateTime.UtcNow, DateTime.UtcNow.AddDays(1), 
+            EditMode.Simple, new Entry("Original content"), new List<ImageInfo>(), new EntryOpenGraphDescription("Original", "Original", null), 0);
+
+        var entryInfoCacheKey = CacheKeyBuilder.BuildEntryInfoCacheKey(entryId);
+        _dataStorageSubstitute.TryGet<EntryInfo?>(entryInfoCacheKey, cancellationToken)
+            .Returns(new ValueTask<EntryInfo?>(existingEntryInfo));
+
+        var localizedString = new LocalizedString("EntryEditModeMismatch", "Edit mode cannot be changed for existing entries.");
+        _localizerSubstitute["EntryEditModeMismatch"]
+            .Returns(localizedString);
+
+        var result = await _entryInfoService.Update(_creator, entryRequest, cancellationToken);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(localizedString.Value, result.Error.Detail);
+        Assert.Equal((int)HttpStatusCode.BadRequest, result.Error.Status);
+        
+        await _viewCountServiceSubstitute.DidNotReceive().Get(entryId, cancellationToken);
+        await _entryServiceSubstitute.DidNotReceive().Add(Arg.Any<EntryRequest>(), Arg.Any<CancellationToken>());
+    }
+
+
     private readonly IEntryInfoService _entryInfoService;
     private readonly Creator _creator;
     private readonly ILoggerFactory _loggerFactorySubstitute = Substitute.For<ILoggerFactory>();

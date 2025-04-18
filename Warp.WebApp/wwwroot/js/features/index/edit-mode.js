@@ -75,7 +75,7 @@ const determineActiveElements = (mode, elements) => {
     }
 };
 
-function applyModeUIState(mode, elements) {
+const applyModeUIState = (mode, elements) => {
     const { activeButton, inactiveButton, activeContainer, inactiveContainer } = determineActiveElements(mode, elements);
         
     uiState.toggleClasses(activeButton, { add: [CSS_CLASSES.ACTIVE] });
@@ -96,6 +96,10 @@ export const editMode = {
     init: (editMode, elements) => {
         const modeToUse = editMode === EDIT_MODE.Unset ? loadEditModeFromStorage() : editMode;
         applyModeUIState(modeToUse, elements);
+    },
+
+    isSwitchAvailable: (mode) => {
+        return mode === EDIT_MODE.Unset;
     },
 
     switch: (mode, elements) => {
