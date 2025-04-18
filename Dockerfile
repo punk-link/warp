@@ -40,7 +40,7 @@ RUN dotnet build "./Warp.WebApp.csproj" -c $BUILD_CONFIGURATION -o /app/build
 FROM build AS test
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-RUN dotnet test --verbosity normal --configuration $BUILD_CONFIGURATION
+RUN dotnet test --verbosity normal --configuration $BUILD_CONFIGURATION --parallel --blame-hang-timeout 60s
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
