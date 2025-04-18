@@ -43,7 +43,7 @@ public interface IEntryInfoService
     /// or problem details if the operation fails.
     /// </returns>
     Task<Result<EntryInfo, ProblemDetails>> Get(Creator creator, Guid entryId, CancellationToken cancellationToken);
-    
+
     /// <summary>
     /// Removes an entry from the system.
     /// </summary>
@@ -64,4 +64,16 @@ public interface IEntryInfoService
     /// A unit result indicating success, or problem details if the operation fails.
     /// </returns>
     Task<UnitResult<ProblemDetails>> RemoveImage(Creator creator, Guid entryId, Guid imageId, CancellationToken cancellationToken);
+    
+    /// <summary>
+    /// Updates an existing entry with new content.
+    /// Only the creator can update their entry and only if the view count is 0.
+    /// </summary>
+    /// <param name="creator">The creator who is updating the entry.</param>
+    /// <param name="entryRequest">The request containing the updated entry data.</param>
+    /// <returns>
+    /// A result containing the updated entry information if successful,
+    /// or problem details if the operation fails.
+    /// </returns>
+    Task<Result<EntryInfo, ProblemDetails>> Update(Creator creator, EntryRequest entryRequest, CancellationToken cancellationToken);
 }

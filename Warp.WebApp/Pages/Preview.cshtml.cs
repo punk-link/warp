@@ -37,11 +37,12 @@ public class PreviewModel : BasePageModel
                 .Map(entryInfo => (tuple.Creator, entryInfo));
 
 
-        void BuildModel((Creator, EntryInfo EntryInfo) tuple)
+        void BuildModel((Creator Creator, EntryInfo EntryInfo) tuple)
         {
             Id = id;
             ExpiresIn = new DateTimeOffset(tuple.EntryInfo.ExpiresAt).ToUnixTimeMilliseconds();
             TextContent = tuple.EntryInfo.Entry.Content;
+            CanEdit = tuple.EntryInfo.CreatorId == tuple.Creator.Id && tuple.EntryInfo.ViewCount == 0;
             
             foreach (var imageInfo in tuple.EntryInfo.ImageInfos)
                 ImageContainers.Add(new ReadOnlyImageContainerModel(imageInfo));
@@ -77,11 +78,22 @@ public class PreviewModel : BasePageModel
     }
 
 
+    public Task<IActionResult> OnPostEdit(string id, CancellationToken cancellationToken)
+    {
+        return DecodeId(id)
+            .Bind(decodedId => GetCreator(decodedId, cancellationToken))
+            .Finally(result => result.IsSuccess 
+                ? RedirectToPage("./Index", new { id = id }) 
+                : RedirectToError(result.Error));
+    }
+
+
     private Task<Result<(Creator, Guid), ProblemDetails>> GetCreator(Guid decodedId, CancellationToken cancellationToken) 
         => GetCreator(cancellationToken)
             .Map(creator => (creator, decodedId));
+    
 
-
+    public bool CanEdit { get; set; }
     public long ExpiresIn { get; set; }
     public string Id { get; set; } = default!;
     public List<ReadOnlyImageContainerModel> ImageContainers { get; set; } = [];

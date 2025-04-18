@@ -2,6 +2,7 @@
 using CSharpFunctionalExtensions.ValueTasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Localization;
+using Sentry;
 using Warp.WebApp.Attributes;
 using Warp.WebApp.Data;
 using Warp.WebApp.Extensions;
@@ -185,7 +186,7 @@ public class EntryInfoService : IEntryInfoService
             return result.Error;
 
         return await GetEntryInfo(entryId, cancellationToken)
-            .Bind(GetViews);
+            .Bind(GetOrAddViews);
 
 
         async Task<UnitResult<ProblemDetails>> EnsureNotReported()
@@ -197,7 +198,7 @@ public class EntryInfoService : IEntryInfoService
         }
 
 
-        async Task<Result<EntryInfo, ProblemDetails>> GetViews(EntryInfo entryInfo)
+        async Task<Result<EntryInfo, ProblemDetails>> GetOrAddViews(EntryInfo entryInfo)
         {
             var viewCount = entryInfo.CreatorId == creator.Id
                 ? await _viewCountService.Get(entryId, cancellationToken)
@@ -236,6 +237,25 @@ public class EntryInfoService : IEntryInfoService
 
                 return RemoveAttachedImageInternally(result, creator, entryId, imageId, cancellationToken);
             });
+
+
+    /// <inheritdoc/>
+    [TraceMethod]
+    public Task<Result<EntryInfo, ProblemDetails>> Update(Creator creator, EntryRequest entryRequest, CancellationToken cancellationToken)
+    {
+        return GetEntryInfo(entryRequest.Id, cancellationToken)
+            .Ensure(entryInfo => IsBelongsToCreator(entryInfo, creator), ProblemDetailsHelper.Create(_localizer["NoPermissionErrorMessage"]))
+            .Bind(GetViews)
+            .Ensure(entryInfo => entryInfo.ViewCount == 0, ProblemDetailsHelper.Create(_localizer["EntryCannotBeEditedAfterViewed"]))
+            .Bind(_ => Add(creator, entryRequest, cancellationToken));
+
+
+        async Task<Result<EntryInfo, ProblemDetails>> GetViews(EntryInfo entryInfo)
+        {
+            var viewCount = await _viewCountService.Get(entryInfo.Id, cancellationToken);
+            return entryInfo with { ViewCount = viewCount };
+        }
+    }
 
 
     private async Task<Result<EntryInfo, ProblemDetails>> GetEntryInfo(Guid entryId, CancellationToken cancellationToken)
