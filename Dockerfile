@@ -1,9 +1,9 @@
-FROM node:18-alpine AS node-dependencies
+FROM node:22-alpine AS node-dependencies
 WORKDIR /dependencies
 COPY ["Warp.WebApp/package.json", "Warp.WebApp/yarn.lock", "./"]
 RUN yarn install
 
-FROM node:18-alpine AS frontend-builder
+FROM node:22-alpine AS frontend-builder
 WORKDIR /src
 COPY --from=node-dependencies /dependencies/node_modules ./node_modules
 COPY ["Warp.WebApp/package.json", "Warp.WebApp/postcss.config.js", "Warp.WebApp/tailwind.config.js", "Warp.WebApp/vite.config.js", "./"]
