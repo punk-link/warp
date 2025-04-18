@@ -137,7 +137,7 @@ public class IndexModel : BasePageModel
     {
         return GetCreator(cancellationToken)
             .Bind(BuildEntryRequest)
-            .Bind(AddEntryInfo)
+            .Bind(ProcessEntryRequest)
             .Finally(result =>
             {
                 if (result.IsFailure)
@@ -166,8 +166,20 @@ public class IndexModel : BasePageModel
         }
 
 
-        Task<Result<EntryInfo, ProblemDetails>> AddEntryInfo((Creator Creator, EntryRequest EntryRequest) tuple)
-            => _entryInfoService.Add(tuple.Creator, tuple.EntryRequest, cancellationToken);
+        async Task<Result<EntryInfo, ProblemDetails>> ProcessEntryRequest((Creator Creator, EntryRequest EntryRequest) tuple)
+        {
+            var entryExists = await CheckIfEntryExists(tuple.Creator, tuple.EntryRequest.Id, cancellationToken);
+            return entryExists
+                ? await _entryInfoService.Update(tuple.Creator, tuple.EntryRequest, cancellationToken)
+                : await _entryInfoService.Add(tuple.Creator, tuple.EntryRequest, cancellationToken);
+
+
+            async Task<bool> CheckIfEntryExists(Creator creator, Guid entryId, CancellationToken cancellationToken)
+            {
+                var result = await _entryInfoService.Get(creator, entryId, cancellationToken);
+                return result.IsSuccess;
+            }
+        }
     }
 
 

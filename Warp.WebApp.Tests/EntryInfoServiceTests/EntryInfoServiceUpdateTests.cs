@@ -68,6 +68,9 @@ public class EntryInfoServiceUpdateTests
         _dataStorageSubstitute.TryGet<EntryInfo?>(entryInfoCacheKey, cancellationToken)
             .Returns(new ValueTask<EntryInfo?>(existingEntryInfo));
 
+        _viewCountServiceSubstitute.Get(entryId, cancellationToken)
+            .Returns(Task.FromResult(0L));
+
         _entryServiceSubstitute.Add(Arg.Any<EntryRequest>(), cancellationToken)
             .Returns(Result.Success<Entry, ProblemDetails>(updatedEntry));
 
@@ -93,6 +96,8 @@ public class EntryInfoServiceUpdateTests
         Assert.Equal(updatedEntry.Content, result.Value.Entry.Content);
         Assert.Equal(_creator.Id, result.Value.CreatorId);
         Assert.Equal(imageInfos.Count, result.Value.ImageInfos.Count);
+        
+        await _viewCountServiceSubstitute.Received(1).Get(entryId, cancellationToken);
     }
 
 
@@ -145,11 +150,14 @@ public class EntryInfoServiceUpdateTests
         };
 
         var existingEntryInfo = new EntryInfo(entryId, _creator.Id, DateTime.UtcNow, DateTime.UtcNow.AddDays(1), 
-            EditMode.Simple, new Entry("Original content"), new List<ImageInfo>(), new EntryOpenGraphDescription("Original", "Original", null), 5);
+            EditMode.Simple, new Entry("Original content"), new List<ImageInfo>(), new EntryOpenGraphDescription("Original", "Original", null), 0);
 
         var entryInfoCacheKey = CacheKeyBuilder.BuildEntryInfoCacheKey(entryId);
         _dataStorageSubstitute.TryGet<EntryInfo?>(entryInfoCacheKey, cancellationToken)
             .Returns(new ValueTask<EntryInfo?>(existingEntryInfo));
+            
+        _viewCountServiceSubstitute.Get(entryId, cancellationToken)
+            .Returns(Task.FromResult(5L));
 
         var localizedString = new LocalizedString("EntryCannotBeEditedAfterViewed", "Entry cannot be edited after being viewed.");
         _localizerSubstitute["EntryCannotBeEditedAfterViewed"]
@@ -161,6 +169,7 @@ public class EntryInfoServiceUpdateTests
         Assert.Equal(localizedString.Value, result.Error.Detail);
         Assert.Equal((int)HttpStatusCode.BadRequest, result.Error.Status);
         
+        await _viewCountServiceSubstitute.Received(1).Get(entryId, cancellationToken);
         await _entryServiceSubstitute.DidNotReceive().Add(Arg.Any<EntryRequest>(), Arg.Any<CancellationToken>());
     }
 
