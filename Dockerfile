@@ -41,7 +41,6 @@ FROM build AS test
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 RUN dotnet test --verbosity normal --configuration $BUILD_CONFIGURATION \
-    --parallel \
     --blame-hang-timeout 60s \
     -- xUnit.parallelizeTestCollections=true xUnit.maxParallelThreads=0
 
