@@ -210,4 +210,7 @@
   <data name="EntryCannotBeEditedAfterViewed" xml:space="preserve">
     <value>Entry cannot be edited after viewed</value>
   </data>
+  <data name="EntryEditModeMismatch" xml:space="preserve">
+    <value>Edit mode cannot be changed for existing entries.</value>
+  </data>
 </root>

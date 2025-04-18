@@ -67,14 +67,14 @@
                     }
                     @if (Model.ImageContainers.Count > 0)
                     {
-                        <div class="gallery pt-5 mb-5">
+                        <div class="gallery pt-5">
                             @foreach (var imageContainer in Model.ImageContainers)
                             {
                                 <partial name="Shared/Components/ReadOnlyImageContainer" model="imageContainer" />
                             }
                         </div>
                     }
-                    <div class="font-sans-serif text-base">
+                    <div class="font-sans-serif text-base pt-5">
                         @Html.Raw(Model.TextContent)
                     </div>
                 </div>
