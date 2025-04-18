@@ -32,7 +32,7 @@ pipeline {
     post {
         success {
             script {
-                sh "curl --location --request POST 'https://api.telegram.org/bot${TOKEN}/sendMessage' --form text='kazino' --form chat_id='${CHAT_ID}'"
+                sh "curl --location --request POST 'https://api.telegram.org/bot'${TOKEN}'/sendMessage' --form text='kazino' --form chat_id='${CHAT_ID}'"
             }
         }
 
