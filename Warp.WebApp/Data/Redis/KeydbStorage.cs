@@ -116,7 +116,7 @@ public sealed class KeyDbStorage : IDistributedStorage
     private static int ToDatabaseIndex<T>(T type)
         => type switch
         {
-            Entry => 1,
+            EntryInfo => 1,
             ImageInfo => 2,
             Report => 3,
             string => 4,
