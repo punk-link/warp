@@ -110,6 +110,7 @@
 
                 <input type="hidden" asp-for="Id" value="@Model.Id" />
                 <input id="edit-mode-state" type="hidden" asp-for="EditMode" />
+                @Html.AntiForgeryToken()
             </div>
         </form>
     </section>

@@ -22,6 +22,8 @@ public class CookieService : ICookieService
 
     public async Task Set(HttpContext httpContext, Creator creator)
     {
+        await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+    
         var claims = new List<Claim>
         {
             new(ClaimTypes.Name, creator.Id.ToString())
@@ -30,13 +32,15 @@ public class CookieService : ICookieService
         var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
 
-        await httpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, _defaultAuthenticationProperties);
+        var authenticationProperties = new AuthenticationProperties
+        {
+            ExpiresUtc = DateTimeOffset.UtcNow.AddDays(365),
+            IsPersistent = true,
+            IssuedUtc = DateTimeOffset.UtcNow
+        };
+
+        await httpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, claimsPrincipal, authenticationProperties);
+
+        httpContext.User = claimsPrincipal;
     }
-
-
-    private static readonly AuthenticationProperties _defaultAuthenticationProperties = new()
-    {
-        IsPersistent = true,
-        ExpiresUtc = DateTimeOffset.UtcNow.AddDays(365)
-    };
 }

@@ -37,7 +37,6 @@ public class IndexModel : BasePageModel
     }
 
 
-    [OutputCache(Duration = 3600, VaryByQueryKeys = [nameof(id)])]
     public Task<IActionResult> OnGet(string? id, CancellationToken cancellationToken)
     {
         return InitializeCreator()
@@ -65,10 +64,7 @@ public class IndexModel : BasePageModel
 
             async Task<Result<Creator>> GetOrAddCreator(Guid? creatorId)
             {
-                if (creatorId is null)
-                    return await _creatorService.Add(cancellationToken);
-
-                var (isSuccess, _, creator, _) = await _creatorService.Get(creatorId.Value, cancellationToken);
+                var (isSuccess, _, creator, _) = await _creatorService.Get(creatorId, cancellationToken);
                 return isSuccess
                     ? creator
                     : await _creatorService.Add(cancellationToken);

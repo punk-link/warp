@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Razor;
@@ -54,7 +55,6 @@ try
     builder.Services.AddControllers()
         .AddControllersAsServices();
     builder.Services.AddHealthChecks()
-        //.AddCheck<ControllerResolveHealthCheck>(nameof(ControllerResolveHealthCheck))
         .AddCheck<RedisHealthCheck>(nameof(RedisHealthCheck));
 
     builder.Services.AddResponseCompression(options =>
@@ -67,7 +67,25 @@ try
     builder.Services.AddResponseCaching();
     builder.Services.AddOutputCache();
 
-    builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme).AddCookie();
+    builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+        .AddCookie(options =>
+        {
+            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            options.Cookie.SameSite = SameSiteMode.Strict;
+            options.Cookie.Name = "Warp.Auth";
+            options.Cookie.HttpOnly = true;
+            options.ExpireTimeSpan = TimeSpan.FromDays(365);
+            options.SlidingExpiration = true;
+        });
+    builder.Services.AddAntiforgery(options => 
+    {
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SameSite = SameSiteMode.Strict;
+        options.Cookie.Name = "Warp.Antiforgery";
+        options.Cookie.HttpOnly = true;
+
+        options.HeaderName = "X-CSRF-TOKEN";
+    });
 
     builder.Services.AddHttpClient(HttpClients.Warmup);
 
@@ -89,26 +107,22 @@ try
 
     app.UseMiddleware<ApiExceptionHandlerMiddleware>();
     app.UseMiddleware<TraceMethodMiddleware>();
-
-    app.UseHttpsRedirection();
-    app.UseResponseCompression();
-    app.UseResponseCaching();
-    app.UseOutputCache();
-
-    app.UseHealthChecks("/health");
     app.UseMiddleware<CancellationExceptionHandlerMiddleware>();
     app.UseMiddleware<RobotsMiddleware>();
+    app.UseHealthChecks("/health");
+
+    app.UseHttpsRedirection();
     app.UseStaticFiles();
-    app.UseCookiePolicy(new CookiePolicyOptions()
-    {
-        Secure = CookieSecurePolicy.Always,
-        MinimumSameSitePolicy = SameSiteMode.Strict
-    });
+    app.UseCookiePolicy();
 
     app.UseRouting();
 
     app.UseAuthentication();
     app.UseAuthorization();
+
+    app.UseResponseCompression();
+    app.UseResponseCaching();
+    app.UseOutputCache();
 
     app.MapControllers();
     app.MapRazorPages();
@@ -187,17 +201,17 @@ void AddServices(IServiceCollection services)
 {
     services.AddSingleton(services);
 
-    services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
+    services.AddTransient<IDistributedStorage, KeyDbStorage>();
+    services.AddTransient<IS3FileStorage, S3FileStorage>();
+
     services.AddTransient<IPartialViewRenderService, PartialViewRenderService>();
     services.AddTransient<IUrlService, UrlService>();
     services.AddTransient<IOpenGraphService, OpenGraphService>();
 
     services.AddTransient<IUnauthorizedImageService, ImageService>();
     services.AddTransient<IImageService, ImageService>();
-    services.AddTransient<IDistributedStorage, KeyDbStorage>();
     services.AddTransient<IDataStorage, DataStorage>();
     services.AddTransient<IAmazonS3Factory, AmazonS3Factory>();
-    services.AddTransient<IS3FileStorage, S3FileStorage>();
     services.AddTransient<IReportService, ReportService>();
     services.AddTransient<IViewCountService, ViewCountService>();
     services.AddTransient<IEntryInfoService, EntryInfoService>();
@@ -207,5 +221,7 @@ void AddServices(IServiceCollection services)
     
     services.AddSingleton<IRouteWarmer, RouteWarmerService>();
     services.AddSingleton<IServiceWarmer, ServiceWarmerService>();
+    services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
+
     services.AddHostedService<WarmupService>();
 }
