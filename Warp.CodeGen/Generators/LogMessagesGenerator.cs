@@ -68,25 +68,19 @@ public partial class LogMessagesGenerator
         var paramMatches = LogParametersRegex().Matches(description);
         foreach (Match match in paramMatches)
         {
-            string paramName = match.Groups[1].Value;
+            var paramNameWithType = match.Groups[1].Value;
+            var paramName = paramNameWithType;
+            var paramType = "string?";
             
-            // Special case handling for known parameter types
-            if (paramName.Equals("RequestId", StringComparison.OrdinalIgnoreCase))
-                parameters.Add("string? requestId");
-            else if (paramName.Equals("ErrorMessage", StringComparison.OrdinalIgnoreCase))
-                parameters.Add("string errorMessage");
-            else if (paramName.Equals("ImageId", StringComparison.OrdinalIgnoreCase))
-                parameters.Add("Guid imageId");
-            else if (paramName.Equals("FileExtension", StringComparison.OrdinalIgnoreCase))
-                parameters.Add("string fileExtension");
-            else if (paramName.Equals("PartialViewName", StringComparison.OrdinalIgnoreCase))
-                parameters.Add("string partialViewName");
-            else if (paramName.Equals("Signature", StringComparison.OrdinalIgnoreCase))
-                parameters.Add("string signature");
-            else if (paramName.Equals("CacheValue", StringComparison.OrdinalIgnoreCase))
-                parameters.Add("string? cacheValue");
-            else
-                parameters.Add($"string {StringExtensions.ToCamelCase(paramName)}");
+            if (paramNameWithType.Contains(':'))
+            {
+                var parts = paramNameWithType.Split(':');
+                paramName = parts[0].Trim();
+                paramType = parts[1].Trim();
+            }
+
+            var variableName = StringExtensions.ToCamelCase(paramName);
+            parameters.Add($"{paramType} {variableName}");
         }
         
         return parameters.Count > 0 
@@ -95,7 +89,7 @@ public partial class LogMessagesGenerator
     }
 
     
-    // Extract parameters from the message template (e.g., {RequestId}, {ErrorMessage})
+    // Extract parameters from the message template (e.g., {RequestId}, {ErrorMessage}, {ImageId:Guid})
     [GeneratedRegex(@"\{([^{}]+)\}", RegexOptions.Compiled)]
     private static partial Regex LogParametersRegex();
 }
