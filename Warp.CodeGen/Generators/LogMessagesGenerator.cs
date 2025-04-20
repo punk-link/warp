@@ -68,13 +68,12 @@ public partial class LogMessagesGenerator
         var paramMatches = LogParametersRegex().Matches(description);
         foreach (Match match in paramMatches)
         {
-            var paramNameWithType = match.Groups[1].Value;
-            var paramName = paramNameWithType;
+            var paramName = match.Groups[1].Value;
             var paramType = "string?";
             
-            if (paramNameWithType.Contains(':'))
+            if (paramName.Contains(':'))
             {
-                var parts = paramNameWithType.Split(':');
+                var parts = paramName.Split(':');
                 paramName = parts[0].Trim();
                 paramType = parts[1].Trim();
             }
