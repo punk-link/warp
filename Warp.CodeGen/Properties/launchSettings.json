@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Warp.CodeGen": {
+      "commandName": "Project",
+      "commandLineArgs": "--json c:\\Projects\\punk-link\\warp\\Warp.WebApp\\CodeGeneration\\LoggingEvents.json --constants c:\\Projects\\punk-link\\warp\\Warp.WebApp\\Constants\\Logging\\LoggingConstants.cs --messages c:\\Projects\\punk-link\\warp\\Warp.WebApp\\Telemetry\\Logging\\LogMessages.cs"
+    }
+  }
+}
