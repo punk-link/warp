@@ -1,0 +1,216 @@
+{
+  "loggingCategories": [
+    {
+      "name": "Generic",
+      "events": [
+        {
+          "id": 10001,
+          "name": "ServerError",
+          "description": "An unexpected error occurred while processing the request. Request ID: '{RequestId}'.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false
+        },
+        {
+          "id": 10002,
+          "name": "ServerErrorWithMessage",
+          "description": "An error occurred while processing the request. Request ID: {RequestId}. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false
+        },
+        {
+          "id": 10003,
+          "name": "ServiceUnavailable",
+          "description": "Service unavailable (503). Request ID: {RequestId}. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false
+        }
+      ]
+    },
+    {
+      "name": "Startup",
+      "events": [
+        {
+          "id": 11001,
+          "name": "RedisHostIsNotSpecified",
+          "description": "Startup error: The Redis host configuration is missing.",
+          "logLevel": "Critical",
+          "generateLogMessage": true,
+          "obsolete": false
+        },
+        {
+          "id": 11002,
+          "name": "RedisPortIsNotSpecified",
+          "description": "Startup error: The Redis port configuration is missing.",
+          "logLevel": "Critical",
+          "generateLogMessage": true,
+          "obsolete": false
+        },
+        {
+          "id": 11003,
+          "name": "RedisConnectionException",
+          "description": "Startup error: Failed to connect to Redis. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Critical",
+          "generateLogMessage": true,
+          "obsolete": false
+        },
+        {
+          "id": 11101,
+          "name": "VaultConnectionException",
+          "description": "Startup error: Failed to connect to the Vault. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Critical",
+          "generateLogMessage": true,
+          "obsolete": false
+        },
+        {
+          "id": 11102,
+          "name": "VaultSecretCastException",
+          "description": "Startup error: Failed to cast retrieved secrets to the expected type. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Critical",
+          "generateLogMessage": true,
+          "obsolete": false
+        },
+        {
+          "id": 11201,
+          "name": "LocalConfigurationIsInUse",
+          "description": "Local configuration is in use.",
+          "logLevel": "Information",
+          "generateLogMessage": true,
+          "obsolete": false
+        },
+        {
+          "id": 11301,
+          "name": "OptionsValidationException",
+          "description": "Startup error: Options validation exception occurred. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false
+        }
+      ]
+    },
+    {
+      "name": "Infrastructure",
+      "events": [
+        {
+          "id": 12001,
+          "name": "DefaultCacheValueError",
+          "description": "Unable to store a default value {CacheValue}.",
+          "logLevel": "Warning",
+          "generateLogMessage": true,
+          "obsolete": false
+        },
+        {
+          "id": 12101,
+          "name": "PartialViewNotFound",
+          "description": "Partial view '{PartialViewName:string}' could not be found. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Critical",
+          "generateLogMessage": true,
+          "obsolete": false
+        },
+        {
+          "id": 12102,
+          "name": "PartialViewRenderingError",
+          "description": "An error occurred while rendering the partial view '{PartialViewName:string}'. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Critical",
+          "generateLogMessage": true,
+          "obsolete": false
+        },
+        {
+          "id": 12103,
+          "name": "ActionContextNotFound",
+          "description": "Action context not found while trying to build an image URL from a Razor page.",
+          "logLevel": "Critical",
+          "generateLogMessage": true,
+          "obsolete": false
+        },
+        {
+          "id": 12104,
+          "name": "ImageControllerGetMethodNotFound",
+          "description": "Get image controller's method not found.",
+          "logLevel": "Critical",
+          "generateLogMessage": true,
+          "obsolete": false
+        },
+        {
+          "id": 12201,
+          "name": "ImageUploadError",
+          "description": "An error occurred while uploading the image. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false
+        },
+        {
+          "id": 12202,
+          "name": "ImageDownloadError",
+          "description": "An error occurred while downloading the image. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false
+        },
+        {
+          "id": 12203,
+          "name": "ImageRemovalError",
+          "description": "An error occurred while removing the image. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false
+        },
+        {
+          "id": 12301,
+          "name": "FileUploadException",
+          "description": "An error occurred while uploading the file. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false
+        },
+        {
+          "id": 12302,
+          "name": "UnverifiedFileSignatureError",
+          "description": "File signature verification failed. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false
+        },
+        {
+          "id": 12303,
+          "name": "FileSignatureVerificationError",
+          "description": "File signature verification failed for files with extension '{FileExtension:string}'.",
+          "logLevel": "Warning",
+          "generateLogMessage": true,
+          "obsolete": false
+        }
+      ]
+    },
+    {
+      "name": "Domain",
+      "events": [
+        {
+          "id": 20001,
+          "name": "WarpContentEmpty",
+          "description": "The entry content is empty.",
+          "logLevel": "Debug",
+          "generateLogMessage": false,
+          "obsolete": false
+        },
+        {
+          "id": 20002,
+          "name": "WarpExpirationPeriodEmpty",
+          "description": "The entry expiration period is not specified.",
+          "logLevel": "Debug",
+          "generateLogMessage": false,
+          "obsolete": false
+        },
+        {
+          "id": 20101,
+          "name": "ImageRemovalDomainError",
+          "description": "An error occurred in the domain layer while removing the image. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false
+        }
+      ]
+    }
+  ]
+}

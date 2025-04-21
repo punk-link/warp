@@ -16,6 +16,7 @@ public class ConstantsGenerator
         var sb = new StringBuilder();
         sb.AppendLine("// This file is auto-generated. Do not edit directly.");
         sb.AppendLine("// Generated on: " + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss UTC"));
+        sb.AppendLine("using System;");
         sb.AppendLine("using System.ComponentModel;");
         sb.AppendLine();
         sb.AppendLine("namespace Warp.WebApp.Constants.Logging;");
@@ -32,8 +33,13 @@ public class ConstantsGenerator
             foreach (var logEvent in category.Events)
             {
                 sb.AppendLine($"    [Description(\"{logEvent.Description}\")]");
+                if (logEvent.Obsolete)
+                    sb.AppendLine($"    [Obsolete(\"This logging event is obsolete. Do not use it.\")]");
+
                 sb.AppendLine($"    {logEvent.Name} = {logEvent.Id},");
-                if (logEvent != category.Events.Last() || !isLastCategory)
+                
+                var isLastEventInCategory = logEvent == category.Events.Last();
+                if (isLastEventInCategory && !isLastCategory)
                     sb.AppendLine();
             }
             

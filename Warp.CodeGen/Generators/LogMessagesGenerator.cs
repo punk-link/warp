@@ -18,6 +18,7 @@ public partial class LogMessagesGenerator
         sb.AppendLine("// This file is auto-generated. Do not edit directly.");
         sb.AppendLine("// Generated on: " + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss UTC"));
         sb.AppendLine("using Microsoft.Extensions.Logging;");
+        sb.AppendLine("using System;");
         sb.AppendLine("using Warp.WebApp.Constants.Logging;");
         sb.AppendLine();
         sb.AppendLine("namespace Warp.WebApp.Telemetry.Logging;");
@@ -44,6 +45,9 @@ public partial class LogMessagesGenerator
                 var parameters = ExtractParameters(logEvent.Description);
                 
                 sb.AppendLine($"    [LoggerMessage((int)LoggingEvents.{logEvent.Name}, LogLevel.{logEvent.LogLevel}, \"{logEvent.Description}\")]");
+                if (logEvent.Obsolete)
+                    sb.AppendLine($"    [Obsolete(\"This log message is obsolete. Do not use it.\")]");
+
                 sb.AppendLine($"    public static partial void {methodName}(this ILogger logger{parameters});");
                 
                 var isLastEventInCategory = logEvent == category.Events.Last(e => e.GenerateLogMessage);
