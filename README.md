@@ -28,6 +28,50 @@ Run the compose file inside the root directory. It sets up external dependencies
 Also you might need to override DB settings to run locally. Set up the _Redis_ section of your _appSettings.Local.json_.
 
 
+## Code Generation
+
+Warp includes a code generation system for managing logging events and messages. The generator creates consistent logging constants, enums, and helper methods based on a JSON configuration file.
+
+### Logging Configuration
+
+The logging configuration is defined in `Warp.WebApp/CodeGeneration/LoggingEvents.json`. Each logging event includes:
+
+- `id` - Unique numeric identifier
+- `name` - Name of the logging event
+- `description` - Description template with optional parameters in format `{ParameterName:Type}`
+- `logLevel` - Severity level (Debug, Information, Warning, Error, Critical)
+- `generateLogMessage` - Boolean flag to control whether a log method should be generated
+- `obsolete` - Boolean flag to mark deprecated log events that will be removed in future versions
+
+Example event:
+```json
+{
+  "id": 12001,
+  "name": "DefaultCacheValueError",
+  "description": "Unable to store a default value {CacheValue}.",
+  "logLevel": "Warning",
+  "generateLogMessage": true,
+  "obsolete": false
+}
+```
+
+### Generated Files
+
+The code generator produces:
+
+1. `LoggingConstants.cs` - Enum definitions for all logging events with Description attributes
+2. `LogMessages.cs` - Extension methods for ILogger with structured logging support
+
+When a log event is marked as `obsolete: true`, both the enum value and log method are decorated with the `[Obsolete]` attribute, generating compiler warnings when used.
+
+### Running Code Generation
+
+Code generation runs automatically during the build process through a target in the project file. You can also run it manually:
+
+```bash
+dotnet run --project Warp.CodeGen/Warp.CodeGen.csproj -- --json Warp.WebApp/CodeGeneration/logging-events.json --constants Warp.WebApp/Constants/Logging/LoggingConstants.cs --messages Warp.WebApp/Telemetry/Logging/LogMessages.cs
+```
+
 ## Styles
 
 The project uses a modern build process for its styles, leveraging both Sass and Tailwind CSS. All style assets are generated via a series of npm scripts defined in the _package.json_. Follow these steps to build the styles:
