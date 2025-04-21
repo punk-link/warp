@@ -1,36 +1,68 @@
-﻿namespace Warp.WebApp.Constants.Logging;
+// This file is auto-generated. Do not edit directly.
+// Generated on: 2025-04-21 08:08:36 UTC
+using System;
+using System.ComponentModel;
 
-public static class LoggingConstants
+namespace Warp.WebApp.Constants.Logging;
+
+public enum LoggingEvents
 {
     // Generic
-    public const int ServerError = 10_001;
-    public const int ServerErrorWithMessage = 10_002;
-    public const int ServiceUnavailable = 10_003;
+    [Description("An unexpected error occurred while processing the request. Request ID: '{RequestId}'.")]
+    ServerError = 10001,
+    [Description("An error occurred while processing the request. Request ID: {RequestId}. Details: '{ErrorMessage:string}'.")]
+    ServerErrorWithMessage = 10002,
+    [Description("Service unavailable (503). Request ID: {RequestId}. Details: '{ErrorMessage:string}'.")]
+    ServiceUnavailable = 10003,
+
 
     // Startup
-    public const int RedisHostIsNotSnspecified = 11_001;
-    public const int RedisPortIsNotSnspecified = 11_002;
-    public const int RedisConnectionException = 11_003;
-    public const int VaultConnectionException = 11_101;
-    public const int VaultSecretCastException = 11_102;
-    public const int LocalConfigurationIsInUse = 11_201;
-    public const int OptionsValidationException = 11_301;
+    [Description("Startup error: The Redis host configuration is missing.")]
+    RedisHostIsNotSpecified = 11001,
+    [Description("Startup error: The Redis port configuration is missing.")]
+    RedisPortIsNotSpecified = 11002,
+    [Description("Startup error: Failed to connect to Redis. Details: '{ErrorMessage:string}'.")]
+    RedisConnectionException = 11003,
+    [Description("Startup error: Failed to connect to the Vault. Details: '{ErrorMessage:string}'.")]
+    VaultConnectionException = 11101,
+    [Description("Startup error: Failed to cast retrieved secrets to the expected type. Details: '{ErrorMessage:string}'.")]
+    VaultSecretCastException = 11102,
+    [Description("Local configuration is in use.")]
+    LocalConfigurationIsInUse = 11201,
+    [Description("Startup error: Options validation exception occurred. Details: '{ErrorMessage:string}'.")]
+    OptionsValidationException = 11301,
+
 
     // Infrastructure
-    public const int DefaultCacheValueError = 12_001;
-    public const int PartialViewNotFound = 12_101;
-    public const int PartialViewRenderingError = 12_102;
-    public const int ActionContextNotFound = 12_103;
-    public const int ImageControllerGetMethodNotFound = 12_104;
-    public const int ImageUploadError = 12_201;
-    public const int ImageDownloadError = 12_202;
-    public const int ImageRemovalError = 12_203;
-    public const int FileUploadException = 12_301;
-    public const int UnverifiedFileSignatureError = 12_302;
-    public const int FileSignatureVerificationError = 12_303;
+    [Description("Unable to store a default value {CacheValue}.")]
+    DefaultCacheValueError = 12001,
+    [Description("Partial view '{PartialViewName:string}' could not be found. Details: '{ErrorMessage:string}'.")]
+    PartialViewNotFound = 12101,
+    [Description("An error occurred while rendering the partial view '{PartialViewName:string}'. Details: '{ErrorMessage:string}'.")]
+    PartialViewRenderingError = 12102,
+    [Description("Action context not found while trying to build an image URL from a Razor page.")]
+    ActionContextNotFound = 12103,
+    [Description("Get image controller's method not found.")]
+    ImageControllerGetMethodNotFound = 12104,
+    [Description("An error occurred while uploading the image. Details: '{ErrorMessage:string}'.")]
+    ImageUploadError = 12201,
+    [Description("An error occurred while downloading the image. Details: '{ErrorMessage:string}'.")]
+    ImageDownloadError = 12202,
+    [Description("An error occurred while removing the image. Details: '{ErrorMessage:string}'.")]
+    ImageRemovalError = 12203,
+    [Description("An error occurred while uploading the file. Details: '{ErrorMessage:string}'.")]
+    FileUploadException = 12301,
+    [Description("File signature verification failed. Details: '{ErrorMessage:string}'.")]
+    UnverifiedFileSignatureError = 12302,
+    [Description("File signature verification failed for files with extension '{FileExtension:string}', '{HeaderBytes:string?}'.")]
+    FileSignatureVerificationError = 12303,
+
 
     // Domain
-    public const int WarpContentEmpty = 20_001;
-    public const int WarpExpirationPeriodEmpty = 20_002;
-    public const int ImageRemovalDomainError = 20_101;
+    [Description("The entry content is empty.")]
+    WarpContentEmpty = 20001,
+    [Description("The entry expiration period is not specified.")]
+    WarpExpirationPeriodEmpty = 20002,
+    [Description("An error occurred in the domain layer while removing the image '{ImageId:Guid}'. Details: '{ErrorMessage:string}'.")]
+    ImageRemovalDomainError = 20101,
 }

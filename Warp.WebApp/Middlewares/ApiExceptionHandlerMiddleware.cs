@@ -24,7 +24,7 @@ public class ApiExceptionHandlerMiddleware
         catch (Exception ex)
         {
             var traceId = context.TraceIdentifier;
-            _logger.LogGenericServerError(traceId, ex.Message);
+            _logger.LogServerErrorWithMessage(traceId, ex.Message);
 
             SentrySdk.CaptureException(ex);
 

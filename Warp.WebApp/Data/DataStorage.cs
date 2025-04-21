@@ -25,7 +25,7 @@ public sealed class DataStorage : IDataStorage
     {
         if (value is null || IsDefaultStruct(value))
         {
-            _logger.LogSetDefaultCacheValueError(value?.ToString());
+            _logger.LogDefaultCacheValueError(value?.ToString());
             return Result.Failure(_localizer["StoringDefaultStructureErrorMessage"]);
         }
 
@@ -73,7 +73,7 @@ public sealed class DataStorage : IDataStorage
     {
         if (value is null || IsDefaultStruct(value))
         {
-            _logger.LogSetDefaultCacheValueError(value?.ToString());
+            _logger.LogDefaultCacheValueError(value?.ToString());
             return Result.Failure(_localizer["StoringDefaultStructureErrorMessage"]);
         }
 

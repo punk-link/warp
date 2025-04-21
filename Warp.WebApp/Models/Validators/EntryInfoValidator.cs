@@ -9,7 +9,7 @@ public class EntryInfoValidator : AbstractValidator<EntryInfo>
     public EntryInfoValidator(IStringLocalizer<ServerResources> localizer)
     {
         RuleFor(x => x.ExpiresAt).GreaterThan(default(DateTime))
-            .WithErrorCode(LoggingConstants.WarpExpirationPeriodEmpty.ToString())
+            .WithErrorCode(((int)LoggingEvents.WarpExpirationPeriodEmpty).ToString())
             .WithMessage(localizer["EntryExpirationPeriodEmptyErrorMessage"]);
     }
 }

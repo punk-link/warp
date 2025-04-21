@@ -13,19 +13,19 @@ public class EntryValidator : AbstractValidator<Entry>
         {
             case EditMode.Unset:
                 RuleFor(x => x.Content).NotEmpty()
-                    .WithErrorCode(LoggingConstants.WarpContentEmpty.ToString())
+                    .WithErrorCode(((int)LoggingEvents.WarpContentEmpty).ToString())
                     .WithMessage(localizer["EntryBodyEmptyErrorMessage"]);
                 break;
             // Business rule: Entry content must not be empty if the edit mode is Text.
             case EditMode.Simple:
                 RuleFor(x => x.Content).NotEmpty()
-                    .WithErrorCode(LoggingConstants.WarpContentEmpty.ToString())
+                    .WithErrorCode(((int)LoggingEvents.WarpContentEmpty).ToString())
                     .WithMessage(localizer["EntryBodyEmptyErrorMessage"]);
                 break;
             // Business rule: Entry content must not be empty if the edit mode is Advanced and there are no images attached.
             case EditMode.Advanced when entryRequest.ImageIds.Count == 0:
                 RuleFor(x => x.Content).NotEmpty()
-                    .WithErrorCode(LoggingConstants.WarpContentEmpty.ToString())
+                    .WithErrorCode(((int)LoggingEvents.WarpContentEmpty).ToString())
                     .WithMessage(localizer["EntryBodyEmptyErrorMessage"]);
                 break;
         }

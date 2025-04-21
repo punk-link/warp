@@ -66,7 +66,7 @@ When a log event is marked as `obsolete: true`, both the enum value and log meth
 
 ### Running Code Generation
 
-Code generation runs automatically during the build process through a target in the project file. You can also run it manually:
+Code generation runs automatically during the release build process through a target in the project file. You can also run it manually:
 
 ```bash
 dotnet run --project Warp.CodeGen/Warp.CodeGen.csproj -- --json Warp.WebApp/CodeGeneration/logging-events.json --constants Warp.WebApp/Constants/Logging/LoggingConstants.cs --messages Warp.WebApp/Telemetry/Logging/LogMessages.cs

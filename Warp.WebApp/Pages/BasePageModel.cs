@@ -89,10 +89,10 @@ public class BasePageModel : PageModel
     {
         var errors = problemDetails.GetErrors();
         if (errors.Count == 0)
-            _logger.LogGenericServerError(traceId);
+            _logger.LogServerError(traceId);
 
         foreach (var error in errors)
-            _logger.LogGenericServerError(traceId, $"{error.Code}: {error.Message}");
+            _logger.LogServerErrorWithMessage(traceId, $"{error.Code}: {error.Message}");
     }
 
 

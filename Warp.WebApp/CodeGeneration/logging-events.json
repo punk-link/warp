@@ -176,7 +176,7 @@
         {
           "id": 12303,
           "name": "FileSignatureVerificationError",
-          "description": "File signature verification failed for files with extension '{FileExtension:string}'.",
+          "description": "File signature verification failed for files with extension '{FileExtension:string}', '{HeaderBytes:string?}'.",
           "logLevel": "Warning",
           "generateLogMessage": true,
           "obsolete": false
@@ -205,7 +205,7 @@
         {
           "id": 20101,
           "name": "ImageRemovalDomainError",
-          "description": "An error occurred in the domain layer while removing the image. Details: '{ErrorMessage:string}'.",
+          "description": "An error occurred in the domain layer while removing the image '{ImageId:Guid}'. Details: '{ErrorMessage:string}'.",
           "logLevel": "Error",
           "generateLogMessage": true,
           "obsolete": false
