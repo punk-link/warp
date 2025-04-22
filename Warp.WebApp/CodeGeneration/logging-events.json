@@ -9,7 +9,8 @@
           "description": "An unexpected error occurred while processing the request. Request ID: '{RequestId}'.",
           "logLevel": "Error",
           "generateLogMessage": true,
-          "obsolete": false
+          "obsolete": false,
+          "httpCode": 500
         },
         {
           "id": 10002,
@@ -17,7 +18,8 @@
           "description": "An error occurred while processing the request. Request ID: {RequestId}. Details: '{ErrorMessage:string}'.",
           "logLevel": "Error",
           "generateLogMessage": true,
-          "obsolete": false
+          "obsolete": false,
+          "httpCode": 500
         },
         {
           "id": 10003,
@@ -25,7 +27,8 @@
           "description": "Service unavailable (503). Request ID: {RequestId}. Details: '{ErrorMessage:string}'.",
           "logLevel": "Error",
           "generateLogMessage": true,
-          "obsolete": false
+          "obsolete": false,
+          "httpCode": 503
         }
       ]
     },
@@ -38,7 +41,8 @@
           "description": "Startup error: The Redis host configuration is missing.",
           "logLevel": "Critical",
           "generateLogMessage": true,
-          "obsolete": false
+          "obsolete": false,
+          "httpCode": 500
         },
         {
           "id": 11002,
@@ -46,7 +50,8 @@
           "description": "Startup error: The Redis port configuration is missing.",
           "logLevel": "Critical",
           "generateLogMessage": true,
-          "obsolete": false
+          "obsolete": false,
+          "httpCode": 500
         },
         {
           "id": 11003,
@@ -54,7 +59,8 @@
           "description": "Startup error: Failed to connect to Redis. Details: '{ErrorMessage:string}'.",
           "logLevel": "Critical",
           "generateLogMessage": true,
-          "obsolete": false
+          "obsolete": false,
+          "httpCode": 500
         },
         {
           "id": 11101,
@@ -62,7 +68,8 @@
           "description": "Startup error: Failed to connect to the Vault. Details: '{ErrorMessage:string}'.",
           "logLevel": "Critical",
           "generateLogMessage": true,
-          "obsolete": false
+          "obsolete": false,
+          "httpCode": 500
         },
         {
           "id": 11102,
@@ -70,7 +77,8 @@
           "description": "Startup error: Failed to cast retrieved secrets to the expected type. Details: '{ErrorMessage:string}'.",
           "logLevel": "Critical",
           "generateLogMessage": true,
-          "obsolete": false
+          "obsolete": false,
+          "httpCode": 500
         },
         {
           "id": 11201,
@@ -78,7 +86,8 @@
           "description": "Local configuration is in use.",
           "logLevel": "Information",
           "generateLogMessage": true,
-          "obsolete": false
+          "obsolete": false,
+          "httpCode": 500
         },
         {
           "id": 11301,
@@ -86,7 +95,8 @@
           "description": "Startup error: Options validation exception occurred. Details: '{ErrorMessage:string}'.",
           "logLevel": "Error",
           "generateLogMessage": true,
-          "obsolete": false
+          "obsolete": false,
+          "httpCode": 500
         }
       ]
     },
@@ -99,7 +109,8 @@
           "description": "Unable to store a default value {CacheValue}.",
           "logLevel": "Warning",
           "generateLogMessage": true,
-          "obsolete": false
+          "obsolete": false,
+          "httpCode": 500
         },
         {
           "id": 12101,
@@ -107,7 +118,8 @@
           "description": "Partial view '{PartialViewName:string}' could not be found. Details: '{ErrorMessage:string}'.",
           "logLevel": "Critical",
           "generateLogMessage": true,
-          "obsolete": false
+          "obsolete": false,
+          "httpCode": 500
         },
         {
           "id": 12102,
@@ -115,7 +127,8 @@
           "description": "An error occurred while rendering the partial view '{PartialViewName:string}'. Details: '{ErrorMessage:string}'.",
           "logLevel": "Critical",
           "generateLogMessage": true,
-          "obsolete": false
+          "obsolete": false,
+          "httpCode": 500
         },
         {
           "id": 12103,
@@ -123,7 +136,8 @@
           "description": "Action context not found while trying to build an image URL from a Razor page.",
           "logLevel": "Critical",
           "generateLogMessage": true,
-          "obsolete": false
+          "obsolete": false,
+          "httpCode": 500
         },
         {
           "id": 12104,
@@ -131,7 +145,8 @@
           "description": "Get image controller's method not found.",
           "logLevel": "Critical",
           "generateLogMessage": true,
-          "obsolete": false
+          "obsolete": false,
+          "httpCode": 500
         },
         {
           "id": 12201,
@@ -139,7 +154,8 @@
           "description": "An error occurred while uploading the image. Details: '{ErrorMessage:string}'.",
           "logLevel": "Error",
           "generateLogMessage": true,
-          "obsolete": false
+          "obsolete": false,
+          "httpCode": 500
         },
         {
           "id": 12202,
@@ -147,7 +163,8 @@
           "description": "An error occurred while downloading the image. Details: '{ErrorMessage:string}'.",
           "logLevel": "Error",
           "generateLogMessage": true,
-          "obsolete": false
+          "obsolete": false,
+          "httpCode": 500
         },
         {
           "id": 12203,
@@ -155,7 +172,8 @@
           "description": "An error occurred while removing the image. Details: '{ErrorMessage:string}'.",
           "logLevel": "Error",
           "generateLogMessage": true,
-          "obsolete": false
+          "obsolete": false,
+          "httpCode": 500
         },
         {
           "id": 12301,
@@ -163,7 +181,8 @@
           "description": "An error occurred while uploading the file. Details: '{ErrorMessage:string}'.",
           "logLevel": "Error",
           "generateLogMessage": true,
-          "obsolete": false
+          "obsolete": false,
+          "httpCode": 400
         },
         {
           "id": 12302,
@@ -171,7 +190,8 @@
           "description": "File signature verification failed. Details: '{ErrorMessage:string}'.",
           "logLevel": "Error",
           "generateLogMessage": true,
-          "obsolete": false
+          "obsolete": false,
+          "httpCode": 415
         },
         {
           "id": 12303,
@@ -179,7 +199,8 @@
           "description": "File signature verification failed for files with extension '{FileExtension:string}', '{HeaderBytes:string?}'.",
           "logLevel": "Warning",
           "generateLogMessage": true,
-          "obsolete": false
+          "obsolete": false,
+          "httpCode": 415
         }
       ]
     },
@@ -192,7 +213,8 @@
           "description": "The entry content is empty.",
           "logLevel": "Debug",
           "generateLogMessage": false,
-          "obsolete": false
+          "obsolete": false,
+          "httpCode": 400
         },
         {
           "id": 20002,
@@ -200,7 +222,8 @@
           "description": "The entry expiration period is not specified.",
           "logLevel": "Debug",
           "generateLogMessage": false,
-          "obsolete": false
+          "obsolete": false,
+          "httpCode": 400
         },
         {
           "id": 20101,
@@ -208,7 +231,8 @@
           "description": "An error occurred in the domain layer while removing the image '{ImageId:Guid}'. Details: '{ErrorMessage:string}'.",
           "logLevel": "Error",
           "generateLogMessage": true,
-          "obsolete": false
+          "obsolete": false,
+          "httpCode": 400
         }
       ]
     }

@@ -18,6 +18,8 @@ public class ConstantsGenerator
         sb.AppendLine("// Generated on: " + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss UTC"));
         sb.AppendLine("using System;");
         sb.AppendLine("using System.ComponentModel;");
+        sb.AppendLine("using Microsoft.AspNetCore.Mvc;");
+        sb.AppendLine("using Microsoft.AspNetCore.Http;");
         sb.AppendLine();
         sb.AppendLine("namespace Warp.WebApp.Constants.Logging;");
         sb.AppendLine();
@@ -32,10 +34,11 @@ public class ConstantsGenerator
             
             foreach (var logEvent in category.Events)
             {
-                sb.AppendLine($"    [Description(\"{logEvent.Description}\")]");
                 if (logEvent.Obsolete)
-                    sb.AppendLine($"    [Obsolete(\"This logging event is obsolete. Do not use it.\")]");
-
+                    sb.AppendLine($"    [Obsolete(\"This logging event is obsolete and will be removed in a future version.\")]");
+                
+                sb.AppendLine($"    [Description(\"{logEvent.Description}\")]");
+                sb.AppendLine($"    [ProducesResponseType(StatusCodes.Status{logEvent.HttpCode})]");
                 sb.AppendLine($"    {logEvent.Name} = {logEvent.Id},");
                 
                 var isLastEventInCategory = logEvent == category.Events.Last();

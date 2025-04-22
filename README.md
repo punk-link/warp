@@ -42,16 +42,18 @@ The logging configuration is defined in `Warp.WebApp/CodeGeneration/LoggingEvent
 - `logLevel` - Severity level (Debug, Information, Warning, Error, Critical)
 - `generateLogMessage` - Boolean flag to control whether a log method should be generated
 - `obsolete` - Boolean flag to mark deprecated log events that will be removed in future versions
+- `httpCode` - Required HTTP status code that generates a ProducesResponseType attribute (default: 200)
 
 Example event:
 ```json
 {
-  "id": 12001,
-  "name": "DefaultCacheValueError",
-  "description": "Unable to store a default value {CacheValue}.",
-  "logLevel": "Warning",
+  "id": 12201,
+  "name": "ImageUploadError",
+  "description": "An error occurred while uploading the image. Details: '{ErrorMessage:string}'.",
+  "logLevel": "Error",
   "generateLogMessage": true,
-  "obsolete": false
+  "obsolete": false,
+  "httpCode": 400
 }
 ```
 
@@ -59,17 +61,19 @@ Example event:
 
 The code generator produces:
 
-1. `LoggingConstants.cs` - Enum definitions for all logging events with Description attributes
+1. `LoggingEvents.cs` - Enum definitions for all logging events with Description attributes
 2. `LogMessages.cs` - Extension methods for ILogger with structured logging support
 
 When a log event is marked as `obsolete: true`, both the enum value and log method are decorated with the `[Obsolete]` attribute, generating compiler warnings when used.
+
+When a log event includes an `httpCode` value, the enum will be decorated with `[ProducesResponseType(StatusCodes.Status{code})]`, which can be used for API documentation and response type specification.
 
 ### Running Code Generation
 
 Code generation runs automatically during the release build process through a target in the project file. You can also run it manually:
 
 ```bash
-dotnet run --project Warp.CodeGen/Warp.CodeGen.csproj -- --json Warp.WebApp/CodeGeneration/logging-events.json --constants Warp.WebApp/Constants/Logging/LoggingConstants.cs --messages Warp.WebApp/Telemetry/Logging/LogMessages.cs
+dotnet run --project Warp.CodeGen/Warp.CodeGen.csproj -- --json Warp.WebApp/CodeGeneration/logging-events.json --constants Warp.WebApp/Constants/Logging/LoggingEvents.cs --messages Warp.WebApp/Telemetry/Logging/LogMessages.cs
 ```
 
 ## Styles

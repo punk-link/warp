@@ -13,4 +13,5 @@ public class LoggingEvent
     public bool GenerateLogMessage { get; set; } = true;
     public LogLevel LogLevel { get; set; } = LogLevel.Information;
     public bool Obsolete { get; set; } = false;
+    public int HttpCode { get; set; } = 200;
 }
