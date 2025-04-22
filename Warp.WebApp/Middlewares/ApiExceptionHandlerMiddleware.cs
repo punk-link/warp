@@ -23,23 +23,24 @@ public class ApiExceptionHandlerMiddleware
         }
         catch (Exception ex)
         {
+            var sentryId = SentrySdk.CaptureException(ex);
+
             var traceId = context.TraceIdentifier;
             _logger.LogServerErrorWithMessage(traceId, ex.Message);
 
-            SentrySdk.CaptureException(ex);
-
-            await HandleExceptionAsync(context, ex, traceId, _environment);
+            await HandleExceptionAsync(context, ex, traceId, sentryId, _environment);
         }
     }
 
 
-    private static Task HandleExceptionAsync(HttpContext context, Exception ex, string? traceId, IWebHostEnvironment environment)
+    private static Task HandleExceptionAsync(HttpContext context, Exception ex, string? traceId, SentryId sentryId, IWebHostEnvironment environment)
     {
         context.Response.ContentType = "application/json";
         context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
 
         var problemDetails = ProblemDetailsHelper.CreateServerException(ex.Message);
-        problemDetails.AddTraceId(traceId);
+        problemDetails.AddTraceId(traceId)
+            .AddSentryId(sentryId);
 
         if (environment.IsDevelopmentOrLocal())
             problemDetails.AddStackTrace(ex.StackTrace);

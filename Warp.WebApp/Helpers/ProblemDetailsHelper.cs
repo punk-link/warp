@@ -14,22 +14,44 @@ public static class ProblemDetailsHelper
     }
 
 
-    public static void AddStackTrace(this ProblemDetails details, string? stackTrace)
+    public static ProblemDetails AddSentryId(this ProblemDetails details, SentryId sentryId)
+    {
+        if (sentryId == SentryId.Empty)
+            return details;
+
+        details.Extensions[SentryIdExtensionToken] = sentryId.ToString();
+        return details;
+    }
+
+
+    public static ProblemDetails AddStackTrace(this ProblemDetails details, string? stackTrace)
     {
         if (string.IsNullOrWhiteSpace(stackTrace))
-            return;
+            return details;
 
         details.Extensions[StackTraceExtensionToken] = stackTrace;
+        return details;
     }
 
 
-    public static void AddTraceId(this ProblemDetails details, string? traceId)
+    public static ProblemDetails AddTraceId(this ProblemDetails details, string? traceId)
     {
         if (string.IsNullOrWhiteSpace(traceId))
-            return;
+            return details;
 
         details.Extensions[TraceIdExtensionToken] = traceId;
+        return details;
     }
+
+
+    public static ProblemDetails Create(string title, string detail, HttpStatusCode status)
+        => new()
+        {
+            Detail = detail,
+            Status = (int)status,
+            Title = title,
+            Type = GetType(status),
+        };
 
 
     public static ProblemDetails Create(string detail, HttpStatusCode status = HttpStatusCode.BadRequest, string? type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6")
@@ -88,7 +110,20 @@ public static class ProblemDetailsHelper
     }
 
 
+    private static string GetType(HttpStatusCode statusCode) 
+        => statusCode switch
+        {
+            HttpStatusCode.NotFound => "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.4",
+            HttpStatusCode.InternalServerError => "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.1",
+            HttpStatusCode.ServiceUnavailable => "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.4",
+            HttpStatusCode.Forbidden => "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.3",
+            HttpStatusCode.Unauthorized => "https://datatracker.ietf.org/doc/html/rfc7235#section-3.1",
+            _ => "https://datatracker.ietf.org/doc/html/rfc7231#section-6",
+        };
+
+
     private const string ErrorsExtensionToken = "errors";
+    private const string SentryIdExtensionToken = "sentry-id";
     private const string StackTraceExtensionToken = "stack-trace";
     private const string TraceIdExtensionToken = "trace-id";
 }
