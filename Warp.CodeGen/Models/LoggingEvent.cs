@@ -10,6 +10,7 @@ public class LoggingEvent
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+    public string? DomainErrorDescription { get; set; }
     public bool GenerateLogMessage { get; set; } = true;
     public LogLevel LogLevel { get; set; } = LogLevel.Information;
     public bool Obsolete { get; set; } = false;

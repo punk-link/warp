@@ -44,7 +44,7 @@ public partial class LogMessagesGenerator
                 var methodName = $"Log{logEvent.Name}";
                 var parameters = ExtractParameters(logEvent.Description);
                 
-                sb.AppendLine($"    [LoggerMessage((int)LoggingEvents.{logEvent.Name}, LogLevel.{logEvent.LogLevel}, \"{logEvent.Description}\")]");
+                sb.AppendLine($"    [LoggerMessage((int)LogEvents.{logEvent.Name}, LogLevel.{logEvent.LogLevel}, \"{logEvent.Description}\")]");
                 if (logEvent.Obsolete)
                     sb.AppendLine($"    [Obsolete(\"This log message is obsolete. Do not use it.\")]");
 

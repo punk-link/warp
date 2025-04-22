@@ -18,12 +18,13 @@ public class ConstantsGenerator
         sb.AppendLine("// Generated on: " + DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss UTC"));
         sb.AppendLine("using System;");
         sb.AppendLine("using System.ComponentModel;");
-        sb.AppendLine("using Microsoft.AspNetCore.Mvc;");
-        sb.AppendLine("using Microsoft.AspNetCore.Http;");
+        sb.AppendLine("using System.Linq;");
+        sb.AppendLine("using Warp.WebApp.Attributes;");
+        
         sb.AppendLine();
         sb.AppendLine("namespace Warp.WebApp.Constants.Logging;");
         sb.AppendLine();
-        sb.AppendLine("public enum LoggingEvents");
+        sb.AppendLine("public enum LogEvents");
         sb.AppendLine("{");
         
         foreach (var category in loggingConfig.LoggingCategories)
@@ -37,8 +38,9 @@ public class ConstantsGenerator
                 if (logEvent.Obsolete)
                     sb.AppendLine($"    [Obsolete(\"This logging event is obsolete and will be removed in a future version.\")]");
                 
-                sb.AppendLine($"    [Description(\"{logEvent.Description}\")]");
-                sb.AppendLine($"    [ProducesResponseType(StatusCodes.Status{logEvent.HttpCode})]");
+                var description = logEvent.DomainErrorDescription ?? logEvent.Description;
+                sb.AppendLine($"    [Description(\"{description}\")]");
+                sb.AppendLine($"    [HttpStatusCode({logEvent.HttpCode})]");
                 sb.AppendLine($"    {logEvent.Name} = {logEvent.Id},");
                 
                 var isLastEventInCategory = logEvent == category.Events.Last();

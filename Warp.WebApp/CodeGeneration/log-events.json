@@ -235,6 +235,78 @@
           "httpCode": 400
         }
       ]
+    },
+    {
+      "name": "Domain.Creator",
+      "events": [
+        {
+          "id": 20201,
+          "name": "CreatorIdIsNull",
+          "description": "The creator ID is not provided.",
+          "logLevel": "Warning",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 400
+        },
+        {
+          "id": 20202,
+          "name": "CreatorIdIsNotFound",
+          "description": "The creator ID is not found.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        }
+      ]
+    },
+    {
+      "name": "Domain.Entry",
+      "events": [
+        {
+          "id": 20301,
+          "name": "CantAttachEntryToCreator",
+          "description": "Can't attach the entry '{EntryId:Guid}' to the creator '{CreatorId:Guid}' due to an internal server error.",
+          "domainErrorDescription": "An error occurred while attaching the entry to the creator.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
+          "id": 20302,
+          "name": "EntryModelValidationError",
+          "description": "The entry model is invalid. Please check the provided data.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        }
+      ]
+    },
+    {
+      "name": "Domain.Image",
+      "events": [
+        {
+          "id": 20401,
+          "name": "UnsupportedFileExtension",
+          "description": "The file extension is not supported.",
+          "domainErrorDescription": "The file extension '{0}' is not supported. Please use one of the following extensions: {1}.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 415
+        },
+        {
+          "id": 20402,
+          "name": "ImageAlreadyExists",
+          "description": "The image already exists.",
+          "domainErrorDescription": "The image '{0}' you are trying to upload already exists.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        }
+      ]
     }
   ]
 }

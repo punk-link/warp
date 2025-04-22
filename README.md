@@ -34,15 +34,16 @@ Warp includes a code generation system for managing logging events and messages.
 
 ### Logging Configuration
 
-The logging configuration is defined in `Warp.WebApp/CodeGeneration/LoggingEvents.json`. Each logging event includes:
+The logging configuration is defined in `Warp.WebApp/CodeGeneration/log-events.json`. The configuration follows a hierarchical structure where logging events are organized by categories. Each logging event includes:
 
 - `id` - Unique numeric identifier
-- `name` - Name of the logging event
+- `name` - Name of the logging event 
 - `description` - Description template with optional parameters in format `{ParameterName:Type}`
+- `domainErrorDescription` - Optional alternative description for domain error messages
 - `logLevel` - Severity level (Debug, Information, Warning, Error, Critical)
 - `generateLogMessage` - Boolean flag to control whether a log method should be generated
 - `obsolete` - Boolean flag to mark deprecated log events that will be removed in future versions
-- `httpCode` - Required HTTP status code that generates a ProducesResponseType attribute (default: 200)
+- `httpCode` - HTTP status code that generates a ProducesResponseType attribute
 
 Example event:
 ```json
@@ -61,19 +62,19 @@ Example event:
 
 The code generator produces:
 
-1. `LoggingEvents.cs` - Enum definitions for all logging events with Description attributes
-2. `LogMessages.cs` - Extension methods for ILogger with structured logging support
+1. `LoggEvents.cs` - Enum definitions for all logging events with Description attributes and HTTP status code decorations
+2. `LogMessages.cs` - Extension methods for ILogger with structured logging support using the [LoggerMessage] attribute pattern
 
 When a log event is marked as `obsolete: true`, both the enum value and log method are decorated with the `[Obsolete]` attribute, generating compiler warnings when used.
 
-When a log event includes an `httpCode` value, the enum will be decorated with `[ProducesResponseType(StatusCodes.Status{code})]`, which can be used for API documentation and response type specification.
+When a log event includes an `httpCode` value, the enum will be decorated with `[HttpStatusCode]`, which can be used for API documentation and response type specification.
 
 ### Running Code Generation
 
 Code generation runs automatically during the release build process through a target in the project file. You can also run it manually:
 
 ```bash
-dotnet run --project Warp.CodeGen/Warp.CodeGen.csproj -- --json Warp.WebApp/CodeGeneration/logging-events.json --constants Warp.WebApp/Constants/Logging/LoggingEvents.cs --messages Warp.WebApp/Telemetry/Logging/LogMessages.cs
+dotnet run --project Warp.CodeGen/Warp.CodeGen.csproj -- --json Warp.WebApp/CodeGeneration/log-events.json --constants Warp.WebApp/Constants/Logging/LogEvents.cs --messages Warp.WebApp/Telemetry/Logging/LogMessages.cs
 ```
 
 ## Styles
