@@ -7,6 +7,7 @@ pipeline {
         CHAT_ID = credentials('chatid')
         JOB_NAME = "${env.JOB_NAME}"
         BUILD_NUMBER = "${env.BUILD_NUMBER}"
+        BUILD_URL = "${env.BUILD_URL}"
     }
 
     stages {
@@ -32,19 +33,19 @@ pipeline {
     post {
         success {
             script {
-                sh "curl --location --request POST 'https://api.telegram.org/bot${TOKEN}/sendMessage' --form text='${JOB_NAME}: #${BUILD_NUMBER}\n✅Deploy success!' --form chat_id=${CHAT_ID}"
+                sh "curl --location --request POST 'https://api.telegram.org/bot${TOKEN}/sendMessage' --form text='${JOB_NAME}: #${BUILD_NUMBER}\n✅Deploy success!\n${BUILD_URL}' --form chat_id=${CHAT_ID}"
             }
         }
 
         failure {
             script {
-                sh "curl -X POST -H 'Content-Type: application/json' -d '{\"chat_id\": \"${CHAT_ID}\", \"text\": \"${JOB_NAME}: #${BUILD_NUMBER}\n❌Deploy failure!\", \"disable_notification\": false}' \"https://api.telegram.org/bot${TOKEN}/sendMessage\""
+                sh "curl --location --request POST 'https://api.telegram.org/bot${TOKEN}/sendMessage' --form text='${JOB_NAME}: #${BUILD_NUMBER}\n❌Deploy failure!' --form chat_id=${CHAT_ID}"
             }
        }
 
        aborted {
            script {
-                sh "curl -X POST -H 'Content-Type: application/json' -d '{\"chat_id\": \"${CHAT_ID}\", \"text\": \"${JOB_NAME}: #${BUILD_NUMBER}\n❌Deploy aborted!\", \"disable_notification\": false}' \"https://api.telegram.org/bot${TOKEN}/sendMessage\""
+                sh "curl --location --request POST 'https://api.telegram.org/bot${TOKEN}/sendMessage' --form text='${JOB_NAME}: #${BUILD_NUMBER}\n❌Deploy aborted! --form chat_id=${CHAT_ID}"
             }
         }    
     }
