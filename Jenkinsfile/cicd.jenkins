@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         // Telegram configuration
-        TOKEN = credentials('telegram-api')
+        TOKEN = credentials('telegram')
         CHAT_ID = credentials('chatid')
         JOB_NAME = "${env.JOB_NAME}"
         BUILD_NUMBER = "${env.BUILD_NUMBER}"
@@ -32,7 +32,7 @@ pipeline {
     post {
         success {
             script {
-                sh "curl --location --request POST 'https://api.telegram.org/bot'${TOKEN}'/sendMessage' --form text='kazino' --form chat_id=-692876171"
+                sh "curl --location --request POST 'https://api.telegram.org/bot${TOKEN}/sendMessage' --form text='kazino' --form chat_id=-692876171"
             }
         }
 
