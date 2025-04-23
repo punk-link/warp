@@ -39,13 +39,13 @@ pipeline {
 
         failure {
             script {
-                sh "curl --location --request POST 'https://api.telegram.org/bot${TOKEN}/sendMessage' --form text='${JOB_NAME}: #${BUILD_NUMBER}\n❌Deploy failure!' --form chat_id=${CHAT_ID}"
+                sh "curl --location --request POST 'https://api.telegram.org/bot${TOKEN}/sendMessage' --form text='${JOB_NAME}: #${BUILD_NUMBER}\n❌Deploy failure!\n https://jenkins.punk.link/job/warp.punk.link/${BUILD_NUMBER}/' --form chat_id=${CHAT_ID}"
             }
        }
 
        aborted {
            script {
-                sh "curl --location --request POST 'https://api.telegram.org/bot${TOKEN}/sendMessage' --form text='${JOB_NAME}: #${BUILD_NUMBER}\n❌Deploy aborted! --form chat_id=${CHAT_ID}"
+                sh "curl --location --request POST 'https://api.telegram.org/bot${TOKEN}/sendMessage' --form text='${JOB_NAME}: #${BUILD_NUMBER}\n❌Deploy aborted!\n https://jenkins.punk.link/job/warp.punk.link/${BUILD_NUMBER}/' --form chat_id=${CHAT_ID}"
             }
         }    
     }
