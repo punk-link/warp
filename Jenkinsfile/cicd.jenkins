@@ -4,7 +4,7 @@ pipeline {
     environment {
         // Telegram configuration
         TOKEN = credentials('telegram-api')
-        CHAT_ID = credentials('telegram_chatid')
+        CHAT_ID = credentials('chatid')
         JOB_NAME = "${env.JOB_NAME}"
         BUILD_NUMBER = "${env.BUILD_NUMBER}"
     }
