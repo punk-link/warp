@@ -1,12 +1,14 @@
-﻿using System.Collections.Concurrent;
+﻿using Microsoft.AspNetCore.Mvc;
+using System.Collections.Concurrent;
 using System.ComponentModel;
+using System.Net;
 using Warp.WebApp.Constants.Logging;
 
 namespace Warp.WebApp.Extensions;
 
 public static class EnumExtensions
 {
-    public static string ToDescriptionString(this LoggingEvents target)
+    public static string ToDescriptionString(this LogEvents target)
     {
         if (_descriptionCache.TryGetValue(target, out var cachedDescription))
             return cachedDescription;
@@ -16,20 +18,51 @@ public static class EnumExtensions
         
         return description;
     }
-    
-    
-    private static string GetDescriptionFromAttributes(LoggingEvents target)
+
+
+    public static HttpStatusCode ToHttpStatusCode(this LogEvents target)
     {
-        var fieldInfo = target.GetType().GetField(target.ToString());
-        if (fieldInfo is null)
-            return target.ToString();
-            
-        var attributes = (DescriptionAttribute[])fieldInfo.GetCustomAttributes(typeof(DescriptionAttribute), false);
-        return attributes.Length > 0 
-            ? attributes[0].Description 
-            : target.ToString();
+        if (_statusCache.TryGetValue(target, out var cachedStatus))
+            return cachedStatus;
+
+        var status = GetHttpStatusCodeFromAttributes(target);
+        _statusCache[target] = status;
+
+        return status;
     }
 
 
-    private static readonly ConcurrentDictionary<LoggingEvents, string> _descriptionCache = new();
+    private static string GetDescriptionFromAttributes(LogEvents target)
+    {
+        var attribute = GetAttribute<DescriptionAttribute>(target);
+        if (attribute is not null)
+            return attribute.Description;
+
+        return target.ToString();
+    }
+
+
+    private static HttpStatusCode GetHttpStatusCodeFromAttributes(LogEvents target)
+    {
+        var attribute = GetAttribute<ProducesResponseTypeAttribute>(target);
+        if (attribute is not null)
+            return (HttpStatusCode) attribute.StatusCode;
+
+        return HttpStatusCode.InternalServerError;
+    }
+
+
+    private static T? GetAttribute<T>(this LogEvents target)
+    {
+        var fieldInfo = target.GetType().GetField(target.ToString());
+        var xx = fieldInfo?.GetCustomAttributes(typeof(T), false) as T[];
+        if (xx?.Length > 0)
+            return xx[0];
+
+        return default;
+    }
+
+
+    private static readonly ConcurrentDictionary<LogEvents, string> _descriptionCache = new();
+    private static readonly ConcurrentDictionary<LogEvents, HttpStatusCode> _statusCache = new();
 }

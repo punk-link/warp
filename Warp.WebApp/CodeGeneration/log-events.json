@@ -154,7 +154,7 @@
           "description": "An error occurred while uploading the image. Details: '{ErrorMessage:string}'.",
           "logLevel": "Error",
           "generateLogMessage": true,
-          "obsolete": false,
+          "obsolete": true,
           "httpCode": 500
         },
         {
@@ -163,7 +163,7 @@
           "description": "An error occurred while downloading the image. Details: '{ErrorMessage:string}'.",
           "logLevel": "Error",
           "generateLogMessage": true,
-          "obsolete": false,
+          "obsolete": true,
           "httpCode": 500
         },
         {
@@ -172,7 +172,7 @@
           "description": "An error occurred while removing the image. Details: '{ErrorMessage:string}'.",
           "logLevel": "Error",
           "generateLogMessage": true,
-          "obsolete": false,
+          "obsolete": true,
           "httpCode": 500
         },
         {
@@ -280,6 +280,54 @@
           "generateLogMessage": false,
           "obsolete": false,
           "httpCode": 400
+        },
+        {
+          "id": 20303,
+          "name": "NoPermissionErrorMessage",
+          "description": "You do not have permission to access this entry.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 403
+        },
+        {
+          "id": 20304,
+          "name": "EntryNotFound",
+          "description": "The entry '{EntryId:Guid}' was not found.",
+          "domainErrorDescription": "The entry was not found.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 404
+        },
+        {
+          "id": 20305,
+          "name": "EntryEditModeMismatch",
+          "description": "The entry '{EntryId:Guid}' edit mode is already set to '{EditMode:bool}'.",
+          "domainErrorDescription": "The entry edit mode is already set to and cannot be changed.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        },
+        {
+          "id": 20306,
+          "name": "EntryCannotBeEditedAfterViewed",
+          "description": "The entry '{EntryId:Guid}' cannot be edited after it has been viewed.",
+          "domainErrorDescription": "The entry cannot be edited after it has been viewed. Try to create a new entry.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        },
+        {
+          "id": 20307,
+          "name": "EntryInfoModelValidationError",
+          "description": "The entry model is invalid. Please check the provided data.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
         }
       ]
     },
@@ -305,6 +353,51 @@
           "generateLogMessage": false,
           "obsolete": false,
           "httpCode": 400
+        }
+      ]
+    },
+    {
+      "name": "Domain.File",
+      "events": [
+        {
+          "id": 20501,
+          "name": "S3ListObjectsError",
+          "description": "An error occurred while listing objects in S3. Details: '{ErrorMessage:string}'.",
+          "domainErrorDescription": "An error occurred while listing objects.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
+          "id": 20502,
+          "name": "S3DeleteObjectError",
+          "description": "An error occurred while deleting an object from S3. Details: '{ErrorMessage:string}'.",
+          "domainErrorDescription": "An error occurred while deleting an object.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
+          "id": 20503,
+          "name": "S3UploadObjectError",
+          "description": "An error occurred while uploading an object to S3. Details: '{ErrorMessage:string}'.",
+          "domainErrorDescription": "An error occurred while uploading an object.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
+          "id": 20504,
+          "name": "S3GetObjectError",
+          "description": "An error occurred while getting an object from S3. Details: '{ErrorMessage:string}'.",
+          "domainErrorDescription": "An error occurred while getting an object.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
         }
       ]
     }

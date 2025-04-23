@@ -1,15 +1,14 @@
 ﻿using CSharpFunctionalExtensions;
 using CSharpFunctionalExtensions.ValueTasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
 using System.Diagnostics;
 using System.IO.Hashing;
-using Warp.WebApp.Constants;
 using Warp.WebApp.Constants.Caching;
+using Warp.WebApp.Constants.Logging;
 using Warp.WebApp.Data;
 using Warp.WebApp.Data.S3;
-using Warp.WebApp.Helpers;
+using Warp.WebApp.Extensions;
 using Warp.WebApp.Models;
+using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Models.Files;
 
 namespace Warp.WebApp.Services.Images;
@@ -24,25 +23,28 @@ public class ImageService : IImageService, IUnauthorizedImageService
     /// <summary>
     /// Initializes a new instance of the <see cref="ImageService"/> class.
     /// </summary>
-    /// <param name="localizer">The string localizer for retrieving localized resources.</param>
     /// <param name="dataStorage">The data storage provider for caching operations.</param>
     /// <param name="s3FileStorage">The S3 file storage provider for image persistence.</param>
-    public ImageService(IStringLocalizer<ServerResources> localizer, IDataStorage dataStorage, IS3FileStorage s3FileStorage)
+    public ImageService(IDataStorage dataStorage, IS3FileStorage s3FileStorage)
     {
         _dataStorage = dataStorage;
-        _localizer = localizer;
         _s3FileStorage = s3FileStorage;
     }
 
 
     /// <inheritdoc cref="IUnauthorizedImageService.Add"/>
-    public async Task<Result<ImageResponse, ProblemDetails>> Add(Guid entryId, AppFile appFile, CancellationToken cancellationToken)
+    public async Task<Result<ImageResponse, DomainError>> Add(Guid entryId, AppFile appFile, CancellationToken cancellationToken)
     {
         Debug.Assert(appFile.Content is not null, "A file content is null, because we checked it already at the controller level.");
         
-        return await UnitResult.Success<ProblemDetails>()
+        return await UnitResult.Success<DomainError>()
             .Map(() => appFile)
-            .Ensure(IsImageMimeType, ProblemDetailsHelper.Create(_localizer["Unsupported file extension."]))
+            .Ensure(IsImageMimeType, _ =>
+            {
+                var logEvent = LogEvents.UnsupportedFileExtension;
+                var detail = string.Format(logEvent.ToDescriptionString(), appFile.ContentMimeType, string.Join(", ", _imageMimeTypes));
+                return new DomainError(logEvent, detail);
+            })
             .Bind(CheckDuplicate)
             .Bind(Upload)
             .Bind(AddHash)
@@ -53,18 +55,19 @@ public class ImageService : IImageService, IUnauthorizedImageService
             => _imageMimeTypes.Contains(fileContent.ContentMimeType);
 
 
-        async Task<Result<AppFile, ProblemDetails>> CheckDuplicate(AppFile file)
+        async Task<Result<AppFile, DomainError>> CheckDuplicate(AppFile file)
         {
-            var hash = await CalculateFileHash(file.Content);
+            var hash = await CalculateFileHash(file.Content, cancellationToken);
             if (!await IsHashCached(hash))
                 return AppFile.AddHash(file, hash);
 
-            var problemDetails = ProblemDetailsHelper.Create(_localizer["This image has already been uploaded."]);
-            problemDetails.Extensions[ProblemDetailsExtensionKeys.FileName] = file.UntrustedFileName;
-            return Result.Failure<AppFile, ProblemDetails>(problemDetails);
+            var logEvent = LogEvents.ImageAlreadyExists;
+            var detail = string.Format(logEvent.ToDescriptionString(), file.UntrustedFileName);
+
+            return new DomainError(logEvent, detail);
             
 
-            static async Task<string> CalculateFileHash(Stream stream)
+            static async Task<string> CalculateFileHash(Stream stream, CancellationToken ct)
             {
                 stream.Position = 0;
         
@@ -72,7 +75,7 @@ public class ImageService : IImageService, IUnauthorizedImageService
                 byte[] buffer = new byte[81920]; // 80KB buffer
                 int bytesRead;
         
-                while ((bytesRead = await stream.ReadAsync(buffer)) > 0)
+                while ((bytesRead = await stream.ReadAsync(buffer, ct)) > 0)
                     hash.Append(buffer.AsSpan(0, bytesRead));
         
                 Span<byte> hashBytes = stackalloc byte[hash.HashLengthInBytes];
@@ -91,7 +94,7 @@ public class ImageService : IImageService, IUnauthorizedImageService
         }
 
 
-        async Task<Result<(Guid, AppFile), ProblemDetails>> Upload(AppFile appFile)
+        async Task<Result<(Guid, AppFile), DomainError>> Upload(AppFile appFile)
         {
             var imageId = Guid.NewGuid();
 
@@ -103,7 +106,7 @@ public class ImageService : IImageService, IUnauthorizedImageService
         }
 
 
-        async Task<Result<(Guid, AppFile), ProblemDetails>> AddHash((Guid ImageId, AppFile AppFile) tuple)
+        async Task<Result<(Guid, AppFile), DomainError>> AddHash((Guid ImageId, AppFile AppFile) tuple)
         {
             var imageHashCacheKey = CacheKeyBuilder.BuildImageToHashBindingCacheKey(tuple.ImageId);
             await _dataStorage.Set(imageHashCacheKey, tuple.AppFile.Hash, CachingConstants.MaxSupportedCachingTime, cancellationToken);
@@ -115,7 +118,7 @@ public class ImageService : IImageService, IUnauthorizedImageService
         }
 
 
-        Result<ImageResponse, ProblemDetails> BuildImageInfo((Guid ImageId, AppFile AppFile) tuple)
+        Result<ImageResponse, DomainError> BuildImageInfo((Guid ImageId, AppFile AppFile) tuple)
         {
             var encodedEntryId = IdCoder.Encode(entryId);
 
@@ -128,10 +131,10 @@ public class ImageService : IImageService, IUnauthorizedImageService
 
 
     /// <inheritdoc cref="IImageService.Copy"/>
-    public async Task<Result<List<ImageInfo>, ProblemDetails>> Copy(Guid sourceEntryId, Guid targetEntryId, List<ImageInfo> sourceImages, CancellationToken cancellationToken)
+    public async Task<Result<List<ImageInfo>, DomainError>> Copy(Guid sourceEntryId, Guid targetEntryId, List<ImageInfo> sourceImages, CancellationToken cancellationToken)
     {
         if (sourceImages.Count == 0)
-            return Result.Success<List<ImageInfo>, ProblemDetails>([]);
+            return Enumerable.Empty<ImageInfo>().ToList();
 
         var results = new List<ImageInfo>();
         foreach (var sourceImage in sourceImages)
@@ -152,11 +155,11 @@ public class ImageService : IImageService, IUnauthorizedImageService
             => new(image.Content, image.ContentType);
 
 
-        async Task<Result<ImageInfo, ProblemDetails>> CopyToTarget(AppFile appFile)
+        async Task<Result<ImageInfo, DomainError>> CopyToTarget(AppFile appFile)
         {
             var addResult = await Add(targetEntryId, appFile, cancellationToken);
             if (addResult.IsFailure)
-                return Result.Failure<ImageInfo, ProblemDetails>(addResult.Error);
+                return addResult.Error;
 
             return addResult.Value.ImageInfo;
         }
@@ -164,17 +167,17 @@ public class ImageService : IImageService, IUnauthorizedImageService
 
 
     /// <inheritdoc cref="IUnauthorizedImageService.Get"/>
-    public Task<Result<Image, ProblemDetails>> Get(Guid entryId, Guid imageId, CancellationToken cancellationToken)
+    public Task<Result<Image, DomainError>> Get(Guid entryId, Guid imageId, CancellationToken cancellationToken)
     {
         return GetImage(imageId, cancellationToken)
             .Bind(BuildImage);
 
 
-        Task<Result<AppFile, ProblemDetails>> GetImage(Guid imageId, CancellationToken cancellationToken) 
+        Task<Result<AppFile, DomainError>> GetImage(Guid imageId, CancellationToken cancellationToken) 
             => _s3FileStorage.Get(entryId.ToString(), imageId.ToString(), cancellationToken);
 
 
-        Result<Image, ProblemDetails> BuildImage(AppFile stream)
+        Result<Image, DomainError> BuildImage(AppFile stream)
             => new Image()
             {
                 Id = imageId,
@@ -185,13 +188,13 @@ public class ImageService : IImageService, IUnauthorizedImageService
 
 
     /// <inheritdoc cref="IImageService.GetAttached"/>
-    public Task<Result<List<ImageInfo>, ProblemDetails>> GetAttached(Guid entryId, List<Guid> imageIds, CancellationToken cancellationToken)
+    public Task<Result<List<ImageInfo>, DomainError>> GetAttached(Guid entryId, List<Guid> imageIds, CancellationToken cancellationToken)
     { 
         return GetUploaded()
             .Bind(BuildImageInfo);
 
 
-        async Task<Result<List<Guid>, ProblemDetails>> GetUploaded()
+        async Task<Result<List<Guid>, DomainError>> GetUploaded()
         {
             var prefix = entryId.ToString();
             var keys = imageIds.Select(imageId => imageId.ToString())
@@ -208,7 +211,7 @@ public class ImageService : IImageService, IUnauthorizedImageService
         }
 
 
-        Result<List<ImageInfo>, ProblemDetails> BuildImageInfo(List<Guid> imageIds) 
+        Result<List<ImageInfo>, DomainError> BuildImageInfo(List<Guid> imageIds) 
             => imageIds.Select(imageId =>
                 {
                     var url = BuildUrl(entryId, imageId);
@@ -218,14 +221,14 @@ public class ImageService : IImageService, IUnauthorizedImageService
 
 
     /// <inheritdoc cref="IImageService.Remove"/>
-    public Task<UnitResult<ProblemDetails>> Remove(Guid entryId, Guid imageId, CancellationToken cancellationToken)
+    public Task<UnitResult<DomainError>> Remove(Guid entryId, Guid imageId, CancellationToken cancellationToken)
     {
         return GetImageHash()
             .Tap(CleanupHash)
             .Bind(DeleteFile);
 
 
-        async Task<Result<string?, ProblemDetails>> GetImageHash()
+        async Task<Result<string?, DomainError>> GetImageHash()
         {
             var imageHashCacheKey = CacheKeyBuilder.BuildImageToHashBindingCacheKey(imageId);
             return await _dataStorage.TryGet<string>(imageHashCacheKey, cancellationToken);
@@ -243,9 +246,9 @@ public class ImageService : IImageService, IUnauthorizedImageService
             await _dataStorage.Remove<string>(hashCacheKey, cancellationToken);
             await _dataStorage.Remove<string>(imageHashCacheKey, cancellationToken);
         }
-
+        
     
-        Task<UnitResult<ProblemDetails>> DeleteFile(string? _)
+        Task<UnitResult<DomainError>> DeleteFile(string? _)
             => _s3FileStorage.Delete(entryId.ToString(), imageId.ToString(), cancellationToken);
     }
 
@@ -274,6 +277,5 @@ public class ImageService : IImageService, IUnauthorizedImageService
 
 
     private readonly IDataStorage _dataStorage;
-    private readonly IStringLocalizer<ServerResources> _localizer;
     private readonly IS3FileStorage _s3FileStorage;
 }

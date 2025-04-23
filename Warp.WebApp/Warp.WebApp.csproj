@@ -81,7 +81,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Warp.CodeGen\Warp.CodeGen.csproj" ReferenceOutputAssembly="false" />
-    <None Include="CodeGeneration\logging-events.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="CodeGeneration\log-events.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   
   <Target Name="GenerateLoggingEvents" BeforeTargets="CoreCompile" Condition=" '$(Configuration)' == 'Release' ">

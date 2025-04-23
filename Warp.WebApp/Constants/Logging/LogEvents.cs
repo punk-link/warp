@@ -1,5 +1,5 @@
 // This file is auto-generated. Do not edit directly.
-// Generated on: 2025-04-22 12:14:35 UTC
+// Generated on: 2025-04-23 07:27:02 UTC
 using System;
 using System.ComponentModel;
 using System.Linq;
@@ -61,12 +61,15 @@ public enum LogEvents
     [Description("Get image controller's method not found.")]
     [HttpStatusCode(500)]
     ImageControllerGetMethodNotFound = 12104,
+    [Obsolete("This logging event is obsolete and will be removed in a future version.")]
     [Description("An error occurred while uploading the image. Details: '{ErrorMessage:string}'.")]
     [HttpStatusCode(500)]
     ImageUploadError = 12201,
+    [Obsolete("This logging event is obsolete and will be removed in a future version.")]
     [Description("An error occurred while downloading the image. Details: '{ErrorMessage:string}'.")]
     [HttpStatusCode(500)]
     ImageDownloadError = 12202,
+    [Obsolete("This logging event is obsolete and will be removed in a future version.")]
     [Description("An error occurred while removing the image. Details: '{ErrorMessage:string}'.")]
     [HttpStatusCode(500)]
     ImageRemovalError = 12203,
@@ -109,6 +112,21 @@ public enum LogEvents
     [Description("The entry model is invalid. Please check the provided data.")]
     [HttpStatusCode(400)]
     EntryModelValidationError = 20302,
+    [Description("You do not have permission to access this entry.")]
+    [HttpStatusCode(403)]
+    NoPermissionErrorMessage = 20303,
+    [Description("The entry was not found.")]
+    [HttpStatusCode(404)]
+    EntryNotFound = 20304,
+    [Description("The entry edit mode is already set to and cannot be changed.")]
+    [HttpStatusCode(400)]
+    EntryEditModeMismatch = 20305,
+    [Description("The entry cannot be edited after it has been viewed. Try to create a new entry.")]
+    [HttpStatusCode(400)]
+    EntryCannotBeEditedAfterViewed = 20306,
+    [Description("The entry model is invalid. Please check the provided data.")]
+    [HttpStatusCode(400)]
+    EntryInfoModelValidationError = 20307,
 
 
     // Domain.Image
@@ -118,4 +136,19 @@ public enum LogEvents
     [Description("The image '{0}' you are trying to upload already exists.")]
     [HttpStatusCode(400)]
     ImageAlreadyExists = 20402,
+
+
+    // Domain.File
+    [Description("An error occurred while listing objects.")]
+    [HttpStatusCode(500)]
+    S3ListObjectsError = 20501,
+    [Description("An error occurred while deleting an object.")]
+    [HttpStatusCode(500)]
+    S3DeleteObjectError = 20502,
+    [Description("An error occurred while uploading an object.")]
+    [HttpStatusCode(500)]
+    S3UploadObjectError = 20503,
+    [Description("An error occurred while getting an object.")]
+    [HttpStatusCode(500)]
+    S3GetObjectError = 20504,
 }

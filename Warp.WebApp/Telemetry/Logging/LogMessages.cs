@@ -1,5 +1,5 @@
 // This file is auto-generated. Do not edit directly.
-// Generated on: 2025-04-22 12:14:35 UTC
+// Generated on: 2025-04-23 07:27:02 UTC
 using Microsoft.Extensions.Logging;
 using System;
 using Warp.WebApp.Constants.Logging;
@@ -59,12 +59,15 @@ internal static partial class LogMessages
     public static partial void LogImageControllerGetMethodNotFound(this ILogger logger);
 
     [LoggerMessage((int)LogEvents.ImageUploadError, LogLevel.Error, "An error occurred while uploading the image. Details: '{ErrorMessage:string}'.")]
+    [Obsolete("This log message is obsolete. Do not use it.")]
     public static partial void LogImageUploadError(this ILogger logger, string errorMessage);
 
     [LoggerMessage((int)LogEvents.ImageDownloadError, LogLevel.Error, "An error occurred while downloading the image. Details: '{ErrorMessage:string}'.")]
+    [Obsolete("This log message is obsolete. Do not use it.")]
     public static partial void LogImageDownloadError(this ILogger logger, string errorMessage);
 
     [LoggerMessage((int)LogEvents.ImageRemovalError, LogLevel.Error, "An error occurred while removing the image. Details: '{ErrorMessage:string}'.")]
+    [Obsolete("This log message is obsolete. Do not use it.")]
     public static partial void LogImageRemovalError(this ILogger logger, string errorMessage);
 
     [LoggerMessage((int)LogEvents.FileUploadException, LogLevel.Error, "An error occurred while uploading the file. Details: '{ErrorMessage:string}'.")]
@@ -90,4 +93,18 @@ internal static partial class LogMessages
     // Domain.Entry
     [LoggerMessage((int)LogEvents.CantAttachEntryToCreator, LogLevel.Error, "Can't attach the entry '{EntryId:Guid}' to the creator '{CreatorId:Guid}' due to an internal server error.")]
     public static partial void LogCantAttachEntryToCreator(this ILogger logger, Guid entryId, Guid creatorId);
+
+
+    // Domain.File
+    [LoggerMessage((int)LogEvents.S3ListObjectsError, LogLevel.Error, "An error occurred while listing objects in S3. Details: '{ErrorMessage:string}'.")]
+    public static partial void LogS3ListObjectsError(this ILogger logger, string errorMessage);
+
+    [LoggerMessage((int)LogEvents.S3DeleteObjectError, LogLevel.Error, "An error occurred while deleting an object from S3. Details: '{ErrorMessage:string}'.")]
+    public static partial void LogS3DeleteObjectError(this ILogger logger, string errorMessage);
+
+    [LoggerMessage((int)LogEvents.S3UploadObjectError, LogLevel.Error, "An error occurred while uploading an object to S3. Details: '{ErrorMessage:string}'.")]
+    public static partial void LogS3UploadObjectError(this ILogger logger, string errorMessage);
+
+    [LoggerMessage((int)LogEvents.S3GetObjectError, LogLevel.Error, "An error occurred while getting an object from S3. Details: '{ErrorMessage:string}'.")]
+    public static partial void LogS3GetObjectError(this ILogger logger, string errorMessage);
 }
