@@ -1,5 +1,5 @@
 // This file is auto-generated. Do not edit directly.
-// Generated on: 2025-04-23 07:27:02 UTC
+// Generated on: 2025-04-24 07:49:40 UTC
 using Microsoft.Extensions.Logging;
 using System;
 using Warp.WebApp.Constants.Logging;

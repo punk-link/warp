@@ -1,35 +1,28 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
-using System.Net;
+using Warp.WebApp.Errors;
+using Warp.WebApp.Extensions;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Models.Creators;
+using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Services.Creators;
 
 namespace Warp.WebApp.Controllers;
 
 public class BaseController : ControllerBase
 {
-    public BaseController(IStringLocalizer<ServerResources> localizer, ICookieService cookieService, ICreatorService creatorService)
+    public BaseController(ICookieService cookieService, ICreatorService creatorService)
     {
         _cookieService = cookieService;
         _creatorService = creatorService;
-        _localizer = localizer;
     }
 
 
-    protected async Task<Result<Creator, ProblemDetails>> GetCreator(CancellationToken cancellationToken)
-    {
-        var creatorId = _cookieService.GetCreatorId(HttpContext);
-        var (_, isFailure, creator, _) = await _creatorService.Get(creatorId, cancellationToken);
-        if (isFailure)
-            return ProblemDetailsHelper.CreateUnauthorized(_localizer);
-
-        return creator;
-    }
+    public BadRequestObjectResult BadRequest(in DomainError error) 
+        => base.BadRequest(ToProblemDetails(error));
 
 
-    protected IActionResult NoContentOrBadRequest<T>(Result<T, ProblemDetails> result)
+    protected IActionResult BadRequestOrNoContent<T>(Result<T, DomainError> result)
     {
         if (result.IsFailure)
             return BadRequest(result.Error);
@@ -38,20 +31,35 @@ public class BaseController : ControllerBase
     }
 
 
-    protected IActionResult ReturnForbid()
+    protected async Task<Result<Creator, DomainError>> GetCreator(CancellationToken cancellationToken)
     {
-        return StatusCode((int)HttpStatusCode.Forbidden, ProblemDetailsHelper.CreateForbidden(_localizer));
+        var creatorId = _cookieService.GetCreatorId(HttpContext);
+        var (_, isFailure, creator, _) = await _creatorService.Get(creatorId, cancellationToken);
+        if (isFailure)
+            return DomainErrors.UnauthorizedError();
+        
+        return creator;
     }
 
 
-    protected IActionResult ReturnIdDecodingBadRequest(string? detail = null)
+    protected IActionResult IdDecodingBadRequest() 
+        => BadRequest(DomainErrors.IdDecodingError());
+
+
+    protected ProblemDetails ToProblemDetails(DomainError error)
     {
-        detail ??= _localizer["IdDecodingErrorMessage"];
-        return BadRequest(ProblemDetailsHelper.Create(detail));
+        var eventId = error.Code;
+        var problemDetails = ProblemDetailsHelper.Create(eventId.ToDescriptionString(), error.Detail, eventId.ToHttpStatusCode())
+            .AddEventId(eventId)
+            .AddTraceId(HttpContext.TraceIdentifier);
+
+        foreach (var extension in error.Extensions)
+           problemDetails.Extensions[extension.Key] = extension.Value;
+
+        return problemDetails;
     }
 
 
     private readonly ICookieService _cookieService;
     private readonly ICreatorService _creatorService;
-    private readonly IStringLocalizer<ServerResources> _localizer;
 }

@@ -12,7 +12,7 @@ public readonly record struct DomainError
     }
     
 
-    public DomainError WithExtension(string key, object value)
+    public DomainError WithExtension(string key, object? value)
     {
         Extensions[key] = value;
         return this;
@@ -21,5 +21,5 @@ public readonly record struct DomainError
 
     public LogEvents Code { get; }
     public string Detail { get; }
-    public Dictionary<string, object> Extensions { get; init; } = [];
+    public Dictionary<string, object?> Extensions { get; init; } = [];
 }

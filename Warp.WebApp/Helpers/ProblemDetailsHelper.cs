@@ -2,6 +2,8 @@
 using Microsoft.Extensions.Localization;
 using System.Net;
 using System.Text.Json;
+using Warp.WebApp.Constants;
+using Warp.WebApp.Constants.Logging;
 using Warp.WebApp.Models.ProblemDetails;
 
 namespace Warp.WebApp.Helpers;
@@ -10,7 +12,14 @@ public static class ProblemDetailsHelper
 {
     public static void AddErrors(this ProblemDetails details, List<Error> errors)
     {
-        details.Extensions[ErrorsExtensionToken] = errors;
+        details.Extensions[ErrorExtensionKeys.ErrorsExtensionToken] = errors;
+    }
+
+
+    public static ProblemDetails AddEventId(this ProblemDetails details, LogEvents eventId)
+    {
+        details.Extensions[ErrorExtensionKeys.EventId] = (int) eventId;
+        return details;
     }
 
 
@@ -19,7 +28,7 @@ public static class ProblemDetailsHelper
         if (sentryId == SentryId.Empty)
             return details;
 
-        details.Extensions[SentryIdExtensionToken] = sentryId.ToString();
+        details.Extensions[ErrorExtensionKeys.SentryIdExtensionToken] = sentryId.ToString();
         return details;
     }
 
@@ -29,7 +38,7 @@ public static class ProblemDetailsHelper
         if (string.IsNullOrWhiteSpace(stackTrace))
             return details;
 
-        details.Extensions[StackTraceExtensionToken] = stackTrace;
+        details.Extensions[ErrorExtensionKeys.StackTraceExtensionToken] = stackTrace;
         return details;
     }
 
@@ -39,7 +48,7 @@ public static class ProblemDetailsHelper
         if (string.IsNullOrWhiteSpace(traceId))
             return details;
 
-        details.Extensions[TraceIdExtensionToken] = traceId;
+        details.Extensions[ErrorExtensionKeys.TraceIdExtensionToken] = traceId;
         return details;
     }
 
@@ -76,17 +85,9 @@ public static class ProblemDetailsHelper
         => Create(localizer["ServiceUnavailableErrorMessage"], HttpStatusCode.ServiceUnavailable, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.4");
 
 
-    public static ProblemDetails CreateForbidden(IStringLocalizer<ServerResources> localizer)
-        => Create(localizer["NoPermissionErrorMessage"], HttpStatusCode.Forbidden, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.3");
-
-
-    public static ProblemDetails CreateUnauthorized(IStringLocalizer<ServerResources> localizer, string? detail = null)
-        => Create(detail ?? localizer["UnauthorizedErrorMessage"], HttpStatusCode.Unauthorized, "https://datatracker.ietf.org/doc/html/rfc7235#section-3.1");
-
-
     public static List<Error> GetErrors(this ProblemDetails details)
     {
-        if (!details.Extensions.TryGetValue(ErrorsExtensionToken, out var errorsObject))
+        if (!details.Extensions.TryGetValue(ErrorExtensionKeys.ErrorsExtensionToken, out var errorsObject))
             return Enumerable.Empty<Error>().ToList();
 
         if (errorsObject is null)
@@ -101,7 +102,7 @@ public static class ProblemDetailsHelper
 
     public static string GetTraceId(this ProblemDetails details)
     {
-        if (!details.Extensions.TryGetValue(TraceIdExtensionToken, out var traceId))
+        if (!details.Extensions.TryGetValue(ErrorExtensionKeys.TraceIdExtensionToken, out var traceId))
             return string.Empty;
 
         var traceIdString = traceId?.ToString();
@@ -120,10 +121,4 @@ public static class ProblemDetailsHelper
             HttpStatusCode.Unauthorized => "https://datatracker.ietf.org/doc/html/rfc7235#section-3.1",
             _ => "https://datatracker.ietf.org/doc/html/rfc7231#section-6",
         };
-
-
-    private const string ErrorsExtensionToken = "errors";
-    private const string SentryIdExtensionToken = "sentry-id";
-    private const string StackTraceExtensionToken = "stack-trace";
-    private const string TraceIdExtensionToken = "trace-id";
 }

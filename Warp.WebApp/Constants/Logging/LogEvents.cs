@@ -1,5 +1,5 @@
 // This file is auto-generated. Do not edit directly.
-// Generated on: 2025-04-23 07:27:02 UTC
+// Generated on: 2025-04-24 07:49:40 UTC
 using System;
 using System.ComponentModel;
 using System.Linq;
@@ -13,7 +13,7 @@ public enum LogEvents
     [Description("An unexpected error occurred while processing the request. Request ID: '{RequestId}'.")]
     [HttpStatusCode(500)]
     ServerError = 10001,
-    [Description("An error occurred while processing the request. Request ID: {RequestId}. Details: '{ErrorMessage:string}'.")]
+    [Description("An error occurred while processing the request. Details: '{0}'.")]
     [HttpStatusCode(500)]
     ServerErrorWithMessage = 10002,
     [Description("Service unavailable (503). Request ID: {RequestId}. Details: '{ErrorMessage:string}'.")]
@@ -94,6 +94,12 @@ public enum LogEvents
     [Description("An error occurred in the domain layer while removing the image '{ImageId:Guid}'. Details: '{ErrorMessage:string}'.")]
     [HttpStatusCode(400)]
     ImageRemovalDomainError = 20101,
+    [Description("An error occurred while decoding the ID.")]
+    [HttpStatusCode(400)]
+    IdDecodingError = 20102,
+    [Description("You do not have permission to perform this action.")]
+    [HttpStatusCode(403)]
+    UnauthorizedError = 20103,
 
 
     // Domain.Creator
@@ -114,7 +120,7 @@ public enum LogEvents
     EntryModelValidationError = 20302,
     [Description("You do not have permission to access this entry.")]
     [HttpStatusCode(403)]
-    NoPermissionErrorMessage = 20303,
+    NoPermissionError = 20303,
     [Description("The entry was not found.")]
     [HttpStatusCode(404)]
     EntryNotFound = 20304,
@@ -151,4 +157,25 @@ public enum LogEvents
     [Description("An error occurred while getting an object.")]
     [HttpStatusCode(500)]
     S3GetObjectError = 20504,
+    [Description("The file name is missing. Please provide a valid file name.")]
+    [HttpStatusCode(400)]
+    FileNameIsMissing = 20505,
+    [Description("The file is empty. Please provide a valid file.")]
+    [HttpStatusCode(400)]
+    FileIsEmpty = 20506,
+    [Description("The file size is {Actual:long} bytes. Yoy can upload files up to {MaxFileSize:long} bytes.")]
+    [HttpStatusCode(400)]
+    FileSizeExceeded = 20507,
+    [Description("The provided file type is not permitted.")]
+    [HttpStatusCode(400)]
+    FileTypeNotPermitted = 20508,
+    [Description("An error occurred while creating the MultipartReader. Probably the request is not a multipart/form-data request.")]
+    [HttpStatusCode(400)]
+    MultipartReaderError = 20509,
+    [Description("The content-type boundary is missing. Please provide a valid content-type boundary.")]
+    [HttpStatusCode(400)]
+    MultipartContentTypeBoundaryError = 20510,
+    [Description("The multipart boundary length limit has been exceeded. Please provide a valid content-type boundary.")]
+    [HttpStatusCode(400)]
+    MultipartBoundaryLengthLimitExceeded = 20511,
 }

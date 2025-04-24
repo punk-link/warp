@@ -16,6 +16,7 @@
           "id": 10002,
           "name": "ServerErrorWithMessage",
           "description": "An error occurred while processing the request. Request ID: {RequestId}. Details: '{ErrorMessage:string}'.",
+          "domainErrorDescription": "An error occurred while processing the request. Details: '{0}'.",
           "logLevel": "Error",
           "generateLogMessage": true,
           "obsolete": false,
@@ -233,6 +234,25 @@
           "generateLogMessage": true,
           "obsolete": false,
           "httpCode": 400
+        },
+        {
+          "id": 20102,
+          "name": "IdDecodingError",
+          "description": "An error occurred while decoding the ID '{Id:string}'. Details: '{ErrorMessage:string}'.",
+          "domainErrorDescription": "An error occurred while decoding the ID.",
+          "logLevel": "Error",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        },
+        {
+          "id": 20103,
+          "name": "UnauthorizedError",
+          "description": "You do not have permission to perform this action.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 403
         }
       ]
     },
@@ -283,7 +303,7 @@
         },
         {
           "id": 20303,
-          "name": "NoPermissionErrorMessage",
+          "name": "NoPermissionError",
           "description": "You do not have permission to access this entry.",
           "logLevel": "Warning",
           "generateLogMessage": false,
@@ -398,6 +418,69 @@
           "generateLogMessage": true,
           "obsolete": false,
           "httpCode": 500
+        },
+        {
+          "id": 20505,
+          "name": "FileNameIsMissing",
+          "description": "The file name is missing. Please provide a valid file name.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        },
+        {
+          "id": 20506,
+          "name": "FileIsEmpty",
+          "description": "The file is empty. Please provide a valid file.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        },
+        {
+          "id": 20507,
+          "name": "FileSizeExceeded",
+          "description": "The file size is {Actual:long} bytes. Yoy can upload files up to {MaxFileSize:long} bytes.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        },
+        {
+          "id": 20508,
+          "name": "FileTypeNotPermitted",
+          "description": "The provided file type is not permitted.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        },
+        {
+          "id": 20509,
+          "name": "MultipartReaderError",
+          "description": "An error occurred while creating the MultipartReader. Probably the request is not a multipart/form-data request.",
+          "logLevel": "Error",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        },
+        {
+          "id": 20510,
+          "name": "MultipartContentTypeBoundaryError",
+          "description": "The content-type boundary is missing. Please provide a valid content-type boundary.",
+          "logLevel": "Error",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        },
+        {
+          "id": 20511,
+          "name": "MultipartBoundaryLengthLimitExceeded",
+          "description": "The multipart boundary length limit has been exceeded. Please provide a valid content-type boundary.",
+          "logLevel": "Error",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
         }
       ]
     }
