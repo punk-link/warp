@@ -7,7 +7,7 @@ namespace Warp.CodeGen.Generators;
 /// <summary>
 /// Generates the LoggingConstants.cs file containing enum definitions
 /// </summary>
-public class ConstantsGenerator
+public class ConstantsGenerator : BaseGenerator
 {
     public static void Generate(LoggingConfig loggingConfig, string outputFilePath)
     {

@@ -1,5 +1,4 @@
 using System.Text;
-using System.Text.RegularExpressions;
 using Warp.CodeGen.Models;
 using Warp.CodeGen.Utilities;
 
@@ -8,7 +7,7 @@ namespace Warp.CodeGen.Generators;
 /// <summary>
 /// Generates the LogMessages.cs file containing partial method declarations for structured logging
 /// </summary>
-public partial class LogMessagesGenerator
+public partial class LogMessagesGenerator : BaseGenerator
 {
     public static void Generate(LoggingConfig loggingConfig, string outputFilePath)
     {
@@ -48,7 +47,10 @@ public partial class LogMessagesGenerator
                 if (logEvent.Obsolete)
                     sb.AppendLine($"    [Obsolete(\"This log message is obsolete. Do not use it.\")]");
 
-                sb.AppendLine($"    public static partial void {methodName}(this ILogger logger{parameters});");
+                if (parameters.Length > 0)
+                    sb.AppendLine($"    public static partial void {methodName}(this ILogger logger, {parameters});");
+                else
+                    sb.AppendLine($"    public static partial void {methodName}(this ILogger logger);");
                 
                 var isLastEventInCategory = logEvent == category.Events.Last(e => e.GenerateLogMessage);
                 if (!isLastEventInCategory || !isLastCategory)
@@ -63,36 +65,4 @@ public partial class LogMessagesGenerator
         
         FileUtilities.WriteToFile(outputFilePath, sb.ToString());
     }
-
-    
-    private static string ExtractParameters(string description)
-    {
-        var parameters = new List<string>();
-        
-        var paramMatches = LogParametersRegex().Matches(description);
-        foreach (Match match in paramMatches)
-        {
-            var paramName = match.Groups[1].Value;
-            var paramType = "string?";
-            
-            if (paramName.Contains(':'))
-            {
-                var parts = paramName.Split(':');
-                paramName = parts[0].Trim();
-                paramType = parts[1].Trim();
-            }
-
-            var variableName = StringExtensions.ToCamelCase(paramName);
-            parameters.Add($"{paramType} {variableName}");
-        }
-        
-        return parameters.Count > 0 
-            ? ", " + string.Join(", ", parameters) 
-            : string.Empty;
-    }
-
-    
-    // Extract parameters from the message template (e.g., {RequestId}, {ErrorMessage}, {ImageId:Guid})
-    [GeneratedRegex(@"\{([^{}]+)\}", RegexOptions.Compiled)]
-    private static partial Regex LogParametersRegex();
 }

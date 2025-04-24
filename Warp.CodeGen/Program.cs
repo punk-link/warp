@@ -22,13 +22,16 @@ public class Program
         };
 
         var messagesOutputOption = new Option<FileInfo?>(name: "--messages", description: "The output path for the LogMessages.cs file");
+        
+        var domainErrorsOutputOption = new Option<FileInfo?>(name: "--domain-errors", description: "The output path for the DomainErrors.cs file");
 
         var rootCommand = new RootCommand("Generates code files from JSON logging definitions");
         rootCommand.AddOption(jsonFileOption);
         rootCommand.AddOption(constantsOutputOption);
         rootCommand.AddOption(messagesOutputOption);
+        rootCommand.AddOption(domainErrorsOutputOption);
 
-        rootCommand.SetHandler((jsonFile, constantsOutput, messagesOutput) =>
+        rootCommand.SetHandler((jsonFile, constantsOutput, messagesOutput, domainErrorsOutput) =>
         {
             if (jsonFile is null || !jsonFile.Exists)
             {
@@ -45,9 +48,12 @@ public class Program
 
             if (messagesOutput is not null)
                 LogMessagesGenerator.Generate(loggingConfig, messagesOutput.FullName);
+                
+            if (domainErrorsOutput is not null)
+                DomainErrorGenerator.Generate(loggingConfig, domainErrorsOutput.FullName);
 
             return Task.FromResult(0);
-        }, jsonFileOption, constantsOutputOption, messagesOutputOption);
+        }, jsonFileOption, constantsOutputOption, messagesOutputOption, domainErrorsOutputOption);
 
         return await rootCommand.InvokeAsync(args);
     }
