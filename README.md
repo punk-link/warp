@@ -30,14 +30,14 @@ Also you might need to override DB settings to run locally. Set up the _Redis_ s
 
 ## Code Generation
 
-Warp includes a code generation system for managing logging events and messages. The generator creates consistent logging constants, enums, and helper methods based on a JSON configuration file.
+Warp includes a code generation system for managing logging events, domain errors, and messages. The generator creates consistent logging constants, enums, domain error factories, and helper methods based on a JSON configuration file.
 
 ### Logging Configuration
 
 The logging configuration is defined in `Warp.WebApp/CodeGeneration/log-events.json`. The configuration follows a hierarchical structure where logging events are organized by categories. Each logging event includes:
 
 - `id` - Unique numeric identifier
-- `name` - Name of the logging event 
+- `name` - Name of the logging event
 - `description` - Description template with optional parameters in format `{ParameterName:Type}`
 - `domainErrorDescription` - Optional alternative description for domain error messages
 - `logLevel` - Severity level (Debug, Information, Warning, Error, Critical)
@@ -51,6 +51,7 @@ Example event:
   "id": 12201,
   "name": "ImageUploadError",
   "description": "An error occurred while uploading the image. Details: '{ErrorMessage:string}'.",
+  "domainErrorDescription": "Failed to upload image: {ErrorMessage:string}",
   "logLevel": "Error",
   "generateLogMessage": true,
   "obsolete": false,
@@ -62,19 +63,29 @@ Example event:
 
 The code generator produces:
 
-1. `LoggEvents.cs` - Enum definitions for all logging events with Description attributes and HTTP status code decorations
+1. `LogEvents.cs` - Enum definitions for all logging events with Description attributes and HTTP status code decorations
 2. `LogMessages.cs` - Extension methods for ILogger with structured logging support using the [LoggerMessage] attribute pattern
+3. `DomainErrors.cs` - Static methods to create strongly-typed DomainError instances with appropriate error codes and messages
 
-When a log event is marked as `obsolete: true`, both the enum value and log method are decorated with the `[Obsolete]` attribute, generating compiler warnings when used.
+When a log event is marked as `obsolete: true`, all related artifacts (enum value, log method, and domain error factory method) are decorated with the `[Obsolete]` attribute, generating compiler warnings when used.
 
 When a log event includes an `httpCode` value, the enum will be decorated with `[HttpStatusCode]`, which can be used for API documentation and response type specification.
+
+### Parameter Extraction
+
+The code generation system automatically extracts parameters from message templates using a regular expression pattern. Parameters are formatted as `{ParameterName}` or `{ParameterName:Type}` where:
+
+- `ParameterName` is converted to camelCase for method parameters
+- `Type` defines the parameter type (defaults to `string?` if not specified)
+
+For example, a template like `"User {UserId:Guid} uploaded {FileCount:int} files"` generates parameters `Guid userId, int fileCount`.
 
 ### Running Code Generation
 
 Code generation runs automatically during the release build process through a target in the project file. You can also run it manually:
 
 ```bash
-dotnet run --project Warp.CodeGen/Warp.CodeGen.csproj -- --json Warp.WebApp/CodeGeneration/log-events.json --constants Warp.WebApp/Constants/Logging/LogEvents.cs --messages Warp.WebApp/Telemetry/Logging/LogMessages.cs
+dotnet run --project Warp.CodeGen/Warp.CodeGen.csproj -- --json Warp.WebApp/CodeGeneration/log-events.json --constants Warp.WebApp/Constants/Logging/LogEvents.cs --messages Warp.WebApp/Telemetry/Logging/LogMessages.cs --domain-errors Warp.WebApp/Extensions/DomainErrorExtensions.cs
 ```
 
 ## Styles
