@@ -1,12 +1,12 @@
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
 using Warp.WebApp.Models;
 using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Models.Entries.Enums;
+using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Models.Options;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
@@ -24,9 +24,8 @@ public class IndexModel : BasePageModel
         IEntryInfoService entryInfoService,
         IStringLocalizer<IndexModel> localizer,
         ILoggerFactory loggerFactory, 
-        IOpenGraphService openGraphService, 
-        IStringLocalizer<ServerResources> serverLocalizer)
-        : base(cookieService, creatorService, loggerFactory, serverLocalizer)
+        IOpenGraphService openGraphService)
+        : base(cookieService, creatorService, loggerFactory)
     {
         _analyticsOptions = analyticsOptions.Value;
         _cookieService = cookieService;
@@ -103,11 +102,11 @@ public class IndexModel : BasePageModel
                     : RedirectToError(result.Error));
 
 
-            Task<Result<EntryInfo, ProblemDetails>> GetEntryInfo(Guid entryId)
+            Task<Result<EntryInfo, DomainError>> GetEntryInfo(Guid entryId)
                 => _entryInfoService.Get(creator, entryId, cancellationToken);
 
 
-            Result<EntryInfo, ProblemDetails> BuildModel(EntryInfo entryInfo)
+            Result<EntryInfo, DomainError> BuildModel(EntryInfo entryInfo)
             {
                 Id = id;
                 EditMode = entryInfo.EditMode;
@@ -144,7 +143,7 @@ public class IndexModel : BasePageModel
             });
 
 
-        Result<(Creator, EntryRequest), ProblemDetails> BuildEntryRequest(Creator creator)
+        Result<(Creator, EntryRequest), DomainError> BuildEntryRequest(Creator creator)
         {
             var expiresIn = GetExpirationPeriod(SelectedExpirationPeriod);
             var decodedImageIds = ImageIds.Select(IdCoder.Decode).ToList();
@@ -162,7 +161,7 @@ public class IndexModel : BasePageModel
         }
 
 
-        async Task<Result<EntryInfo, ProblemDetails>> ProcessEntryRequest((Creator Creator, EntryRequest EntryRequest) tuple)
+        async Task<Result<EntryInfo, DomainError>> ProcessEntryRequest((Creator Creator, EntryRequest EntryRequest) tuple)
         {
             var entryExists = await CheckIfEntryExists(tuple.Creator, tuple.EntryRequest.Id, cancellationToken);
             return entryExists
