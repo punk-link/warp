@@ -3,10 +3,8 @@ using CSharpFunctionalExtensions.ValueTasks;
 using System.Diagnostics;
 using System.IO.Hashing;
 using Warp.WebApp.Constants.Caching;
-using Warp.WebApp.Constants.Logging;
 using Warp.WebApp.Data;
 using Warp.WebApp.Data.S3;
-using Warp.WebApp.Extensions;
 using Warp.WebApp.Models;
 using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Models.Files;
@@ -39,12 +37,7 @@ public class ImageService : IImageService, IUnauthorizedImageService
         
         return await UnitResult.Success<DomainError>()
             .Map(() => appFile)
-            .Ensure(IsImageMimeType, _ =>
-            {
-                var logEvent = LogEvents.UnsupportedFileExtension;
-                var detail = string.Format(logEvent.ToDescriptionString(), appFile.ContentMimeType, string.Join(", ", _imageMimeTypes));
-                return new DomainError(logEvent, detail);
-            })
+            .Ensure(IsImageMimeType,DomainErrors.UnsupportedFileExtension(appFile.ContentMimeType, string.Join(", ", _imageMimeTypes)))
             .Bind(CheckDuplicate)
             .Bind(Upload)
             .Bind(AddHash)
@@ -61,10 +54,7 @@ public class ImageService : IImageService, IUnauthorizedImageService
             if (!await IsHashCached(hash))
                 return AppFile.AddHash(file, hash);
 
-            var logEvent = LogEvents.ImageAlreadyExists;
-            var detail = string.Format(logEvent.ToDescriptionString(), file.UntrustedFileName);
-
-            return new DomainError(logEvent, detail);
+            return DomainErrors.ImageAlreadyExists(file.UntrustedFileName);
             
 
             static async Task<string> CalculateFileHash(Stream stream, CancellationToken ct)

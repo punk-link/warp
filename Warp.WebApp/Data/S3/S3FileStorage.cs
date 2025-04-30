@@ -2,7 +2,6 @@
 using Amazon.S3.Model;
 using CSharpFunctionalExtensions;
 using Warp.WebApp.Attributes;
-using Warp.WebApp.Constants.Logging;
 using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Models.Files;
 using Warp.WebApp.Telemetry.Logging;
@@ -63,7 +62,7 @@ public class S3FileStorage : IS3FileStorage
         }
 
         _logger.LogS3ListObjectsError(error);
-        return new DomainError(LogEvents.S3ListObjectsError);
+        return DomainErrors.S3ListObjectsError();
     }
 
 
@@ -95,7 +94,7 @@ public class S3FileStorage : IS3FileStorage
         }
 
         _logger.LogS3UploadObjectError(error);
-        return new DomainError(LogEvents.S3UploadObjectError);
+        return DomainErrors.S3UploadObjectError();
     }
 
 
@@ -130,7 +129,7 @@ public class S3FileStorage : IS3FileStorage
         }
 
         _logger.LogS3GetObjectError(error);
-        return new DomainError(LogEvents.S3GetObjectError);
+        return DomainErrors.S3GetObjectError();
     }
 
 
@@ -159,7 +158,7 @@ public class S3FileStorage : IS3FileStorage
         }
 
         _logger.LogS3DeleteObjectError(error);
-        return new DomainError(LogEvents.S3DeleteObjectError);
+        return DomainErrors.S3DeleteObjectError();
     }
 
     

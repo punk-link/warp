@@ -1,6 +1,5 @@
 ﻿using CSharpFunctionalExtensions;
 using Warp.WebApp.Attributes;
-using Warp.WebApp.Constants.Logging;
 using Warp.WebApp.Data;
 using Warp.WebApp.Models;
 using Warp.WebApp.Models.Creators;
@@ -85,9 +84,8 @@ public class CreatorService : ICreatorService
                 return UnitResult.Success<DomainError>();
 
             _logger.LogCantAttachEntryToCreator(entryInfo.Id, creator.Id);
-            var error = new DomainError(LogEvents.CantAttachEntryToCreator);
 
-            return UnitResult.Failure(error);
+            return DomainErrors.CantAttachEntryToCreator();
         }
     }
 
@@ -99,13 +97,13 @@ public class CreatorService : ICreatorService
         if (creatorId is null)
         {
             _logger.LogCreatorIdIsNull();
-            return new DomainError(LogEvents.CreatorIdIsNull);
+            return DomainErrors.CreatorIdIsNull();
         }
 
         var userCacheKey = CacheKeyBuilder.BuildCreatorCacheKey(creatorId.Value);
         var creator = await _dataStorage.TryGet<Creator>(userCacheKey, cancellationToken);
         if (creator == default)
-            return new DomainError(LogEvents.CreatorIdIsNotFound);
+            return DomainErrors.CreatorIdIsNotFound();
 
         return creator;
     }

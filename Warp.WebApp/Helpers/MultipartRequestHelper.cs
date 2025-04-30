@@ -1,7 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.Net.Http.Headers;
 using Warp.WebApp.Models.Errors;
-using Warp.WebApp.Errors;
 
 namespace Warp.WebApp.Helpers;
 

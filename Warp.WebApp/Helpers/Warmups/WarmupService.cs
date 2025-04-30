@@ -45,7 +45,7 @@ public class WarmupService : IHostedService
                 await _routeWarmer.WarmUpRoutes(linkedCts.Token);
             
                 stopwatch.Stop();
-                _logger.LogInformation($"Application warmup completed in {stopwatch.ElapsedMilliseconds}ms");
+                _logger.LogInformation("Application warmup completed in {ElapsedMilliseconds}ms", stopwatch.ElapsedMilliseconds);
             }
             catch (OperationCanceledException)
             {

@@ -2,8 +2,6 @@
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Net.Http.Headers;
 using System.Text;
-using Warp.WebApp.Constants.Logging;
-using Warp.WebApp.Extensions;
 using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Models.Files;
 using Warp.WebApp.Telemetry.Logging;
@@ -27,32 +25,26 @@ public class FileHelper
         {
             var fileName = contentDisposition.FileName.Value;
             if (string.IsNullOrEmpty(fileName))
-                return new DomainError(LogEvents.FileNameIsMissing);
+                return DomainErrors.FileNameIsMissing();
 
             var memoryStream = new MemoryStream();
             await section.Body.CopyToAsync(memoryStream);
 
             if (memoryStream.Length is 0)
-                return new DomainError(LogEvents.FileIsEmpty);
-        
+                return DomainErrors.FileIsEmpty();
+
             if (memoryStream.Length > _fileSizeLimit)
-            {
-                var logEvent = LogEvents.FileSizeExceeded;
-                var description = string.Format(logEvent.ToDescriptionString(), memoryStream.Length, _fileSizeLimit);
-                return new DomainError(logEvent, description);
-            }
+                return DomainErrors.FileSizeExceeded(memoryStream.Length, _fileSizeLimit);
 
             if(!IsValidFileExtensionAndSignature(_logger, contentDisposition.FileName.Value!, memoryStream, _permittedExtensions))
-                return new DomainError(LogEvents.FileTypeNotPermitted);
+                return DomainErrors.FileTypeNotPermitted();
 
             return new AppFile(memoryStream, section.ContentType!, contentDisposition.FileName.Value!);
         }
         catch (Exception ex)
         {
             _logger.LogFileUploadException(ex.Message);
-
-            var description = string.Format(LogEvents.ServerErrorWithMessage.ToDescriptionString(), ex);
-            return new DomainError(LogEvents.ServerErrorWithMessage, description);
+            return DomainErrors.ServerErrorWithMessage(ex.Message);
         }
     }
 

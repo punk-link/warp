@@ -1,8 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
-using Warp.WebApp.Errors;
 using Warp.WebApp.Extensions;
-using Warp.WebApp.Helpers;
 using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Services.Creators;
@@ -19,7 +17,7 @@ public class BaseController : ControllerBase
 
 
     public BadRequestObjectResult BadRequest(in DomainError error) 
-        => base.BadRequest(ToProblemDetails(error));
+        => base.BadRequest(error.ToProblemDetails());
 
 
     protected IActionResult BadRequestOrNoContent<T>(Result<T, DomainError> result)
@@ -44,20 +42,6 @@ public class BaseController : ControllerBase
 
     protected IActionResult IdDecodingBadRequest() 
         => BadRequest(DomainErrors.IdDecodingError());
-
-
-    protected ProblemDetails ToProblemDetails(DomainError error)
-    {
-        var eventId = error.Code;
-        var problemDetails = ProblemDetailsHelper.Create(eventId.ToDescriptionString(), error.Detail, eventId.ToHttpStatusCode())
-            .AddEventId(eventId)
-            .AddTraceId(HttpContext.TraceIdentifier);
-
-        foreach (var extension in error.Extensions)
-           problemDetails.Extensions[extension.Key] = extension.Value;
-
-        return problemDetails;
-    }
 
 
     private readonly ICookieService _cookieService;

@@ -10,7 +10,6 @@ using System.Diagnostics;
 using System.Text.Json;
 using Warp.WebApp.Attributes;
 using Warp.WebApp.Constants;
-using Warp.WebApp.Errors;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
 using Warp.WebApp.Models.Errors;

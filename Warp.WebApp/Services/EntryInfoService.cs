@@ -1,13 +1,7 @@
 ﻿using CSharpFunctionalExtensions;
 using CSharpFunctionalExtensions.ValueTasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
-using Sentry;
 using Warp.WebApp.Attributes;
-using Warp.WebApp.Constants.Logging;
 using Warp.WebApp.Data;
-using Warp.WebApp.Extensions;
-using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
 using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Models.Errors;
@@ -108,7 +102,7 @@ public class EntryInfoService : IEntryInfoService
             if (validationResult.IsValid)
                 return entryInfo;
 
-            var error = new DomainError(LogEvents.EntryInfoModelValidationError);
+            var error = DomainErrors.EntryInfoModelValidationError();
             foreach (var validationError in validationResult.Errors)
                 error.WithExtension($"{nameof(EntryInfoValidator)}:{validationError.ErrorCode}", validationError.ErrorMessage);
 
@@ -141,7 +135,7 @@ public class EntryInfoService : IEntryInfoService
         var newEntryId = Guid.CreateVersion7();
 
         return GetEntryInfo(entryId, cancellationToken)
-            .Ensure(entryInfo => IsBelongsToCreator(entryInfo, creator), new DomainError(LogEvents.NoPermissionErrorMessage))
+            .Ensure(entryInfo => IsBelongsToCreator(entryInfo, creator), DomainErrors.NoPermissionError())
             .Bind(CopyImages)
             .Bind(BuildEntryRequest)
             .Bind(AddEntryInfo);
@@ -195,7 +189,7 @@ public class EntryInfoService : IEntryInfoService
         async Task<UnitResult<DomainError>> EnsureNotReported()
         {
             if (await _reportService.Contains(entryId, cancellationToken))
-                return new DomainError(LogEvents.EntryNotFound);
+                return DomainErrors.EntryNotFound();
 
             return UnitResult.Success<DomainError>();
         }
@@ -217,7 +211,7 @@ public class EntryInfoService : IEntryInfoService
     public async Task<UnitResult<DomainError>> Remove(Creator creator, Guid entryId, CancellationToken cancellationToken)
     {
         return await GetEntryInfo(entryId, cancellationToken)
-            .Ensure(entryInfo => IsBelongsToCreator(entryInfo, creator), new DomainError(LogEvents.NoPermissionErrorMessage))
+            .Ensure(entryInfo => IsBelongsToCreator(entryInfo, creator), DomainErrors.NoPermissionError())
             .Tap(RemoveEntryInfo);
 
 
@@ -247,10 +241,10 @@ public class EntryInfoService : IEntryInfoService
     public Task<Result<EntryInfo, DomainError>> Update(Creator creator, EntryRequest entryRequest, CancellationToken cancellationToken)
     {
         return GetEntryInfo(entryRequest.Id, cancellationToken)
-            .Ensure(entryInfo => IsBelongsToCreator(entryInfo, creator), new DomainError(LogEvents.NoPermissionErrorMessage))
-            .Ensure(entryInfo => entryInfo.EditMode == entryRequest.EditMode, new DomainError(LogEvents.EntryEditModeMismatch))
+            .Ensure(entryInfo => IsBelongsToCreator(entryInfo, creator), DomainErrors.NoPermissionError())
+            .Ensure(entryInfo => entryInfo.EditMode == entryRequest.EditMode, DomainErrors.EntryEditModeMismatch())
             .Bind(GetViews)
-            .Ensure(entryInfo => entryInfo.ViewCount == 0, new DomainError(LogEvents.EntryCannotBeEditedAfterViewed))
+            .Ensure(entryInfo => entryInfo.ViewCount == 0, DomainErrors.EntryCannotBeEditedAfterViewed())
             .Bind(_ => Add(creator, entryRequest, cancellationToken));
 
 
@@ -267,7 +261,7 @@ public class EntryInfoService : IEntryInfoService
         var cacheKey = CacheKeyBuilder.BuildEntryInfoCacheKey(entryId);
         var result = await _dataStorage.TryGet<EntryInfo?>(cacheKey, cancellationToken);
         if (result is null)
-            return new DomainError(LogEvents.EntryNotFound);
+            return DomainErrors.EntryNotFound();
 
         return result.Value;
     }
@@ -280,7 +274,7 @@ public class EntryInfoService : IEntryInfoService
     private Task<UnitResult<DomainError>> RemoveAttachedImageInternally(Result<EntryInfo, DomainError> entryInfoResult, Creator creator, Guid entryId, Guid imageId, CancellationToken cancellationToken)
     {
         return entryInfoResult
-            .Ensure(entryInfo => IsBelongsToCreator(entryInfo, creator), new DomainError(LogEvents.NoPermissionErrorMessage))
+            .Ensure(entryInfo => IsBelongsToCreator(entryInfo, creator), DomainErrors.NoPermissionError())
             .Bind(UpdateEntryInfo)
             .TapError(LogDomainError)
             .Tap(CacheEntryInfo)

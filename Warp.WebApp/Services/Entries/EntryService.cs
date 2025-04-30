@@ -1,6 +1,5 @@
 ﻿using CSharpFunctionalExtensions;
 using Warp.WebApp.Attributes;
-using Warp.WebApp.Constants.Logging;
 using Warp.WebApp.Models;
 using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Models.Validators;
@@ -34,7 +33,7 @@ public sealed class EntryService : IEntryService
             if (validationResult.IsValid)
                 return entry;
 
-            var error = new DomainError(LogEvents.EntryModelValidationError);
+            var error = DomainErrors.EntryModelValidationError();
             foreach (var validationError in validationResult.Errors)
                 error.WithExtension($"{nameof(EntryValidator)}:{validationError.ErrorCode}", validationError.ErrorMessage);
 
