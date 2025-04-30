@@ -6,7 +6,7 @@ using Warp.WebApp.Constants.Logging;
 
 namespace Warp.WebApp.Extensions;
 
-public static class EnumExtensions
+public static class LogEventsExtensions
 {
     public static string ToDescriptionString(this LogEvents target)
     {
@@ -30,6 +30,10 @@ public static class EnumExtensions
 
         return status;
     }
+
+
+    public static int ToHttpStatusCodeInt(this LogEvents target) 
+        => (int)ToHttpStatusCode(target);
 
 
     private static string GetDescriptionFromAttributes(LogEvents target)

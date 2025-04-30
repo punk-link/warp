@@ -4,6 +4,8 @@ using System.Net;
 using System.Text.Json;
 using Warp.WebApp.Constants;
 using Warp.WebApp.Constants.Logging;
+using Warp.WebApp.Extensions;
+using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Models.ProblemDetails;
 
 namespace Warp.WebApp.Helpers;
@@ -71,10 +73,6 @@ public static class ProblemDetailsHelper
             Title = status.ToString(),
             Type = type,
         };
-
-
-    public static ProblemDetails CreateNotFound(IStringLocalizer<ServerResources> localizer)
-        => Create(localizer["NotFoundErrorMessage"], HttpStatusCode.NotFound, "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.4");
 
 
     public static ProblemDetails CreateServerException(string error)
