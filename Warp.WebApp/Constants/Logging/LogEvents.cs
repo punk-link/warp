@@ -1,5 +1,5 @@
 // This file is auto-generated. Do not edit directly.
-// Generated on: 2025-04-24 07:49:40 UTC
+// Generated on: 2025-04-29 07:43:04 UTC
 using System;
 using System.ComponentModel;
 using System.Linq;
@@ -13,7 +13,7 @@ public enum LogEvents
     [Description("An unexpected error occurred while processing the request. Request ID: '{RequestId}'.")]
     [HttpStatusCode(500)]
     ServerError = 10001,
-    [Description("An error occurred while processing the request. Details: '{0}'.")]
+    [Description("An error occurred while processing the request. Details: '{ErrorMessage:string}'.")]
     [HttpStatusCode(500)]
     ServerErrorWithMessage = 10002,
     [Description("Service unavailable (503). Request ID: {RequestId}. Details: '{ErrorMessage:string}'.")]
@@ -136,10 +136,10 @@ public enum LogEvents
 
 
     // Domain.Image
-    [Description("The file extension '{0}' is not supported. Please use one of the following extensions: {1}.")]
+    [Description("The file extension '{FileExtension:string}' is not supported. Please use one of the following extensions: {SupportedFileExtensions:string}.")]
     [HttpStatusCode(415)]
     UnsupportedFileExtension = 20401,
-    [Description("The image '{0}' you are trying to upload already exists.")]
+    [Description("The image '{UntrustedImageName:string}' you are trying to upload already exists.")]
     [HttpStatusCode(400)]
     ImageAlreadyExists = 20402,
 

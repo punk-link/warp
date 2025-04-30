@@ -85,7 +85,7 @@ For example, a template like `"User {UserId:Guid} uploaded {FileCount:int} files
 Code generation runs automatically during the release build process through a target in the project file. You can also run it manually:
 
 ```bash
-dotnet run --project Warp.CodeGen/Warp.CodeGen.csproj -- --json Warp.WebApp/CodeGeneration/log-events.json --constants Warp.WebApp/Constants/Logging/LogEvents.cs --messages Warp.WebApp/Telemetry/Logging/LogMessages.cs --domain-errors Warp.WebApp/Extensions/DomainErrorExtensions.cs
+dotnet run --project Warp.CodeGen/Warp.CodeGen.csproj -- --json Warp.WebApp/CodeGeneration/log-events.json --constants Warp.WebApp/Constants/Logging/LogEvents.cs --messages Warp.WebApp/Telemetry/Logging/LogMessages.cs --domain-errors Warp.WebApp/Extensions/DomainErrors.cs
 ```
 
 ## Styles

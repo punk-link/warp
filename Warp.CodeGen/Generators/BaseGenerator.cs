@@ -76,5 +76,5 @@ public abstract partial class BaseGenerator
     /// Regex to extract parameters from message templates like {RequestId}, {ErrorMessage}, {ImageId:Guid}
     /// </summary>
     [GeneratedRegex(@"\{([^{}]+)\}", RegexOptions.Compiled)]
-    private static partial Regex LogParametersRegex();
+    protected static partial Regex LogParametersRegex();
 }
