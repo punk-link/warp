@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Localization;
 using NSubstitute;
-using Pipelines.Sockets.Unofficial.Arenas;
 using Warp.WebApp.Services.OpenGraph;
 
 namespace Warp.WebApp.Tests;
@@ -11,8 +10,8 @@ public class OpenGraphServiceTests
     {
         var localizerSubstitute = Substitute.For<IStringLocalizer<ServerResources>>();
 
-        localizerSubstitute["DefaultOpenGraphDescriptionText"]
-            .Returns(new LocalizedString("DefaultOpenGraphDescriptionText", DefaultDescription));
+        localizerSubstitute["Warplyn is a simple and secure way to share text and images."]
+            .Returns(new LocalizedString("Warplyn is a simple and secure way to share text and images.", DefaultDescription));
 
         _localizer = localizerSubstitute;
     }

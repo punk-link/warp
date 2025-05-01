@@ -1,11 +1,11 @@
 ﻿using CSharpFunctionalExtensions;
-using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
-using System.Net;
 using Xunit;
 using Warp.WebApp.Data;
 using Warp.WebApp.Models;
 using Warp.WebApp.Models.Creators;
+using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Creators;
 
@@ -15,7 +15,7 @@ public class CreatorServiceTests
 {
     public CreatorServiceTests()
     {
-        _creatorService = new CreatorService(_localizerSubstitute, _dataStorageSubstitute);
+        _creatorService = new CreatorService(_loggerFactorySubstitute, _dataStorageSubstitute);
         _creator = new Creator(Guid.NewGuid());
     }
 
@@ -27,7 +27,7 @@ public class CreatorServiceTests
     }
 
     [Fact]
-    public async Task Get_CreatorIdNotFound_ReturnsProblemDetails()
+    public async Task Get_CreatorIdNotFound_ReturnsDomainError()
     {
         _dataStorageSubstitute
             .TryGet<Creator>(Arg.Any<string>(), Arg.Any<CancellationToken>())
@@ -36,33 +36,34 @@ public class CreatorServiceTests
         var result = await _creatorService.Get(_creator.Id, CancellationToken.None);
 
         Assert.False(result.IsSuccess);
-        Assert.NotNull(result.Error);
-        Assert.Equal((int)HttpStatusCode.BadRequest, result.Error.Status);
+        Assert.Equal(Constants.Logging.LogEvents.CreatorIdIsNotFound, result.Error.Code);
     }
 
     [Fact]
-    public async Task Get_CreatorIdIsNull_ReturnsProblemDetails()
+    public async Task Get_CreatorIdIsNull_ReturnsDomainError()
     {
         var result = await _creatorService.Get(null, CancellationToken.None);
 
         Assert.False(result.IsSuccess);
-        Assert.NotNull(result.Error);
-        Assert.Equal((int)HttpStatusCode.BadRequest, result.Error.Status);
+        Assert.Equal(Constants.Logging.LogEvents.CreatorIdIsNull, result.Error.Code);
     }
 
     [Fact]
     public async Task AttachEntry_WithoutExistingEntries_AttachesSuccessfully()
     {
         var entryInfo = new EntryInfo(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            DateTime.Now,
-            DateTime.Now.AddDays(1),
-            Models.Entries.Enums.EditMode.Simple,
-            new Entry("Some content"),
-            new List<ImageInfo>(),
-            new Models.Entries.EntryOpenGraphDescription("Some content", "Some content", null),
-            0);
+            id: Guid.NewGuid(),
+            creatorId: Guid.NewGuid(),
+            createdAt: DateTime.Now,
+            expiresAt: DateTime.Now.AddDays(1),
+            editMode: Models.Entries.Enums.EditMode.Simple,
+            entry: new Entry("Some content"),
+            imageInfos: new List<ImageInfo>(),
+            openGraphDescription: new Models.Entries.EntryOpenGraphDescription(
+                title: "Some content", 
+                description: "Some content", 
+                imageUrl: null),
+            viewCount: 0);
 
         var userIdCacheKey = CacheKeyBuilder.BuildCreatorsEntrySetCacheKey(_creator.Id);
 
@@ -72,7 +73,7 @@ public class CreatorServiceTests
 
         _dataStorageSubstitute
             .AddToSet<Guid>(userIdCacheKey, entryInfo.Id, Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>())
-            .Returns(Result.Success());
+            .Returns(UnitResult.Success<DomainError>());
 
         var result = await _creatorService.AttachEntry(_creator, entryInfo, CancellationToken.None);
 
@@ -80,18 +81,21 @@ public class CreatorServiceTests
     }
 
     [Fact]
-    public async Task AttachEntry_AttachFails_ReturnsProblemDetails()
+    public async Task AttachEntry_AttachFails_ReturnsDomainError()
     {
         var entryInfo = new EntryInfo(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            DateTime.Now,
-            DateTime.Now.AddDays(1),
-            Models.Entries.Enums.EditMode.Simple,
-            new Entry("Some content"),
-            new List<ImageInfo>(),
-            new Models.Entries.EntryOpenGraphDescription("Some content", "Some content", null),
-            0);
+            id: Guid.NewGuid(),
+            creatorId: Guid.NewGuid(),
+            createdAt: DateTime.Now,
+            expiresAt: DateTime.Now.AddDays(1),
+            editMode: Models.Entries.Enums.EditMode.Simple,
+            entry: new Entry("Some content"),
+            imageInfos: new List<ImageInfo>(),
+            openGraphDescription: new Models.Entries.EntryOpenGraphDescription(
+                title: "Some content", 
+                description: "Some content", 
+                imageUrl: null),
+            viewCount: 0);
 
         var userIdCacheKey = CacheKeyBuilder.BuildCreatorsEntrySetCacheKey(_creator.Id);
 
@@ -101,54 +105,62 @@ public class CreatorServiceTests
 
         _dataStorageSubstitute
             .AddToSet(userIdCacheKey, entryInfo.Id, Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>())
-            .Returns(Result.Failure("Failure"));
+            .Returns(UnitResult.Failure(DomainErrors.DefaultCacheValueError("test")));
 
         var result = await _creatorService.AttachEntry(_creator, entryInfo, CancellationToken.None);
 
         Assert.True(result.IsFailure);
-        Assert.NotNull(result.Error);
-        Assert.Equal((int)HttpStatusCode.InternalServerError, result.Error.Status);
+        Assert.Equal(Constants.Logging.LogEvents.CantAttachEntryToCreator, result.Error.Code);
     }
 
     [Fact]
     public async Task AttachEntry_WithExistingEntries_AttachesSuccessfully()
     {
         var entryInfo = new EntryInfo(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            DateTime.Now,
-            DateTime.Now.AddDays(1),
-            Models.Entries.Enums.EditMode.Simple,
-            new Entry("Some content"),
-            new List<ImageInfo>(),
-            new Models.Entries.EntryOpenGraphDescription("Some content", "Some content", null),
-            0);
+            id: Guid.NewGuid(),
+            creatorId: Guid.NewGuid(),
+            createdAt: DateTime.Now,
+            expiresAt: DateTime.Now.AddDays(1),
+            editMode: Models.Entries.Enums.EditMode.Simple,
+            entry: new Entry("Some content"),
+            imageInfos: new List<ImageInfo>(),
+            openGraphDescription: new Models.Entries.EntryOpenGraphDescription(
+                title: "Some content", 
+                description: "Some content", 
+                imageUrl: null),
+            viewCount: 0);
 
         var userIdCacheKey = CacheKeyBuilder.BuildCreatorsEntrySetCacheKey(_creator.Id);
 
         var existingEntryIds = new HashSet<Guid> { Guid.NewGuid(), Guid.NewGuid() };
 
         var existingEntryInfoFirst = new EntryInfo(
-            existingEntryIds.First(),
-            Guid.NewGuid(),
-            DateTime.Now,
-            DateTime.Now.AddDays(1),
-            Models.Entries.Enums.EditMode.Simple,
-            new Entry("Some content"),
-            new List<ImageInfo>(),
-            new Models.Entries.EntryOpenGraphDescription("Some content", "Some content", null),
-            0);
+            id: existingEntryIds.First(),
+            creatorId: Guid.NewGuid(),
+            createdAt: DateTime.Now,
+            expiresAt: DateTime.Now.AddDays(1),
+            editMode: Models.Entries.Enums.EditMode.Simple,
+            entry: new Entry("Some content"),
+            imageInfos: new List<ImageInfo>(),
+            openGraphDescription: new Models.Entries.EntryOpenGraphDescription(
+                title: "Some content", 
+                description: "Some content", 
+                imageUrl: null),
+            viewCount: 0);
 
         var existingEntryInfoSecond = new EntryInfo(
-            existingEntryIds.Last(),
-            Guid.NewGuid(),
-            DateTime.Now,
-            DateTime.Now.AddDays(1),
-            Models.Entries.Enums.EditMode.Simple,
-            new Entry("Some content"),
-            new List<ImageInfo>(),
-            new Models.Entries.EntryOpenGraphDescription("Some content", "Some content", null),
-            0);
+            id: existingEntryIds.Last(),
+            creatorId: Guid.NewGuid(),
+            createdAt: DateTime.Now,
+            expiresAt: DateTime.Now.AddDays(1),
+            editMode: Models.Entries.Enums.EditMode.Simple,
+            entry: new Entry("Some content"),
+            imageInfos: new List<ImageInfo>(),
+            openGraphDescription: new Models.Entries.EntryOpenGraphDescription(
+                title: "Some content", 
+                description: "Some content", 
+                imageUrl: null),
+            viewCount: 0);
 
         _dataStorageSubstitute
             .TryGetSet<Guid>(userIdCacheKey, Arg.Any<CancellationToken>())
@@ -168,7 +180,7 @@ public class CreatorServiceTests
 
         _dataStorageSubstitute
             .AddToSet(userIdCacheKey, entryInfo.Id, Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>())
-            .Returns(Result.Success());
+            .Returns(UnitResult.Success<DomainError>());
 
         var result = await _creatorService.AttachEntry(_creator, entryInfo, CancellationToken.None);
 
@@ -176,7 +188,7 @@ public class CreatorServiceTests
     }
 
     private readonly IDataStorage _dataStorageSubstitute = Substitute.For<IDataStorage>();
-    private readonly IStringLocalizer<ServerResources> _localizerSubstitute = Substitute.For<IStringLocalizer<ServerResources>>();
+    private readonly ILoggerFactory _loggerFactorySubstitute = Substitute.For<ILoggerFactory>();
     private readonly CreatorService _creatorService;
     private readonly Creator _creator;
 }

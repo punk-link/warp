@@ -1,12 +1,12 @@
 using CSharpFunctionalExtensions;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using System.Net;
 using Warp.WebApp.Constants.Caching;
+using Warp.WebApp.Constants.Logging;
 using Warp.WebApp.Data;
 using Warp.WebApp.Data.S3;
-using Warp.WebApp.Helpers;
+using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Models.Files;
 using Warp.WebApp.Services.Images;
 
@@ -16,11 +16,14 @@ public class ImageServiceAddTests
 {
     public ImageServiceAddTests()
     {
-        _localizerSubstitute = Substitute.For<IStringLocalizer<ServerResources>>();
+        _loggerFactorySubstitute = Substitute.For<ILoggerFactory>();
+        _loggerSubstitute = Substitute.For<ILogger<ImageService>>();
+        _loggerFactorySubstitute.CreateLogger<ImageService>().Returns(_loggerSubstitute);
+        
         _dataStorageSubstitute = Substitute.For<IDataStorage>();
         _s3StorageSubstitute = Substitute.For<IS3FileStorage>();
         
-        _imageService = new ImageService(_localizerSubstitute, _dataStorageSubstitute, _s3StorageSubstitute);
+        _imageService = new ImageService(_dataStorageSubstitute, _s3StorageSubstitute);
     }
 
 
@@ -37,8 +40,7 @@ public class ImageServiceAddTests
         var result = await _imageService.Add(entryId, appFile, CancellationToken.None);
 
         Assert.True(result.IsFailure);
-        Assert.NotNull(result.Error);
-        Assert.Equal((int)HttpStatusCode.BadRequest, result.Error.Status);
+        Assert.Equal(LogEvents.ImageAlreadyExists, result.Error.Code);
     }
 
 
@@ -53,10 +55,10 @@ public class ImageServiceAddTests
             .Returns(new ValueTask<bool>(false));
 
         _dataStorageSubstitute.Set(Arg.Any<string>(), Arg.Any<object>(), Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>())
-            .Returns(Result.Success());
+            .Returns(UnitResult.Success<DomainError>());
 
         _s3StorageSubstitute.Save(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<AppFile>(), Arg.Any<CancellationToken>())
-            .Returns(UnitResult.Success<ProblemDetails>());
+            .Returns(UnitResult.Success<DomainError>());
 
         var result = await _imageService.Add(entryId, appFile, CancellationToken.None);
 
@@ -78,13 +80,12 @@ public class ImageServiceAddTests
             .Returns(new ValueTask<bool>(false));
 
         _s3StorageSubstitute.Save(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<AppFile>(), Arg.Any<CancellationToken>())
-            .Returns(UnitResult.Failure(ProblemDetailsHelper.Create("File save failed")));
+            .Returns(UnitResult.Failure(DomainErrors.S3UploadObjectError()));
 
         var result = await _imageService.Add(entryId, appFile, CancellationToken.None);
 
         Assert.True(result.IsFailure);
-        Assert.NotNull(result.Error);
-        Assert.Equal((int)HttpStatusCode.BadRequest, result.Error.Status);
+        Assert.Equal(LogEvents.S3UploadObjectError, result.Error.Code);
     }
 
 
@@ -99,11 +100,11 @@ public class ImageServiceAddTests
             .Returns(new ValueTask<bool>(false));
 
         _dataStorageSubstitute.Set(Arg.Any<string>(), Arg.Any<object>(), Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>())
-            .Returns(Result.Success());
+            .Returns(UnitResult.Success<DomainError>());
 
         _s3StorageSubstitute
             .Save(entryId.ToString(), Arg.Any<string>(), appFile, Arg.Any<CancellationToken>())
-            .Returns(UnitResult.Success<ProblemDetails>());
+            .Returns(UnitResult.Success<DomainError>());
 
         var result = await _imageService.Add(entryId, appFile, CancellationToken.None);
 
@@ -116,7 +117,8 @@ public class ImageServiceAddTests
 
     
     private readonly IS3FileStorage _s3StorageSubstitute;
-    private readonly IStringLocalizer<ServerResources> _localizerSubstitute;
+    private readonly ILoggerFactory _loggerFactorySubstitute;
+    private readonly ILogger<ImageService> _loggerSubstitute;
     private readonly IDataStorage _dataStorageSubstitute;
     private readonly ImageService _imageService;
 }

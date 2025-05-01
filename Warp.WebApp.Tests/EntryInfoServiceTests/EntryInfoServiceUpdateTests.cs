@@ -9,6 +9,7 @@ using Warp.WebApp.Models;
 using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Entries.Enums;
+using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Entries;
@@ -21,6 +22,8 @@ public class EntryInfoServiceUpdateTests
 {
     public EntryInfoServiceUpdateTests()
     {
+        _loggerFactorySubstitute.CreateLogger<EntryInfoService>().Returns(_loggerSubstitute);
+        
         _entryInfoService = new EntryInfoService(
             _creatorServiceSubstitute,
             _dataStorageSubstitute,
@@ -29,7 +32,6 @@ public class EntryInfoServiceUpdateTests
             _loggerFactorySubstitute,
             _openGraphServiceSubstitute,
             _reportServiceSubstitute,
-            _localizerSubstitute,
             _viewCountServiceSubstitute
         );
         _creator = new Creator(Guid.NewGuid());
@@ -55,14 +57,30 @@ public class EntryInfoServiceUpdateTests
         
         var imageInfos = new List<ImageInfo>
         {
-            new() { Id = Guid.NewGuid(), Url = new Uri("http://example.com/image.jpg") }
+            new(id: Guid.NewGuid(), entryId: entryId, url: new Uri("http://example.com/image.jpg"))
         };
         
-        var existingEntryInfo = new EntryInfo(entryId, _creator.Id, DateTime.UtcNow, DateTime.UtcNow.AddDays(1), 
-            EditMode.Advanced, existingEntry, new List<ImageInfo>(), new EntryOpenGraphDescription("Original", "Original", null), 0);
+        var existingEntryInfo = new EntryInfo(
+            id: entryId, 
+            creatorId: _creator.Id, 
+            createdAt: DateTime.UtcNow, 
+            expiresAt: DateTime.UtcNow.AddDays(1), 
+            editMode: EditMode.Advanced, 
+            entry: existingEntry, 
+            imageInfos: new List<ImageInfo>(), 
+            openGraphDescription: new EntryOpenGraphDescription("Original", "Original", null), 
+            viewCount: 0);
         
-        var updatedEntryInfo = new EntryInfo(entryId, _creator.Id, DateTime.UtcNow, DateTime.UtcNow.AddDays(1), 
-            EditMode.Advanced, updatedEntry, imageInfos, new EntryOpenGraphDescription("Updated", "Updated", imageInfos[0].Url), 0);
+        var updatedEntryInfo = new EntryInfo(
+            id: entryId, 
+            creatorId: _creator.Id, 
+            createdAt: DateTime.UtcNow, 
+            expiresAt: DateTime.UtcNow.AddDays(1), 
+            editMode: EditMode.Advanced, 
+            entry: updatedEntry, 
+            imageInfos: imageInfos, 
+            openGraphDescription: new EntryOpenGraphDescription("Updated", "Updated", imageInfos[0].Url), 
+            viewCount: 0);
 
         var entryInfoCacheKey = CacheKeyBuilder.BuildEntryInfoCacheKey(entryId);
         _dataStorageSubstitute.TryGet<EntryInfo?>(entryInfoCacheKey, cancellationToken)
@@ -72,23 +90,20 @@ public class EntryInfoServiceUpdateTests
             .Returns(Task.FromResult(0L));
 
         _entryServiceSubstitute.Add(Arg.Any<EntryRequest>(), cancellationToken)
-            .Returns(Result.Success<Entry, ProblemDetails>(updatedEntry));
+            .Returns(Result.Success<Entry, DomainError>(updatedEntry));
 
         _imageServiceSubstitute.GetAttached(entryId, entryRequest.ImageIds, cancellationToken)
-            .Returns(Result.Success<List<ImageInfo>, ProblemDetails>(imageInfos));
+            .Returns(Result.Success<List<ImageInfo>, DomainError>(imageInfos));
 
         var imageUrl = imageInfos.Select(x => x.Url).FirstOrDefault();
         _openGraphServiceSubstitute.BuildDescription(updatedEntry.Content, imageUrl)
             .Returns(new EntryOpenGraphDescription("Updated", "Updated", imageUrl));
 
         _creatorServiceSubstitute.AttachEntry(_creator, Arg.Any<EntryInfo>(), cancellationToken)
-            .Returns(Result.Success<EntryInfo, ProblemDetails>(updatedEntryInfo));
+            .Returns(Result.Success<EntryInfo, DomainError>(updatedEntryInfo));
 
         _dataStorageSubstitute.Set(Arg.Any<string>(), Arg.Any<EntryInfo>(), Arg.Any<TimeSpan>(), cancellationToken)
-            .Returns(Result.Success());
-        
-        _localizerSubstitute["EntryExpirationPeriodEmptyErrorMessage"]
-            .Returns(new LocalizedString("EntryExpirationPeriodEmptyErrorMessage", "Entry period is empty."));
+            .Returns(UnitResult.Success<DomainError>());
 
         var result = await _entryInfoService.Update(_creator, entryRequest, cancellationToken);
 
@@ -102,7 +117,7 @@ public class EntryInfoServiceUpdateTests
 
 
     [Fact]
-    public async Task Update_ShouldReturnProblemDetails_WhenEntryDoesNotBelongToCreator()
+    public async Task Update_ShouldReturnDomainError_WhenEntryDoesNotBelongToCreator()
     {
         var entryId = Guid.NewGuid();
         var differentCreatorId = Guid.NewGuid();
@@ -115,29 +130,32 @@ public class EntryInfoServiceUpdateTests
             TextContent = "Updated Text"
         };
 
-        var existingEntryInfo = new EntryInfo(entryId, differentCreatorId, DateTime.UtcNow, DateTime.UtcNow.AddDays(1), 
-            EditMode.Simple, new Entry("Original content"), new List<ImageInfo>(), new EntryOpenGraphDescription("Original", "Original", null), 0);
+        var existingEntryInfo = new EntryInfo(
+            id: entryId, 
+            creatorId: differentCreatorId, 
+            createdAt: DateTime.UtcNow, 
+            expiresAt: DateTime.UtcNow.AddDays(1), 
+            editMode: EditMode.Simple, 
+            entry: new Entry("Original content"), 
+            imageInfos: new List<ImageInfo>(), 
+            openGraphDescription: new EntryOpenGraphDescription("Original", "Original", null), 
+            viewCount: 0);
 
         var entryInfoCacheKey = CacheKeyBuilder.BuildEntryInfoCacheKey(entryId);
         _dataStorageSubstitute.TryGet<EntryInfo?>(entryInfoCacheKey, cancellationToken)
             .Returns(new ValueTask<EntryInfo?>(existingEntryInfo));
 
-        var localizedString = new LocalizedString("NoPermissionErrorMessage", "Entry does not belong to creator.");
-        _localizerSubstitute["NoPermissionErrorMessage"]
-            .Returns(localizedString);
-
         var result = await _entryInfoService.Update(_creator, entryRequest, cancellationToken);
 
         Assert.True(result.IsFailure);
-        Assert.Equal(localizedString.Value, result.Error.Detail);
-        Assert.Equal((int)HttpStatusCode.BadRequest, result.Error.Status);
+        Assert.Equal(Constants.Logging.LogEvents.NoPermissionError, result.Error.Code);
         
         await _entryServiceSubstitute.DidNotReceive().Add(Arg.Any<EntryRequest>(), Arg.Any<CancellationToken>());
     }
 
 
     [Fact]
-    public async Task Update_ShouldReturnProblemDetails_WhenViewCountIsGreaterThanZero()
+    public async Task Update_ShouldReturnDomainError_WhenViewCountIsGreaterThanZero()
     {
         var entryId = Guid.NewGuid();
         var cancellationToken = CancellationToken.None;
@@ -149,8 +167,16 @@ public class EntryInfoServiceUpdateTests
             TextContent = "Updated Text"
         };
 
-        var existingEntryInfo = new EntryInfo(entryId, _creator.Id, DateTime.UtcNow, DateTime.UtcNow.AddDays(1), 
-            EditMode.Simple, new Entry("Original content"), new List<ImageInfo>(), new EntryOpenGraphDescription("Original", "Original", null), 0);
+        var existingEntryInfo = new EntryInfo(
+            id: entryId, 
+            creatorId: _creator.Id, 
+            createdAt: DateTime.UtcNow, 
+            expiresAt: DateTime.UtcNow.AddDays(1), 
+            editMode: EditMode.Simple, 
+            entry: new Entry("Original content"), 
+            imageInfos: new List<ImageInfo>(), 
+            openGraphDescription: new EntryOpenGraphDescription("Original", "Original", null), 
+            viewCount: 0);
 
         var entryInfoCacheKey = CacheKeyBuilder.BuildEntryInfoCacheKey(entryId);
         _dataStorageSubstitute.TryGet<EntryInfo?>(entryInfoCacheKey, cancellationToken)
@@ -159,15 +185,10 @@ public class EntryInfoServiceUpdateTests
         _viewCountServiceSubstitute.Get(entryId, cancellationToken)
             .Returns(Task.FromResult(5L));
 
-        var localizedString = new LocalizedString("EntryCannotBeEditedAfterViewed", "Entry cannot be edited after being viewed.");
-        _localizerSubstitute["EntryCannotBeEditedAfterViewed"]
-            .Returns(localizedString);
-
         var result = await _entryInfoService.Update(_creator, entryRequest, cancellationToken);
 
         Assert.True(result.IsFailure);
-        Assert.Equal(localizedString.Value, result.Error.Detail);
-        Assert.Equal((int)HttpStatusCode.BadRequest, result.Error.Status);
+        Assert.Equal(Constants.Logging.LogEvents.EntryCannotBeEditedAfterViewed, result.Error.Code);
         
         await _viewCountServiceSubstitute.Received(1).Get(entryId, cancellationToken);
         await _entryServiceSubstitute.DidNotReceive().Add(Arg.Any<EntryRequest>(), Arg.Any<CancellationToken>());
@@ -175,7 +196,7 @@ public class EntryInfoServiceUpdateTests
 
 
     [Fact]
-    public async Task Update_ShouldReturnProblemDetails_WhenEntryDoesNotExist()
+    public async Task Update_ShouldReturnDomainError_WhenEntryDoesNotExist()
     {
         var entryId = Guid.NewGuid();
         var cancellationToken = CancellationToken.None;
@@ -191,20 +212,17 @@ public class EntryInfoServiceUpdateTests
         _dataStorageSubstitute.TryGet<EntryInfo?>(entryInfoCacheKey, cancellationToken)
             .Returns(new ValueTask<EntryInfo?>((EntryInfo?)null));
 
-        _localizerSubstitute["NotFoundErrorMessage"]
-            .Returns(new LocalizedString("NotFoundErrorMessage", "Entry not found."));
-
         var result = await _entryInfoService.Update(_creator, entryRequest, cancellationToken);
 
         Assert.True(result.IsFailure);
-        Assert.Equal((int)HttpStatusCode.NotFound, result.Error.Status);
+        Assert.Equal(Constants.Logging.LogEvents.EntryNotFound, result.Error.Code);
         
         await _entryServiceSubstitute.DidNotReceive().Add(Arg.Any<EntryRequest>(), Arg.Any<CancellationToken>());
     }
 
 
     [Fact]
-    public async Task Update_ShouldReturnProblemDetails_WhenEditModeIsDifferent()
+    public async Task Update_ShouldReturnDomainError_WhenEditModeIsDifferent()
     {
         var entryId = Guid.NewGuid();
         var cancellationToken = CancellationToken.None;
@@ -216,22 +234,25 @@ public class EntryInfoServiceUpdateTests
             TextContent = "Updated Text"
         };
 
-        var existingEntryInfo = new EntryInfo(entryId, _creator.Id, DateTime.UtcNow, DateTime.UtcNow.AddDays(1), 
-            EditMode.Simple, new Entry("Original content"), new List<ImageInfo>(), new EntryOpenGraphDescription("Original", "Original", null), 0);
+        var existingEntryInfo = new EntryInfo(
+            id: entryId, 
+            creatorId: _creator.Id, 
+            createdAt: DateTime.UtcNow, 
+            expiresAt: DateTime.UtcNow.AddDays(1), 
+            editMode: EditMode.Simple, 
+            entry: new Entry("Original content"), 
+            imageInfos: new List<ImageInfo>(), 
+            openGraphDescription: new EntryOpenGraphDescription("Original", "Original", null), 
+            viewCount: 0);
 
         var entryInfoCacheKey = CacheKeyBuilder.BuildEntryInfoCacheKey(entryId);
         _dataStorageSubstitute.TryGet<EntryInfo?>(entryInfoCacheKey, cancellationToken)
             .Returns(new ValueTask<EntryInfo?>(existingEntryInfo));
 
-        var localizedString = new LocalizedString("EntryEditModeMismatch", "Edit mode cannot be changed for existing entries.");
-        _localizerSubstitute["EntryEditModeMismatch"]
-            .Returns(localizedString);
-
         var result = await _entryInfoService.Update(_creator, entryRequest, cancellationToken);
 
         Assert.True(result.IsFailure);
-        Assert.Equal(localizedString.Value, result.Error.Detail);
-        Assert.Equal((int)HttpStatusCode.BadRequest, result.Error.Status);
+        Assert.Equal(Constants.Logging.LogEvents.EntryEditModeMismatch, result.Error.Code);
         
         await _viewCountServiceSubstitute.DidNotReceive().Get(entryId, cancellationToken);
         await _entryServiceSubstitute.DidNotReceive().Add(Arg.Any<EntryRequest>(), Arg.Any<CancellationToken>());
@@ -241,6 +262,7 @@ public class EntryInfoServiceUpdateTests
     private readonly IEntryInfoService _entryInfoService;
     private readonly Creator _creator;
     private readonly ILoggerFactory _loggerFactorySubstitute = Substitute.For<ILoggerFactory>();
+    private readonly ILogger<EntryInfoService> _loggerSubstitute = Substitute.For<ILogger<EntryInfoService>>();
     private readonly IOpenGraphService _openGraphServiceSubstitute = Substitute.For<IOpenGraphService>();
     private readonly IDataStorage _dataStorageSubstitute = Substitute.For<IDataStorage>();
     private readonly IReportService _reportServiceSubstitute = Substitute.For<IReportService>();
@@ -248,5 +270,4 @@ public class EntryInfoServiceUpdateTests
     private readonly IImageService _imageServiceSubstitute = Substitute.For<IImageService>();
     private readonly IEntryService _entryServiceSubstitute = Substitute.For<IEntryService>();
     private readonly ICreatorService _creatorServiceSubstitute = Substitute.For<ICreatorService>();
-    private readonly IStringLocalizer<ServerResources> _localizerSubstitute = Substitute.For<IStringLocalizer<ServerResources>>();
 }

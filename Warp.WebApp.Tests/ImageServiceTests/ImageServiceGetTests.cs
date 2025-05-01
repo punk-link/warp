@@ -1,11 +1,10 @@
 using CSharpFunctionalExtensions;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
-using System.Net;
+using Warp.WebApp.Constants.Logging;
 using Warp.WebApp.Data;
 using Warp.WebApp.Data.S3;
-using Warp.WebApp.Helpers;
+using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Models.Files;
 using Warp.WebApp.Services.Images;
 
@@ -15,12 +14,16 @@ public class ImageServiceGetTests
 {
     public ImageServiceGetTests()
     {
-        _localizerSubstitute = Substitute.For<IStringLocalizer<ServerResources>>();
+        _loggerFactorySubstitute = Substitute.For<ILoggerFactory>();
+        _loggerSubstitute = Substitute.For<ILogger<ImageService>>();
+        _loggerFactorySubstitute.CreateLogger<ImageService>().Returns(_loggerSubstitute);
+        
         _dataStorageSubstitute = Substitute.For<IDataStorage>();
         _s3StorageSubstitute = Substitute.For<IS3FileStorage>();
         
-        _imageService = new ImageService(_localizerSubstitute, _dataStorageSubstitute, _s3StorageSubstitute);
+        _imageService = new ImageService(_dataStorageSubstitute, _s3StorageSubstitute);
     }
+
 
     [Fact]
     public async Task Get_GetFromStorage_Failed()
@@ -29,13 +32,12 @@ public class ImageServiceGetTests
         var imageId = Guid.NewGuid();
 
         _s3StorageSubstitute.Get(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(Result.Failure<AppFile, ProblemDetails>(ProblemDetailsHelper.Create("Failed while receiving file.")));
+            .Returns(Result.Failure<AppFile, DomainError>(DomainErrors.S3GetObjectError()));
 
         var result = await _imageService.Get(entryId, imageId, CancellationToken.None);
 
         Assert.True(result.IsFailure);
-        Assert.NotNull(result.Error);
-        Assert.Equal((int)HttpStatusCode.BadRequest, result.Error.Status);
+        Assert.Equal(LogEvents.S3GetObjectError, result.Error.Code);
     }
 
 
@@ -50,7 +52,7 @@ public class ImageServiceGetTests
 
         _s3StorageSubstitute
             .Get(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(Result.Success<AppFile, ProblemDetails>(appFile));
+            .Returns(Result.Success<AppFile, DomainError>(appFile));
 
         var result = await _imageService.Get(entryId, imageId, CancellationToken.None);
 
@@ -61,7 +63,8 @@ public class ImageServiceGetTests
     
 
     private readonly IS3FileStorage _s3StorageSubstitute;
-    private readonly IStringLocalizer<ServerResources> _localizerSubstitute;
+    private readonly ILoggerFactory _loggerFactorySubstitute;
+    private readonly ILogger<ImageService> _loggerSubstitute;
     private readonly IDataStorage _dataStorageSubstitute;
     private readonly ImageService _imageService;
 }
