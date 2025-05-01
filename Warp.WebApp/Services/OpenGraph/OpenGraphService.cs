@@ -33,17 +33,17 @@ public partial class OpenGraphService : IOpenGraphService
     /// </summary>
     /// <returns></returns>
     public EntryOpenGraphDescription GetDefaultDescription() 
-        => new(Title, _localizer["DefaultOpenGraphDescriptionText"], _defaultImageUrl);
+        => new(Title, _localizer["Warplyn is a simple and secure way to share text and images."], _defaultImageUrl);
 
 
     private string GetDescription(string description)
     {
         if (string.IsNullOrWhiteSpace(description))
-            return _localizer["DefaultOpenGraphDescriptionText"];
+            return _localizer["Warplyn is a simple and secure way to share text and images."];
 
         var processedText = ProcessText(description);
         if (string.IsNullOrWhiteSpace(processedText))
-            return _localizer["DefaultOpenGraphDescriptionText"];
+            return _localizer["Warplyn is a simple and secure way to share text and images."];
 
         return TrimDescription(processedText);
     }

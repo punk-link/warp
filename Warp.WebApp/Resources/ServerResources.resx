@@ -117,13 +117,10 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="DefaultOpenGraphDescriptionText" xml:space="preserve">
+  <data name="An error occurred while processing your request." xml:space="preserve">
+    <value>An error occurred while processing your request.</value>
+  </data>
+  <data name="Warplyn is a simple and secure way to share text and images." xml:space="preserve">
     <value>Warplyn is a simple and secure way to share text and images.</value>
-  </data>
-  <data name="NotFoundErrorMessage" xml:space="preserve">
-    <value>The requested resource was not found.</value>
-  </data>
-  <data name="ServiceUnavailableErrorMessage" xml:space="preserve">
-    <value>The server is currently unable to handle the request due to a temporary overload or maintenance of the server.</value>
   </data>
 </root>

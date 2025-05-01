@@ -30,8 +30,8 @@ public static class DomainErrorExtensions
     public static ProblemDetails ToProblemDetails(this DomainError error)
     {
         var httpStatusCode = error.Code.ToHttpStatusCode();
-        var problemDetails = ProblemDetailsHelper.Create(httpStatusCode.ToString(), error.Detail, httpStatusCode)
-            .AddEventId(error.Code);
+        var problemDetails = ProblemDetailsHelper.Create(httpStatusCode, error.Detail);
+        problemDetails.Extensions[ErrorExtensionKeys.EventId] = (int)error.Code;
 
         foreach (var extension in error.Extensions)
            problemDetails.Extensions[extension.Key] = extension.Value;

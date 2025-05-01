@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using System.Diagnostics;
 using System.Net;
 using System.Text.Json;
@@ -14,10 +15,11 @@ public class ErrorModel : BasePageModel
 {
     public ErrorModel(ICookieService cookieService, 
         ICreatorService creatorService, 
-        ILoggerFactory loggerFactory) 
+        ILoggerFactory loggerFactory,
+        IStringLocalizer<ServerResources> localizer) 
         : base(cookieService, creatorService, loggerFactory)
     {
-        Detail = "An error occurred while processing your request.";
+        Detail = localizer["An error occurred while processing your request."];
         RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
     }
 
