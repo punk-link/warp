@@ -8,6 +8,7 @@
 - Use named parameters for clarity, especially when creating new objects(e.g., `id: Guid.NewGuid()`).
 - Ensure correct parameter names are used.
 - Ensure unused usings are removed.
+- Always use `DateTime.UtcNow` instead of `DateTime.Now`.
 
 
 # Code Annotatins And Comments

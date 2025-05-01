@@ -1,7 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using Xunit;
 using Warp.WebApp.Data;
 using Warp.WebApp.Models;
 using Warp.WebApp.Models.Creators;
@@ -54,8 +53,8 @@ public class CreatorServiceTests
         var entryInfo = new EntryInfo(
             id: Guid.NewGuid(),
             creatorId: Guid.NewGuid(),
-            createdAt: DateTime.Now,
-            expiresAt: DateTime.Now.AddDays(1),
+            createdAt: DateTime.UtcNow,
+            expiresAt: DateTime.UtcNow.AddDays(1),
             editMode: Models.Entries.Enums.EditMode.Simple,
             entry: new Entry("Some content"),
             imageInfos: new List<ImageInfo>(),
@@ -86,8 +85,8 @@ public class CreatorServiceTests
         var entryInfo = new EntryInfo(
             id: Guid.NewGuid(),
             creatorId: Guid.NewGuid(),
-            createdAt: DateTime.Now,
-            expiresAt: DateTime.Now.AddDays(1),
+            createdAt: DateTime.UtcNow,
+            expiresAt: DateTime.UtcNow.AddDays(1),
             editMode: Models.Entries.Enums.EditMode.Simple,
             entry: new Entry("Some content"),
             imageInfos: new List<ImageInfo>(),
@@ -119,8 +118,8 @@ public class CreatorServiceTests
         var entryInfo = new EntryInfo(
             id: Guid.NewGuid(),
             creatorId: Guid.NewGuid(),
-            createdAt: DateTime.Now,
-            expiresAt: DateTime.Now.AddDays(1),
+            createdAt: DateTime.UtcNow,
+            expiresAt: DateTime.UtcNow.AddDays(1),
             editMode: Models.Entries.Enums.EditMode.Simple,
             entry: new Entry("Some content"),
             imageInfos: new List<ImageInfo>(),
@@ -137,8 +136,8 @@ public class CreatorServiceTests
         var existingEntryInfoFirst = new EntryInfo(
             id: existingEntryIds.First(),
             creatorId: Guid.NewGuid(),
-            createdAt: DateTime.Now,
-            expiresAt: DateTime.Now.AddDays(1),
+            createdAt: DateTime.UtcNow,
+            expiresAt: DateTime.UtcNow.AddDays(1),
             editMode: Models.Entries.Enums.EditMode.Simple,
             entry: new Entry("Some content"),
             imageInfos: new List<ImageInfo>(),
@@ -151,8 +150,8 @@ public class CreatorServiceTests
         var existingEntryInfoSecond = new EntryInfo(
             id: existingEntryIds.Last(),
             creatorId: Guid.NewGuid(),
-            createdAt: DateTime.Now,
-            expiresAt: DateTime.Now.AddDays(1),
+            createdAt: DateTime.UtcNow,
+            expiresAt: DateTime.UtcNow.AddDays(1),
             editMode: Models.Entries.Enums.EditMode.Simple,
             entry: new Entry("Some content"),
             imageInfos: new List<ImageInfo>(),
