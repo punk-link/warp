@@ -9,15 +9,19 @@ namespace Warp.WebApp.Controllers;
 
 public class BaseController : ControllerBase
 {
-    public BaseController(ICookieService cookieService, ICreatorService creatorService)
+    protected BaseController(ICookieService cookieService, ICreatorService creatorService)
     {
         _cookieService = cookieService;
         _creatorService = creatorService;
     }
 
 
-    public BadRequestObjectResult BadRequest(in DomainError error) 
+    protected BadRequestObjectResult BadRequest(in DomainError error) 
         => base.BadRequest(error.ToProblemDetails());
+
+
+    protected UnauthorizedObjectResult Unauthorized(in DomainError error)
+        => base.Unauthorized(error.ToProblemDetails());
 
 
     protected IActionResult BadRequestOrNoContent<T>(Result<T, DomainError> result)
