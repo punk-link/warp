@@ -79,16 +79,6 @@
     </EmbeddedResource>
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Warp.CodeGen\Warp.CodeGen.csproj" ReferenceOutputAssembly="false" />
-    <None Include="CodeGeneration\log-events.json" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
-  
-  <Target Name="GenerateLoggingEvents" BeforeTargets="CoreCompile" Condition=" '$(Configuration)' == 'Release' ">
-    <Message Text="Generating logging files from JSON definition..." Importance="high" />
-    <Exec Command="dotnet run --project $(SolutionDir)Warp.CodeGen\Warp.CodeGen.csproj -- --json $(ProjectDir)CodeGeneration\logging-events.json --constants $(ProjectDir)Constants\Logging\LoggingConstants.cs --messages $(ProjectDir)Telemetry\Logging\LogMessages.cs" />
-  </Target>
-
   <Target Name="NpmInstall" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' ">
     <Exec Command="yarn install" WorkingDirectory="$(ProjectDir)" />
   </Target>
