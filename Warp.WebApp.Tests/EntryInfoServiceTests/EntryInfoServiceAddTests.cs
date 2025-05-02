@@ -1,6 +1,4 @@
 using CSharpFunctionalExtensions;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Warp.WebApp.Data;
@@ -8,6 +6,7 @@ using Warp.WebApp.Models;
 using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Entries.Enums;
+using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Entries;
@@ -20,6 +19,8 @@ public class EntryInfoServiceAddTests
 {
     public EntryInfoServiceAddTests()
     {
+        _loggerFactorySubstitute.CreateLogger<EntryInfoService>().Returns(_loggerSubstitute);
+        
         _entryInfoService = new EntryInfoService(
             _creatorServiceSubstitute,
             _dataStorageSubstitute,
@@ -28,7 +29,6 @@ public class EntryInfoServiceAddTests
             _loggerFactorySubstitute,
             _openGraphServiceSubstitute,
             _reportServiceSubstitute,
-            _localizerSubstitute,
             _viewCountServiceSubstitute
         );
         _creator = new Creator(Guid.NewGuid());
@@ -56,24 +56,21 @@ public class EntryInfoServiceAddTests
         var entryInfo = new EntryInfo(entryRequest.Id, _creator.Id, DateTime.UtcNow, DateTime.UtcNow + entryRequest.ExpiresIn, 
             EditMode.Advanced, entry, imageInfos, new EntryOpenGraphDescription("Test", "Test", imageInfos[0].Url), 0);
 
-        _localizerSubstitute["EntryExpirationPeriodEmptyErrorMessage"]
-            .Returns(new LocalizedString("EntryExpirationPeriodEmptyErrorMessage", "Entry period is empty."));
-
         var imageUrl = imageInfos.Select(x => x.Url).FirstOrDefault();
         _openGraphServiceSubstitute.BuildDescription(entry.Content, imageUrl)
             .Returns(new EntryOpenGraphDescription(entry.Content, entry.Content, imageUrl));
 
         _entryServiceSubstitute.Add(entryRequest, cancellationToken)
-            .Returns(Result.Success<Entry, ProblemDetails>(entry));
+            .Returns(Result.Success<Entry, DomainError>(entry));
 
         _imageServiceSubstitute.GetAttached(entryRequest.Id, entryRequest.ImageIds, cancellationToken)
-            .Returns(Result.Success<List<ImageInfo>, ProblemDetails>(imageInfos));
+            .Returns(Result.Success<List<ImageInfo>, DomainError>(imageInfos));
 
-        _creatorServiceSubstitute.AttachEntry(_creator, entryInfo, cancellationToken)
-            .Returns(Result.Success<EntryInfo, ProblemDetails>(entryInfo));
+        _creatorServiceSubstitute.AttachEntry(_creator, Arg.Any<EntryInfo>(), cancellationToken)
+            .Returns(Result.Success<EntryInfo, DomainError>(entryInfo));
 
         _dataStorageSubstitute.Set(Arg.Any<string>(), entryInfo, entryRequest.ExpiresIn, cancellationToken)
-            .Returns(Result.Success());
+            .Returns(UnitResult.Success<DomainError>());
 
         var result = await _entryInfoService.Add(_creator, entryRequest, cancellationToken);
 
@@ -94,25 +91,26 @@ public class EntryInfoServiceAddTests
 
 
     [Fact]
-    public async Task Add_ShouldReturnProblemDetails_EntryServiceFails()
+    public async Task Add_ShouldReturnDomainError_EntryServiceFails()
     {
         var entryRequest = new EntryRequest { Id = Guid.NewGuid(), ExpiresIn = TimeSpan.FromDays(1) };
         var cancellationToken = CancellationToken.None;
 
-        var problemDetails = new ProblemDetails { Title = "Error", Detail = "Error" };
+        var domainError = DomainErrors.EntryModelValidationError();
 
         _entryServiceSubstitute.Add(entryRequest, cancellationToken)
-            .Returns(Result.Failure<Entry, ProblemDetails>(problemDetails));
+            .Returns(Result.Failure<Entry, DomainError>(domainError));
 
         var result = await _entryInfoService.Add(_creator, entryRequest, cancellationToken);
 
         Assert.True(result.IsFailure);
-        Assert.Equal(result.Error, problemDetails);
+        Assert.Equal(domainError.Code, result.Error.Code);
+        Assert.Equal(domainError.Detail, result.Error.Detail);
     }
 
 
     [Fact]
-    public async Task Add_ShouldReturnProblemDetails_GetImageInfosFails()
+    public async Task Add_ShouldReturnDomainError_GetImageInfosFails()
     {
         var entryRequest = new EntryRequest
         {
@@ -123,23 +121,24 @@ public class EntryInfoServiceAddTests
         var cancellationToken = CancellationToken.None;
 
         var entry = new Entry("Test");
-        var problemDetails = new ProblemDetails { Title = "Image Error", Detail = "Failed to get image info" };
+        var domainError = DomainErrors.FileUploadException("Failed to get image info");
 
         _entryServiceSubstitute.Add(entryRequest, cancellationToken)
-            .Returns(Result.Success<Entry, ProblemDetails>(entry));
+            .Returns(Result.Success<Entry, DomainError>(entry));
 
         _imageServiceSubstitute.GetAttached(entryRequest.Id, entryRequest.ImageIds, cancellationToken)
-            .Returns(Result.Failure<List<ImageInfo>, ProblemDetails>(problemDetails));
+            .Returns(Result.Failure<List<ImageInfo>, DomainError>(domainError));
 
         var result = await _entryInfoService.Add(_creator, entryRequest, cancellationToken);
 
         Assert.True(result.IsFailure);
-        Assert.Equal(problemDetails, result.Error);
+        Assert.Equal(domainError.Code, result.Error.Code);
+        Assert.Equal(domainError.Detail, result.Error.Detail);
     }
 
 
     [Fact]
-    public async Task Add_ShouldReturnProblemDetails_AttachToCreatorFails()
+    public async Task Add_ShouldReturnDomainError_AttachToCreatorFails()
     {
         var entryRequest = new EntryRequest
         {
@@ -152,33 +151,32 @@ public class EntryInfoServiceAddTests
 
         var entry = new Entry("Test");
         var imageInfos = new List<ImageInfo>();
-        var problemDetails = new ProblemDetails { Title = "Attach Error", Detail = "Failed to attach entry to creator" };
-
-        _localizerSubstitute["EntryExpirationPeriodEmptyErrorMessage"]
-            .Returns(new LocalizedString("EntryExpirationPeriodEmptyErrorMessage", "Entry period is empty."));
+        var domainError = DomainErrors.CantAttachEntryToCreator();
 
         _entryServiceSubstitute.Add(entryRequest, cancellationToken)
-            .Returns(Result.Success<Entry, ProblemDetails>(entry));
+            .Returns(Result.Success<Entry, DomainError>(entry));
 
         _imageServiceSubstitute.GetAttached(entryRequest.Id, entryRequest.ImageIds, cancellationToken)
-            .Returns(Result.Success<List<ImageInfo>, ProblemDetails>(imageInfos));
+            .Returns(Result.Success<List<ImageInfo>, DomainError>(imageInfos));
 
         _openGraphServiceSubstitute.BuildDescription(entry.Content, null)
             .Returns(new EntryOpenGraphDescription(entry.Content, entry.Content, null));
 
         _creatorServiceSubstitute.AttachEntry(Arg.Any<Creator>(), Arg.Any<EntryInfo>(), cancellationToken)
-            .Returns(UnitResult.Failure(problemDetails));
+            .Returns(Result.Failure<EntryInfo, DomainError>(domainError));
 
         var result = await _entryInfoService.Add(_creator, entryRequest, cancellationToken);
 
         Assert.True(result.IsFailure);
-        Assert.Equal(problemDetails, result.Error);
+        Assert.Equal(domainError.Code, result.Error.Code);
+        Assert.Equal(domainError.Detail, result.Error.Detail);
     }
 
 
     private readonly IEntryInfoService _entryInfoService;
     private readonly Creator _creator;
     private readonly ILoggerFactory _loggerFactorySubstitute = Substitute.For<ILoggerFactory>();
+    private readonly ILogger<EntryInfoService> _loggerSubstitute = Substitute.For<ILogger<EntryInfoService>>();
     private readonly IOpenGraphService _openGraphServiceSubstitute = Substitute.For<IOpenGraphService>();
     private readonly IDataStorage _dataStorageSubstitute = Substitute.For<IDataStorage>();
     private readonly IReportService _reportServiceSubstitute = Substitute.For<IReportService>();
@@ -186,5 +184,4 @@ public class EntryInfoServiceAddTests
     private readonly IImageService _imageServiceSubstitute = Substitute.For<IImageService>();
     private readonly IEntryService _entryServiceSubstitute = Substitute.For<IEntryService>();
     private readonly ICreatorService _creatorServiceSubstitute = Substitute.For<ICreatorService>();
-    private readonly IStringLocalizer<ServerResources> _localizerSubstitute = Substitute.For<IStringLocalizer<ServerResources>>();
 }

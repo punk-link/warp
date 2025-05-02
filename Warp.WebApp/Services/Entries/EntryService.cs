@@ -1,46 +1,43 @@
 ﻿using CSharpFunctionalExtensions;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
 using Warp.WebApp.Attributes;
-using Warp.WebApp.Extensions;
 using Warp.WebApp.Models;
+using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Models.Validators;
 
 namespace Warp.WebApp.Services.Entries;
 
+/// <summary>
+/// Implements functionality for managing entry content in the application.
+/// </summary>
 public sealed class EntryService : IEntryService
 {
-    public EntryService(IStringLocalizer<ServerResources> localizer)
-    {
-        _localizer = localizer;
-    }
-
-
+    /// <inheritdoc cref="IEntryService.Add"/>
     [TraceMethod]
-    public async Task<Result<Entry, ProblemDetails>> Add(EntryRequest entryRequest, CancellationToken cancellationToken)
+    public async Task<Result<Entry, DomainError>> Add(EntryRequest entryRequest, CancellationToken cancellationToken)
     {
         return await BuildEntry()
             .Bind(Validate);
 
 
-        Result<Entry, ProblemDetails> BuildEntry()
+        Result<Entry, DomainError> BuildEntry()
         {
             var formattedText = TextFormatter.Format(entryRequest.TextContent);
             return new Entry(formattedText);
         }
 
 
-        async Task<Result<Entry, ProblemDetails>> Validate(Entry entry)
+        async Task<Result<Entry, DomainError>> Validate(Entry entry)
         {
-            var validator = new EntryValidator(_localizer, entryRequest);
+            var validator = new EntryValidator(entryRequest);
             var validationResult = await validator.ValidateAsync(entry, cancellationToken);
-            if (!validationResult.IsValid)
-                return validationResult.ToFailure<Entry>(_localizer);
+            if (validationResult.IsValid)
+                return entry;
 
-            return entry;
+            var error = DomainErrors.EntryModelValidationError();
+            foreach (var validationError in validationResult.Errors)
+                error.WithExtension($"{nameof(EntryValidator)}:{validationError.ErrorCode}", validationError.ErrorMessage);
+
+            return error;
         }
     }
-
-
-    private readonly IStringLocalizer<ServerResources> _localizer;
 }

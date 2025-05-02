@@ -1,0 +1,175 @@
+// This file is auto-generated. Do not edit directly.
+// Generated on: 2025-04-29 07:43:04 UTC
+using Warp.WebApp.Constants.Logging;
+
+#pragma warning disable IDE0130 // Namespace does not match folder structure
+namespace Warp.WebApp.Models.Errors;
+#pragma warning restore IDE0130 // Namespace does not match folder structure
+
+/// <summary>
+/// Provides static methods to create domain error instances
+/// </summary>
+public static class DomainErrors
+{
+    // Generic
+    public static DomainError ServerError(string? requestId)
+        => new(LogEvents.ServerError, string.Format("An unexpected error occurred while processing the request. Request ID: '{0}'.", requestId));
+
+    public static DomainError ServerErrorWithMessage(string errorMessage)
+        => new(LogEvents.ServerErrorWithMessage, string.Format("An error occurred while processing the request. Details: '{0}'.", errorMessage));
+
+    public static DomainError ServiceUnavailable(string? requestId, string errorMessage)
+        => new(LogEvents.ServiceUnavailable, string.Format("Service unavailable (503). Request ID: {0}. Details: '{1}'.", requestId, errorMessage));
+
+
+    // Startup
+    public static DomainError RedisHostIsNotSpecified()
+        => new(LogEvents.RedisHostIsNotSpecified);
+
+    public static DomainError RedisPortIsNotSpecified()
+        => new(LogEvents.RedisPortIsNotSpecified);
+
+    public static DomainError RedisConnectionException(string errorMessage)
+        => new(LogEvents.RedisConnectionException, string.Format("Startup error: Failed to connect to Redis. Details: '{0}'.", errorMessage));
+
+    public static DomainError VaultConnectionException(string errorMessage)
+        => new(LogEvents.VaultConnectionException, string.Format("Startup error: Failed to connect to the Vault. Details: '{0}'.", errorMessage));
+
+    public static DomainError VaultSecretCastException(string errorMessage)
+        => new(LogEvents.VaultSecretCastException, string.Format("Startup error: Failed to cast retrieved secrets to the expected type. Details: '{0}'.", errorMessage));
+
+    public static DomainError LocalConfigurationIsInUse()
+        => new(LogEvents.LocalConfigurationIsInUse);
+
+    public static DomainError OptionsValidationException(string errorMessage)
+        => new(LogEvents.OptionsValidationException, string.Format("Startup error: Options validation exception occurred. Details: '{0}'.", errorMessage));
+
+
+    // Infrastructure
+    public static DomainError DefaultCacheValueError(string? cacheValue)
+        => new(LogEvents.DefaultCacheValueError, string.Format("Unable to store a default value {0}.", cacheValue));
+
+    public static DomainError PartialViewNotFound(string partialViewName, string errorMessage)
+        => new(LogEvents.PartialViewNotFound, string.Format("Partial view '{0}' could not be found. Details: '{1}'.", partialViewName, errorMessage));
+
+    public static DomainError PartialViewRenderingError(string partialViewName, string errorMessage)
+        => new(LogEvents.PartialViewRenderingError, string.Format("An error occurred while rendering the partial view '{0}'. Details: '{1}'.", partialViewName, errorMessage));
+
+    public static DomainError ActionContextNotFound()
+        => new(LogEvents.ActionContextNotFound);
+
+    public static DomainError ImageControllerGetMethodNotFound()
+        => new(LogEvents.ImageControllerGetMethodNotFound);
+
+    [Obsolete("This error is obsolete. Do not use.")]
+    public static DomainError ImageUploadError(string errorMessage)
+        => new(LogEvents.ImageUploadError, string.Format("An error occurred while uploading the image. Details: '{0}'.", errorMessage));
+
+    [Obsolete("This error is obsolete. Do not use.")]
+    public static DomainError ImageDownloadError(string errorMessage)
+        => new(LogEvents.ImageDownloadError, string.Format("An error occurred while downloading the image. Details: '{0}'.", errorMessage));
+
+    [Obsolete("This error is obsolete. Do not use.")]
+    public static DomainError ImageRemovalError(string errorMessage)
+        => new(LogEvents.ImageRemovalError, string.Format("An error occurred while removing the image. Details: '{0}'.", errorMessage));
+
+    public static DomainError FileUploadException(string errorMessage)
+        => new(LogEvents.FileUploadException, string.Format("An error occurred while uploading the file. Details: '{0}'.", errorMessage));
+
+    public static DomainError UnverifiedFileSignatureError(string errorMessage)
+        => new(LogEvents.UnverifiedFileSignatureError, string.Format("File signature verification failed. Details: '{0}'.", errorMessage));
+
+    public static DomainError FileSignatureVerificationError(string fileExtension, string? headerBytes)
+        => new(LogEvents.FileSignatureVerificationError, string.Format("File signature verification failed for files with extension '{0}', '{1}'.", fileExtension, headerBytes));
+
+
+    // Domain
+    public static DomainError WarpContentEmpty()
+        => new(LogEvents.WarpContentEmpty);
+
+    public static DomainError WarpExpirationPeriodEmpty()
+        => new(LogEvents.WarpExpirationPeriodEmpty);
+
+    public static DomainError ImageRemovalDomainError(Guid imageId, string errorMessage)
+        => new(LogEvents.ImageRemovalDomainError, string.Format("An error occurred in the domain layer while removing the image '{0}'. Details: '{1}'.", imageId, errorMessage));
+
+    public static DomainError IdDecodingError()
+        => new(LogEvents.IdDecodingError);
+
+    public static DomainError UnauthorizedError()
+        => new(LogEvents.UnauthorizedError);
+
+
+    // Domain.Creator
+    public static DomainError CreatorIdIsNull()
+        => new(LogEvents.CreatorIdIsNull);
+
+    public static DomainError CreatorIdIsNotFound()
+        => new(LogEvents.CreatorIdIsNotFound);
+
+
+    // Domain.Entry
+    public static DomainError CantAttachEntryToCreator()
+        => new(LogEvents.CantAttachEntryToCreator);
+
+    public static DomainError EntryModelValidationError()
+        => new(LogEvents.EntryModelValidationError);
+
+    public static DomainError NoPermissionError()
+        => new(LogEvents.NoPermissionError);
+
+    public static DomainError EntryNotFound()
+        => new(LogEvents.EntryNotFound);
+
+    public static DomainError EntryEditModeMismatch()
+        => new(LogEvents.EntryEditModeMismatch);
+
+    public static DomainError EntryCannotBeEditedAfterViewed()
+        => new(LogEvents.EntryCannotBeEditedAfterViewed);
+
+    public static DomainError EntryInfoModelValidationError()
+        => new(LogEvents.EntryInfoModelValidationError);
+
+
+    // Domain.Image
+    public static DomainError UnsupportedFileExtension(string fileExtension, string supportedFileExtensions)
+        => new(LogEvents.UnsupportedFileExtension, string.Format("The file extension '{0}' is not supported. Please use one of the following extensions: {1}.", fileExtension, supportedFileExtensions));
+
+    public static DomainError ImageAlreadyExists(string untrustedImageName)
+        => new(LogEvents.ImageAlreadyExists, string.Format("The image '{0}' you are trying to upload already exists.", untrustedImageName));
+
+
+    // Domain.File
+    public static DomainError S3ListObjectsError()
+        => new(LogEvents.S3ListObjectsError);
+
+    public static DomainError S3DeleteObjectError()
+        => new(LogEvents.S3DeleteObjectError);
+
+    public static DomainError S3UploadObjectError()
+        => new(LogEvents.S3UploadObjectError);
+
+    public static DomainError S3GetObjectError()
+        => new(LogEvents.S3GetObjectError);
+
+    public static DomainError FileNameIsMissing()
+        => new(LogEvents.FileNameIsMissing);
+
+    public static DomainError FileIsEmpty()
+        => new(LogEvents.FileIsEmpty);
+
+    public static DomainError FileSizeExceeded(long actual, long maxFileSize)
+        => new(LogEvents.FileSizeExceeded, string.Format("The file size is {0} bytes. Yoy can upload files up to {1} bytes.", actual, maxFileSize));
+
+    public static DomainError FileTypeNotPermitted()
+        => new(LogEvents.FileTypeNotPermitted);
+
+    public static DomainError MultipartReaderError()
+        => new(LogEvents.MultipartReaderError);
+
+    public static DomainError MultipartContentTypeBoundaryError()
+        => new(LogEvents.MultipartContentTypeBoundaryError);
+
+    public static DomainError MultipartBoundaryLengthLimitExceeded()
+        => new(LogEvents.MultipartBoundaryLengthLimitExceeded);
+}

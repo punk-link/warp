@@ -1,7 +1,8 @@
-﻿using System.Net;
-using Warp.WebApp.Telemetry.Logging;
+﻿using Warp.WebApp.Telemetry.Logging;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Helpers.Configuration;
+using Warp.WebApp.Models.Errors;
+using Warp.WebApp.Extensions;
 
 namespace Warp.WebApp.Middlewares;
 
@@ -23,24 +24,25 @@ public class ApiExceptionHandlerMiddleware
         }
         catch (Exception ex)
         {
+            var sentryId = SentrySdk.CaptureException(ex);
             var traceId = context.TraceIdentifier;
-            _logger.LogGenericServerError(traceId, ex.Message);
 
-            SentrySdk.CaptureException(ex);
+            _logger.LogServerErrorWithMessage(traceId, ex.Message);
+            var error = DomainErrors.ServerErrorWithMessage(ex.Message)
+                .AddSentryId(sentryId)
+                .AddTraceId(traceId);
 
-            await HandleExceptionAsync(context, ex, traceId, _environment);
+            await HandleExceptionAsync(context, error, ex, _environment);
         }
     }
 
 
-    private static Task HandleExceptionAsync(HttpContext context, Exception ex, string? traceId, IWebHostEnvironment environment)
+    private static Task HandleExceptionAsync(HttpContext context, DomainError error, Exception ex, IWebHostEnvironment environment)
     {
         context.Response.ContentType = "application/json";
-        context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+        context.Response.StatusCode = error.Code.ToHttpStatusCodeInt();
 
-        var problemDetails = ProblemDetailsHelper.CreateServerException(ex.Message);
-        problemDetails.AddTraceId(traceId);
-
+        var problemDetails = error.ToProblemDetails();
         if (environment.IsDevelopmentOrLocal())
             problemDetails.AddStackTrace(ex.StackTrace);
 

@@ -1,9 +1,8 @@
 ﻿using CSharpFunctionalExtensions;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.Localization;
 using Microsoft.Net.Http.Headers;
 using System.Text;
+using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Models.Files;
 using Warp.WebApp.Telemetry.Logging;
 
@@ -11,43 +10,41 @@ namespace Warp.WebApp.Helpers;
 
 public class FileHelper
 {
-    public FileHelper(ILoggerFactory loggerFactory, IStringLocalizer<ServerResources> localizer, string[] permittedExtensions, long fileSizeLimit)
+    public FileHelper(ILoggerFactory loggerFactory, string[] permittedExtensions, long fileSizeLimit)
     {
         _logger = loggerFactory.CreateLogger<FileHelper>();
-
-        _localizer = localizer;
 
         _permittedExtensions = permittedExtensions;
         _fileSizeLimit = fileSizeLimit;
     }
 
 
-    public async Task<Result<AppFile, ProblemDetails>> ProcessStreamedFile(MultipartSection section, ContentDispositionHeaderValue contentDisposition)
+    public async Task<Result<AppFile, DomainError>> ProcessStreamedFile(MultipartSection section, ContentDispositionHeaderValue contentDisposition)
     {
         try
         {
             var fileName = contentDisposition.FileName.Value;
             if (string.IsNullOrEmpty(fileName))
-                return Result.Failure<AppFile, ProblemDetails>(ProblemDetailsHelper.Create(_localizer["The file is missing a name."]));
+                return DomainErrors.FileNameIsMissing();
 
             var memoryStream = new MemoryStream();
             await section.Body.CopyToAsync(memoryStream);
 
             if (memoryStream.Length is 0)
-                return Result.Failure<AppFile, ProblemDetails>(ProblemDetailsHelper.Create(_localizer["The file is empty."]));
-        
+                return DomainErrors.FileIsEmpty();
+
             if (memoryStream.Length > _fileSizeLimit)
-                return Result.Failure<AppFile, ProblemDetails>(ProblemDetailsHelper.Create(_localizer["The file exceeds the size limit."]));
+                return DomainErrors.FileSizeExceeded(memoryStream.Length, _fileSizeLimit);
 
             if(!IsValidFileExtensionAndSignature(_logger, contentDisposition.FileName.Value!, memoryStream, _permittedExtensions))
-                return Result.Failure<AppFile, ProblemDetails>(ProblemDetailsHelper.Create(_localizer["The file type isn't permitted."]));
+                return DomainErrors.FileTypeNotPermitted();
 
             return new AppFile(memoryStream, section.ContentType!, contentDisposition.FileName.Value!);
         }
         catch (Exception ex)
         {
             _logger.LogFileUploadException(ex.Message);
-            return Result.Failure<AppFile, ProblemDetails>(ProblemDetailsHelper.CreateServerException(ex.Message));
+            return DomainErrors.ServerErrorWithMessage(ex.Message);
         }
     }
 
@@ -132,7 +129,6 @@ public class FileHelper
 
     
     private readonly long _fileSizeLimit;
-    private readonly IStringLocalizer<ServerResources> _localizer;
     private readonly ILogger<FileHelper> _logger;
     private readonly string[] _permittedExtensions;
 }

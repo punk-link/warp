@@ -1,11 +1,10 @@
 using CSharpFunctionalExtensions;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
-using System.Net;
+using Warp.WebApp.Constants.Logging;
 using Warp.WebApp.Data;
 using Warp.WebApp.Data.S3;
-using Warp.WebApp.Helpers;
+using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Services.Images;
 
 namespace Warp.WebApp.Tests.ImageServiceTests;
@@ -14,46 +13,53 @@ public class ImageServiceRemoveTests
 {
     public ImageServiceRemoveTests()
     {
-        _localizerSubstitute = Substitute.For<IStringLocalizer<ServerResources>>();
+        _loggerFactorySubstitute = Substitute.For<ILoggerFactory>();
+        _loggerSubstitute = Substitute.For<ILogger<ImageService>>();
+        _loggerFactorySubstitute.CreateLogger<ImageService>().Returns(_loggerSubstitute);
+        
         _dataStorageSubstitute = Substitute.For<IDataStorage>();
         _s3StorageSubstitute = Substitute.For<IS3FileStorage>();
         
-        _imageService = new ImageService(_localizerSubstitute, _dataStorageSubstitute, _s3StorageSubstitute);
+        _imageService = new ImageService(_dataStorageSubstitute, _s3StorageSubstitute);
     }
 
+
     [Fact]
-    public async Task Remove_WithoutHash_DeletesOnlyFile()
+    public async Task Remove_NoHash_DeletesFromS3()
     {
         var entryId = Guid.NewGuid();
         var imageId = Guid.NewGuid();
 
         _dataStorageSubstitute.TryGet<string>(Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(new ValueTask<string?>((string?)null));
+            .Returns((string?)null);
 
-        _s3StorageSubstitute.Delete(entryId.ToString(), imageId.ToString(), Arg.Any<CancellationToken>())
-            .Returns(UnitResult.Success<ProblemDetails>());
+        _s3StorageSubstitute.Delete(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(UnitResult.Success<DomainError>());
 
         var result = await _imageService.Remove(entryId, imageId, CancellationToken.None);
 
         Assert.True(result.IsSuccess);
-
-        // Verify that Remove was not called on the data storage
+        
         await _dataStorageSubstitute.DidNotReceive()
             .Remove<string>(Arg.Any<string>(), Arg.Any<CancellationToken>());
+        
+        await _s3StorageSubstitute.Received(1)
+            .Delete(Arg.Is<string>(s => s == entryId.ToString()), Arg.Is<string>(s => s == imageId.ToString()), Arg.Any<CancellationToken>());
     }
 
 
     [Fact]
-    public async Task Remove_WithHash_CleansUpHashAndDeletesFile()
+    public async Task Remove_WithHash_RemovesHashAndDeletesFromS3()
     {
         var entryId = Guid.NewGuid();
         var imageId = Guid.NewGuid();
+        var hash = "some-hash";
 
         _dataStorageSubstitute.TryGet<string>(Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(new ValueTask<string?>("hash"));
+            .Returns(hash);
 
-        _s3StorageSubstitute.Delete(entryId.ToString(), imageId.ToString(), Arg.Any<CancellationToken>())
-            .Returns(UnitResult.Success<ProblemDetails>());
+        _s3StorageSubstitute.Delete(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(UnitResult.Success<DomainError>());
 
         var result = await _imageService.Remove(entryId, imageId, CancellationToken.None);
 
@@ -61,26 +67,28 @@ public class ImageServiceRemoveTests
         
         await _dataStorageSubstitute.Received(2)
             .Remove<string>(Arg.Any<string>(), Arg.Any<CancellationToken>());
+        
+        await _s3StorageSubstitute.Received(1)
+            .Delete(Arg.Is<string>(s => s == entryId.ToString()), Arg.Is<string>(s => s == imageId.ToString()), Arg.Any<CancellationToken>());
     }
 
 
     [Fact]
-    public async Task Remove_FileDeletionFailed()
+    public async Task Remove_DeleteFailed_ReturnsFailure()
     {
         var entryId = Guid.NewGuid();
         var imageId = Guid.NewGuid();
 
         _dataStorageSubstitute.TryGet<string>(Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(new ValueTask<string?>("hash"));
+            .Returns((string?)null);
 
-        _s3StorageSubstitute.Delete(entryId.ToString(), imageId.ToString(), Arg.Any<CancellationToken>())
-            .Returns(UnitResult.Failure(ProblemDetailsHelper.Create("Error")));
+        _s3StorageSubstitute.Delete(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(UnitResult.Failure(DomainErrors.S3DeleteObjectError()));
 
         var result = await _imageService.Remove(entryId, imageId, CancellationToken.None);
 
         Assert.True(result.IsFailure);
-        Assert.NotNull(result.Error);
-        Assert.Equal((int)HttpStatusCode.BadRequest, result.Error.Status);
+        Assert.Equal(LogEvents.S3DeleteObjectError, result.Error.Code);
     }
 
 
@@ -91,16 +99,17 @@ public class ImageServiceRemoveTests
         var imageId = Guid.NewGuid();
 
         _s3StorageSubstitute.Delete(entryId.ToString(), imageId.ToString(), Arg.Any<CancellationToken>())
-            .Returns(UnitResult.Success<ProblemDetails>());
+            .Returns(UnitResult.Success<DomainError>());
 
         var result = await _imageService.Remove(entryId, imageId, CancellationToken.None);
 
         Assert.True(result.IsSuccess);
     }
-
+    
 
     private readonly IS3FileStorage _s3StorageSubstitute;
-    private readonly IStringLocalizer<ServerResources> _localizerSubstitute;
+    private readonly ILoggerFactory _loggerFactorySubstitute;
+    private readonly ILogger<ImageService> _loggerSubstitute;
     private readonly IDataStorage _dataStorageSubstitute;
     private readonly ImageService _imageService;
 }

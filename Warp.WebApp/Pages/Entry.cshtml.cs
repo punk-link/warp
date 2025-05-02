@@ -1,8 +1,8 @@
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
 using Warp.WebApp.Models;
 using Warp.WebApp.Models.Creators;
+using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Creators;
@@ -14,9 +14,8 @@ public class EntryModel : BasePageModel
     public EntryModel(ICookieService cookieService, 
         ICreatorService creatorService,
         IEntryInfoService entryPresentationService,
-        ILoggerFactory loggerFactory, 
-        IStringLocalizer<ServerResources> serverLocalizer)
-        : base(cookieService, creatorService, loggerFactory, serverLocalizer)
+        ILoggerFactory loggerFactory)
+        : base(cookieService, creatorService, loggerFactory)
     {
         _entryPresentationService = entryPresentationService;
     }
@@ -33,17 +32,17 @@ public class EntryModel : BasePageModel
                 : RedirectToError(result.Error));
 
 
-        Task<Result<(Creator, Guid), ProblemDetails>> GetCreator(Guid decodedId) 
+        Task<Result<(Creator, Guid), DomainError>> GetCreator(Guid decodedId) 
             => base.GetCreator(cancellationToken)
                 .OnFailureCompensate(() => Creator.Empty)
                 .Map(creator => (creator, decodedId));
 
 
-        Task<Result<EntryInfo, ProblemDetails>> GetEntryInfo((Creator Creator, Guid DecodedId) tuple) 
+        Task<Result<EntryInfo, DomainError>> GetEntryInfo((Creator Creator, Guid DecodedId) tuple) 
             => _entryPresentationService.Get(tuple.Creator, tuple.DecodedId, cancellationToken);
 
 
-        Result<EntryInfo, ProblemDetails> BuildModel(EntryInfo entryInfo)
+        Result<EntryInfo, DomainError> BuildModel(EntryInfo entryInfo)
         {
             Id = id;
             ExpiresIn = new DateTimeOffset(entryInfo.ExpiresAt).ToUnixTimeMilliseconds();

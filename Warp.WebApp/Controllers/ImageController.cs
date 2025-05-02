@@ -4,8 +4,6 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.Localization;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 using System.Diagnostics;
@@ -14,6 +12,7 @@ using Warp.WebApp.Attributes;
 using Warp.WebApp.Constants;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
+using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Models.Options;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
@@ -40,19 +39,16 @@ public sealed class ImageController : BaseController
     /// <param name="loggerFactory">Factory for creating loggers</param>
     /// <param name="partialViewRenderHelper">Service for rendering partial views</param>
     /// <param name="unauthorizedImageService">Service for handling images without authorization</param>
-    /// <param name="localizer">Service for handling text localization</param>
     public ImageController(IOptions<ImageUploadOptions> options,
         ICookieService cookieService, 
         ICreatorService creatorService,
         IEntryInfoService entryInfoService,
         ILoggerFactory loggerFactory,
         IPartialViewRenderService partialViewRenderHelper,
-        IUnauthorizedImageService unauthorizedImageService,
-        IStringLocalizer<ServerResources> localizer) 
-        : base(localizer, cookieService, creatorService)
+        IUnauthorizedImageService unauthorizedImageService) 
+        : base(cookieService, creatorService)
     {
         _entryInfoService = entryInfoService;
-        _localizer = localizer;
         _loggerFactory = loggerFactory;
         _options = options.Value;
         _partialViewRenderHelper = partialViewRenderHelper;
@@ -79,11 +75,11 @@ public sealed class ImageController : BaseController
     {
         var decodedEntryId = IdCoder.Decode(entryId);
         if (decodedEntryId == Guid.Empty)
-            return ReturnIdDecodingBadRequest();
+            return IdDecodingBadRequest();
 
         var decodedImageId = IdCoder.Decode(imageId);
         if (decodedImageId == Guid.Empty)
-            return ReturnIdDecodingBadRequest();
+            return IdDecodingBadRequest();
 
         var (_, isFailure, value, error) = await _unauthorizedImageService.Get(decodedEntryId, decodedImageId, cancellationToken);
         if (isFailure)
@@ -110,15 +106,15 @@ public sealed class ImageController : BaseController
     {
         var decodedEntryId = IdCoder.Decode(entryId);
         if (decodedEntryId == Guid.Empty)
-            return ReturnIdDecodingBadRequest();
+            return IdDecodingBadRequest();
 
         var decodedImageId = IdCoder.Decode(imageId);
         if (decodedImageId == Guid.Empty)
-            return ReturnIdDecodingBadRequest();
+            return IdDecodingBadRequest();
 
         var creatorResult = await GetCreator(cancellationToken);
         if (creatorResult.IsFailure)
-            return ReturnForbid();
+            return Forbid();
 
         await _entryInfoService.RemoveImage(creatorResult.Value, decodedEntryId, decodedImageId, cancellationToken);
         return NoContent();
@@ -150,34 +146,29 @@ public sealed class ImageController : BaseController
 
         var decodedEntryId = IdCoder.Decode(entryId);
         if (decodedEntryId == Guid.Empty)
-            return ReturnIdDecodingBadRequest();
+            return IdDecodingBadRequest();
 
-        var boundaryResult = MultipartRequestHelper.GetBoundary(
-            _localizer, 
-            MediaTypeHeaderValue.Parse(Request.ContentType), 
-            _options.RequestBoundaryLengthLimit);
-        
+        var boundaryResult = MultipartRequestHelper.GetBoundary(MediaTypeHeaderValue.Parse(Request.ContentType), _options.RequestBoundaryLengthLimit);
         if (boundaryResult.IsFailure)
             return BadRequest(boundaryResult.Error);
 
         var reader = new MultipartReader(boundaryResult.Value, HttpContext.Request.Body);
         if (reader is null)
-            return BadRequest(ProblemDetailsHelper.Create(_localizer["Failed to create MultipartReader"]));
+            return BadRequest(DomainErrors.MultipartReaderError());
 
         var uploadResults = await ProcessUploadedFiles(reader, decodedEntryId, cancellationToken);
-    
         return Ok(await BuildUploadResults(uploadResults));
     }
 
 
-    private async Task<Dictionary<string, string>> BuildUploadResults(List<Result<ImageResponse, ProblemDetails>> uploadResults)
+    private async Task<Dictionary<string, string>> BuildUploadResults(List<Result<ImageResponse, DomainError>> uploadResults)
     {
         var results = new Dictionary<string, string>();
         foreach (var (_, isFailure, imageResponse, error) in uploadResults)
         {
             if (isFailure)
             {
-                var fileName = error.Extensions[ProblemDetailsExtensionKeys.FileName] as string ?? "unknown";
+                var fileName = error.Extensions[ErrorExtensionKeys.FileName] as string ?? "unknown";
 
                 var errorJson = JsonSerializer.Serialize(error);
                 results.Add(fileName, errorJson);
@@ -202,11 +193,11 @@ public sealed class ImageController : BaseController
     }
 
 
-    private async Task<List<Result<ImageResponse, ProblemDetails>>> ProcessUploadedFiles(MultipartReader reader, Guid decodedEntryId, CancellationToken cancellationToken)
+    private async Task<List<Result<ImageResponse, DomainError>>> ProcessUploadedFiles(MultipartReader reader, Guid decodedEntryId, CancellationToken cancellationToken)
     {
-        var fileHelper = new FileHelper(_loggerFactory, _localizer, _options.AllowedExtensions, _options.MaxFileSize);
+        var fileHelper = new FileHelper(_loggerFactory, _options.AllowedExtensions, _options.MaxFileSize);
 
-        var uploadResults = new List<Result<ImageResponse, ProblemDetails>>();
+        var uploadResults = new List<Result<ImageResponse, DomainError>>();
         var uploadedFilesCount = 0;
         MultipartSection? section;
 
@@ -231,7 +222,7 @@ public sealed class ImageController : BaseController
     }
 
 
-    private async Task<(bool HasValue, Result<ImageResponse, ProblemDetails> Value)> ProcessSection(MultipartSection section, FileHelper fileHelper, Guid decodedEntryId, CancellationToken cancellationToken)
+    private async Task<(bool HasValue, Result<ImageResponse, DomainError> Value)> ProcessSection(MultipartSection section, FileHelper fileHelper, Guid decodedEntryId, CancellationToken cancellationToken)
     {
         if (!ContentDispositionHeaderValue.TryParse(section.ContentDisposition, out var contentDisposition))
             return (false, default);
@@ -243,23 +234,22 @@ public sealed class ImageController : BaseController
         if (appFileResult.IsFailure)
         {
             var enrichedError = EnrichProblemDetails(contentDisposition, appFileResult.Error);
-            return (true, Result.Failure<ImageResponse, ProblemDetails>(enrichedError));
+            return (true, enrichedError);
         }
 
-        var uploadResult = await _unauthorizedImageService.Add(decodedEntryId, appFileResult.Value, cancellationToken);
+        var uploadResult = (await _unauthorizedImageService.Add(decodedEntryId, appFileResult.Value, cancellationToken));
         return (true, uploadResult);
 
 
-        static ProblemDetails EnrichProblemDetails(ContentDispositionHeaderValue contentDisposition, ProblemDetails problemDetails)
+        static DomainError EnrichProblemDetails(ContentDispositionHeaderValue contentDisposition, DomainError error)
         {
-            problemDetails.Extensions.Add(ProblemDetailsExtensionKeys.FileName, contentDisposition.FileName.Value);
-            return problemDetails;
+            error.Extensions.Add(ErrorExtensionKeys.FileName, contentDisposition.FileName.Value);
+            return error;
         }
     }
 
 
     private readonly IEntryInfoService _entryInfoService;
-    private readonly IStringLocalizer<ServerResources> _localizer;
     private readonly ILoggerFactory _loggerFactory;
     private readonly ImageUploadOptions _options;
     private readonly IPartialViewRenderService _partialViewRenderHelper;

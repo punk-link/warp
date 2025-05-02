@@ -5,8 +5,12 @@ using Warp.WebApp.Models.Creators;
 
 namespace Warp.WebApp.Services.Creators;
 
+/// <summary>
+/// Implements functionality for managing creator authentication cookies.
+/// </summary>
 public class CookieService : ICookieService
 {
+    /// <inheritdoc cref="ICookieService.GetCreatorId"/>/>
     public Guid? GetCreatorId(HttpContext httpContext)
     {
         var claim = httpContext.User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.Name);
@@ -20,6 +24,7 @@ public class CookieService : ICookieService
     }
 
 
+    /// <inheritdoc cref="ICookieService.Set"/>
     public async Task Set(HttpContext httpContext, Creator creator)
     {
         await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);

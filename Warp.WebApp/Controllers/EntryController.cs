@@ -1,6 +1,5 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Entries;
@@ -14,8 +13,7 @@ public class EntryController : BaseController
     public EntryController(ICookieService cookieService, 
         ICreatorService creatorService,
         IEntryInfoService entryInfoService, 
-        IStringLocalizer<ServerResources> localizer, 
-        IReportService reportService) : base(localizer, cookieService, creatorService)
+        IReportService reportService) : base(cookieService, creatorService)
     {
         _entryInfoService = entryInfoService;
         _reportService = reportService;
@@ -27,7 +25,7 @@ public class EntryController : BaseController
     {
         var decodedId = IdCoder.Decode(id);
         if (decodedId == Guid.Empty)
-            return ReturnIdDecodingBadRequest();
+            return IdDecodingBadRequest();
 
         var (_, isFailure, creator, error) = await GetCreator(cancellationToken);
         if (isFailure)
@@ -43,7 +41,7 @@ public class EntryController : BaseController
     {
         var decodedId = IdCoder.Decode(id);
         if (decodedId == Guid.Empty)
-            return ReturnIdDecodingBadRequest();
+            return IdDecodingBadRequest();
 
         await _reportService.MarkAsReported(decodedId, cancellationToken);
         return NoContent();

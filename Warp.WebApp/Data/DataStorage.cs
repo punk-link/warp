@@ -1,17 +1,16 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Localization;
 using Warp.WebApp.Data.Redis;
+using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Telemetry.Logging;
 
 namespace Warp.WebApp.Data;
 
 public sealed class DataStorage : IDataStorage
 {
-    public DataStorage(ILoggerFactory loggerFactory, IStringLocalizer<ServerResources> localizer, IMemoryCache memoryCache, IDistributedStorage distributedStorage)
+    public DataStorage(ILoggerFactory loggerFactory, IMemoryCache memoryCache, IDistributedStorage distributedStorage)
     {
         _logger = loggerFactory.CreateLogger<DataStorage>();
-        _localizer = localizer;
         _memoryCache = memoryCache;
         _distributedStorage = distributedStorage;
     }
@@ -21,12 +20,12 @@ public sealed class DataStorage : IDataStorage
         => await _distributedStorage.AddAndGetCounter(key, cancellationToken);
 
 
-    public async Task<Result> AddToSet<T>(string key, T value, TimeSpan expiresIn, CancellationToken cancellationToken)
+    public async Task<UnitResult<DomainError>> AddToSet<T>(string key, T value, TimeSpan expiresIn, CancellationToken cancellationToken)
     {
         if (value is null || IsDefaultStruct(value))
         {
-            _logger.LogSetDefaultCacheValueError(value?.ToString());
-            return Result.Failure(_localizer["StoringDefaultStructureErrorMessage"]);
+            _logger.LogDefaultCacheValueError(value?.ToString());
+            return DomainErrors.DefaultCacheValueError(value?.ToString());
         }
 
         await _distributedStorage.AddToSet(key, value, expiresIn, cancellationToken);
@@ -37,7 +36,7 @@ public sealed class DataStorage : IDataStorage
         set!.Add(value);
         _memoryCache.Set(key, set, expiresIn);
 
-        return Result.Success();
+        return UnitResult.Success<DomainError>();
     }
 
 
@@ -69,19 +68,19 @@ public sealed class DataStorage : IDataStorage
     }
 
 
-    public async Task<Result> Set<T>(string key, T value, TimeSpan expiresIn, CancellationToken cancellationToken)
+    public async Task<UnitResult<DomainError>> Set<T>(string key, T value, TimeSpan expiresIn, CancellationToken cancellationToken)
     {
         if (value is null || IsDefaultStruct(value))
         {
-            _logger.LogSetDefaultCacheValueError(value?.ToString());
-            return Result.Failure(_localizer["StoringDefaultStructureErrorMessage"]);
+            _logger.LogDefaultCacheValueError(value?.ToString());
+            return DomainErrors.DefaultCacheValueError(value?.ToString());
         }
 
         _memoryCache.Set(key, value, expiresIn);
 
         await _distributedStorage.Set(key, value, expiresIn, cancellationToken);
 
-        return Result.Success();
+        return UnitResult.Success<DomainError>();
     }
 
 
@@ -114,7 +113,6 @@ public sealed class DataStorage : IDataStorage
 
 
     private readonly ILogger<DataStorage> _logger;
-    private readonly IStringLocalizer<ServerResources> _localizer;
     private readonly IMemoryCache _memoryCache;
     private readonly IDistributedStorage _distributedStorage;
 }

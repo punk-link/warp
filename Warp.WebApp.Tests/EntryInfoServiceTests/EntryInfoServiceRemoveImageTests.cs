@@ -10,6 +10,7 @@ using Warp.WebApp.Models;
 using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Entries.Enums;
+using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Entries;
@@ -22,6 +23,8 @@ public class EntryInfoServiceRemoveImageTests
 {
     public EntryInfoServiceRemoveImageTests()
     {
+        _loggerFactorySubstitute.CreateLogger<EntryInfoService>().Returns(_loggerSubstitute);
+        
         _entryInfoService = new EntryInfoService(
             _creatorServiceSubstitute,
             _dataStorageSubstitute,
@@ -30,7 +33,6 @@ public class EntryInfoServiceRemoveImageTests
             _loggerFactorySubstitute,
             _openGraphServiceSubstitute,
             _reportServiceSubstitute,
-            _localizerSubstitute,
             _viewCountServiceSubstitute
         );
         _creator = new Creator(Guid.NewGuid());
@@ -46,21 +48,29 @@ public class EntryInfoServiceRemoveImageTests
 
         var imageInfos = new List<ImageInfo>
         {
-            new(imageId, entryId, new Uri("http://example.com/image.jpg")),
-            new(Guid.NewGuid(), entryId, new Uri("http://example.com/image2.jpg"))
+            new(id: imageId, entryId: entryId, url: new Uri("http://example.com/image.jpg")),
+            new(id: Guid.NewGuid(), entryId: entryId, url: new Uri("http://example.com/image2.jpg"))
         };
 
-        var entryInfo = new EntryInfo(entryId, _creator.Id, DateTime.UtcNow, DateTime.UtcNow.AddDays(1), EditMode.Advanced,
-            new Entry("Test content"), imageInfos, new EntryOpenGraphDescription("Test", "Test", imageInfos[0].Url), 0);
+        var entryInfo = new EntryInfo(
+            id: entryId, 
+            creatorId: _creator.Id, 
+            createdAt: DateTime.UtcNow, 
+            expiresAt: DateTime.UtcNow.AddDays(1), 
+            editMode: EditMode.Advanced,
+            entry: new Entry("Test content"), 
+            imageInfos: imageInfos, 
+            openGraphDescription: new EntryOpenGraphDescription("Test", "Test", imageInfos[0].Url), 
+            viewCount: 0);
 
         _dataStorageSubstitute.TryGet<EntryInfo?>(Arg.Any<string>(), cancellationToken)
             .Returns(new ValueTask<EntryInfo?>(entryInfo));
 
         _dataStorageSubstitute.Set(Arg.Any<string>(), Arg.Any<EntryInfo>(), Arg.Any<TimeSpan>(), cancellationToken)
-            .Returns(Result.Success());
+            .Returns(UnitResult.Success<DomainError>());
 
         _imageServiceSubstitute.Remove(entryId, imageId, cancellationToken)
-            .Returns(UnitResult.Success<ProblemDetails>());
+            .Returns(UnitResult.Success<DomainError>());
 
         var result = await _entryInfoService.RemoveImage(_creator, entryId, imageId, cancellationToken);
 
@@ -83,7 +93,7 @@ public class EntryInfoServiceRemoveImageTests
             .Returns(new ValueTask<EntryInfo?>((EntryInfo?)null));
 
         _imageServiceSubstitute.Remove(entryId, imageId, cancellationToken)
-            .Returns(UnitResult.Success<ProblemDetails>());
+            .Returns(UnitResult.Success<DomainError>());
 
         var result = await _entryInfoService.RemoveImage(_creator, entryId, imageId, cancellationToken);
 
@@ -94,7 +104,7 @@ public class EntryInfoServiceRemoveImageTests
 
 
     [Fact]
-    public async Task RemoveImage_ShouldReturnProblemDetails_WhenEntryDoesntBelongToCreator()
+    public async Task RemoveImage_ShouldReturnDomainError_WhenEntryDoesntBelongToCreator()
     {
         var entryId = Guid.NewGuid();
         var imageId = Guid.NewGuid();
@@ -103,24 +113,27 @@ public class EntryInfoServiceRemoveImageTests
 
         var imageInfos = new List<ImageInfo>
         {
-            new(imageId, entryId, new Uri("http://example.com/image.jpg"))
+            new(id: imageId, entryId: entryId, url: new Uri("http://example.com/image.jpg"))
         };
 
-        var entryInfo = new EntryInfo(entryId, differentCreatorId, DateTime.UtcNow, DateTime.UtcNow.AddDays(1), EditMode.Advanced,
-            new Entry("Test content"), imageInfos, new EntryOpenGraphDescription("Test", "Test", imageInfos[0].Url), 0);
+        var entryInfo = new EntryInfo(
+            id: entryId, 
+            creatorId: differentCreatorId, 
+            createdAt: DateTime.UtcNow, 
+            expiresAt: DateTime.UtcNow.AddDays(1), 
+            editMode: EditMode.Advanced,
+            entry: new Entry("Test content"), 
+            imageInfos: imageInfos, 
+            openGraphDescription: new EntryOpenGraphDescription("Test", "Test", imageInfos[0].Url), 
+            viewCount: 0);
 
         _dataStorageSubstitute.TryGet<EntryInfo?>(Arg.Any<string>(), cancellationToken)
             .Returns(new ValueTask<EntryInfo?>(entryInfo));
 
-        var localizedString = new LocalizedString("NoPermissionErrorMessage", "Entry does not belong to creator.");
-        _localizerSubstitute["NoPermissionErrorMessage"]
-            .Returns(localizedString);
-
         var result = await _entryInfoService.RemoveImage(_creator, entryId, imageId, cancellationToken);
 
         Assert.True(result.IsFailure);
-        Assert.Equal(localizedString.Value, result.Error.Detail);
-        Assert.Equal((int)HttpStatusCode.BadRequest, result.Error.Status);
+        Assert.Equal(Constants.Logging.LogEvents.NoPermissionError, result.Error.Code);
         await _imageServiceSubstitute.DidNotReceive().Remove(entryId, imageId, cancellationToken);
     }
 
@@ -134,32 +147,41 @@ public class EntryInfoServiceRemoveImageTests
 
         var imageInfos = new List<ImageInfo>
         {
-            new(imageId, entryId, new Uri("http://example.com/image.jpg"))
+            new(id: imageId, entryId: entryId, url: new Uri("http://example.com/image.jpg"))
         };
 
-        var entryInfo = new EntryInfo(entryId, _creator.Id, DateTime.UtcNow, DateTime.UtcNow.AddDays(1), EditMode.Advanced,
-            new Entry("Test content"), imageInfos, new EntryOpenGraphDescription("Test", "Test", imageInfos[0].Url), 0);
+        var entryInfo = new EntryInfo(
+            id: entryId, 
+            creatorId: _creator.Id, 
+            createdAt: DateTime.UtcNow, 
+            expiresAt: DateTime.UtcNow.AddDays(1), 
+            editMode: EditMode.Advanced,
+            entry: new Entry("Test content"), 
+            imageInfos: imageInfos, 
+            openGraphDescription: new EntryOpenGraphDescription("Test", "Test", imageInfos[0].Url), 
+            viewCount: 0);
 
         _dataStorageSubstitute.TryGet<EntryInfo?>(Arg.Any<string>(), cancellationToken)
             .Returns(new ValueTask<EntryInfo?>(entryInfo));
 
         _dataStorageSubstitute.Set(Arg.Any<string>(), Arg.Any<EntryInfo>(), Arg.Any<TimeSpan>(), cancellationToken)
-            .Returns(Result.Success());
+            .Returns(UnitResult.Success<DomainError>());
 
-        var problemDetails = ProblemDetailsHelper.Create("Failed to remove image");
+        var domainError = DomainErrors.S3DeleteObjectError();
         _imageServiceSubstitute.Remove(entryId, imageId, cancellationToken)
-            .Returns(UnitResult.Failure<ProblemDetails>(problemDetails));
+            .Returns(UnitResult.Failure<DomainError>(domainError));
 
         var result = await _entryInfoService.RemoveImage(_creator, entryId, imageId, cancellationToken);
 
         Assert.True(result.IsFailure);
-        Assert.Equal(problemDetails, result.Error);
+        Assert.Equal(domainError.Code, result.Error.Code);
     }
 
 
     private readonly IEntryInfoService _entryInfoService;
     private readonly Creator _creator;
     private readonly ILoggerFactory _loggerFactorySubstitute = Substitute.For<ILoggerFactory>();
+    private readonly ILogger<EntryInfoService> _loggerSubstitute = Substitute.For<ILogger<EntryInfoService>>();
     private readonly IOpenGraphService _openGraphServiceSubstitute = Substitute.For<IOpenGraphService>();
     private readonly IDataStorage _dataStorageSubstitute = Substitute.For<IDataStorage>();
     private readonly IReportService _reportServiceSubstitute = Substitute.For<IReportService>();
@@ -167,5 +189,4 @@ public class EntryInfoServiceRemoveImageTests
     private readonly IImageService _imageServiceSubstitute = Substitute.For<IImageService>();
     private readonly IEntryService _entryServiceSubstitute = Substitute.For<IEntryService>();
     private readonly ICreatorService _creatorServiceSubstitute = Substitute.For<ICreatorService>();
-    private readonly IStringLocalizer<ServerResources> _localizerSubstitute = Substitute.For<IStringLocalizer<ServerResources>>();
 }

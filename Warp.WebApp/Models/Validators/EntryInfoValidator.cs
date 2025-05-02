@@ -1,15 +1,16 @@
 ﻿using FluentValidation;
-using Microsoft.Extensions.Localization;
-using Warp.WebApp.Constants.Logging;
+using Warp.WebApp.Extensions;
+using Warp.WebApp.Models.Errors;
 
 namespace Warp.WebApp.Models.Validators;
 
 public class EntryInfoValidator : AbstractValidator<EntryInfo>
 {
-    public EntryInfoValidator(IStringLocalizer<ServerResources> localizer)
+    public EntryInfoValidator()
     {
+        var error = DomainErrors.WarpExpirationPeriodEmpty();
         RuleFor(x => x.ExpiresAt).GreaterThan(default(DateTime))
-            .WithErrorCode(LoggingConstants.WarpExpirationPeriodEmpty.ToString())
-            .WithMessage(localizer["EntryExpirationPeriodEmptyErrorMessage"]);
+            .WithErrorCode(error.Code.ToHttpStatusCodeInt().ToString())
+            .WithMessage(error.Detail);
     }
 }

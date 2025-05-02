@@ -1,20 +1,25 @@
 ﻿using Amazon.S3;
 using Amazon.S3.Model;
 using CSharpFunctionalExtensions;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
 using Warp.WebApp.Attributes;
-using Warp.WebApp.Helpers;
+using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Models.Files;
 using Warp.WebApp.Telemetry.Logging;
 
 namespace Warp.WebApp.Data.S3;
 
+/// <summary>
+/// Implementation of <see cref="IS3FileStorage"/> that manages files in Amazon S3 storage.
+/// </summary>
 public class S3FileStorage : IS3FileStorage
 {
-    public S3FileStorage(IStringLocalizer<ServerResources> localizer, IAmazonS3Factory amazonS3Factory, ILoggerFactory loggerFactory)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="S3FileStorage"/> class.
+    /// </summary>
+    /// <param name="amazonS3Factory">Factory for creating Amazon S3 clients.</param>
+    /// <param name="loggerFactory">Factory for creating loggers.</param>
+    public S3FileStorage(IAmazonS3Factory amazonS3Factory, ILoggerFactory loggerFactory)
     {
-        _localizer = localizer;
         _logger = loggerFactory.CreateLogger<S3FileStorage>();
 
         _amazonS3Client = amazonS3Factory.CreateClient();
@@ -22,8 +27,9 @@ public class S3FileStorage : IS3FileStorage
     }
 
 
+    /// <inheritdoc/>
     [TraceMethod]
-    public async Task<Result<HashSet<string>, ProblemDetails>> Contains(string prefix, List<string> keys, CancellationToken cancellationToken)
+    public async Task<Result<HashSet<string>, DomainError>> Contains(string prefix, List<string> keys, CancellationToken cancellationToken)
     {
         string error;
         try
@@ -55,13 +61,14 @@ public class S3FileStorage : IS3FileStorage
             error = ex.Message;
         }
 
-        error = string.Format(_localizer["Failed to list objects in S3"], error);
-        return Result.Failure<HashSet<string>, ProblemDetails>(ProblemDetailsHelper.CreateServerException(error));
+        _logger.LogS3ListObjectsError(error);
+        return DomainErrors.S3ListObjectsError();
     }
 
 
+    /// <inheritdoc/>
     [TraceMethod]
-    public async Task<UnitResult<ProblemDetails>> Save(string prefix, string key, AppFile appFile, CancellationToken cancellationToken)
+    public async Task<UnitResult<DomainError>> Save(string prefix, string key, AppFile appFile, CancellationToken cancellationToken)
     {
         string error;
         try
@@ -77,7 +84,7 @@ public class S3FileStorage : IS3FileStorage
 
             var response = await _amazonS3Client.PutObjectAsync(request, cancellationToken);
             if (IsSuccess(response))
-                return UnitResult.Success<ProblemDetails>();
+                return UnitResult.Success<DomainError>();
 
             error = response?.HttpStatusCode.ToString() ?? "unknown error";
         }
@@ -86,16 +93,14 @@ public class S3FileStorage : IS3FileStorage
             error = ex.Message;
         }
 
-        error = string.Format(_localizer["Failed to save an image to S3"], error);
-        var problemDetails = ProblemDetailsHelper.CreateServerException(error);
-
-        _logger.LogImageUploadError(error);
-        return UnitResult.Failure(problemDetails);
+        _logger.LogS3UploadObjectError(error);
+        return DomainErrors.S3UploadObjectError();
     }
 
 
+    /// <inheritdoc/>
     [TraceMethod]
-    public async Task<Result<AppFile, ProblemDetails>> Get(string prefix, string key, CancellationToken cancellationToken)
+    public async Task<Result<AppFile, DomainError>> Get(string prefix, string key, CancellationToken cancellationToken)
     {
         string error;
         try
@@ -123,16 +128,14 @@ public class S3FileStorage : IS3FileStorage
             error = ex.Message;
         }
 
-        error = string.Format(_localizer["Failed to get an image from S3"], error);
-        var problemDetails = ProblemDetailsHelper.CreateServerException(error);
-
-        _logger.LogImageDownloadError(error);
-        return Result.Failure<AppFile, ProblemDetails>(problemDetails);
+        _logger.LogS3GetObjectError(error);
+        return DomainErrors.S3GetObjectError();
     }
 
 
+    /// <inheritdoc/>
     [TraceMethod]
-    public async Task<UnitResult<ProblemDetails>> Delete(string prefix, string key, CancellationToken cancellationToken)
+    public async Task<UnitResult<DomainError>> Delete(string prefix, string key, CancellationToken cancellationToken)
     {
         string error;
         try
@@ -145,7 +148,7 @@ public class S3FileStorage : IS3FileStorage
 
             var response = await _amazonS3Client.DeleteObjectAsync(request, cancellationToken);
             if (response is not null && response.HttpStatusCode is System.Net.HttpStatusCode.NoContent)
-                return UnitResult.Success<ProblemDetails>();
+                return UnitResult.Success<DomainError>();
 
             error = response?.HttpStatusCode.ToString() ?? "unknown error";
         }
@@ -154,24 +157,20 @@ public class S3FileStorage : IS3FileStorage
             error = ex.Message;
         }
 
-        error = string.Format(_localizer["Failed to delete an image from S3"], error);
-        var problemDetails = ProblemDetailsHelper.CreateServerException(error);
-
-        _logger.LogImageRemovalError(error);
-        return UnitResult.Failure(problemDetails);
+        _logger.LogS3DeleteObjectError(error);
+        return DomainErrors.S3DeleteObjectError();
     }
 
-
+    
     private static string BuildPrefix(string key) 
         => key.TrimEnd('/') + '/';
 
-
+    
     private static bool IsSuccess(Amazon.Runtime.AmazonWebServiceResponse response)
         => response is not null && response.HttpStatusCode is System.Net.HttpStatusCode.OK;
 
-
+    
     private readonly AmazonS3Client _amazonS3Client;
     private readonly IAmazonS3Factory _amazonS3Factory;
-    private readonly IStringLocalizer<ServerResources> _localizer;
     private readonly ILogger<S3FileStorage> _logger;
 }

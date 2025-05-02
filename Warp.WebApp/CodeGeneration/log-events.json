@@ -1,0 +1,488 @@
+{
+  "loggingCategories": [
+    {
+      "name": "Generic",
+      "events": [
+        {
+          "id": 10001,
+          "name": "ServerError",
+          "description": "An unexpected error occurred while processing the request. Request ID: '{RequestId}'.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
+          "id": 10002,
+          "name": "ServerErrorWithMessage",
+          "description": "An error occurred while processing the request. Request ID: {RequestId}. Details: '{ErrorMessage:string}'.",
+          "domainErrorDescription": "An error occurred while processing the request. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
+          "id": 10003,
+          "name": "ServiceUnavailable",
+          "description": "Service unavailable (503). Request ID: {RequestId}. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 503
+        }
+      ]
+    },
+    {
+      "name": "Startup",
+      "events": [
+        {
+          "id": 11001,
+          "name": "RedisHostIsNotSpecified",
+          "description": "Startup error: The Redis host configuration is missing.",
+          "logLevel": "Critical",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
+          "id": 11002,
+          "name": "RedisPortIsNotSpecified",
+          "description": "Startup error: The Redis port configuration is missing.",
+          "logLevel": "Critical",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
+          "id": 11003,
+          "name": "RedisConnectionException",
+          "description": "Startup error: Failed to connect to Redis. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Critical",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
+          "id": 11101,
+          "name": "VaultConnectionException",
+          "description": "Startup error: Failed to connect to the Vault. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Critical",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
+          "id": 11102,
+          "name": "VaultSecretCastException",
+          "description": "Startup error: Failed to cast retrieved secrets to the expected type. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Critical",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
+          "id": 11201,
+          "name": "LocalConfigurationIsInUse",
+          "description": "Local configuration is in use.",
+          "logLevel": "Information",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
+          "id": 11301,
+          "name": "OptionsValidationException",
+          "description": "Startup error: Options validation exception occurred. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        }
+      ]
+    },
+    {
+      "name": "Infrastructure",
+      "events": [
+        {
+          "id": 12001,
+          "name": "DefaultCacheValueError",
+          "description": "Unable to store a default value {CacheValue}.",
+          "logLevel": "Warning",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
+          "id": 12101,
+          "name": "PartialViewNotFound",
+          "description": "Partial view '{PartialViewName:string}' could not be found. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Critical",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
+          "id": 12102,
+          "name": "PartialViewRenderingError",
+          "description": "An error occurred while rendering the partial view '{PartialViewName:string}'. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Critical",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
+          "id": 12103,
+          "name": "ActionContextNotFound",
+          "description": "Action context not found while trying to build an image URL from a Razor page.",
+          "logLevel": "Critical",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
+          "id": 12104,
+          "name": "ImageControllerGetMethodNotFound",
+          "description": "Get image controller's method not found.",
+          "logLevel": "Critical",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
+          "id": 12201,
+          "name": "ImageUploadError",
+          "description": "An error occurred while uploading the image. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": true,
+          "httpCode": 500
+        },
+        {
+          "id": 12202,
+          "name": "ImageDownloadError",
+          "description": "An error occurred while downloading the image. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": true,
+          "httpCode": 500
+        },
+        {
+          "id": 12203,
+          "name": "ImageRemovalError",
+          "description": "An error occurred while removing the image. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": true,
+          "httpCode": 500
+        },
+        {
+          "id": 12301,
+          "name": "FileUploadException",
+          "description": "An error occurred while uploading the file. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 400
+        },
+        {
+          "id": 12302,
+          "name": "UnverifiedFileSignatureError",
+          "description": "File signature verification failed. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 415
+        },
+        {
+          "id": 12303,
+          "name": "FileSignatureVerificationError",
+          "description": "File signature verification failed for files with extension '{FileExtension:string}', '{HeaderBytes:string?}'.",
+          "logLevel": "Warning",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 415
+        }
+      ]
+    },
+    {
+      "name": "Domain",
+      "events": [
+        {
+          "id": 20001,
+          "name": "WarpContentEmpty",
+          "description": "The entry content is empty.",
+          "logLevel": "Debug",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        },
+        {
+          "id": 20002,
+          "name": "WarpExpirationPeriodEmpty",
+          "description": "The entry expiration period is not specified.",
+          "logLevel": "Debug",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        },
+        {
+          "id": 20101,
+          "name": "ImageRemovalDomainError",
+          "description": "An error occurred in the domain layer while removing the image '{ImageId:Guid}'. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 400
+        },
+        {
+          "id": 20102,
+          "name": "IdDecodingError",
+          "description": "An error occurred while decoding the ID '{Id:string}'. Details: '{ErrorMessage:string}'.",
+          "domainErrorDescription": "An error occurred while decoding the ID.",
+          "logLevel": "Error",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        },
+        {
+          "id": 20103,
+          "name": "UnauthorizedError",
+          "description": "You do not have permission to perform this action.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 403
+        }
+      ]
+    },
+    {
+      "name": "Domain.Creator",
+      "events": [
+        {
+          "id": 20201,
+          "name": "CreatorIdIsNull",
+          "description": "The creator ID is not provided.",
+          "logLevel": "Warning",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 400
+        },
+        {
+          "id": 20202,
+          "name": "CreatorIdIsNotFound",
+          "description": "The creator ID is not found.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        }
+      ]
+    },
+    {
+      "name": "Domain.Entry",
+      "events": [
+        {
+          "id": 20301,
+          "name": "CantAttachEntryToCreator",
+          "description": "Can't attach the entry '{EntryId:Guid}' to the creator '{CreatorId:Guid}' due to an internal server error.",
+          "domainErrorDescription": "An error occurred while attaching the entry to the creator.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
+          "id": 20302,
+          "name": "EntryModelValidationError",
+          "description": "The entry model is invalid. Please check the provided data.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        },
+        {
+          "id": 20303,
+          "name": "NoPermissionError",
+          "description": "You do not have permission to access this entry.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 403
+        },
+        {
+          "id": 20304,
+          "name": "EntryNotFound",
+          "description": "The entry '{EntryId:Guid}' was not found.",
+          "domainErrorDescription": "The entry was not found.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 404
+        },
+        {
+          "id": 20305,
+          "name": "EntryEditModeMismatch",
+          "description": "The entry '{EntryId:Guid}' edit mode is already set to '{EditMode:bool}'.",
+          "domainErrorDescription": "The entry edit mode is already set to and cannot be changed.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        },
+        {
+          "id": 20306,
+          "name": "EntryCannotBeEditedAfterViewed",
+          "description": "The entry '{EntryId:Guid}' cannot be edited after it has been viewed.",
+          "domainErrorDescription": "The entry cannot be edited after it has been viewed. Try to create a new entry.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        },
+        {
+          "id": 20307,
+          "name": "EntryInfoModelValidationError",
+          "description": "The entry model is invalid. Please check the provided data.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        }
+      ]
+    },
+    {
+      "name": "Domain.Image",
+      "events": [
+        {
+          "id": 20401,
+          "name": "UnsupportedFileExtension",
+          "description": "The file extension is not supported.",
+          "domainErrorDescription": "The file extension '{FileExtension:string}' is not supported. Please use one of the following extensions: {SupportedFileExtensions:string}.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 415
+        },
+        {
+          "id": 20402,
+          "name": "ImageAlreadyExists",
+          "description": "The image already exists.",
+          "domainErrorDescription": "The image '{UntrustedImageName:string}' you are trying to upload already exists.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        }
+      ]
+    },
+    {
+      "name": "Domain.File",
+      "events": [
+        {
+          "id": 20501,
+          "name": "S3ListObjectsError",
+          "description": "An error occurred while listing objects in S3. Details: '{ErrorMessage:string}'.",
+          "domainErrorDescription": "An error occurred while listing objects.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
+          "id": 20502,
+          "name": "S3DeleteObjectError",
+          "description": "An error occurred while deleting an object from S3. Details: '{ErrorMessage:string}'.",
+          "domainErrorDescription": "An error occurred while deleting an object.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
+          "id": 20503,
+          "name": "S3UploadObjectError",
+          "description": "An error occurred while uploading an object to S3. Details: '{ErrorMessage:string}'.",
+          "domainErrorDescription": "An error occurred while uploading an object.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
+          "id": 20504,
+          "name": "S3GetObjectError",
+          "description": "An error occurred while getting an object from S3. Details: '{ErrorMessage:string}'.",
+          "domainErrorDescription": "An error occurred while getting an object.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
+          "id": 20505,
+          "name": "FileNameIsMissing",
+          "description": "The file name is missing. Please provide a valid file name.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        },
+        {
+          "id": 20506,
+          "name": "FileIsEmpty",
+          "description": "The file is empty. Please provide a valid file.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        },
+        {
+          "id": 20507,
+          "name": "FileSizeExceeded",
+          "description": "The file size is {Actual:long} bytes. Yoy can upload files up to {MaxFileSize:long} bytes.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        },
+        {
+          "id": 20508,
+          "name": "FileTypeNotPermitted",
+          "description": "The provided file type is not permitted.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        },
+        {
+          "id": 20509,
+          "name": "MultipartReaderError",
+          "description": "An error occurred while creating the MultipartReader. Probably the request is not a multipart/form-data request.",
+          "logLevel": "Error",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        },
+        {
+          "id": 20510,
+          "name": "MultipartContentTypeBoundaryError",
+          "description": "The content-type boundary is missing. Please provide a valid content-type boundary.",
+          "logLevel": "Error",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        },
+        {
+          "id": 20511,
+          "name": "MultipartBoundaryLengthLimitExceeded",
+          "description": "The multipart boundary length limit has been exceeded. Please provide a valid content-type boundary.",
+          "logLevel": "Error",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        }
+      ]
+    }
+  ]
+}
