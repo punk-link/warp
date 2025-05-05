@@ -7,9 +7,9 @@ using Warp.WebApp.Services.Creators;
 
 namespace Warp.WebApp.Controllers;
 
-public class BaseController : ControllerBase
+public abstract class BaseController : ControllerBase
 {
-    protected BaseController(ICookieService cookieService, ICreatorService creatorService)
+    public BaseController(ICookieService cookieService, ICreatorService creatorService)
     {
         _cookieService = cookieService;
         _creatorService = creatorService;
