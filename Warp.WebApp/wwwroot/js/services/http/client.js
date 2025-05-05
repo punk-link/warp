@@ -92,7 +92,7 @@ const handlers = {
                     const options = buildRequestOptions(method, body);
                     const response = await fetch(url, options);
 
-                    validateResponse(response, url);
+                    await validateResponse(response, url);
 
                     return response;
                 } catch (error) {
