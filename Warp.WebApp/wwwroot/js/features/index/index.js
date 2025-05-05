@@ -3,10 +3,14 @@ import { uiState } from '/js/utils/ui-core.js';
 import { addDropAreaEvents, pasteImages } from '/js/components/gallery/upload.js';
 import { animateBackgroundImage } from '/js/components/background/image-positioner.js';
 import { preview } from '/js/components/gallery/preview.js'; 
+import { core } from '/js/core/initialize.js';
 import { elements } from './elements.js';
 import { createButton } from './create-button.js';
 import { editMode } from './edit-mode.js';
 import { adjustTextareaSizes } from './textarea.js';
+
+
+core.initialize();
 
 
 const initPaste = (entryId) => {

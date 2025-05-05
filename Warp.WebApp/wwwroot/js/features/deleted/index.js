@@ -1,6 +1,9 @@
 ﻿import { ROUTES, redirectTo } from '/js/utils/routes.js';
+import { core } from '/js/core/initialize.js';
 import { elements } from './elements.js';
 
+
+core.initialize();
 
 const handlers = {
     actions: (() => {

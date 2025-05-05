@@ -5,8 +5,11 @@ import { galleryViewer } from '/js/components/gallery/viewer.js';
 import { animateBackgroundImage } from '/js/components/background/image-positioner.js';
 import { http } from '/js/services/http/client.js';
 import { modal } from '/js/components/modal.js';
+import { core } from '/js/core/initialize.js';
 import { elements } from './elements.js';
 
+
+core.initialize();
 
 const handlers = {
     actions: (() => {

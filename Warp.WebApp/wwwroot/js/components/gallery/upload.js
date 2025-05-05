@@ -4,6 +4,7 @@ import { http } from '/js/services/http/client.js';
 import { CSS_CLASSES } from '/js/constants/css.js';
 import { ICONS } from '/js/utils/icons.js';
 import { dispatchEvent } from '/js/services/events.js';
+import { sentryService } from '/js/services/sentry.js';
 import { elements } from './elements.js';
 import { preview } from './preview.js';
 
@@ -35,26 +36,51 @@ const handlers = {
 
             handlers.image.toggleUploadState(uploadContainer, true);
 
-            const formData = new FormData();
-            validImageFiles.forEach(file => formData.append('Images', file, file.name));
+            try {
+                const formData = new FormData();
+                validImageFiles.forEach(file => formData.append('Images', file, file.name));
 
-            const response = await http.post(ROUTES.API.IMAGES.ADD(entryId), formData);
+                const response = await http.post(ROUTES.API.IMAGES.ADD(entryId), formData);
 
-            if (!response.ok) {
+                if (!response.ok) {
+                    handlers.image.toggleUploadState(uploadContainer, false);
+                    
+                    sentryService.captureError(
+                        new Error(`Image upload failed with status: ${response.status}`), 
+                        {
+                            feature: 'galleryUpload',
+                            status: response.status,
+                            statusText: response.statusText,
+                            entryId: entryId,
+                            filesCount: validImageFiles.length
+                        },
+                        'Image upload failed'
+                    );
+                    
+                    return;
+                }
+
+                const results = await response.json();
+                preview.render(entryId, validImageFiles, results);
+
+                const fileInput = elements.getUploadElements().fileInput;
+                if (fileInput) 
+                    fileInput.value = '';
+            } catch (error) {
+                sentryService.captureError(
+                    error, 
+                    {
+                        feature: 'galleryUpload',
+                        action: 'upload',
+                        entryId: entryId,
+                        filesCount: validImageFiles?.length || 0
+                    },
+                    'Image upload failed'
+                );
+            } finally {
                 handlers.image.toggleUploadState(uploadContainer, false);
-                console.error(response.status, response.statusText);
-                return;
+                dispatchEvent.uploadFinished();
             }
-
-            const results = await response.json();
-            preview.render(entryId, validImageFiles, results);
-
-            const fileInput = elements.getUploadElements().fileInput;
-            if (fileInput) 
-                fileInput.value = '';
-
-            handlers.image.toggleUploadState(uploadContainer, false);
-            dispatchEvent.uploadFinished();
         }
     },
 
@@ -132,7 +158,16 @@ const handlers = {
 
                 return new File([blob], fileName, { type: blob.type });
             } catch (error) {
-                console.error(`Error processing clipboard item: ${error}`);
+                sentryService.captureError(
+                    error, 
+                    {
+                        feature: 'clipboard',
+                        action: 'createFileFromBlob',
+                        blobType: type,
+                        index: index
+                    },
+                    'Error processing clipboard item'
+                );
                 return null;
             }
         },
@@ -164,7 +199,15 @@ const handlers = {
                 const files = await handlers.clipboard.getImagesFromClipboard();
                 await handlers.image.upload(entryId, files);
             } catch (error) {
-                console.error('Paste operation failed:', error);
+                sentryService.captureError(
+                    error, 
+                    {
+                        feature: 'clipboard',
+                        action: 'pasteHandler',
+                        entryId: entryId
+                    },
+                    'Paste operation failed'
+                );
             }
         }
     }
