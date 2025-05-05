@@ -1,3 +1,6 @@
+import { sentryService } from '/js/services/sentry.js';
+
+
 const handlers = {
     clipboard: (() => {
         const setCursor = (state) => {
@@ -13,7 +16,10 @@ const handlers = {
 
                     return true;
                 } catch (error) {
-                    console.error('Copy to clipboard failed: ', error);
+                    sentryService.captureError(error, { 
+                        feature: 'clipboard', 
+                        action: 'copyUrl' 
+                    }, 'Copy to clipboard failed');
                     return false;
                 } finally {
                     setCursor('auto');
@@ -29,7 +35,10 @@ const handlers = {
 
                     return true;
                 } catch (error) {
-                    console.error('Copy to clipboard failed: ', error);
+                    sentryService.captureError(error, { 
+                        feature: 'clipboard', 
+                        action: 'copyText' 
+                    }, 'Copy to clipboard failed');
                     return false;
                 } finally {
                     setCursor('auto');

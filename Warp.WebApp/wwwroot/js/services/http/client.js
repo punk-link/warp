@@ -1,4 +1,5 @@
 ﻿import { ROUTES, buildUrl } from '/js/utils/routes.js';
+import { sentryService } from '/js/services/sentry.js';
 
 
 const HTTP_METHOD = Object.freeze({
@@ -56,11 +57,26 @@ const handlers = {
             return options;
         };
 
-        const handleRequestError = async (response, url) => {
+        const validateResponse = async (response, url) => {
             if (response.ok) 
                 return response;
 
             const problemDetails = await response.json();
+            
+            sentryService.captureError(
+                new Error(HTTP_ERROR.REQUEST_FAILED), 
+                {
+                    url: url,
+                    status: response.status,
+                    statusText: response.statusText,
+                    problemDetails: problemDetails
+                },
+                'HTTP Request failed'
+            );
+            
+            // Redirect to error page if the response contains problem details
+            // This is by design to handle specific error cases
+            // Until we implement a front-end error handling strategy
             location.href = buildUrl(ROUTES.ERROR, { 
                 details: JSON.stringify(problemDetails) 
             });
@@ -76,9 +92,19 @@ const handlers = {
                     const options = buildRequestOptions(method, body);
                     const response = await fetch(url, options);
 
+                    validateResponse(response, url);
+
                     return response;
                 } catch (error) {
-                    handleRequestError(error, url);
+                    sentryService.captureError(
+                        error, 
+                        {
+                            url: url,
+                            method: method,
+                            context: 'httpClient'
+                        },
+                        'HTTP Request error'
+                    );
                 }
             }
         };
@@ -88,9 +114,7 @@ const handlers = {
 
 export const { POST, GET, PUT, PATCH, DELETE } = HTTP_METHOD;
 
-
 export const makeHttpRequest = async (url, method, body = null) => handlers.request.execute(url, method, body);
-
 
 export const http = {
     get: (url) => 
