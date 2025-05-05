@@ -30,8 +30,13 @@ const handlers = {
             Sentry.init({
                 dsn: window.appConfig?.sentryDsn,
                 environment: currentEnvironment,
-                integrations: [ new Sentry.BrowserTracing() ],
+                integrations: [
+                    Sentry.browserTracingIntegration(),
+                    Sentry.replayIntegration()
+                ],
                 tracesSampleRate: 1.0,
+                replaysSessionSampleRate: 0.1,
+                replaysOnErrorSampleRate: 1.0
             });
             
             isInitialized = true;
