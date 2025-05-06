@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Warp.WebApp.Telemetry.Logging;
 using Warp.WebApp.Helpers;
+using Warp.WebApp.Models.Errors;
+using Warp.WebApp.Extensions;
 
 namespace Warp.WebApp.Middlewares;
 
@@ -23,32 +23,16 @@ public class CancellationExceptionHandlerMiddleware
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {
             var traceId = Activity.Current?.Id ?? context.TraceIdentifier;
+            var error = DomainErrors.ServiceUnavailable(traceId, ex.Message)
+                .AddTraceId(traceId);
 
-            LogException(context, ex, traceId);
-            var problemDetails = BuildProblemDetails(context, traceId);
+            var loggerFactory = context.RequestServices.GetRequiredService<ILoggerFactory>();
+            var logger = loggerFactory.CreateLogger<CancellationExceptionHandlerMiddleware>();
+            logger.LogServiceUnavailable(traceId, ex.Message);
 
-            await context.Response.WriteAsJsonAsync(problemDetails);
-            context.Response.StatusCode = problemDetails.Status!.Value;
+            await context.Response.WriteAsJsonAsync(error.ToProblemDetails());
+            context.Response.StatusCode = error.Code.ToHttpStatusCodeInt();
         }
-    }
-
-
-    private static ProblemDetails BuildProblemDetails(HttpContext context, string traceId)
-    {
-        var localizer = context.RequestServices.GetRequiredService<IStringLocalizer<ServerResources>>();
-
-        var result = ProblemDetailsHelper.CreateServiceUnavailable(localizer);
-        result.AddTraceId(traceId);
-
-        return result;
-    }
-
-
-    private static void LogException(HttpContext context, Exception exception, string traceId)
-    {
-        var loggerFactory = context.RequestServices.GetRequiredService<ILoggerFactory>();
-        var logger = loggerFactory.CreateLogger<CancellationExceptionHandlerMiddleware>();
-        logger.LogServiceUnavailable(traceId, exception.Message);
     }
 
 

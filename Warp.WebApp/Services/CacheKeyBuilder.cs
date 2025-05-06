@@ -6,6 +6,7 @@ using Warp.WebApp.Services.Images;
 
 namespace Warp.WebApp.Services;
 
+// TODO: consider generic approach to cache key building
 public static class CacheKeyBuilder
 {
     public static string BuildCreatorCacheKey(in Guid id)

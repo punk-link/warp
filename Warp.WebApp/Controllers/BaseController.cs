@@ -1,35 +1,30 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
-using System.Net;
-using Warp.WebApp.Helpers;
+using Warp.WebApp.Extensions;
 using Warp.WebApp.Models.Creators;
+using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Services.Creators;
 
 namespace Warp.WebApp.Controllers;
 
-public class BaseController : ControllerBase
+public abstract class BaseController : ControllerBase
 {
-    public BaseController(IStringLocalizer<ServerResources> localizer, ICookieService cookieService, ICreatorService creatorService)
+    public BaseController(ICookieService cookieService, ICreatorService creatorService)
     {
         _cookieService = cookieService;
         _creatorService = creatorService;
-        _localizer = localizer;
     }
 
 
-    protected async Task<Result<Creator, ProblemDetails>> GetCreator(CancellationToken cancellationToken)
-    {
-        var creatorId = _cookieService.GetCreatorId(HttpContext);
-        var (_, isFailure, creator, _) = await _creatorService.Get(creatorId, cancellationToken);
-        if (isFailure)
-            return ProblemDetailsHelper.CreateUnauthorized(_localizer);
-
-        return creator;
-    }
+    protected BadRequestObjectResult BadRequest(in DomainError error) 
+        => base.BadRequest(error.ToProblemDetails());
 
 
-    protected IActionResult NoContentOrBadRequest<T>(Result<T, ProblemDetails> result)
+    protected UnauthorizedObjectResult Unauthorized(in DomainError error)
+        => base.Unauthorized(error.ToProblemDetails());
+
+
+    protected IActionResult BadRequestOrNoContent<T>(Result<T, DomainError> result)
     {
         if (result.IsFailure)
             return BadRequest(result.Error);
@@ -38,20 +33,21 @@ public class BaseController : ControllerBase
     }
 
 
-    protected IActionResult ReturnForbid()
+    protected async Task<Result<Creator, DomainError>> GetCreator(CancellationToken cancellationToken)
     {
-        return StatusCode((int)HttpStatusCode.Forbidden, ProblemDetailsHelper.CreateForbidden(_localizer));
+        var creatorId = _cookieService.GetCreatorId(HttpContext);
+        var (_, isFailure, creator, _) = await _creatorService.Get(creatorId, cancellationToken);
+        if (isFailure)
+            return DomainErrors.UnauthorizedError();
+        
+        return creator;
     }
 
 
-    protected IActionResult ReturnIdDecodingBadRequest(string? detail = null)
-    {
-        detail ??= _localizer["IdDecodingErrorMessage"];
-        return BadRequest(ProblemDetailsHelper.Create(detail));
-    }
+    protected IActionResult IdDecodingBadRequest() 
+        => BadRequest(DomainErrors.IdDecodingError());
 
 
     private readonly ICookieService _cookieService;
     private readonly ICreatorService _creatorService;
-    private readonly IStringLocalizer<ServerResources> _localizer;
 }

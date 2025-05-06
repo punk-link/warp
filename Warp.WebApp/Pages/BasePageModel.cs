@@ -9,7 +9,8 @@ using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Services.Creators;
 using CSharpFunctionalExtensions;
 using Warp.WebApp.Services;
-using Microsoft.Extensions.Localization;
+using Warp.WebApp.Models.Errors;
+using Warp.WebApp.Extensions;
 
 namespace Warp.WebApp.Pages;
 
@@ -17,13 +18,11 @@ public class BasePageModel : PageModel
 {
     public BasePageModel(ICookieService cookieService, 
         ICreatorService creatorService, 
-        ILoggerFactory loggerFactory, 
-        IStringLocalizer<ServerResources> serverLocalizer)
+        ILoggerFactory loggerFactory)
     {
         _cookieService = cookieService;
         _creatorService = creatorService;
         _logger = loggerFactory.CreateLogger<BasePageModel>();
-        _serverLocalizer = serverLocalizer;
     }
 
 
@@ -34,17 +33,17 @@ public class BasePageModel : PageModel
     }
 
 
-    protected Result<Guid, ProblemDetails> DecodeId(string id)
+    protected Result<Guid, DomainError> DecodeId(string id)
     {
         var decodedId = IdCoder.Decode(id);
         if (decodedId == Guid.Empty)
-            return ProblemDetailsHelper.Create(_serverLocalizer["IdDecodingErrorMessage"]);
+            return DomainErrors.IdDecodingError();
 
         return decodedId;
     }
 
 
-    protected async Task<Result<Creator, ProblemDetails>> GetCreator(CancellationToken cancellationToken)
+    protected async Task<Result<Creator, DomainError>> GetCreator(CancellationToken cancellationToken)
     {
         var creatorId = _cookieService.GetCreatorId(HttpContext);
         return await _creatorService.Get(creatorId, cancellationToken);
@@ -62,37 +61,36 @@ public class BasePageModel : PageModel
     }
 
 
-    protected IActionResult RedirectToError(ProblemDetails problemDetails)
+    protected IActionResult RedirectToError(in DomainError error)
     {
         var traceId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+        error.AddTraceId(traceId);
 
-        problemDetails = AddTracingData(problemDetails, traceId);
+        var problemDetails = error.ToProblemDetails();
+        problemDetails.Instance = HttpContext.Request.Path;
+        if (IsSkipableError(error))
+            LogErrors(problemDetails);
+
         AddProblemDetails(problemDetails);
 
-        if (problemDetails.Status != (int)HttpStatusCode.NotFound)
-            LogErrors(problemDetails, traceId);
-
         return RedirectToPage("./Error");
-    }
 
 
-    private ProblemDetails AddTracingData(ProblemDetails problemDetails, string traceId)
-    {
-        problemDetails.Instance = HttpContext.Request.Path;
-        problemDetails.AddTraceId(traceId);
-
-        return problemDetails;
-    }
+        bool IsSkipableError(DomainError error) 
+            => error.Code.ToHttpStatusCode() == HttpStatusCode.NotFound;
 
 
-    private void LogErrors(ProblemDetails problemDetails, string traceId)
-    {
-        var errors = problemDetails.GetErrors();
-        if (errors.Count == 0)
-            _logger.LogGenericServerError(traceId);
+        void LogErrors(ProblemDetails problemDetails)
+        {
+            // We're logging the problem details here, but ideally we should log the domain error
+            // let's keep it that way until we move out from razor pages
+            var errors = problemDetails.GetErrors();
+            if (errors.Count == 0)
+                _logger.LogServerError(traceId);
 
-        foreach (var error in errors)
-            _logger.LogGenericServerError(traceId, $"{error.Code}: {error.Message}");
+            foreach (var error in errors)
+                _logger.LogServerErrorWithMessage(traceId, $"{error.Code}: {error.Message}");
+        }
     }
 
 
@@ -101,5 +99,4 @@ public class BasePageModel : PageModel
     private readonly ICookieService _cookieService;
     private readonly ICreatorService _creatorService;
     private readonly ILogger<BasePageModel> _logger;
-    private readonly IStringLocalizer<ServerResources> _serverLocalizer;
 }

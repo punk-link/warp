@@ -1,11 +1,6 @@
-using CSharpFunctionalExtensions;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using System.Net;
 using Warp.WebApp.Data;
-using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
 using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Models.Entries;
@@ -22,6 +17,8 @@ public class EntryInfoServiceGetTests
 {
     public EntryInfoServiceGetTests()
     {
+        _loggerFactorySubstitute.CreateLogger<EntryInfoService>().Returns(_loggerSubstitute);
+        
         _entryInfoService = new EntryInfoService(
             _creatorServiceSubstitute,
             _dataStorageSubstitute,
@@ -30,7 +27,6 @@ public class EntryInfoServiceGetTests
             _loggerFactorySubstitute,
             _openGraphServiceSubstitute,
             _reportServiceSubstitute,
-            _localizerSubstitute,
             _viewCountServiceSubstitute
         );
         _creator = new Creator(Guid.NewGuid());
@@ -46,8 +42,16 @@ public class EntryInfoServiceGetTests
         var viewCount = 42L;
 
         // Different creator than the one requesting
-        var entryInfo = new EntryInfo(entryId, creatorId, DateTime.UtcNow, DateTime.UtcNow.AddDays(1), EditMode.Simple,
-            new Entry("Test content"), [], new EntryOpenGraphDescription("Test", "Test", null), viewCount: 5);
+        var entryInfo = new EntryInfo(
+            id: entryId, 
+            creatorId: creatorId, 
+            createdAt: DateTime.UtcNow, 
+            expiresAt: DateTime.UtcNow.AddDays(1), 
+            editMode: EditMode.Simple,
+            entry: new Entry("Test content"), 
+            imageInfos: [], 
+            openGraphDescription: new EntryOpenGraphDescription("Test", "Test", null), 
+            viewCount: 5);
 
         _dataStorageSubstitute.TryGet<EntryInfo?>(Arg.Any<string>(), cancellationToken)
             .Returns(new ValueTask<EntryInfo?>(entryInfo));
@@ -75,8 +79,16 @@ public class EntryInfoServiceGetTests
         var cancellationToken = CancellationToken.None;
 
         // Same creator as the one requesting
-        var entryInfo = new EntryInfo(entryId, _creator.Id, DateTime.UtcNow, DateTime.UtcNow.AddDays(1), EditMode.Simple, 
-            new Entry("Test content"), [], new EntryOpenGraphDescription("Test", "Test", null), viewCount: 5);
+        var entryInfo = new EntryInfo(
+            id: entryId, 
+            creatorId: _creator.Id, 
+            createdAt: DateTime.UtcNow, 
+            expiresAt: DateTime.UtcNow.AddDays(1), 
+            editMode: EditMode.Simple, 
+            entry: new Entry("Test content"), 
+            imageInfos: [], 
+            openGraphDescription: new EntryOpenGraphDescription("Test", "Test", null), 
+            viewCount: 5);
 
         _dataStorageSubstitute.TryGet<EntryInfo?>(Arg.Any<string>(), cancellationToken)
             .Returns(new ValueTask<EntryInfo?>(entryInfo));
@@ -97,7 +109,7 @@ public class EntryInfoServiceGetTests
 
 
     [Fact]
-    public async Task Get_ShouldReturnProblemDetails_WhenEntryIsReported()
+    public async Task Get_ShouldReturnDomainError_WhenEntryIsReported()
     {
         var entryId = Guid.NewGuid();
         var cancellationToken = CancellationToken.None;
@@ -105,18 +117,15 @@ public class EntryInfoServiceGetTests
         _reportServiceSubstitute.Contains(entryId, cancellationToken)
             .Returns(new ValueTask<bool>(true));
 
-        _localizerSubstitute["NotFoundErrorMessage"]
-            .Returns(new LocalizedString("NotFoundErrorMessage", "Entry not found."));
-
         var result = await _entryInfoService.Get(_creator, entryId, cancellationToken);
 
         Assert.True(result.IsFailure);
-        Assert.Equal((int)HttpStatusCode.NotFound, result.Error.Status);
+        Assert.Equal(Constants.Logging.LogEvents.EntryNotFound, result.Error.Code);
     }
 
 
     [Fact]
-    public async Task Get_ShouldReturnProblemDetails_WhenEntryNotFound()
+    public async Task Get_ShouldReturnDomainError_WhenEntryNotFound()
     {
         var entryId = Guid.NewGuid();
         var cancellationToken = CancellationToken.None;
@@ -127,13 +136,10 @@ public class EntryInfoServiceGetTests
         _dataStorageSubstitute.TryGet<EntryInfo?>(Arg.Any<string>(), cancellationToken)
             .Returns(new ValueTask<EntryInfo?>((EntryInfo?)null));
 
-        _localizerSubstitute["NotFoundErrorMessage"]
-            .Returns(new LocalizedString("NotFoundErrorMessage", "Entry not found."));
-
         var result = await _entryInfoService.Get(_creator, entryId, cancellationToken);
 
         Assert.True(result.IsFailure);
-        Assert.Equal((int)HttpStatusCode.NotFound, result.Error.Status);
+        Assert.Equal(Constants.Logging.LogEvents.EntryNotFound, result.Error.Code);
     }
 
 
@@ -145,8 +151,16 @@ public class EntryInfoServiceGetTests
         var cancellationToken = CancellationToken.None;
 
         var content = "Test content";
-        var entryInfo = new EntryInfo(entryId, _creator.Id, DateTime.UtcNow, DateTime.UtcNow.AddDays(1), EditMode.Advanced,
-            new Entry(content), [], new EntryOpenGraphDescription("Test", "Test", null), 5);
+        var entryInfo = new EntryInfo(
+            id: entryId, 
+            creatorId: _creator.Id, 
+            createdAt: DateTime.UtcNow, 
+            expiresAt: DateTime.UtcNow.AddDays(1), 
+            editMode: EditMode.Advanced,
+            entry: new Entry(content), 
+            imageInfos: [], 
+            openGraphDescription: new EntryOpenGraphDescription("Test", "Test", null), 
+            viewCount: 5);
 
         _dataStorageSubstitute.TryGet<EntryInfo?>(Arg.Any<string>(), cancellationToken)
             .Returns(new ValueTask<EntryInfo?>(entryInfo));
@@ -173,6 +187,7 @@ public class EntryInfoServiceGetTests
     private readonly IEntryInfoService _entryInfoService;
     private readonly Creator _creator;
     private readonly ILoggerFactory _loggerFactorySubstitute = Substitute.For<ILoggerFactory>();
+    private readonly ILogger<EntryInfoService> _loggerSubstitute = Substitute.For<ILogger<EntryInfoService>>();
     private readonly IOpenGraphService _openGraphServiceSubstitute = Substitute.For<IOpenGraphService>();
     private readonly IDataStorage _dataStorageSubstitute = Substitute.For<IDataStorage>();
     private readonly IReportService _reportServiceSubstitute = Substitute.For<IReportService>();
@@ -180,5 +195,4 @@ public class EntryInfoServiceGetTests
     private readonly IImageService _imageServiceSubstitute = Substitute.For<IImageService>();
     private readonly IEntryService _entryServiceSubstitute = Substitute.For<IEntryService>();
     private readonly ICreatorService _creatorServiceSubstitute = Substitute.For<ICreatorService>();
-    private readonly IStringLocalizer<ServerResources> _localizerSubstitute = Substitute.For<IStringLocalizer<ServerResources>>();
 }

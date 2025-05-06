@@ -1,12 +1,12 @@
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
 using Warp.WebApp.Models;
 using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Models.Entries.Enums;
+using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Models.Options;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
@@ -24,9 +24,8 @@ public class IndexModel : BasePageModel
         IEntryInfoService entryInfoService,
         IStringLocalizer<IndexModel> localizer,
         ILoggerFactory loggerFactory, 
-        IOpenGraphService openGraphService, 
-        IStringLocalizer<ServerResources> serverLocalizer)
-        : base(cookieService, creatorService, loggerFactory, serverLocalizer)
+        IOpenGraphService openGraphService)
+        : base(cookieService, creatorService, loggerFactory)
     {
         _analyticsOptions = analyticsOptions.Value;
         _cookieService = cookieService;
@@ -37,7 +36,6 @@ public class IndexModel : BasePageModel
     }
 
 
-    [OutputCache(Duration = 3600, VaryByQueryKeys = [nameof(id)])]
     public Task<IActionResult> OnGet(string? id, CancellationToken cancellationToken)
     {
         return InitializeCreator()
@@ -65,10 +63,7 @@ public class IndexModel : BasePageModel
 
             async Task<Result<Creator>> GetOrAddCreator(Guid? creatorId)
             {
-                if (creatorId is null)
-                    return await _creatorService.Add(cancellationToken);
-
-                var (isSuccess, _, creator, _) = await _creatorService.Get(creatorId.Value, cancellationToken);
+                var (isSuccess, _, creator, _) = await _creatorService.Get(creatorId, cancellationToken);
                 return isSuccess
                     ? creator
                     : await _creatorService.Add(cancellationToken);
@@ -107,11 +102,11 @@ public class IndexModel : BasePageModel
                     : RedirectToError(result.Error));
 
 
-            Task<Result<EntryInfo, ProblemDetails>> GetEntryInfo(Guid entryId)
+            Task<Result<EntryInfo, DomainError>> GetEntryInfo(Guid entryId)
                 => _entryInfoService.Get(creator, entryId, cancellationToken);
 
 
-            Result<EntryInfo, ProblemDetails> BuildModel(EntryInfo entryInfo)
+            Result<EntryInfo, DomainError> BuildModel(EntryInfo entryInfo)
             {
                 Id = id;
                 EditMode = entryInfo.EditMode;
@@ -137,7 +132,7 @@ public class IndexModel : BasePageModel
     {
         return GetCreator(cancellationToken)
             .Bind(BuildEntryRequest)
-            .Bind(AddEntryInfo)
+            .Bind(ProcessEntryRequest)
             .Finally(result =>
             {
                 if (result.IsFailure)
@@ -148,7 +143,7 @@ public class IndexModel : BasePageModel
             });
 
 
-        Result<(Creator, EntryRequest), ProblemDetails> BuildEntryRequest(Creator creator)
+        Result<(Creator, EntryRequest), DomainError> BuildEntryRequest(Creator creator)
         {
             var expiresIn = GetExpirationPeriod(SelectedExpirationPeriod);
             var decodedImageIds = ImageIds.Select(IdCoder.Decode).ToList();
@@ -166,8 +161,20 @@ public class IndexModel : BasePageModel
         }
 
 
-        Task<Result<EntryInfo, ProblemDetails>> AddEntryInfo((Creator Creator, EntryRequest EntryRequest) tuple)
-            => _entryInfoService.Add(tuple.Creator, tuple.EntryRequest, cancellationToken);
+        async Task<Result<EntryInfo, DomainError>> ProcessEntryRequest((Creator Creator, EntryRequest EntryRequest) tuple)
+        {
+            var entryExists = await CheckIfEntryExists(tuple.Creator, tuple.EntryRequest.Id, cancellationToken);
+            return entryExists
+                ? await _entryInfoService.Update(tuple.Creator, tuple.EntryRequest, cancellationToken)
+                : await _entryInfoService.Add(tuple.Creator, tuple.EntryRequest, cancellationToken);
+
+
+            async Task<bool> CheckIfEntryExists(Creator creator, Guid entryId, CancellationToken cancellationToken)
+            {
+                var result = await _entryInfoService.Get(creator, entryId, cancellationToken);
+                return result.IsSuccess;
+            }
+        }
     }
 
 

@@ -1,13 +1,12 @@
 using CSharpFunctionalExtensions;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
-using System.Net;
 using Warp.WebApp.Constants.Caching;
+using Warp.WebApp.Constants.Logging;
 using Warp.WebApp.Data;
 using Warp.WebApp.Data.S3;
-using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
+using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Models.Files;
 using Warp.WebApp.Services.Images;
 
@@ -17,11 +16,14 @@ public class ImageServiceCopyTests
 {
     public ImageServiceCopyTests()
     {
-        _localizerSubstitute = Substitute.For<IStringLocalizer<ServerResources>>();
+        _loggerFactorySubstitute = Substitute.For<ILoggerFactory>();
+        _loggerSubstitute = Substitute.For<ILogger<ImageService>>();
+        _loggerFactorySubstitute.CreateLogger<ImageService>().Returns(_loggerSubstitute);
+        
         _dataStorageSubstitute = Substitute.For<IDataStorage>();
         _s3StorageSubstitute = Substitute.For<IS3FileStorage>();
         
-        _imageService = new ImageService(_localizerSubstitute, _dataStorageSubstitute, _s3StorageSubstitute);
+        _imageService = new ImageService(_dataStorageSubstitute, _s3StorageSubstitute);
     }
 
 
@@ -47,17 +49,16 @@ public class ImageServiceCopyTests
         var imageId = Guid.NewGuid();
         var sourceImages = new List<ImageInfo>
         {
-            new(imageId, sourceEntryId, new Uri($"https://example.com/{sourceEntryId}/{imageId}"))
+            new(id: imageId, entryId: sourceEntryId, url: new Uri($"https://example.com/{sourceEntryId}/{imageId}"))
         };
 
         _s3StorageSubstitute.Get(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(Result.Failure<AppFile, ProblemDetails>(ProblemDetailsHelper.Create("Failed to get image")));
+            .Returns(Result.Failure<AppFile, DomainError>(DomainErrors.S3GetObjectError()));
 
         var result = await _imageService.Copy(sourceEntryId, targetEntryId, sourceImages, CancellationToken.None);
 
         Assert.True(result.IsFailure);
-        Assert.NotNull(result.Error);
-        Assert.Equal((int)HttpStatusCode.BadRequest, result.Error.Status);
+        Assert.Equal(LogEvents.S3GetObjectError, result.Error.Code);
     }
 
 
@@ -69,23 +70,22 @@ public class ImageServiceCopyTests
         var imageId = Guid.NewGuid();
         var sourceImages = new List<ImageInfo>
         {
-            new(imageId, sourceEntryId, new Uri($"https://example.com/{sourceEntryId}/{imageId}"))
+            new(id: imageId, entryId: sourceEntryId, url: new Uri($"https://example.com/{sourceEntryId}/{imageId}"))
         };
 
         using var stream = new MemoryStream([0x01, 0x02, 0x03]);
         var appFile = new AppFile(stream, "image/png");
 
         _s3StorageSubstitute.Get(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(Result.Success<AppFile, ProblemDetails>(appFile));
+            .Returns(Result.Success<AppFile, DomainError>(appFile));
 
         _s3StorageSubstitute.Save(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<AppFile>(), Arg.Any<CancellationToken>())
-            .Returns(UnitResult.Failure(ProblemDetailsHelper.Create("Failed to save image")));
+            .Returns(UnitResult.Failure(DomainErrors.S3UploadObjectError()));
 
         var result = await _imageService.Copy(sourceEntryId, targetEntryId, sourceImages, CancellationToken.None);
 
         Assert.True(result.IsFailure);
-        Assert.NotNull(result.Error);
-        Assert.Equal((int)HttpStatusCode.BadRequest, result.Error.Status);
+        Assert.Equal(LogEvents.S3UploadObjectError, result.Error.Code);
     }
 
 
@@ -98,8 +98,8 @@ public class ImageServiceCopyTests
         var imageId2 = Guid.NewGuid();
         var sourceImages = new List<ImageInfo>
         {
-            new(imageId1, sourceEntryId, new Uri($"https://example.com/{sourceEntryId}/{imageId1}")),
-            new(imageId2, sourceEntryId, new Uri($"https://example.com/{sourceEntryId}/{imageId2}"))
+            new(id: imageId1, entryId: sourceEntryId, url: new Uri($"https://example.com/{sourceEntryId}/{imageId1}")),
+            new(id: imageId2, entryId: sourceEntryId, url: new Uri($"https://example.com/{sourceEntryId}/{imageId2}"))
         };
 
         using var stream1 = new MemoryStream([0x01, 0x02, 0x03]);
@@ -109,16 +109,16 @@ public class ImageServiceCopyTests
         var appFile2 = new AppFile(stream2, "image/jpeg");
 
         _s3StorageSubstitute.Get(Arg.Is<string>(s => s == sourceEntryId.ToString()), Arg.Is<string>(s => s == imageId1.ToString()), Arg.Any<CancellationToken>())
-            .Returns(Result.Success<AppFile, ProblemDetails>(appFile1));
+            .Returns(Result.Success<AppFile, DomainError>(appFile1));
         
         _s3StorageSubstitute.Get(Arg.Is<string>(s => s == sourceEntryId.ToString()), Arg.Is<string>(s => s == imageId2.ToString()), Arg.Any<CancellationToken>())
-            .Returns(Result.Success<AppFile, ProblemDetails>(appFile2));
+            .Returns(Result.Success<AppFile, DomainError>(appFile2));
 
         _s3StorageSubstitute.Save(Arg.Is<string>(s => s == targetEntryId.ToString()), Arg.Any<string>(), Arg.Any<AppFile>(), Arg.Any<CancellationToken>())
-            .Returns(UnitResult.Success<ProblemDetails>());
+            .Returns(UnitResult.Success<DomainError>());
 
         _dataStorageSubstitute.Set(Arg.Any<string>(), Arg.Any<object>(), Arg.Is<TimeSpan>(ts => ts == CachingConstants.MaxSupportedCachingTime), Arg.Any<CancellationToken>())
-            .Returns(Result.Success());
+            .Returns(UnitResult.Success<DomainError>());
 
         var result = await _imageService.Copy(sourceEntryId, targetEntryId, sourceImages, CancellationToken.None);
 
@@ -140,7 +140,8 @@ public class ImageServiceCopyTests
     
 
     private readonly IS3FileStorage _s3StorageSubstitute;
-    private readonly IStringLocalizer<ServerResources> _localizerSubstitute;
+    private readonly ILoggerFactory _loggerFactorySubstitute;
+    private readonly ILogger<ImageService> _loggerSubstitute;
     private readonly IDataStorage _dataStorageSubstitute;
     private readonly ImageService _imageService;
 }

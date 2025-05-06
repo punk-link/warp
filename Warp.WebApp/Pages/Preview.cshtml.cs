@@ -6,7 +6,7 @@ using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Models.Creators;
-using Microsoft.Extensions.Localization;
+using Warp.WebApp.Models.Errors;
 
 namespace Warp.WebApp.Pages;
 
@@ -15,9 +15,8 @@ public class PreviewModel : BasePageModel
     public PreviewModel(ICookieService cookieService,
         ICreatorService creatorService,
         IEntryInfoService entryInfoService,
-        ILoggerFactory loggerFactory, 
-        IStringLocalizer<ServerResources> serverLocalizer)
-        : base(cookieService, creatorService, loggerFactory, serverLocalizer)
+        ILoggerFactory loggerFactory)
+        : base(cookieService, creatorService, loggerFactory)
     {
         _entryInfoService = entryInfoService;
     }
@@ -32,23 +31,24 @@ public class PreviewModel : BasePageModel
             .Finally(Redirect);
 
 
-        Task<Result<(Creator, EntryInfo), ProblemDetails>> GetEntryInfo((Creator Creator, Guid DecodedId) tuple) 
+        Task<Result<(Creator, EntryInfo), DomainError>> GetEntryInfo((Creator Creator, Guid DecodedId) tuple) 
             => _entryInfoService.Get(tuple.Creator, tuple.DecodedId, cancellationToken)
                 .Map(entryInfo => (tuple.Creator, entryInfo));
 
 
-        void BuildModel((Creator, EntryInfo EntryInfo) tuple)
+        void BuildModel((Creator Creator, EntryInfo EntryInfo) tuple)
         {
             Id = id;
             ExpiresIn = new DateTimeOffset(tuple.EntryInfo.ExpiresAt).ToUnixTimeMilliseconds();
             TextContent = tuple.EntryInfo.Entry.Content;
+            CanEdit = tuple.EntryInfo.CreatorId == tuple.Creator.Id && tuple.EntryInfo.ViewCount == 0;
             
             foreach (var imageInfo in tuple.EntryInfo.ImageInfos)
                 ImageContainers.Add(new ReadOnlyImageContainerModel(imageInfo));
         }
 
 
-        IActionResult Redirect(Result<(Creator, EntryInfo), ProblemDetails> result)
+        IActionResult Redirect(Result<(Creator, EntryInfo), DomainError> result)
         {
             if (result.IsFailure)
                 return RedirectToError(result.Error);
@@ -72,16 +72,27 @@ public class PreviewModel : BasePageModel
                 : RedirectToError(result.Error));
 
 
-        Task<Result<EntryInfo, ProblemDetails>> CopyEntryInfo((Creator Creator, Guid DecodedId) tuple) 
+        Task<Result<EntryInfo, DomainError>> CopyEntryInfo((Creator Creator, Guid DecodedId) tuple) 
             => _entryInfoService.Copy(tuple.Creator, tuple.DecodedId, cancellationToken);
     }
 
 
-    private Task<Result<(Creator, Guid), ProblemDetails>> GetCreator(Guid decodedId, CancellationToken cancellationToken) 
+    public Task<IActionResult> OnPostEdit(string id, CancellationToken cancellationToken)
+    {
+        return DecodeId(id)
+            .Bind(decodedId => GetCreator(decodedId, cancellationToken))
+            .Finally(result => result.IsSuccess 
+                ? RedirectToPage("./Index", new { id = id }) 
+                : RedirectToError(result.Error));
+    }
+
+
+    private Task<Result<(Creator, Guid), DomainError>> GetCreator(Guid decodedId, CancellationToken cancellationToken) 
         => GetCreator(cancellationToken)
             .Map(creator => (creator, decodedId));
+    
 
-
+    public bool CanEdit { get; set; }
     public long ExpiresIn { get; set; }
     public string Id { get; set; } = default!;
     public List<ReadOnlyImageContainerModel> ImageContainers { get; set; } = [];

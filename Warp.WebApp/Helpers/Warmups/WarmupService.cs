@@ -29,7 +29,7 @@ public class WarmupService : IHostedService
             {
                 // Wait for application startup
                 var startedTcs = new TaskCompletionSource<object>();
-                using var registration = _applicationLifetime.ApplicationStarted.Register(() => startedTcs.TrySetResult(null));
+                using var registration = _applicationLifetime.ApplicationStarted.Register(() => startedTcs.TrySetResult(0));
                 await startedTcs.Task;
             
                 // Delay briefly to allow the application to stabilize after startup
@@ -45,7 +45,7 @@ public class WarmupService : IHostedService
                 await _routeWarmer.WarmUpRoutes(linkedCts.Token);
             
                 stopwatch.Stop();
-                _logger.LogInformation($"Application warmup completed in {stopwatch.ElapsedMilliseconds}ms");
+                _logger.LogInformation("Application warmup completed in {ElapsedMilliseconds}ms", stopwatch.ElapsedMilliseconds);
             }
             catch (OperationCanceledException)
             {

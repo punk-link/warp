@@ -25,7 +25,7 @@ public class ServiceWarmerService : IServiceWarmer
         try
         {
             var serviceTypes = GetServiceTypes(_serviceCollection);
-            _logger.LogInformation($"Warming up {serviceTypes.Count} services in parallel");
+            _logger.LogInformation("Warming up {Count} services in parallel", serviceTypes.Count);
             
             var successCount = 0;
             var parallelOptions = new ParallelOptions
@@ -44,11 +44,11 @@ public class ServiceWarmerService : IServiceWarmer
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, $"Failed to warm up service {serviceType.FullName}");
+                    _logger.LogWarning(ex, "Failed to warm up service {FullName}", serviceType.FullName);
                 }
             });
             
-            _logger.LogInformation($"Successfully warmed up {successCount} of {serviceTypes.Count} services");
+            _logger.LogInformation("Successfully warmed up {SuccessCount} of {Count} services", successCount, serviceTypes.Count);
         }
         catch (OperationCanceledException)
         {

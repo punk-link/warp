@@ -1,23 +1,31 @@
 ﻿using CSharpFunctionalExtensions;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
 using Warp.WebApp.Attributes;
 using Warp.WebApp.Data;
-using Warp.WebApp.Helpers;
 using Warp.WebApp.Models;
 using Warp.WebApp.Models.Creators;
+using Warp.WebApp.Models.Errors;
+using Warp.WebApp.Telemetry.Logging;
 
 namespace Warp.WebApp.Services.Creators;
 
+/// <summary>
+/// Implements functionality for managing creators within the application.
+/// </summary>
 public class CreatorService : ICreatorService
 {
-    public CreatorService(IStringLocalizer<ServerResources> localizer, IDataStorage dataStorage)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CreatorService"/> class.
+    /// </summary>
+    /// <param name="loggerFactory">The factory used to create loggers.</param>
+    /// <param name="dataStorage">The data storage service for persisting creator information.</param>
+    public CreatorService(ILoggerFactory loggerFactory, IDataStorage dataStorage)
     {
         _dataStorage = dataStorage;
-        _localizer = localizer;
+        _logger = loggerFactory.CreateLogger<CreatorService>();
     }
 
 
+    /// <inheritdoc cref="ICreatorService.Add"/>
     [TraceMethod]
     public async Task<Creator> Add(CancellationToken cancellationToken)
     {
@@ -31,12 +39,13 @@ public class CreatorService : ICreatorService
     }
 
 
+    /// <inheritdoc cref="ICreatorService.AttachEntry"/>
     [TraceMethod]
-    public async Task<UnitResult<ProblemDetails>> AttachEntry(Creator creator, EntryInfo entryInfo, CancellationToken cancellationToken)
+    public async Task<UnitResult<DomainError>> AttachEntry(Creator creator, EntryInfo entryInfo, CancellationToken cancellationToken)
     {
         var userIdCacheKey = CacheKeyBuilder.BuildCreatorsEntrySetCacheKey(creator.Id);
 
-        return await UnitResult.Success<ProblemDetails>()
+        return await UnitResult.Success<DomainError>()
             .Map(GetMaxExpirationDateTime)
             .Bind(GetExpirationSpan)
             .Bind(AttachEntryToCreator);
@@ -62,53 +71,44 @@ public class CreatorService : ICreatorService
         }
 
 
-        Result<TimeSpan, ProblemDetails> GetExpirationSpan(DateTime maxExpirationDateTime) 
+        Result<TimeSpan, DomainError> GetExpirationSpan(DateTime maxExpirationDateTime) 
             => maxExpirationDateTime > entryInfo.ExpiresAt
                 ? maxExpirationDateTime - entryInfo.ExpiresAt
                 : entryInfo.ExpiresAt - maxExpirationDateTime;
 
 
-        async Task<UnitResult<ProblemDetails>> AttachEntryToCreator(TimeSpan expirationSpan)
+        async Task<UnitResult<DomainError>> AttachEntryToCreator(TimeSpan expirationSpan)
         {
             var result = await _dataStorage.AddToSet(userIdCacheKey, entryInfo.Id, expirationSpan, cancellationToken);
             if (result.IsSuccess)
-                return UnitResult.Success<ProblemDetails>();
+                return UnitResult.Success<DomainError>();
 
-            var errorMessage = _localizer["AttachEntryErrorMessage"];
-            return UnitResult.Failure(ProblemDetailsHelper.CreateServerException(errorMessage));
+            _logger.LogCantAttachEntryToCreator(entryInfo.Id, creator.Id);
+
+            return DomainErrors.CantAttachEntryToCreator();
         }
     }
 
 
+    /// <inheritdoc cref="ICreatorService.Get"/>
     [TraceMethod]
-    public async Task<Result<Creator, ProblemDetails>> Get(Guid? creatorId, CancellationToken cancellationToken)
+    public async Task<Result<Creator, DomainError>> Get(Guid? creatorId, CancellationToken cancellationToken)
     {
-        // TODO: consider to log creator errors as a warning
         if (creatorId is null)
-            return ProblemDetailsHelper.Create(_localizer["CreatorIdIsNull"]);
+        {
+            _logger.LogCreatorIdIsNull();
+            return DomainErrors.CreatorIdIsNull();
+        }
 
         var userCacheKey = CacheKeyBuilder.BuildCreatorCacheKey(creatorId.Value);
         var creator = await _dataStorage.TryGet<Creator>(userCacheKey, cancellationToken);
         if (creator == default)
-            return ProblemDetailsHelper.Create(_localizer["CreatorIdIsNotFound"]);
+            return DomainErrors.CreatorIdIsNotFound();
 
         return creator;
     }
 
 
-    public async Task<Creator> GetOrAdd(Guid? creatorId, CancellationToken cancellationToken)
-    {
-        if (creatorId is null)
-            return await Add(cancellationToken);
-
-        var (isSuccess, _, creator, _) = await Get(creatorId, cancellationToken);
-        if (isSuccess)
-            return creator;
-            
-        return await Add(cancellationToken);
-    }
-
-
     private readonly IDataStorage _dataStorage;
-    private readonly IStringLocalizer<ServerResources> _localizer;
+    private readonly ILogger<CreatorService> _logger;
 }

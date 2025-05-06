@@ -25,6 +25,7 @@
 }
 
 <form method="post" id="copy-form" asp-page-handler="Copy" asp-route-id="@Model.Id"></form>
+<form method="post" id="edit-form" asp-page-handler="Edit" asp-route-id="@Model.Id"></form>
 
 <div class="min-h-screen">
     <div class="flex flex-col sm:flex-row items-baseline px-3">
@@ -55,17 +56,27 @@
 
             <!-- Content -->
             <article class="w-full md:w-1/2 bg-yellow-50 p-3 rounded-sm mb-10">
-                @if (Model.ImageContainers.Count > 0)
-                {
-                    <div class="gallery mb-5">
-                        @foreach (var imageContainer in Model.ImageContainers)
-                        {
-                            <partial name="Shared/Components/ReadOnlyImageContainer" model="imageContainer" />
-                        }
+                <div class="relative">
+                    @if (Model.CanEdit)
+                    {
+                        <div class="absolute -top-6 right-3 z-10">
+                            <button id="edit-entry-button" class="btn btn-round btn-outline-primary" title="@Localizer["EditButton"]" form="edit-form">
+                                <i class="icofont-pencil-alt-2 text-xl"></i>
+                            </button>
+                        </div>
+                    }
+                    @if (Model.ImageContainers.Count > 0)
+                    {
+                        <div class="gallery pt-5">
+                            @foreach (var imageContainer in Model.ImageContainers)
+                            {
+                                <partial name="Shared/Components/ReadOnlyImageContainer" model="imageContainer" />
+                            }
+                        </div>
+                    }
+                    <div class="font-sans-serif text-base pt-5">
+                        @Html.Raw(Model.TextContent)
                     </div>
-                }
-                <div class="font-sans-serif text-base">
-                    @Html.Raw(Model.TextContent)
                 </div>
             </article>
 

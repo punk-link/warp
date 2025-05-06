@@ -1,7 +1,11 @@
 ﻿import { uiState } from '/js/utils/ui-core.js';
 import { CSS_CLASSES } from '/js/constants/css.js';
 import { copyText } from '/js/utils/clipboard.js';
+import { core } from '/js/core/initialize.js';
 import { elements } from './elements.js';
+
+
+core.initialize();
 
 
 const handlers = {

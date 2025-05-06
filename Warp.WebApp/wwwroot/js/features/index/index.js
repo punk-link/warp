@@ -1,11 +1,16 @@
-import { EDIT_MODE } from '/js/constants/enums.js';
+import { EDIT_MODE } from '/js/constants/enums.js'; 
+import { uiState } from '/js/utils/ui-core.js';
 import { addDropAreaEvents, pasteImages } from '/js/components/gallery/upload.js';
 import { animateBackgroundImage } from '/js/components/background/image-positioner.js';
 import { preview } from '/js/components/gallery/preview.js'; 
+import { core } from '/js/core/initialize.js';
 import { elements } from './elements.js';
 import { createButton } from './create-button.js';
 import { editMode } from './edit-mode.js';
 import { adjustTextareaSizes } from './textarea.js';
+
+
+core.initialize();
 
 
 const initPaste = (entryId) => {
@@ -15,16 +20,21 @@ const initPaste = (entryId) => {
 };
 
 
-export const addIndexEvents = (entryId, currentEditMode) => {
+export const addIndexEvents = (entryId, initialEditMode) => {
     const roamingImage = elements.getRoamingImage();
     animateBackgroundImage(roamingImage);
+
+    const isSwitchAvailable = editMode.isSwitchAvailable(initialEditMode);
+    editMode.init(initialEditMode, elements);
     
-    editMode.init(currentEditMode, elements);
-    
-    const { advancedButton, simpleButton, advancedContainer, simpleContainer } = elements.getModeElements();
-    
-    advancedButton.addEventListener('click', editMode.switch(advancedButton, simpleButton, advancedContainer, simpleContainer, EDIT_MODE.Advanced, elements));
-    simpleButton.addEventListener('click', editMode.switch(simpleButton, advancedButton, simpleContainer, advancedContainer, EDIT_MODE.Simple, elements));
+    if (isSwitchAvailable) { 
+        const { advancedButton, simpleButton } = elements.getModeElements();
+        advancedButton.addEventListener('click', editMode.switch(EDIT_MODE.Advanced, elements));
+        simpleButton.addEventListener('click', editMode.switch(EDIT_MODE.Simple, elements));
+
+        uiState.setElementDisabled(advancedButton, false);
+        uiState.setElementDisabled(simpleButton, false);
+    }
     
     createButton.init(elements);
     

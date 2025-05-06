@@ -19,6 +19,6 @@ public class TraceMethodAttribute : Attribute
         Tags.Add(new KeyValuePair<string, string>("trace.notes", notes));
     }
 
-    public List<KeyValuePair<string, string>> Tags { get; } = [];
 
+    public List<KeyValuePair<string, string>> Tags { get; } = [];
 }

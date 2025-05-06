@@ -1,9 +1,9 @@
-FROM node:18-alpine AS node-dependencies
+FROM node:22-alpine AS node-dependencies
 WORKDIR /dependencies
 COPY ["Warp.WebApp/package.json", "Warp.WebApp/yarn.lock", "./"]
 RUN yarn install
 
-FROM node:18-alpine AS frontend-builder
+FROM node:22-alpine AS frontend-builder
 WORKDIR /src
 COPY --from=node-dependencies /dependencies/node_modules ./node_modules
 COPY ["Warp.WebApp/package.json", "Warp.WebApp/postcss.config.js", "Warp.WebApp/tailwind.config.js", "Warp.WebApp/vite.config.js", "./"]
@@ -40,7 +40,9 @@ RUN dotnet build "./Warp.WebApp.csproj" -c $BUILD_CONFIGURATION -o /app/build
 FROM build AS test
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-RUN dotnet test --verbosity normal --configuration $BUILD_CONFIGURATION
+RUN dotnet test --verbosity normal --configuration $BUILD_CONFIGURATION \
+    --blame-hang-timeout 60s \
+    -- xUnit.parallelizeTestCollections=true xUnit.maxParallelThreads=0
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release

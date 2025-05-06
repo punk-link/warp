@@ -11,10 +11,10 @@ public static class LoggingExtensions
         #endif
 
         builder.Logging.AddConsole();
-        if (!string.IsNullOrWhiteSpace(builder.Configuration["SentryDsn"]))
+        if (!string.IsNullOrWhiteSpace(builder.Configuration["Sentry:BackendDsn"]))
             builder.Logging.AddSentry(o =>
             {
-                o.Dsn = builder.Configuration["SentryDsn"];
+                o.Dsn = builder.Configuration["Sentry:BackendDsn"];
                 o.AttachStacktrace = true;
             });
 

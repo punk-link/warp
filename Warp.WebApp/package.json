@@ -6,7 +6,8 @@
   ],
   "dependencies": {
     "@fancyapps/ui": "5.0.36",
-    "vite": "6.2.3"
+    "@sentry/browser": "9.15.0",
+    "vite": "6.3.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.0.7",

@@ -13,5 +13,5 @@ public class RoutesWarmupOptions
     /// <summary>
     /// Collection of routes to warm up
     /// </summary>
-    public List<string> Routes { get; set; } = [ ];
+    public List<string> Routes { get; set; } = [];
 }

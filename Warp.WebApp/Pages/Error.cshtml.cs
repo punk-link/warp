@@ -15,11 +15,11 @@ public class ErrorModel : BasePageModel
 {
     public ErrorModel(ICookieService cookieService, 
         ICreatorService creatorService, 
-        ILoggerFactory loggerFactory, 
-        IStringLocalizer<ServerResources> serverLocalizer) 
-        : base(cookieService, creatorService, loggerFactory, serverLocalizer)
+        ILoggerFactory loggerFactory,
+        IStringLocalizer<ServerResources> localizer) 
+        : base(cookieService, creatorService, loggerFactory)
     {
-        Detail = serverLocalizer["DefaultErrorMessage"];
+        Detail = localizer["An error occurred while processing your request."];
         RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
     }
 

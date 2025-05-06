@@ -10,6 +10,7 @@ using Warp.WebApp.Models;
 using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Entries.Enums;
+using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Entries;
@@ -22,6 +23,8 @@ public class EntryInfoServiceCopyTests
 {
     public EntryInfoServiceCopyTests()
     {
+        _loggerFactorySubstitute.CreateLogger<EntryInfoService>().Returns(_loggerSubstitute);
+        
         _entryInfoService = new EntryInfoService(
             _creatorServiceSubstitute,
             _dataStorageSubstitute,
@@ -30,7 +33,6 @@ public class EntryInfoServiceCopyTests
             _loggerFactorySubstitute,
             _openGraphServiceSubstitute,
             _reportServiceSubstitute,
-            _localizerSubstitute,
             _viewCountServiceSubstitute
         );
         _creator = new Creator(Guid.NewGuid());
@@ -50,8 +52,16 @@ public class EntryInfoServiceCopyTests
             new(originalImageId, originalEntryId, new Uri("http://example.com/image.jpg"))
         };
 
-        var originalEntryInfo = new EntryInfo(originalEntryId, _creator.Id, DateTime.UtcNow.AddDays(-1), DateTime.UtcNow.AddDays(2), EditMode.Advanced,
-            new Entry("Original content"), imageInfos, new EntryOpenGraphDescription("Test", "Test", imageInfos[0].Url), 10);
+        var originalEntryInfo = new EntryInfo(
+            id: originalEntryId, 
+            creatorId: _creator.Id, 
+            createdAt: DateTime.UtcNow.AddDays(-1), 
+            expiresAt: DateTime.UtcNow.AddDays(2), 
+            editMode: EditMode.Advanced,
+            entry: new Entry("Original content"), 
+            imageInfos: imageInfos, 
+            openGraphDescription: new EntryOpenGraphDescription("Test", "Test", imageInfos[0].Url), 
+            viewCount: 10);
 
         _dataStorageSubstitute.TryGet<EntryInfo?>(Arg.Any<string>(), cancellationToken)
             .Returns(new ValueTask<EntryInfo?>(originalEntryInfo));
@@ -59,30 +69,27 @@ public class EntryInfoServiceCopyTests
         var newImageId = Guid.NewGuid();
         var copiedImageInfos = new List<ImageInfo>
         {
-            new(newImageId, newEntryId, new Uri("http://example.com/copied-image.jpg"))
+            new(id: newImageId, entryId: newEntryId, url: new Uri("http://example.com/copied-image.jpg"))
         };
 
         _imageServiceSubstitute.Copy(originalEntryId, Arg.Any<Guid>(), imageInfos, cancellationToken)
-            .Returns(Result.Success<List<ImageInfo>, ProblemDetails>(copiedImageInfos));
+            .Returns(Result.Success<List<ImageInfo>, DomainError>(copiedImageInfos));
 
         var newEntry = new Entry("Original content");
         _entryServiceSubstitute.Add(Arg.Any<EntryRequest>(), cancellationToken)
-            .Returns(Result.Success<Entry, ProblemDetails>(newEntry));
+            .Returns(Result.Success<Entry, DomainError>(newEntry));
 
         _imageServiceSubstitute.GetAttached(Arg.Any<Guid>(), Arg.Is<List<Guid>>(list => list.Contains(newImageId)), cancellationToken)
-            .Returns(Result.Success<List<ImageInfo>, ProblemDetails>(copiedImageInfos));
+            .Returns(Result.Success<List<ImageInfo>, DomainError>(copiedImageInfos));
 
         _creatorServiceSubstitute.AttachEntry(Arg.Any<Creator>(), Arg.Any<EntryInfo>(), cancellationToken)
-            .Returns(Result.Success<EntryInfo, ProblemDetails>(default));
+            .Returns(Result.Success<EntryInfo, DomainError>(default));
 
         _dataStorageSubstitute.Set(Arg.Any<string>(), Arg.Any<EntryInfo>(), Arg.Any<TimeSpan>(), cancellationToken)
-            .Returns(Result.Success());
+            .Returns(UnitResult.Success<DomainError>());
 
         _openGraphServiceSubstitute.BuildDescription(Arg.Any<string>(), Arg.Any<Uri>())
             .Returns(new EntryOpenGraphDescription("Test", "Test", copiedImageInfos[0].Url));
-
-        _localizerSubstitute["EntryExpirationPeriodEmptyErrorMessage"]
-            .Returns(new LocalizedString("EntryExpirationPeriodEmptyErrorMessage", "Entry period is empty."));
 
         var result = await _entryInfoService.Copy(_creator, originalEntryId, cancellationToken);
 
@@ -91,12 +98,12 @@ public class EntryInfoServiceCopyTests
             .Copy(originalEntryId, Arg.Any<Guid>(), imageInfos, cancellationToken);
 
         await _entryServiceSubstitute.Received()
-            .Add(Arg.Is<EntryRequest>(req => req.TextContent == originalEntryInfo.Entry.Content && req.EditMode == originalEntryInfo.EditMode),cancellationToken);
+            .Add(Arg.Is<EntryRequest>(req => req.TextContent == originalEntryInfo.Entry.Content && req.EditMode == originalEntryInfo.EditMode), cancellationToken);
     }
 
 
     [Fact]
-    public async Task Copy_ShouldReturnProblemDetails_WhenEntryNotFound()
+    public async Task Copy_ShouldReturnDomainError_WhenEntryNotFound()
     {
         var entryId = Guid.NewGuid();
         var cancellationToken = CancellationToken.None;
@@ -104,66 +111,74 @@ public class EntryInfoServiceCopyTests
         _dataStorageSubstitute.TryGet<EntryInfo?>(Arg.Any<string>(), cancellationToken)
             .Returns(new ValueTask<EntryInfo?>((EntryInfo?)null));
 
-        _localizerSubstitute["NotFoundErrorMessage"]
-            .Returns(new LocalizedString("NotFoundErrorMessage", "Entry not found."));
-
         var result = await _entryInfoService.Copy(_creator, entryId, cancellationToken);
 
         Assert.True(result.IsFailure);
-        Assert.Equal((int)HttpStatusCode.NotFound, result.Error.Status);
+        Assert.Equal(Constants.Logging.LogEvents.EntryNotFound, result.Error.Code);
     }
 
 
     [Fact]
-    public async Task Copy_ShouldReturnProblemDetails_WhenEntryDoesntBelongToCreator()
+    public async Task Copy_ShouldReturnDomainError_WhenEntryDoesntBelongToCreator()
     {
         var entryId = Guid.NewGuid();
         var differentCreatorId = Guid.NewGuid();
         var cancellationToken = CancellationToken.None;
 
-        var entryInfo = new EntryInfo(entryId, differentCreatorId, DateTime.UtcNow, DateTime.UtcNow.AddDays(1), EditMode.Simple,
-            new Entry("Test content"), [], new EntryOpenGraphDescription("Test", "Test", null), 0);
+        var entryInfo = new EntryInfo(
+            id: entryId, 
+            creatorId: differentCreatorId, 
+            createdAt: DateTime.UtcNow, 
+            expiresAt: DateTime.UtcNow.AddDays(1), 
+            editMode: EditMode.Simple,
+            entry: new Entry("Test content"), 
+            imageInfos: [], 
+            openGraphDescription: new EntryOpenGraphDescription("Test", "Test", null), 
+            viewCount: 0);
 
         _dataStorageSubstitute.TryGet<EntryInfo?>(Arg.Any<string>(), cancellationToken)
             .Returns(new ValueTask<EntryInfo?>(entryInfo));
 
-        var localizedString = new LocalizedString("NoPermissionErrorMessage", "Entry does not belong to creator.");
-        _localizerSubstitute["NoPermissionErrorMessage"]
-            .Returns(localizedString);
-
         var result = await _entryInfoService.Copy(_creator, entryId, cancellationToken);
 
         Assert.True(result.IsFailure);
-        Assert.Equal(localizedString.Value, result.Error.Detail);
-        Assert.Equal((int)HttpStatusCode.BadRequest, result.Error.Status);
+        Assert.Equal(Constants.Logging.LogEvents.NoPermissionError, result.Error.Code);
     }
 
 
     [Fact]
-    public async Task Copy_ShouldReturnProblemDetails_WhenImageCopyFails()
+    public async Task Copy_ShouldReturnDomainError_WhenImageCopyFails()
     {
         var originalEntryId = Guid.NewGuid();
         var cancellationToken = CancellationToken.None;
 
         var imageInfos = new List<ImageInfo>
         {
-            new(Guid.NewGuid(), originalEntryId, new Uri("http://example.com/image.jpg"))
+            new(id: Guid.NewGuid(), entryId: originalEntryId, url: new Uri("http://example.com/image.jpg"))
         };
 
-        var originalEntryInfo = new EntryInfo(originalEntryId, _creator.Id, DateTime.UtcNow, DateTime.UtcNow.AddDays(1), EditMode.Advanced,
-            new Entry("Original content"), imageInfos, new EntryOpenGraphDescription("Test", "Test", imageInfos[0].Url), 0);
+        var originalEntryInfo = new EntryInfo(
+            id: originalEntryId, 
+            creatorId: _creator.Id, 
+            createdAt: DateTime.UtcNow, 
+            expiresAt: DateTime.UtcNow.AddDays(1), 
+            editMode: EditMode.Advanced,
+            entry: new Entry("Original content"), 
+            imageInfos: imageInfos, 
+            openGraphDescription: new EntryOpenGraphDescription("Test", "Test", imageInfos[0].Url), 
+            viewCount: 0);
 
         _dataStorageSubstitute.TryGet<EntryInfo?>(Arg.Any<string>(), cancellationToken)
             .Returns(new ValueTask<EntryInfo?>(originalEntryInfo));
 
-        var problemDetails = ProblemDetailsHelper.Create("Failed to copy images");
+        var domainError = DomainErrors.S3UploadObjectError();
         _imageServiceSubstitute.Copy(originalEntryId, Arg.Any<Guid>(), imageInfos, cancellationToken)
-            .Returns(Result.Failure<List<ImageInfo>, ProblemDetails>(problemDetails));
+            .Returns(Result.Failure<List<ImageInfo>, DomainError>(domainError));
 
         var result = await _entryInfoService.Copy(_creator, originalEntryId, cancellationToken);
 
         Assert.True(result.IsFailure);
-        Assert.Equal(problemDetails, result.Error);
+        Assert.Equal(domainError.Code, result.Error.Code);
     }
 
 
@@ -173,30 +188,35 @@ public class EntryInfoServiceCopyTests
         var originalEntryId = Guid.NewGuid();
         var cancellationToken = CancellationToken.None;
 
-        var originalEntryInfo = new EntryInfo(originalEntryId, _creator.Id, DateTime.UtcNow, DateTime.UtcNow.AddDays(1), EditMode.Simple,
-            new Entry("Original content"), [], new EntryOpenGraphDescription("Test", "Test", null), 0);
+        var originalEntryInfo = new EntryInfo(
+            id: originalEntryId, 
+            creatorId: _creator.Id, 
+            createdAt: DateTime.UtcNow, 
+            expiresAt: DateTime.UtcNow.AddDays(1), 
+            editMode: EditMode.Simple,
+            entry: new Entry("Original content"), 
+            imageInfos: [], 
+            openGraphDescription: new EntryOpenGraphDescription("Test", "Test", null), 
+            viewCount: 0);
 
         _dataStorageSubstitute.TryGet<EntryInfo?>(Arg.Any<string>(), cancellationToken)
             .Returns(new ValueTask<EntryInfo?>(originalEntryInfo));
 
         var newEntry = new Entry("Original content");
         _entryServiceSubstitute.Add(Arg.Any<EntryRequest>(), cancellationToken)
-            .Returns(Result.Success<Entry, ProblemDetails>(newEntry));
+            .Returns(Result.Success<Entry, DomainError>(newEntry));
 
         _imageServiceSubstitute.GetAttached(Arg.Any<Guid>(), Arg.Any<List<Guid>>(), cancellationToken)
-            .Returns(Result.Success<List<ImageInfo>, ProblemDetails>(new List<ImageInfo>()));
+            .Returns(Result.Success<List<ImageInfo>, DomainError>(new List<ImageInfo>()));
 
         _creatorServiceSubstitute.AttachEntry(Arg.Any<Creator>(), Arg.Any<EntryInfo>(), cancellationToken)
-            .Returns(Result.Success<EntryInfo, ProblemDetails>(default));
+            .Returns(Result.Success<EntryInfo, DomainError>(default));
 
         _dataStorageSubstitute.Set(Arg.Any<string>(), Arg.Any<EntryInfo>(), Arg.Any<TimeSpan>(), cancellationToken)
-            .Returns(Result.Success());
+            .Returns(UnitResult.Success<DomainError>());
 
         _openGraphServiceSubstitute.BuildDescription(Arg.Any<string>(), Arg.Any<Uri>())
             .Returns(new EntryOpenGraphDescription("Test", "Test", null));
-
-        _localizerSubstitute["EntryExpirationPeriodEmptyErrorMessage"]
-            .Returns(new LocalizedString("EntryExpirationPeriodEmptyErrorMessage", "Entry period is empty."));
 
         var result = await _entryInfoService.Copy(_creator, originalEntryId, cancellationToken);
 
@@ -209,6 +229,7 @@ public class EntryInfoServiceCopyTests
     private readonly IEntryInfoService _entryInfoService;
     private readonly Creator _creator;
     private readonly ILoggerFactory _loggerFactorySubstitute = Substitute.For<ILoggerFactory>();
+    private readonly ILogger<EntryInfoService> _loggerSubstitute = Substitute.For<ILogger<EntryInfoService>>();
     private readonly IOpenGraphService _openGraphServiceSubstitute = Substitute.For<IOpenGraphService>();
     private readonly IDataStorage _dataStorageSubstitute = Substitute.For<IDataStorage>();
     private readonly IReportService _reportServiceSubstitute = Substitute.For<IReportService>();
@@ -216,5 +237,4 @@ public class EntryInfoServiceCopyTests
     private readonly IImageService _imageServiceSubstitute = Substitute.For<IImageService>();
     private readonly IEntryService _entryServiceSubstitute = Substitute.For<IEntryService>();
     private readonly ICreatorService _creatorServiceSubstitute = Substitute.For<ICreatorService>();
-    private readonly IStringLocalizer<ServerResources> _localizerSubstitute = Substitute.For<IStringLocalizer<ServerResources>>();
 }
