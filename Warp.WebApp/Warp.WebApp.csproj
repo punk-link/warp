@@ -53,6 +53,7 @@
     <PackageReference Include="System.Formats.Asn1" Version="9.0.3" />
     <PackageReference Include="System.IO.Hashing" Version="9.0.3" />
     <PackageReference Include="System.Text.Json" Version="9.0.3" />
+    <PackageReference Include="VaultSharp" Version="1.17.5.1" />
   </ItemGroup>
 
   <ItemGroup>

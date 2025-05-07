@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.FeatureManagement;
 using System.Globalization;
 using System.Text.Json;
+using VaultSharp;
 using Warp.WebApp.Constants;
 using Warp.WebApp.Data;
 using Warp.WebApp.Data.Redis;
@@ -172,10 +173,32 @@ void AddOptions(ILogger<Program> logger, IServiceCollection services, IConfigura
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        services.AddOptions<EncryptionOptions>()
+        services.AddOptions<ImageUploadOptions>()
             .Configure(options =>
             {
-                if (builder.Environment.IsLocal())
+                // AppSettings configuration provider returns an array of string,
+                // but Consul configuration provider returns a single string.
+                // So we need to handle both cases differently.
+                var allowedExtensionsSection = configuration.GetSection("ImageUploadOptions:AllowedExtensions");
+                var allowedExtensions = Array.Empty<string>();
+
+                if (allowedExtensionsSection.Value is not null)
+                    allowedExtensions = JsonSerializer.Deserialize<string[]>(allowedExtensionsSection.Value)!;
+                else if (allowedExtensionsSection.GetChildren().Any())
+                    allowedExtensions = allowedExtensionsSection.Get<string[]>() ?? [];
+
+                options.AllowedExtensions = allowedExtensions;
+                options.MaxFileCount = configuration.GetValue<int>("ImageUploadOptions:MaxFileCount");
+                options.MaxFileSize = configuration.GetValue<long>("ImageUploadOptions:MaxFileSize");
+                options.RequestBoundaryLengthLimit = configuration.GetValue<int>("ImageUploadOptions:RequestBoundaryLengthLimit");
+            })
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        if (builder.Environment.IsLocal())
+        {
+            services.AddOptions<EncryptionOptions>()
+                .Configure(options =>
                 {
                     string base64EncriptionKey;
 
@@ -201,79 +224,9 @@ void AddOptions(ILogger<Program> logger, IServiceCollection services, IConfigura
                         throw new Exception($"Encryption key length is not 32 bytes (256 bits). Key length: {encryptionKey.Length}");
 
                     options.EncryptionKey = encryptionKey;
-                }
-                //else
-                //{
-                //    // Production environment - prioritize Vault
-                //    logger.LogInformation("Production environment detected - Using Vault for encryption key");
-                    
-                //    try
-                //    {
-                //        // Try to get the encryption key from Vault
-                //        var vaultClient = VaultHelper.GetVaultClient(configuration);
-                        
-                //        // Default path: secretName is "encryption-keys" and key is "keydb"
-                //        var response = vaultClient.Secrets
-                //            .KvV2Read("encryption-keys", "secrets")
-                //            .GetAwaiter()
-                //            .GetResult();
-                        
-                //        if (response?.Data?.Data != null && 
-                //            response.Data.Data.ContainsKey("keydb") && 
-                //            response.Data.Data["keydb"] is string keyString)
-                //        {
-                //            options.EncryptionKey = keyString;
-                //            logger.LogInformation("Successfully loaded encryption key from Vault");
-                //        }
-                //        else
-                //        {
-                //            logger.LogWarning("Encryption key not found in Vault");
-                            
-                //            // Still allow the fallback to configuration even in production
-                //            // But with a warning since Vault should be preferred
-                //            configuration.GetSection(nameof(EncryptionOptions)).Bind(options);
-                //            if (!string.IsNullOrEmpty(options.KeyFilePath) || !string.IsNullOrEmpty(options.EncryptionKey))
-                //            {
-                //                logger.LogWarning("Using fallback encryption options from configuration in production");
-                //            }
-                //        }
-                //    }
-                //    catch (Exception ex)
-                //    {
-                //        logger.LogError(ex, "Failed to retrieve encryption key from Vault");
-                        
-                //        // Fall back to configuration but log the error
-                //        configuration.GetSection(nameof(EncryptionOptions)).Bind(options);
-                //        if (!string.IsNullOrEmpty(options.KeyFilePath) || !string.IsNullOrEmpty(options.EncryptionKey))
-                //        {
-                //            logger.LogWarning("Using fallback encryption options from configuration due to Vault error");
-                //        }
-                //    }
-                //}
             })
             .ValidateDataAnnotations();
-
-        services.AddOptions<ImageUploadOptions>()
-            .Configure(options =>
-            {
-                // AppSettings configuration provider returns an array of string,
-                // but Consul configuration provider returns a single string.
-                // So we need to handle both cases differently.
-                var allowedExtensionsSection = configuration.GetSection("ImageUploadOptions:AllowedExtensions");
-                var allowedExtensions = Array.Empty<string>();
-
-                if (allowedExtensionsSection.Value is not null)
-                    allowedExtensions = JsonSerializer.Deserialize<string[]>(allowedExtensionsSection.Value)!;
-                else if (allowedExtensionsSection.GetChildren().Any())
-                    allowedExtensions = allowedExtensionsSection.Get<string[]>() ?? [];
-
-                options.AllowedExtensions = allowedExtensions;
-                options.MaxFileCount = configuration.GetValue<int>("ImageUploadOptions:MaxFileCount");
-                options.MaxFileSize = configuration.GetValue<long>("ImageUploadOptions:MaxFileSize");
-                options.RequestBoundaryLengthLimit = configuration.GetValue<int>("ImageUploadOptions:RequestBoundaryLengthLimit");
-            })
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
+        }
     }
     catch (Exception ex)
     {
@@ -287,10 +240,16 @@ void AddServices(IServiceCollection services)
 {
     services.AddSingleton(services);
 
+    services.AddTransient(sp => {
+        var configuration = sp.GetRequiredService<IConfiguration>();
+        return VaultHelper.GetVaultClient(configuration);
+    });
+    
     services.AddTransient<IDistributedStorage, KeyDbStorage>();
     services.AddTransient<IS3FileStorage, S3FileStorage>();
 
-    services.AddSingleton<IEncryptionService, AesEncryptionService>();
+    //services.AddSingleton<IEncryptionService, AesEncryptionService>();
+    services.AddSingleton<IEncryptionService, TransitEncryptionService>();
 
     services.AddTransient<IPartialViewRenderService, PartialViewRenderService>();
     services.AddTransient<IUrlService, UrlService>();
