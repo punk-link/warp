@@ -47,7 +47,7 @@ try
     builder.Services.AddSingleton(_ => DistributedCacheHelper.GetConnectionMultiplexer(startupLogger, builder.Configuration));
 
     AddOptions(startupLogger, builder.Services, builder.Configuration);
-    AddServices(builder.Services);
+    AddServices(builder.Services, builder.Configuration);
 
     builder.Services.AddLocalization(o => o.ResourcesPath = "Resources");
 
@@ -200,31 +200,42 @@ void AddOptions(ILogger<Program> logger, IServiceCollection services, IConfigura
             services.AddOptions<EncryptionOptions>()
                 .Configure(options =>
                 {
-                    string base64EncriptionKey;
+                    if (configuration["EncryptionOptions:Type"] == "AesEncryptionService")
+                    { 
+                        string base64EncriptionKey;
 
-                    logger.LogInformation("Local environment detected - Using local encryption configuration");
-                    var encriptionKeyPath = configuration["EncryptionOptions:KeyFilePath"];
-                    if (!string.IsNullOrEmpty(encriptionKeyPath) && File.Exists(encriptionKeyPath))
-                    {
-                        logger.LogInformation($"Using encryption key from file: {encriptionKeyPath}");
-                        base64EncriptionKey = File.ReadAllText(encriptionKeyPath).Trim();
+                        logger.LogInformation("Using AesEncryptionService encryption configuration");
+                        var encriptionKeyPath = configuration["EncryptionOptions:KeyFilePath"];
+                        if (!string.IsNullOrEmpty(encriptionKeyPath) && File.Exists(encriptionKeyPath))
+                        {
+                            logger.LogInformation($"Using encryption key from file: {encriptionKeyPath}");
+                            base64EncriptionKey = File.ReadAllText(encriptionKeyPath).Trim();
+                        }
+                        else
+                        {
+                            logger.LogWarning($"Encryption key file not found at {encriptionKeyPath} or not specified. Using encryption key from WARP_ENCRYPTION_KEY environment variable");
+                            var envKey = Environment.GetEnvironmentVariable("WARP_ENCRYPTION_KEY");
+                            if (string.IsNullOrEmpty(envKey))
+                                throw new Exception("Encryption key not found in any source. Please specify it in the configuration or as an environment variable.");
+
+                            base64EncriptionKey = envKey ?? string.Empty;
+                        }
+
+                        var encryptionKey = Convert.FromBase64String(base64EncriptionKey);
+                        if (encryptionKey.Length != 32) // 256 bits = 32 bytes
+                            throw new Exception($"Encryption key length is not 32 bytes (256 bits). Key length: {encryptionKey.Length}");
+
+                        options.EncryptionKey = encryptionKey;
+                        options.TransitKeyName = null;
+
+                        return;
                     }
-                    else
-                    {
-                        logger.LogWarning($"Encryption key file not found at {encriptionKeyPath} or not specified. Using encryption key from WARP_ENCRYPTION_KEY environment variable");
-                        var envKey = Environment.GetEnvironmentVariable("WARP_ENCRYPTION_KEY");
-                        if (string.IsNullOrEmpty(envKey))
-                            throw new Exception("Encryption key not found in any source. Please specify it in the configuration or as an environment variable.");
-
-                        base64EncriptionKey = envKey ?? string.Empty;
-                    }
-
-                    var encryptionKey = Convert.FromBase64String(base64EncriptionKey);
-                    if (encryptionKey.Length != 32) // 256 bits = 32 bytes
-                        throw new Exception($"Encryption key length is not 32 bytes (256 bits). Key length: {encryptionKey.Length}");
-
-                    options.EncryptionKey = encryptionKey;
-            })
+                    
+                    logger.LogInformation("Using TransitEncryptionService encryption configuration");
+                    
+                    options.TransitKeyName = configuration["EncryptionOptions:TransitKeyName"];
+                    options.EncryptionKey = null;
+                })
             .ValidateDataAnnotations();
         }
     }
@@ -236,20 +247,19 @@ void AddOptions(ILogger<Program> logger, IServiceCollection services, IConfigura
 }
 
 
-void AddServices(IServiceCollection services)
+void AddServices(IServiceCollection services, IConfiguration configuration)
 {
     services.AddSingleton(services);
 
-    services.AddTransient(sp => {
-        var configuration = sp.GetRequiredService<IConfiguration>();
-        return VaultHelper.GetVaultClient(configuration);
-    });
+    services.AddTransient(_ => VaultHelper.GetVaultClient(configuration));
     
     services.AddTransient<IDistributedStorage, KeyDbStorage>();
     services.AddTransient<IS3FileStorage, S3FileStorage>();
 
-    //services.AddSingleton<IEncryptionService, AesEncryptionService>();
-    services.AddSingleton<IEncryptionService, TransitEncryptionService>();
+    if (configuration["EncryptionOptions:Type"] == "AesEncryptionService")
+        services.AddTransient<IEncryptionService, AesEncryptionService>();
+    else
+        services.AddSingleton<IEncryptionService, TransitEncryptionService>();
 
     services.AddTransient<IPartialViewRenderService, PartialViewRenderService>();
     services.AddTransient<IUrlService, UrlService>();

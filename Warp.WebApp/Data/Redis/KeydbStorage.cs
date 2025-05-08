@@ -25,7 +25,7 @@ public sealed class KeyDbStorage : IDistributedStorage
 
     public async Task AddToSet<T>(string key, T value, TimeSpan expiresIn, CancellationToken cancellationToken)
     {
-        var encryptedValue = Encrypt(value);
+        var encryptedValue = await Encrypt(value);
         
         var db = GetDatabase<T>();
         var transaction = db.CreateTransaction();
@@ -48,7 +48,7 @@ public sealed class KeyDbStorage : IDistributedStorage
 
     public async Task<bool> ContainsInSet<T>(string key, T value, CancellationToken cancellationToken)
     {
-        var encryptedValue = Encrypt(value);
+        var encryptedValue = await Encrypt(value);
         
         var db = GetDatabase<T>();
         var task = db.SetContainsAsync(key, encryptedValue);
@@ -68,7 +68,7 @@ public sealed class KeyDbStorage : IDistributedStorage
 
     public async Task Set<T>(string key, T value, TimeSpan expiresIn, CancellationToken cancellationToken)
     {
-        var encryptedValue = Encrypt(value);
+        var encryptedValue = await Encrypt(value);
         
         var db = GetDatabase<T>();
         var task = db.StringSetAsync(key, encryptedValue, expiresIn);
@@ -86,7 +86,7 @@ public sealed class KeyDbStorage : IDistributedStorage
         if (!completedTask.HasValue)
             return default;
 
-        return Decrypt<T>(completedTask!);
+        return await Decrypt<T>(completedTask!);
     }
 
 
@@ -102,7 +102,7 @@ public sealed class KeyDbStorage : IDistributedStorage
         var results = new HashSet<T>();
         foreach (var member in members)
         {
-            var value = Decrypt<T>(member!);
+            var value = await Decrypt<T>(member!);
             results.Add(value);
         }
 
@@ -110,17 +110,17 @@ public sealed class KeyDbStorage : IDistributedStorage
     }
 
 
-    private T Decrypt<T>(byte[] encryptedBytes)
+    private async ValueTask<T> Decrypt<T>(byte[] encryptedBytes)
     {
-        var decryptedBytes = _encryptionService.Decrypt(encryptedBytes);
+        var decryptedBytes = await _encryptionService.Decrypt(encryptedBytes);
         return JsonSerializer.Deserialize<T>(decryptedBytes)!;
     }
 
 
-    private byte[] Encrypt<T>(T value)
+    private async ValueTask<byte[]> Encrypt<T>(T value)
     {
         var serialized = JsonSerializer.SerializeToUtf8Bytes(value);
-        return _encryptionService.Encrypt(serialized);
+        return await _encryptionService.Encrypt(serialized);
     }
 
 

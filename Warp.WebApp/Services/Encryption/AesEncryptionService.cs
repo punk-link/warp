@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Options;
 using Microsoft.FeatureManagement;
 using System.Security.Cryptography;
+using Warp.WebApp.Extensions;
 using Warp.WebApp.Models.Options;
 
 namespace Warp.WebApp.Services.Encryption;
@@ -12,7 +13,7 @@ namespace Warp.WebApp.Services.Encryption;
 /// Encrypted data includes a header with a marker byte and version byte, followed by the initialization vector (IV),
 /// and then the encrypted payload.
 /// </summary>
-public class AesEncryptionService : IEncryptionService
+public class AesEncryptionService : EncryptionServiceBase, IEncryptionService
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="AesEncryptionService"/> class
@@ -22,18 +23,18 @@ public class AesEncryptionService : IEncryptionService
     public AesEncryptionService(IFeatureManager featureManager, IOptions<EncryptionOptions> options)
     {
         _encryptionKey = options.Value.EncryptionKey!;
-        _isDisabled = !featureManager.IsEnabledAsync("EntryEncription").GetAwaiter().GetResult();
+        _isDisabled = !featureManager.IsEnabled("EntryEncryption");
     }
 
 
     /// <inheritdoc/>
-    public byte[] Encrypt(byte[] decryptedData)
+    public ValueTask<byte[]> Encrypt(byte[] decryptedData)
     {
         if (decryptedData == null || decryptedData.Length == 0)
-            return [];
+            return ValueTask.FromResult(Array.Empty<byte>());
 
         if (_isDisabled)
-            return decryptedData;
+            return ValueTask.FromResult(decryptedData);
 
         using var aes = Aes.Create();
         aes.Key = _encryptionKey;
@@ -53,18 +54,18 @@ public class AesEncryptionService : IEncryptionService
         cryptoStream.Write(decryptedData, 0, decryptedData.Length);
         cryptoStream.FlushFinalBlock();
             
-        return memoryStream.ToArray();
+        return ValueTask.FromResult(memoryStream.ToArray());
     }
 
 
     /// <inheritdoc/>
-    public byte[] Decrypt(byte[] encryptedData)
+    public ValueTask<byte[]> Decrypt(byte[] encryptedData)
     {
         if (encryptedData == null || encryptedData.Length == 0)
-            return [];
+            return ValueTask.FromResult(Array.Empty<byte>());
 
         if (_isDisabled || !IsEncrypted(encryptedData))
-            return encryptedData;
+            return ValueTask.FromResult(encryptedData);
 
         using var aes = Aes.Create();
         aes.Key = _encryptionKey;
@@ -88,31 +89,13 @@ public class AesEncryptionService : IEncryptionService
         
         cryptoStream.CopyTo(memoryStream);
         
-        return memoryStream.ToArray();
+        return ValueTask.FromResult(memoryStream.ToArray());
     }
 
-
-    private static bool IsEncrypted(byte[] data)
-    {
-        // Quick length check - encrypted data must include header + IV (16 bytes) + some ciphertext
-        const int minimumEncryptedLength = EncryptionHeaderSize + 16;
-        if (data == null || data.Length < minimumEncryptedLength)
-            return false;
-    
-        return data[0] == EncryptionMarker && data[1] == EncryptionVersion;
-    }
-
-
-    public const byte EncryptionMarker = 0xE5;
-    public const byte EncryptionVersion = 0x01;
-
-    private const int EncryptionHeaderSize = sizeof(byte) * 2;
     
     private readonly byte[] _encryptionKey;
     private readonly bool _isDisabled;
 }
 
-
-// TODO: Add Vault integration to store the encryption key
 
 // TODO: Investigate why all entries go to the ImageService database
