@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Razor;
@@ -7,7 +6,6 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.FeatureManagement;
 using System.Globalization;
 using System.Text.Json;
-using VaultSharp;
 using Warp.WebApp.Constants;
 using Warp.WebApp.Data;
 using Warp.WebApp.Data.Redis;
@@ -202,26 +200,26 @@ void AddOptions(ILogger<Program> logger, IServiceCollection services, IConfigura
                 {
                     if (configuration["EncryptionOptions:Type"] == "AesEncryptionService")
                     { 
-                        string base64EncriptionKey;
+                        string base64EncryptionKey;
 
                         logger.LogInformation("Using AesEncryptionService encryption configuration");
-                        var encriptionKeyPath = configuration["EncryptionOptions:KeyFilePath"];
-                        if (!string.IsNullOrEmpty(encriptionKeyPath) && File.Exists(encriptionKeyPath))
+                        var encryptionKeyPath = configuration["EncryptionOptions:KeyFilePath"];
+                        if (!string.IsNullOrEmpty(encryptionKeyPath) && File.Exists(encryptionKeyPath))
                         {
-                            logger.LogInformation($"Using encryption key from file: {encriptionKeyPath}");
-                            base64EncriptionKey = File.ReadAllText(encriptionKeyPath).Trim();
+                            logger.LogInformation($"Using encryption key from file: {encryptionKeyPath}");
+                            base64EncryptionKey = File.ReadAllText(encryptionKeyPath).Trim();
                         }
                         else
                         {
-                            logger.LogWarning($"Encryption key file not found at {encriptionKeyPath} or not specified. Using encryption key from WARP_ENCRYPTION_KEY environment variable");
+                            logger.LogWarning($"Encryption key file not found at {encryptionKeyPath} or not specified. Using encryption key from WARP_ENCRYPTION_KEY environment variable");
                             var envKey = Environment.GetEnvironmentVariable("WARP_ENCRYPTION_KEY");
                             if (string.IsNullOrEmpty(envKey))
                                 throw new Exception("Encryption key not found in any source. Please specify it in the configuration or as an environment variable.");
 
-                            base64EncriptionKey = envKey ?? string.Empty;
+                            base64EncryptionKey = envKey ?? string.Empty;
                         }
 
-                        var encryptionKey = Convert.FromBase64String(base64EncriptionKey);
+                        var encryptionKey = Convert.FromBase64String(base64EncryptionKey);
                         if (encryptionKey.Length != 32) // 256 bits = 32 bytes
                             throw new Exception($"Encryption key length is not 32 bytes (256 bits). Key length: {encryptionKey.Length}");
 
