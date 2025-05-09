@@ -139,7 +139,9 @@ Update your `appsettings.json` or `appsettings.Local.json`:
 
 ```json
 "EncryptionOptions": {
-  "KeyFilePath": "C:\\ProgramData\\Warp\\encryption-key.txt"
+  "KeyFilePath": "C:\\ProgramData\\Warp\\encryption-key.txt",
+  "TransitKeyName": "warp-key",
+  "Type": "AesEncryptionService"
 }
 ```
 
@@ -152,6 +154,19 @@ set WARP_ENCRYPTION_KEY=your_base64_key_here
 # Linux/macOS
 export WARP_ENCRYPTION_KEY=your_base64_key_here
 ```
+
+### Using TransitEncryptionService
+
+Warp offers a `TransitEncryptionService` which integrates with HashiCorp Vault's Transit secrets engine. To use it, set the following configuration:
+
+```json
+"EncryptionOptions": {
+  "Type": "TransitEncryptionService",
+  "TransitKeyName": "warp-keydb"
+}
+```
+
+The `EncryptionOptions:Type` setting is mandatory and must be set to either `AesEncryptionService` or `TransitEncryptionService` to specify which encryption service implementation to use. The service implementation is selected at application startup based on this configuration value.
 
 
 ## Project Icons
