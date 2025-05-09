@@ -3,6 +3,7 @@ using Microsoft.FeatureManagement;
 using NSubstitute;
 using Warp.WebApp.Models.Options;
 using Warp.WebApp.Services.Encryption;
+using Warp.WebApp.Tests.Infrastructure;
 
 namespace Warp.WebApp.Tests.EncryptionServiceTests;
 
@@ -11,6 +12,8 @@ public class AesEncryptionServiceEncryptTests
     public AesEncryptionServiceEncryptTests()
     {
         _featureManagerSubstitute = Substitute.For<IFeatureManager>();
+        _featureManagerSubstitute.ConfigureFeature("EntryEncryption", false);
+
         _encryptionOptionsSubstitute = Substitute.For<IOptions<EncryptionOptions>>();
         
         _encryptionOptionsSubstitute.Value.Returns(new EncryptionOptions 
@@ -23,67 +26,66 @@ public class AesEncryptionServiceEncryptTests
 
 
     [Fact]
-    public void Encrypt_EmptyData_ReturnsEmptyArray()
+    public async Task Encrypt_EmptyData_ReturnsEmptyArray()
     {
         byte[] data = [];
         
-        var result = _encryptionService.Encrypt(data);
+        var result = await _encryptionService.Encrypt(data);
         
         Assert.Empty(result);
     }
 
 
     [Fact]
-    public void Encrypt_NullData_ReturnsEmptyArray()
+    public async Task Encrypt_NullData_ReturnsEmptyArray()
     {
         byte[]? data = null;
         
-        var result = _encryptionService.Encrypt(data);
+        var result = await _encryptionService.Encrypt(data);
         
         Assert.Empty(result);
     }
 
 
     [Fact]
-    public void Encrypt_EncryptionDisabled_ReturnsOriginalData()
+    public async Task Encrypt_EncryptionDisabled_ReturnsOriginalData()
     {
-        _featureManagerSubstitute.IsEnabledAsync("EntryEncription").Returns(false);
         var encryptionService = new AesEncryptionService(_featureManagerSubstitute, _encryptionOptionsSubstitute);
         byte[] data = [1, 2, 3, 4, 5];
         
-        var result = encryptionService.Encrypt(data);
+        var result = await encryptionService.Encrypt(data);
         
         Assert.Equal(data, result);
     }
 
 
     [Fact]
-    public void Encrypt_EncryptionEnabled_ReturnsEncryptedData()
+    public async Task Encrypt_EncryptionEnabled_ReturnsEncryptedData()
     {
-        _featureManagerSubstitute.IsEnabledAsync("EntryEncription").Returns(true);
-        var encryptionService = new AesEncryptionService(_featureManagerSubstitute, _encryptionOptionsSubstitute);
+        var enabledFeatureManager = _featureManagerSubstitute.ConfigureFeature("EntryEncryption", true);
+        var encryptionService = new AesEncryptionService(enabledFeatureManager, _encryptionOptionsSubstitute);
         byte[] data = [1, 2, 3, 4, 5];
         
-        var result = encryptionService.Encrypt(data);
+        var result = await encryptionService.Encrypt(data);
         
         Assert.NotEmpty(result);
         Assert.NotEqual(data, result);
         Assert.True(result.Length > data.Length); // Encrypted data includes header and IV
         
-        Assert.Equal(AesEncryptionService.EncryptionMarker, result[0]);
-        Assert.Equal(AesEncryptionService.EncryptionVersion, result[1]);
+        Assert.Equal(EncryptionServiceBase.EncryptionMarker, result[0]);
+        Assert.Equal(EncryptionServiceBase.EncryptionVersion, result[1]);
     }
 
 
     [Fact]
-    public void Encrypt_MultipleCalls_ProduceDifferentResults()
+    public async Task Encrypt_MultipleCalls_ProduceDifferentResults()
     {
-        _featureManagerSubstitute.IsEnabledAsync("EntryEncription").Returns(true);
-        var encryptionService = new AesEncryptionService(_featureManagerSubstitute, _encryptionOptionsSubstitute);
+        var enabledFeatureManager = _featureManagerSubstitute.ConfigureFeature("EntryEncryption", true);
+        var encryptionService = new AesEncryptionService(enabledFeatureManager, _encryptionOptionsSubstitute);
         byte[] data = [1, 2, 3, 4, 5];
         
-        var result1 = encryptionService.Encrypt(data);
-        var result2 = encryptionService.Encrypt(data);
+        var result1 = await encryptionService.Encrypt(data);
+        var result2 = await encryptionService.Encrypt(data);
         
         Assert.NotEqual(result1, result2); // Should be different due to different IVs
     }
