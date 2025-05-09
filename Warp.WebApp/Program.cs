@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.FeatureManagement;
 using System.Globalization;
 using System.Text.Json;
 using Warp.WebApp.Constants;
@@ -17,6 +17,7 @@ using Warp.WebApp.Middlewares;
 using Warp.WebApp.Models.Options;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Creators;
+using Warp.WebApp.Services.Encryption;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
 using Warp.WebApp.Services.Infrastructure;
@@ -44,7 +45,7 @@ try
     builder.Services.AddSingleton(_ => DistributedCacheHelper.GetConnectionMultiplexer(startupLogger, builder.Configuration));
 
     AddOptions(startupLogger, builder.Services, builder.Configuration);
-    AddServices(builder.Services);
+    AddServices(builder.Services, builder.Configuration);
 
     builder.Services.AddLocalization(o => o.ResourcesPath = "Resources");
 
@@ -144,11 +145,14 @@ void AddConfiguration(ILogger<Program> logger, WebApplicationBuilder builder)
     {
         logger.LogLocalConfigurationIsInUse();
         builder.Configuration.AddJsonFile($"appsettings.{builder.Configuration["ASPNETCORE_ENVIRONMENT"]}.json", optional: true, reloadOnChange: true);
-        return;
+    }
+    else
+    {
+        var secrets = VaultHelper.GetSecrets<ProgramSecrets>(logger, builder.Configuration);
+        builder.AddConsulConfiguration(secrets.ConsulAddress, secrets.ConsulToken);
     }
 
-    var secrets = VaultHelper.GetSecrets<ProgramSecrets>(logger, builder.Configuration);
-    builder.AddConsulConfiguration(secrets.ConsulAddress, secrets.ConsulToken);
+    builder.Services.AddFeatureManagement();
 }
 
 
@@ -188,6 +192,50 @@ void AddOptions(ILogger<Program> logger, IServiceCollection services, IConfigura
             })
             .ValidateDataAnnotations()
             .ValidateOnStart();
+
+        if (builder.Environment.IsLocal())
+        {
+            services.AddOptions<EncryptionOptions>()
+                .Configure(options =>
+                {
+                    if (configuration["EncryptionOptions:Type"] == "AesEncryptionService")
+                    { 
+                        string base64EncryptionKey;
+
+                        logger.LogInformation("Using AesEncryptionService encryption configuration");
+                        var encryptionKeyPath = configuration["EncryptionOptions:KeyFilePath"];
+                        if (!string.IsNullOrEmpty(encryptionKeyPath) && File.Exists(encryptionKeyPath))
+                        {
+                            logger.LogInformation($"Using encryption key from file: {encryptionKeyPath}");
+                            base64EncryptionKey = File.ReadAllText(encryptionKeyPath).Trim();
+                        }
+                        else
+                        {
+                            logger.LogWarning($"Encryption key file not found at {encryptionKeyPath} or not specified. Using encryption key from WARP_ENCRYPTION_KEY environment variable");
+                            var envKey = Environment.GetEnvironmentVariable("WARP_ENCRYPTION_KEY");
+                            if (string.IsNullOrEmpty(envKey))
+                                throw new Exception("Encryption key not found in any source. Please specify it in the configuration or as an environment variable.");
+
+                            base64EncryptionKey = envKey ?? string.Empty;
+                        }
+
+                        var encryptionKey = Convert.FromBase64String(base64EncryptionKey);
+                        if (encryptionKey.Length != 32) // 256 bits = 32 bytes
+                            throw new Exception($"Encryption key length is not 32 bytes (256 bits). Key length: {encryptionKey.Length}");
+
+                        options.EncryptionKey = encryptionKey;
+                        options.TransitKeyName = null;
+
+                        return;
+                    }
+                    
+                    logger.LogInformation("Using TransitEncryptionService encryption configuration");
+                    
+                    options.TransitKeyName = configuration["EncryptionOptions:TransitKeyName"];
+                    options.EncryptionKey = null;
+                })
+            .ValidateDataAnnotations();
+        }
     }
     catch (Exception ex)
     {
@@ -197,12 +245,19 @@ void AddOptions(ILogger<Program> logger, IServiceCollection services, IConfigura
 }
 
 
-void AddServices(IServiceCollection services)
+void AddServices(IServiceCollection services, IConfiguration configuration)
 {
     services.AddSingleton(services);
 
+    services.AddTransient(_ => VaultHelper.GetVaultClient(configuration));
+    
     services.AddTransient<IDistributedStorage, KeyDbStorage>();
     services.AddTransient<IS3FileStorage, S3FileStorage>();
+
+    if (configuration["EncryptionOptions:Type"] == "AesEncryptionService")
+        services.AddTransient<IEncryptionService, AesEncryptionService>();
+    else
+        services.AddSingleton<IEncryptionService, TransitEncryptionService>();
 
     services.AddTransient<IPartialViewRenderService, PartialViewRenderService>();
     services.AddTransient<IUrlService, UrlService>();

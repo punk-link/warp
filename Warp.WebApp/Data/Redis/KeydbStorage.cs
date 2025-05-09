@@ -1,34 +1,37 @@
 ﻿using StackExchange.Redis;
 using System.Text.Json;
 using Warp.WebApp.Models;
+using Warp.WebApp.Services.Encryption;
 
 namespace Warp.WebApp.Data.Redis;
 
 public sealed class KeyDbStorage : IDistributedStorage
 {
-    public KeyDbStorage(IConnectionMultiplexer multiplexer)
+    public KeyDbStorage(IConnectionMultiplexer multiplexer, IEncryptionService encryptionService)
     {
         _multiplexer = multiplexer;
+        _encryptionService = encryptionService;
     }
 
 
     public async Task<long> AddAndGetCounter(string key, CancellationToken cancellationToken)
     {
-        var db = GetDatabase<object>();
-        var redisTask = db.StringIncrementAsync(key);
-        return await ExecuteOrCancel(redisTask, cancellationToken);
+        var db = GetDatabase<string>();
+        var task = db.StringIncrementAsync(key);
+
+        return await ExecuteOrCancel(task, cancellationToken);
     }
 
 
     public async Task AddToSet<T>(string key, T value, TimeSpan expiresIn, CancellationToken cancellationToken)
     {
-        var db = GetDatabase<HashSet<T>>();
-        var bytes = JsonSerializer.SerializeToUtf8Bytes(value);
+        var encryptedValue = await Encrypt(value);
         
-        var redisTransaction = db.CreateTransaction();
-        var transactionalTask = Task.WhenAll(redisTransaction.SetAddAsync(key, bytes), redisTransaction.KeyExpireAsync(key, expiresIn));
+        var db = GetDatabase<T>();
+        var transaction = db.CreateTransaction();
+        var transactionalTask = Task.WhenAll(transaction.SetAddAsync(key, encryptedValue), transaction.KeyExpireAsync(key, expiresIn));
 
-        var isExecuted = await ExecuteOrCancel(redisTransaction.ExecuteAsync(), cancellationToken);
+        var isExecuted = await ExecuteOrCancel(transaction.ExecuteAsync(), cancellationToken);
         if (isExecuted)
             await transactionalTask;
     }
@@ -37,61 +40,87 @@ public sealed class KeyDbStorage : IDistributedStorage
     public async Task<bool> Contains<T>(string key, CancellationToken cancellationToken)
     {
         var db = GetDatabase<T>();
-        var redisTask = db.KeyExistsAsync(key);
-        return await ExecuteOrCancel(redisTask, cancellationToken);
+        var task = db.KeyExistsAsync(key);
+
+        return await ExecuteOrCancel(task, cancellationToken);
     }
 
 
     public async Task<bool> ContainsInSet<T>(string key, T value, CancellationToken cancellationToken)
     {
+        var encryptedValue = await Encrypt(value);
+        
         var db = GetDatabase<T>();
-        var valueBytes = JsonSerializer.SerializeToUtf8Bytes(value);
-        var redisTask = db.SetContainsAsync(key, valueBytes);
+        var task = db.SetContainsAsync(key, encryptedValue);
 
-        return await ExecuteOrCancel(redisTask, cancellationToken);
+        return await ExecuteOrCancel(task, cancellationToken);
     }
+
 
     public async Task Remove<T>(string key, CancellationToken cancellationToken)
     {
         var db = GetDatabase<T>();
-        var redisTask = db.StringGetDeleteAsync(key);
-        await ExecuteOrCancel(redisTask, cancellationToken);
+        var task = db.KeyDeleteAsync(key);
+
+        await ExecuteOrCancel(task, cancellationToken);
     }
 
 
     public async Task Set<T>(string key, T value, TimeSpan expiresIn, CancellationToken cancellationToken)
     {
+        var encryptedValue = await Encrypt(value);
+        
         var db = GetDatabase<T>();
-        var bytes = JsonSerializer.SerializeToUtf8Bytes(value);
-        var redisTask = db.StringSetAsync(key, bytes, expiresIn);
-        await ExecuteOrCancel(redisTask, cancellationToken);
-    }
+        var task = db.StringSetAsync(key, encryptedValue, expiresIn);
 
-
-    public async Task<HashSet<T>> TryGetSet<T>(string key, CancellationToken cancellationToken)
-    {
-        var db = GetDatabase<T>();
-        var redisTask = db.SetMembersAsync(key);
-
-        var completedTask = await ExecuteOrCancel(redisTask!, cancellationToken);
-        if (completedTask is null)
-            return Enumerable.Empty<T>().ToHashSet();
-
-        return completedTask.Select(d => JsonSerializer.Deserialize<T>(d!)).ToHashSet()!;
+        await ExecuteOrCancel(task, cancellationToken);
     }
 
 
     public async Task<T?> TryGet<T>(string key, CancellationToken cancellationToken)
     {
         var db = GetDatabase<T>();
-        var redisTask = db.StringGetAsync(key);
+        var task = db.StringGetAsync(key);
 
-        var completedTask = await ExecuteOrCancel(redisTask, cancellationToken);
+        var completedTask = await ExecuteOrCancel(task, cancellationToken);
         if (!completedTask.HasValue)
             return default;
 
-        var bytes = (byte[])completedTask!;
-        return JsonSerializer.Deserialize<T>(bytes)!;
+        return await Decrypt<T>(completedTask!);
+    }
+
+
+    public async Task<HashSet<T>> TryGetSet<T>(string key, CancellationToken cancellationToken)
+    {
+        var db = GetDatabase<T>();
+        var task = db.SetMembersAsync(key);
+
+        var members = await ExecuteOrCancel(task, cancellationToken);
+        if (members == null || members.Length == 0)
+            return Enumerable.Empty<T>().ToHashSet();
+
+        var results = new HashSet<T>();
+        foreach (var member in members)
+        {
+            var value = await Decrypt<T>(member!);
+            results.Add(value);
+        }
+
+        return results;
+    }
+
+
+    private async ValueTask<T> Decrypt<T>(byte[] encryptedBytes)
+    {
+        var decryptedBytes = await _encryptionService.Decrypt(encryptedBytes);
+        return JsonSerializer.Deserialize<T>(decryptedBytes)!;
+    }
+
+
+    private async ValueTask<byte[]> Encrypt<T>(T value)
+    {
+        var serialized = JsonSerializer.SerializeToUtf8Bytes(value);
+        return await _encryptionService.Encrypt(serialized);
     }
 
 
@@ -126,4 +155,5 @@ public sealed class KeyDbStorage : IDistributedStorage
 
 
     private readonly IConnectionMultiplexer _multiplexer;
+    private readonly IEncryptionService _encryptionService;
 }

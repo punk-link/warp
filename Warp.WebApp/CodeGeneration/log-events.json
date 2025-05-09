@@ -348,6 +348,24 @@
           "generateLogMessage": false,
           "obsolete": false,
           "httpCode": 400
+        },
+        {
+          "id": 20308,
+          "name": "VaultCiphertextError",
+          "description": "Failed to get ciphertext from encryption response. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Critical",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
+          "id": 20309,
+          "name": "VaultPlaintextError",
+          "description": "Failed to get plaintext from decryption response. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Critical",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
         }
       ]
     },

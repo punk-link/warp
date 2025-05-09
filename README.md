@@ -107,6 +107,68 @@ The project uses a modern build process for its styles, leveraging both Sass and
    ```
 
 
+## Encryption Key Management
+
+Warp uses AES-256 encryption for all data stored in KeyDB. The encryption key can be managed using the `warp-keymanager` tool.
+
+### Installing warp-keymanager
+
+Build and install the tool as a .NET global tool:
+
+```bash
+cd Warp.KeyManager
+dotnet pack
+dotnet tool install --global --add-source ./nupkg Warp.KeyManager
+```
+
+### Generating a Local Encryption Key
+
+To generate a new encryption key for local development:
+
+```bash
+# Generate and display a Base64 key
+warp-keymanager generate --base64
+
+# Generate and save a key to a file
+warp-keymanager generate --base64 --output C:\ProgramData\Warp\encryption-key.txt
+```
+
+### Configuring the Local Application to Use the Key
+
+Update your `appsettings.json` or `appsettings.Local.json`:
+
+```json
+"EncryptionOptions": {
+  "KeyFilePath": "C:\\ProgramData\\Warp\\encryption-key.txt",
+  "TransitKeyName": "warp-key",
+  "Type": "AesEncryptionService"
+}
+```
+
+Alternatively, you can set an environment variable:
+
+```bash
+# Windows
+set WARP_ENCRYPTION_KEY=your_base64_key_here
+
+# Linux/macOS
+export WARP_ENCRYPTION_KEY=your_base64_key_here
+```
+
+### Using TransitEncryptionService
+
+Warp offers a `TransitEncryptionService` which integrates with HashiCorp Vault's Transit secrets engine. To use it, set the following configuration:
+
+```json
+"EncryptionOptions": {
+  "Type": "TransitEncryptionService",
+  "TransitKeyName": "warp-keydb"
+}
+```
+
+The `EncryptionOptions:Type` setting is mandatory and must be set to either `AesEncryptionService` or `TransitEncryptionService` to specify which encryption service implementation to use. The service implementation is selected at application startup based on this configuration value.
+
+
 ## Project Icons
 
 The project uses these [icofont](https://icofont.com) glyphs:

@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
-using Vault;
-using Vault.Client;
-using Vault.Model;
+using VaultSharp;
+using VaultSharp.V1.AuthMethods.Token;
 using Warp.WebApp.Telemetry.Logging;
 
 namespace Warp.WebApp.Helpers.Configuration;
@@ -11,10 +10,15 @@ public static class VaultHelper
     public static T GetSecrets<T>(ILogger logger, IConfiguration configuration)
     {
         var vaultClient = GetVaultClient(configuration);
-        VaultResponse<KvV2ReadResponse>? response;
+        object? response;
         try
         {
-            response = vaultClient.Secrets.KvV2Read(configuration["ServiceName"], StorageName);
+            var secretTask = vaultClient.V1.Secrets.KeyValue.V2.ReadSecretAsync(
+                path: StorageName,
+                mountPoint: configuration["ServiceName"]);
+
+            secretTask.Wait();
+            response = secretTask.Result;
         }
         catch (Exception ex)
         {
@@ -24,7 +28,7 @@ public static class VaultHelper
 
         try
         {
-            var jObject = JObject.FromObject(response.Data.Data!);
+            var jObject = JObject.FromObject(response!);
             return jObject.ToObject<T>()!;
         }
         catch (Exception ex)
@@ -35,15 +39,14 @@ public static class VaultHelper
     }
 
 
-    private static VaultClient GetVaultClient(IConfiguration configuration)
+    public static IVaultClient GetVaultClient(IConfiguration configuration)
     {
         var vaultAddress = configuration["PNKL_VAULT_ADDR"]!;
-        var vaultConfig = new VaultConfiguration(vaultAddress);
-
-        var vaultClient = new VaultClient(vaultConfig);
-        vaultClient.SetToken(configuration["PNKL_VAULT_TOKEN"]);
-
-        return vaultClient;
+        var vaultToken = configuration["PNKL_VAULT_TOKEN"]!;
+        
+        var vaultClientSettings = new VaultClientSettings(vaultAddress, new TokenAuthMethodInfo(vaultToken));
+        
+        return new VaultClient(vaultClientSettings);
     }
 
 
