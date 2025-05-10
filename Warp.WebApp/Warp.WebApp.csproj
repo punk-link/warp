@@ -2,10 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>283dab27-87b6-46e4-8250-f2fd17e5f08d</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <EnableDefaultStaticWebAssets>true</EnableDefaultStaticWebAssets>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RuntimeIdentifiers>linux-x64;win-x64</RuntimeIdentifiers>
+    <UserSecretsId>283dab27-87b6-46e4-8250-f2fd17e5f08d</UserSecretsId>
   </PropertyGroup>
 
   <PropertyGroup>

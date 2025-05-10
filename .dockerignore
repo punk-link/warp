@@ -1,3 +1,4 @@
+# Source control
 **/.classpath
 **/.dockerignore
 **/.env
@@ -6,23 +7,54 @@
 **/.project
 **/.settings
 **/.toolstarget
+
+# IDE files
 **/.vs
 **/.vscode
 **/*.*proj.user
 **/*.dbmdl
 **/*.jfm
+**/*.suo
+**/*.user
+
+# Build outputs
 **/azds.yaml
 **/bin
 **/charts
+**/obj
+**/TestResults
+**/coverage
+
+# Logs and diagnostics
+**/*.log
+**/npm-debug.log
+**/yarn-error.log
+
+# Debug files
+**/*.pdb
+**/*.dll.config
+
+# Frontend
+**/node_modules
 **/docker-compose*
 **/Dockerfile*
-**/node_modules
-**/npm-debug.log
-**/obj
+**/.sass-cache
+**/*.css.map
+**/*.js.map
+**/dist
+
+# OS files
+**/.DS_Store
+
+# Config files
 **/secrets.dev.yaml
 **/values.dev.yaml
+
+# Documentation
 LICENSE
 README.md
+
+# Exceptions (include these files)
 !**/.gitignore
 !.git/HEAD
 !.git/config
