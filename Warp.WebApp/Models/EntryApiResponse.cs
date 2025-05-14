@@ -1,0 +1,35 @@
+﻿using Warp.WebApp.Models.Entries;
+using Warp.WebApp.Models.Entries.Enums;
+
+namespace Warp.WebApp.Models;
+
+public readonly record struct EntryApiResponse
+{
+    public EntryApiResponse(string id, EditMode editMode, ExpirationPeriod expirationPeriod, List<ImageInfo> images, EntryOpenGraphDescription openGraphDescription, string textContent)
+    {
+        Id = id;
+        EditMode = editMode;
+        ExpirationPeriod = expirationPeriod;
+        Images = images ?? [];
+        OpenGraphDescription = openGraphDescription;
+        TextContent = textContent;
+    }
+
+
+    public EntryApiResponse(string id, EntryOpenGraphDescription openGraphDescription) : this(id, EditMode.Unset, ExpirationPeriod.FiveMinutes, [], openGraphDescription, string.Empty)
+    {
+    }
+
+    // TODO: add expiration period
+    public EntryApiResponse(string id, EntryInfo entryInfo) : this(id, entryInfo.EditMode, ExpirationPeriod.FiveMinutes, entryInfo.ImageInfos, entryInfo.OpenGraphDescription, entryInfo.Entry.Content)
+    {
+    }
+
+
+    public string Id { get; }
+    public EditMode EditMode { get; } = EditMode.Unset;
+    public ExpirationPeriod ExpirationPeriod { get; } = ExpirationPeriod.FiveMinutes;
+    public List<ImageInfo> Images { get; } = [];
+    public EntryOpenGraphDescription OpenGraphDescription { get; } = default!;
+    public string TextContent { get; } = string.Empty;
+}

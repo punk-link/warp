@@ -110,6 +110,7 @@ public class IndexModel : BasePageModel
             {
                 Id = id;
                 EditMode = entryInfo.EditMode;
+                // TODO: move to post
                 TextContent = TextFormatter.GetCleanString(entryInfo.Entry.Content);
                 SelectedExpirationPeriod = GetExpirationPeriodId(entryInfo.ExpiresAt - entryInfo.CreatedAt);
 

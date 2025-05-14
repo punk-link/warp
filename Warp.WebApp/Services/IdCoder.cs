@@ -2,7 +2,7 @@
 
 public static class IdCoder
 {
-    public static Guid Decode(string id)
+    public static Guid Decode(string? id)
     {
         if(string.IsNullOrEmpty(id))
             return Guid.Empty;
