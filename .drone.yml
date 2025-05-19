@@ -17,6 +17,7 @@ steps:
       from_secret: GITHUB_TOKEN     
     PNKL_VAULT_TOKEN:
       from_secret: PNKL_VAULT_TOKEN    
+    DOCKER_BUILDK: 1
   commands:
     - dotnet build -c Release
     - dotnet test -c Release
