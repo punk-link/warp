@@ -26,14 +26,14 @@ jobs:
 
 
 
-    -  name: Login to private registry
+    -  name: Push image to private registry
        uses: docker/build-push-action@v2
        with:
          context: .
          file: ./Dockerfile
          builder: ${{ steps.buildx.outputs.name }}
          push: true
-         tags: '${{ secrets.REGISTRY_URL }}/warp-webapp:github'
+         tags: '${{ secrets.REGISTRY_URL }}/warp-webapp:${{ env.GITHUB_RUN_ID}}'
          cache-from: 'type=registry,ref=${{ secrets.REGISTRY_URL }}/warp-webapp:buildcache'
          cache-to: 'type=registry,ref=${{ secrets.REGISTRY_URL }}/warp-webappr:buildcache,mode=max'
 
