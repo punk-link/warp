@@ -24,8 +24,6 @@ jobs:
          username: ${{ secrets.REGISTRY_USERNAME }}
          password: ${{ secrets.REGISTRY_PASSWORD }}
 
-
-
     -  name: Push image to private registry
        uses: docker/build-push-action@v2
        with:
@@ -37,5 +35,17 @@ jobs:
          cache-from: 'type=registry,ref=${{ secrets.REGISTRY_URL }}/warp-webapp:buildcache'
          cache-to: 'type=registry,ref=${{ secrets.REGISTRY_URL }}/warp-webappr:buildcache,mode=max'
 
+    - name: Send message to Telegram
+      uses: appleboy/telegram-action@master
+      with:
+        to: ${{ secrets.TELEGRAM_CHAT_ID }}
+        token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        message: |
+          🔔 New push to ${{ github.repository }}!
+          Run ID: ${{ github.run_id }}
+          Commit: ${{ github.sha }}
+          Status: Success
+          Details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}         
+          Image name : ${{ secrets.REGISTRY_URL }}/warp-webapp:${{ github.run_id }}
 
 
