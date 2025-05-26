@@ -33,7 +33,7 @@ jobs:
          file: ./Dockerfile
          builder: ${{ steps.buildx.outputs.name }}
          push: true
-         tags: '${{ secrets.REGISTRY_URL }}/warp-webapp:${{ env.GITHUB_RUN_ID}}'
+         tags: '${{ secrets.REGISTRY_URL }}/warp-webapp:${{ github.run_id }}'
          cache-from: 'type=registry,ref=${{ secrets.REGISTRY_URL }}/warp-webapp:buildcache'
          cache-to: 'type=registry,ref=${{ secrets.REGISTRY_URL }}/warp-webappr:buildcache,mode=max'
 
