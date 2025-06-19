@@ -7,6 +7,8 @@ namespace Warp.WebApp.Controllers;
 /// <summary>
 /// Controller for managing creator authentication and lifecycle operations.
 /// </summary>
+[ApiController]
+[Route("/api/creators")]
 public class CreatorController : BaseController
 {
     /// <summary>
@@ -32,7 +34,7 @@ public class CreatorController : BaseController
     [HttpGet]
     public async Task<IActionResult> GetOrSet(CancellationToken cancellationToken = default)
     {
-        var (isSuccess, _, creator, _) = await GetCreator(cancellationToken);
+        var (isSuccess, _, creator, _) = await TryGetCreator(cancellationToken);
         if (isSuccess)
             return Ok(creator);
 

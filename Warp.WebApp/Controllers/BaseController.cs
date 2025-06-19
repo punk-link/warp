@@ -20,20 +20,27 @@ public abstract class BaseController : ControllerBase
         => base.BadRequest(error.ToProblemDetails());
 
 
-    protected UnauthorizedObjectResult Unauthorized(in DomainError error)
-        => base.Unauthorized(error.ToProblemDetails());
-
-
-    protected IActionResult BadRequestOrNoContent<T>(Result<T, DomainError> result)
+    protected IActionResult OkOrBadRequest<T>(Result<T, DomainError> result)
     {
         if (result.IsFailure)
             return BadRequest(result.Error);
-
-        return NoContent();
+        
+        return Ok(result.Value);
     }
 
 
-    protected async Task<Result<Creator, DomainError>> GetCreator(CancellationToken cancellationToken)
+    protected async Task<Creator> GetCreator(CancellationToken cancellationToken)
+    {
+        var creatorId = _cookieService.GetCreatorId(HttpContext);
+        var (_, isFailure, creator, _) = await _creatorService.Get(creatorId, cancellationToken);
+        if (isFailure)
+            throw new UnauthorizedAccessException("Unauthorized access to creator.");
+
+        return creator;
+    }
+
+
+    protected async Task<Result<Creator, DomainError>> TryGetCreator(CancellationToken cancellationToken)
     {
         var creatorId = _cookieService.GetCreatorId(HttpContext);
         var (_, isFailure, creator, _) = await _creatorService.Get(creatorId, cancellationToken);
