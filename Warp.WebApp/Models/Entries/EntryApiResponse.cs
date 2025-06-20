@@ -1,7 +1,7 @@
-﻿using Warp.WebApp.Models.Entries;
-using Warp.WebApp.Models.Entries.Enums;
+﻿using Warp.WebApp.Models.Entries.Enums;
+using Warp.WebApp.Services;
 
-namespace Warp.WebApp.Models;
+namespace Warp.WebApp.Models.Entries;
 
 public readonly record struct EntryApiResponse
 {
@@ -12,15 +12,11 @@ public readonly record struct EntryApiResponse
         ExpirationPeriod = expirationPeriod;
         Images = images ?? [];
         OpenGraphDescription = openGraphDescription;
-        TextContent = textContent;
+        // TODO: move out from the struct
+        TextContent = TextFormatter.GetCleanString(textContent);
     }
 
 
-    public EntryApiResponse(string id, EntryOpenGraphDescription openGraphDescription) : this(id, EditMode.Unset, ExpirationPeriod.FiveMinutes, [], openGraphDescription, string.Empty)
-    {
-    }
-
-    // TODO: add expiration period
     public EntryApiResponse(string id, EntryInfo entryInfo) : this(id, entryInfo.EditMode, ExpirationPeriod.FiveMinutes, entryInfo.ImageInfos, entryInfo.OpenGraphDescription, entryInfo.Entry.Content)
     {
     }

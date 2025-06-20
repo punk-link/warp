@@ -31,8 +31,7 @@ public abstract class BaseController : ControllerBase
 
     protected async Task<Creator> GetCreator(CancellationToken cancellationToken)
     {
-        var creatorId = _cookieService.GetCreatorId(HttpContext);
-        var (_, isFailure, creator, _) = await _creatorService.Get(creatorId, cancellationToken);
+        var (_, isFailure, creator, _) = await TryGetCreatorInternal(cancellationToken);
         if (isFailure)
             throw new UnauthorizedAccessException("Unauthorized access to creator.");
 
@@ -42,8 +41,7 @@ public abstract class BaseController : ControllerBase
 
     protected async Task<Result<Creator, DomainError>> TryGetCreator(CancellationToken cancellationToken)
     {
-        var creatorId = _cookieService.GetCreatorId(HttpContext);
-        var (_, isFailure, creator, _) = await _creatorService.Get(creatorId, cancellationToken);
+        var (_, isFailure, creator, _) = await TryGetCreatorInternal(cancellationToken);
         if (isFailure)
             return DomainErrors.UnauthorizedError();
         
@@ -53,6 +51,13 @@ public abstract class BaseController : ControllerBase
 
     protected IActionResult IdDecodingBadRequest() 
         => BadRequest(DomainErrors.IdDecodingError());
+
+
+    private Task<Result<Creator, DomainError>> TryGetCreatorInternal(CancellationToken cancellationToken)
+    {
+        var creatorId = _cookieService.GetCreatorId(HttpContext);
+        return _creatorService.Get(creatorId, cancellationToken);
+    }
 
 
     private readonly ICookieService _cookieService;

@@ -1,5 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
+using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Services.Creators;
 
 namespace Warp.WebApp.Controllers;
@@ -32,6 +33,7 @@ public class CreatorController : BaseController
     /// Returns 200 OK with the creator if found or newly created.
     /// </returns>
     [HttpGet]
+    [ProducesResponseType(typeof(Creator), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetOrSet(CancellationToken cancellationToken = default)
     {
         var (isSuccess, _, creator, _) = await TryGetCreator(cancellationToken);

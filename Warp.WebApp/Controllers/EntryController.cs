@@ -1,55 +1,89 @@
-﻿using CSharpFunctionalExtensions;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Warp.WebApp.Attributes;
-using Warp.WebApp.Models;
-using Warp.WebApp.Models.Entries.Enums;
+using Warp.WebApp.Models.Entries;
+using Warp.WebApp.Models.Entries.Converters;
 using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Entries;
-using Warp.WebApp.Services.OpenGraph;
 
 namespace Warp.WebApp.Controllers;
 
+/// <summary>
+/// Controller for managing entry resources, including creation, retrieval, update, copy, deletion, and reporting of entries.
+/// </summary>
 [ApiController]
 [Route("/api/entries")]
 [RequireCreatorCookie]
 public class EntryController : BaseController
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="EntryController"/> class.
+    /// </summary>
+    /// <param name="cookieService">The cookie service.</param>
+    /// <param name="creatorService">The creator service.</param>
+    /// <param name="entryInfoService">The entry info service.</param>
+    /// <param name="reportService">The report service.</param>
     public EntryController(ICookieService cookieService, 
         ICreatorService creatorService,
         IEntryInfoService entryInfoService,
-        IOpenGraphService openGraphService,
         IReportService reportService) : base(cookieService, creatorService)
     {
         _entryInfoService = entryInfoService;
-        _openGraphService = openGraphService;
         _reportService = reportService;
     }
 
 
+    /// <summary>
+    /// Adds an entry.
+    /// </summary>
+    /// <param name="request">The entry API request.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>The entry response or error.</returns>
+    [HttpPost]
+    [ProducesResponseType(typeof(EntryApiResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(DomainError), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Add([FromBody] EntryApiRequest request, CancellationToken cancellationToken = default)
+    {
+        var creator = await GetCreator(cancellationToken);
+        var req = request.ToEntryRequest(Guid.CreateVersion7());
+        var result = await _entryInfoService.Add(creator, req, cancellationToken)
+            .ToEntryApiResponse();
+
+        return OkOrBadRequest(result);
+    }
+
+
+    /// <summary>
+    /// Copies an entry by its identifier.
+    /// </summary>
+    /// <param name="id">The encoded entry identifier.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>The copied entry response or error.</returns>
     [HttpPost("{id}/copy")]
-    [ValidateDecodableId]
+    [ProducesResponseType(typeof(EntryApiResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(DomainError), StatusCodes.Status400BadRequest)]
+    [ValidateId]
     public async Task<IActionResult> Copy([FromRoute] string id, CancellationToken cancellationToken = default)
     {
         var decodedId = IdCoder.Decode(id);
         var creator = await GetCreator(cancellationToken);
-        var result = await _entryInfoService.Copy(creator, decodedId, cancellationToken);
-        if (result.IsFailure)
-            return BadRequest(result.Error);
+        var result = await _entryInfoService.Copy(creator, decodedId, cancellationToken)
+            .ToEntryApiResponse();
 
-        var response = new EntryApiResponse(id, result.Value);
-        return Ok(response);
+        return OkOrBadRequest(result);
     }
 
 
-    [HttpGet]
-    public IActionResult Create() 
-        => ReturnNew();
-
-
+    /// <summary>
+    /// Deletes an entry by its identifier.
+    /// </summary>
+    /// <param name="id">The encoded entry identifier.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>No content if successful.</returns>
     [HttpDelete("{id}")]
-    [ValidateDecodableId]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ValidateId]
     public async Task<IActionResult> Delete([FromRoute] string id, CancellationToken cancellationToken = default)
     {
         var decodedId = IdCoder.Decode(id);
@@ -60,91 +94,70 @@ public class EntryController : BaseController
     }
 
 
+    /// <summary>
+    /// Gets an entry by its identifier or returns a new entry response if the identifier is invalid.
+    /// </summary>
+    /// <param name="id">The encoded entry identifier.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>The entry response or error.</returns>
     [HttpGet("{id}")]
-    public async Task<IActionResult> Get([FromRoute] string? id, CancellationToken cancellationToken = default)
+    [ProducesResponseType(typeof(EntryApiResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(DomainError), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Get([FromRoute] string id, CancellationToken cancellationToken = default)
     {
         var decodedId = IdCoder.Decode(id);
         if (decodedId == Guid.Empty)
-            return ReturnNew();
+            return Ok(); // TODO: should we return a new entry response here?
 
-        return await ReturnExisting();
-
-
-        async Task<IActionResult> ReturnExisting()
-        {
-            var creator = await GetCreator(cancellationToken);
-            var (_, isFailure, entry, error) = await _entryInfoService.Get(creator, decodedId, cancellationToken);
-            if (isFailure)
-                return BadRequest(error);
-
-            var response = new EntryApiResponse(id!, entry);
-            return Ok(response);
-        }
-    }
-
-
-    [HttpPost("{id}")]
-    [ValidateDecodableId]
-    public async Task<IActionResult> Post([FromRoute] string id, [FromBody] EntryApiRequest request, CancellationToken cancellationToken = default)
-    {
-        var req = new EntryRequest()
-        {
-            Id = decodedId,
-            EditMode = request.EditMode,
-            ExpiresIn = GetExpirationPeriod(request.ExpirationPeriod),
-            ImageIds = request.ImageIds,
-            TextContent = request.TextContent
-        };
-        
         var creator = await GetCreator(cancellationToken);
-        var decodedId = IdCoder.Decode(id);
-        var isExistResult = await _entryInfoService.Get(creator, decodedId, cancellationToken);
+        var result = await _entryInfoService.Get(creator, decodedId, cancellationToken)
+            .ToEntryApiResponse();
 
-        Result<EntryInfo, DomainError> postResult;
-        if (isExistResult.IsSuccess)
-            postResult = await _entryInfoService.Update(creator, req, cancellationToken);
-        else
-            postResult = await _entryInfoService.Add(creator, req, cancellationToken);
-
-        return OkOrBadRequest(postResult);
-
-
-        static TimeSpan GetExpirationPeriod(ExpirationPeriod expirationPeriod)
-            => expirationPeriod switch
-            {
-                ExpirationPeriod.FiveMinutes => new TimeSpan(0, 5, 0),
-                ExpirationPeriod.ThirtyMinutes => new TimeSpan(0, 30, 0),
-                ExpirationPeriod.OneHour => new TimeSpan(1, 0, 0),
-                ExpirationPeriod.EightHours => new TimeSpan(8, 0, 0),
-                ExpirationPeriod.OneDay => new TimeSpan(24, 0, 0),
-                _ => new TimeSpan(0, 5, 0)
-            };
+        return OkOrBadRequest(result);
     }
 
 
+    /// <summary>
+    /// Reports an entry by its identifier for inappropriate content.
+    /// </summary>
+    /// <param name="id">The encoded entry identifier.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>No content if successful.</returns>
     [HttpPost("{id}/report")]
-    [ValidateDecodableId]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ValidateId]
     public async Task<IActionResult> Report([FromRoute] string id, CancellationToken cancellationToken = default)
     {
         var decodedId = IdCoder.Decode(id);
         await _reportService.MarkAsReported(decodedId, cancellationToken);
+
         return NoContent();
     }
 
 
-    private OkObjectResult ReturnNew()
+    /// <summary>
+    /// Updates an entry.
+    /// </summary>
+    /// <param name="id">The encoded entry identifier.</param>
+    /// <param name="request">The entry API request.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>The entry response or error.</returns>
+    [HttpPost("{id}")]
+    [ProducesResponseType(typeof(EntryApiResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(DomainError), StatusCodes.Status400BadRequest)]
+    [ValidateId]
+    public async Task<IActionResult> Update([FromRoute] string id, [FromBody] EntryApiRequest request, CancellationToken cancellationToken = default)
     {
-        var id = Guid.CreateVersion7();
-        var encodedId = IdCoder.Encode(id);
+        var req = request.ToEntryRequest(IdCoder.Decode(id));
+        var creator = await GetCreator(cancellationToken);
 
-        var openGraphDescription = _openGraphService.GetDefaultDescription();
+        var result = await _entryInfoService.Update(creator, req, cancellationToken)
+            .ToEntryApiResponse();
 
-        var response = new EntryApiResponse(encodedId, openGraphDescription);
-        return Ok(response);
+        return OkOrBadRequest(result);
     }
 
 
     private readonly IEntryInfoService _entryInfoService;
-    private readonly IOpenGraphService _openGraphService;
     private readonly IReportService _reportService;
 }
