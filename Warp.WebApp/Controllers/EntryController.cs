@@ -1,11 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using CSharpFunctionalExtensions;
+using Microsoft.AspNetCore.Mvc;
 using Warp.WebApp.Attributes;
+using Warp.WebApp.Models;
 using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Entries.Converters;
 using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Entries;
+using Warp.WebApp.Services.OpenGraph;
 
 namespace Warp.WebApp.Controllers;
 
@@ -23,34 +26,47 @@ public class EntryController : BaseController
     /// <param name="cookieService">The cookie service.</param>
     /// <param name="creatorService">The creator service.</param>
     /// <param name="entryInfoService">The entry info service.</param>
+    /// <param name="openGraphService">The open graph service.</param>
     /// <param name="reportService">The report service.</param>
     public EntryController(ICookieService cookieService, 
         ICreatorService creatorService,
         IEntryInfoService entryInfoService,
+        IOpenGraphService openGraphService,
         IReportService reportService) : base(cookieService, creatorService)
     {
         _entryInfoService = entryInfoService;
+        _openGraphService = openGraphService;
         _reportService = reportService;
     }
 
 
     /// <summary>
-    /// Adds an entry.
+    /// Adds or updates an entry.
     /// </summary>
+    /// <param name="id">The encoded entry identifier.</param>
     /// <param name="request">The entry API request.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>The entry response or error.</returns>
-    [HttpPost]
+    [HttpPost("{id}")]
     [ProducesResponseType(typeof(EntryApiResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(DomainError), StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> Add([FromBody] EntryApiRequest request, CancellationToken cancellationToken = default)
+    [ValidateId]
+    public async Task<IActionResult> AddOrUpdate([FromRoute] string id, [FromBody] EntryApiRequest request, CancellationToken cancellationToken = default)
     {
         var creator = await GetCreator(cancellationToken);
-        var req = request.ToEntryRequest(Guid.CreateVersion7());
-        var result = await _entryInfoService.Add(creator, req, cancellationToken)
-            .ToEntryApiResponse();
+        
+        var decodedId = IdCoder.Decode(id);
+        var req = request.ToEntryRequest(decodedId);
 
-        return OkOrBadRequest(result);
+        // TODO: replace this check with a more performant version
+        var x = await _entryInfoService.Get(creator, decodedId, cancellationToken);
+        Result<EntryInfo, DomainError> result;
+        if (x.IsFailure)
+            result = await _entryInfoService.Add(creator, req, cancellationToken);
+        else
+            result = await _entryInfoService.Update(creator, req, cancellationToken);
+
+        return OkOrBadRequest(result.ToEntryApiResponse());
     }
 
 
@@ -72,6 +88,21 @@ public class EntryController : BaseController
             .ToEntryApiResponse();
 
         return OkOrBadRequest(result);
+    }
+
+
+    /// <summary>
+    /// Creates a new entry with a unique identifier and default description.
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet]
+    [ProducesResponseType(typeof(EntryApiResponse), StatusCodes.Status200OK)]
+    public IActionResult Create()
+    {
+        var encodedId = IdCoder.Encode(Guid.CreateVersion7());
+        var defaultDescription = _openGraphService.GetDefaultDescription();
+
+        return Ok(EntryApiResponse.Empty(encodedId, defaultDescription));
     }
 
 
@@ -107,7 +138,7 @@ public class EntryController : BaseController
     {
         var decodedId = IdCoder.Decode(id);
         if (decodedId == Guid.Empty)
-            return Ok(); // TODO: should we return a new entry response here?
+            return Create();
 
         var creator = await GetCreator(cancellationToken);
         var result = await _entryInfoService.Get(creator, decodedId, cancellationToken)
@@ -135,29 +166,7 @@ public class EntryController : BaseController
     }
 
 
-    /// <summary>
-    /// Updates an entry.
-    /// </summary>
-    /// <param name="id">The encoded entry identifier.</param>
-    /// <param name="request">The entry API request.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
-    /// <returns>The entry response or error.</returns>
-    [HttpPost("{id}")]
-    [ProducesResponseType(typeof(EntryApiResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(DomainError), StatusCodes.Status400BadRequest)]
-    [ValidateId]
-    public async Task<IActionResult> Update([FromRoute] string id, [FromBody] EntryApiRequest request, CancellationToken cancellationToken = default)
-    {
-        var req = request.ToEntryRequest(IdCoder.Decode(id));
-        var creator = await GetCreator(cancellationToken);
-
-        var result = await _entryInfoService.Update(creator, req, cancellationToken)
-            .ToEntryApiResponse();
-
-        return OkOrBadRequest(result);
-    }
-
-
     private readonly IEntryInfoService _entryInfoService;
+    private readonly IOpenGraphService _openGraphService;
     private readonly IReportService _reportService;
 }
