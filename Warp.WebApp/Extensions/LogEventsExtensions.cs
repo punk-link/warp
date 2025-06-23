@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Net;
+using Warp.WebApp.Attributes;
 using Warp.WebApp.Constants.Logging;
 
 namespace Warp.WebApp.Extensions;
@@ -48,7 +48,7 @@ public static class LogEventsExtensions
 
     private static HttpStatusCode GetHttpStatusCodeFromAttributes(LogEvents target)
     {
-        var attribute = GetAttribute<ProducesResponseTypeAttribute>(target);
+        var attribute = GetAttribute<HttpStatusCodeAttribute>(target);
         if (attribute is not null)
             return (HttpStatusCode) attribute.StatusCode;
 
@@ -59,9 +59,9 @@ public static class LogEventsExtensions
     private static T? GetAttribute<T>(this LogEvents target)
     {
         var fieldInfo = target.GetType().GetField(target.ToString());
-        var xx = fieldInfo?.GetCustomAttributes(typeof(T), false) as T[];
-        if (xx?.Length > 0)
-            return xx[0];
+        var attribute = fieldInfo?.GetCustomAttributes(typeof(T), false) as T[];
+        if (attribute?.Length > 0)
+            return attribute[0];
 
         return default;
     }
