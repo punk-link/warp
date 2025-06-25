@@ -7,9 +7,16 @@
     // API routes
     ENTRY: '/entry',
     API: {
+        CREATORS: {
+            GET_OR_SET: '/api/creators'
+        },
+
         ENTRIES: {
-            ROOT: '/api/entries',
+            ADD_OR_UPDATE: (entryId) => `/api/entries/${entryId}`,
+            COPY: (entryId) => `/api/entries/${entryId}/copy`,
+            CREATE: `/api/entries`,
             DELETE: (entryId) => `/api/entries/${entryId}`,
+            GET: (entryId) => `/api/entries/${entryId}`,
             REPORT: (entryId) => `/api/entries/${entryId}/report`
         },
 
