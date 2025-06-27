@@ -3,7 +3,7 @@ import { CSS_CLASSES } from '/js/constants/css.js';
 import { eventNames } from '/js/services/events.js';
 
 
-export const createButton = {
+export const createButtonService = {
     init: (elements) => {
         const createButton = elements.getCreateButton();
         const { advancedTextarea, simpleTextarea, advancedButton, simpleButton } = elements.getModeElements();
@@ -38,5 +38,7 @@ export const createButton = {
         });
 
         updateButtonState();
+
+        return createButton;
     }
 };

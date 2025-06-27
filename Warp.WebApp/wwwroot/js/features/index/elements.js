@@ -5,6 +5,7 @@ export const elements = {
     getId: () => dom.query('input[name="id"]'),
     getCreateButton: () => dom.get('create-button'),
     getExpirationSelector: () => dom.get('expiration-selector'),
+    getForm: () => dom.get('entry-form'),
     getModeElements: () => ({
         advancedButton: dom.get('advanced-mode-nav-button'),
         simpleButton: dom.get('simple-mode-nav-button'),
