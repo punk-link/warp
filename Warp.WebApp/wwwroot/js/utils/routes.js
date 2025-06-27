@@ -23,6 +23,12 @@
         IMAGES: {
             ADD: (entryId) => `/api/images/entry-id/${entryId}`,
             DELETE: (entryId, imageId) => `/api/images/entry-id/${entryId}/image-id/${imageId}`
+        },
+
+        METADATA: {
+            DEFAULT_OPENGRAPH: '/api/metadata/opengraph/default',
+            EDIT_MODES: '/api/metadata/enums/edit-modes',
+            EXPIRATION_PERIODS: '/api/metadata/enums/expiration-periods'
         }
     }
 });
