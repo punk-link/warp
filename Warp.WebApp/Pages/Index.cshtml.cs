@@ -1,218 +1,50 @@
-using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Localization;
-using Microsoft.Extensions.Options;
-using Warp.WebApp.Models;
-using Warp.WebApp.Models.Creators;
+using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Entries.Enums;
-using Warp.WebApp.Models.Errors;
-using Warp.WebApp.Models.Options;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Creators;
-using Warp.WebApp.Services.OpenGraph;
 
 namespace Warp.WebApp.Pages;
 
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 public class IndexModel : BasePageModel
 {
-    public IndexModel(IOptionsSnapshot<AnalyticsOptions> analyticsOptions, 
+    public IndexModel(
         ICookieService cookieService, 
         ICreatorService creatorService, 
-        IEntryInfoService entryInfoService,
         IStringLocalizer<IndexModel> localizer,
-        ILoggerFactory loggerFactory, 
-        IOpenGraphService openGraphService)
+        ILoggerFactory loggerFactory)
         : base(cookieService, creatorService, loggerFactory)
     {
-        _analyticsOptions = analyticsOptions.Value;
-        _cookieService = cookieService;
-        _creatorService = creatorService;
-        _entryInfoService = entryInfoService;
         _localizer = localizer;
-        _openGraphService = openGraphService;
     }
 
 
-    public Task<IActionResult> OnGet(string? id, CancellationToken cancellationToken)
+    public IActionResult OnGet(string? id)
     {
-        return InitializeCreator()
-            .Tap(AddAnalyticsModel)
-            .Finally(async creatorResult =>
-            {
-                if (string.IsNullOrEmpty(id))
-                    return BuildNewModel();
+        Id = IdCoder.Encode(Guid.CreateVersion7());
+        if (!string.IsNullOrWhiteSpace(id))
+            Id = id;
 
-                var creator = creatorResult.Value;
-                return await BuildExistingModel(creator);
-            });
+        ImageContainers.Add(EditableImageContainerModel.Empty);
 
+        OpenGraphModel = new OpenGraphModel(new EntryOpenGraphDescription(_localizer["Open Graph Title"], _localizer["Open Graph Description"], null));
 
-        Task<Result<Creator>> InitializeCreator()
-        {
-            return TryGetCreatorId()
-                .Bind(GetOrAddCreator)
-                .Tap(SetCreatorCookie);
-
-            
-            Result<Guid?> TryGetCreatorId() 
-                => _cookieService.GetCreatorId(HttpContext);
-
-
-            async Task<Result<Creator>> GetOrAddCreator(Guid? creatorId)
-            {
-                var (isSuccess, _, creator, _) = await _creatorService.Get(creatorId, cancellationToken);
-                return isSuccess
-                    ? creator
-                    : await _creatorService.Add(cancellationToken);
-            }
-
-
-            Task SetCreatorCookie(Creator creator)
-                => _cookieService.Set(HttpContext, creator);
-        }
-
-
-        void AddAnalyticsModel()
-            => AnalyticsModel = new AnalyticsModel(_analyticsOptions);
-
-
-        IActionResult BuildNewModel()
-        {
-            var openGraphDescription = _openGraphService.GetDefaultDescription();
-            OpenGraphModel = new OpenGraphModel(openGraphDescription);
-
-            Id = IdCoder.Encode(Guid.CreateVersion7());
-            ImageContainers.Add(EditableImageContainerModel.Empty);
-
-            return Page();
-        }
-
-
-        Task<IActionResult> BuildExistingModel(Creator creator)
-        {
-            return DecodeId(id)
-                .Bind(GetEntryInfo)
-                .Bind(BuildModel)
-                .Tap(AddOpenGraphModel)
-                .Finally(result => result.IsSuccess
-                    ? Page()
-                    : RedirectToError(result.Error));
-
-
-            Task<Result<EntryInfo, DomainError>> GetEntryInfo(Guid entryId)
-                => _entryInfoService.Get(creator, entryId, cancellationToken);
-
-
-            Result<EntryInfo, DomainError> BuildModel(EntryInfo entryInfo)
-            {
-                Id = id;
-                EditMode = entryInfo.EditMode;
-                // TODO: move to post
-                TextContent = TextFormatter.GetCleanString(entryInfo.Entry.Content);
-                SelectedExpirationPeriod = GetExpirationPeriodId(entryInfo.ExpiresAt - entryInfo.CreatedAt);
-
-                foreach (var imageInfo in entryInfo.ImageInfos)
-                    ImageContainers.Add(new EditableImageContainerModel(imageInfo));
-
-                ImageContainers.Add(EditableImageContainerModel.Empty);
-
-                return entryInfo;
-            }
-
-            
-            void AddOpenGraphModel(EntryInfo entryInfo)
-                => OpenGraphModel = new OpenGraphModel(entryInfo.OpenGraphDescription);
-        }
+        return Page();
     }
 
 
-    public Task<IActionResult> OnPost(CancellationToken cancellationToken)
+    public IActionResult OnPost(CancellationToken cancellationToken)
     {
-        return GetCreator(cancellationToken)
-            .Bind(BuildEntryRequest)
-            .Bind(ProcessEntryRequest)
-            .Finally(result =>
-            {
-                if (result.IsFailure)
-                    return RedirectToError(result.Error);
-
-                var entryInfo = result.Value;
-                return RedirectToPage("./Preview", new { id = IdCoder.Encode(entryInfo.Id) });
-            });
-
-
-        Result<(Creator, EntryRequest), DomainError> BuildEntryRequest(Creator creator)
-        {
-            var expiresIn = GetExpirationPeriod(SelectedExpirationPeriod);
-            var decodedImageIds = ImageIds.Select(IdCoder.Decode).ToList();
-        
-            var request = new EntryRequest 
-            {
-                Id = IdCoder.Decode(Id), 
-                EditMode = EditMode, 
-                ExpiresIn = expiresIn, 
-                ImageIds = decodedImageIds, 
-                TextContent = TextContent
-            };
-
-            return (creator, request);
-        }
-
-
-        async Task<Result<EntryInfo, DomainError>> ProcessEntryRequest((Creator Creator, EntryRequest EntryRequest) tuple)
-        {
-            var entryExists = await CheckIfEntryExists(tuple.Creator, tuple.EntryRequest.Id, cancellationToken);
-            return entryExists
-                ? await _entryInfoService.Update(tuple.Creator, tuple.EntryRequest, cancellationToken)
-                : await _entryInfoService.Add(tuple.Creator, tuple.EntryRequest, cancellationToken);
-
-
-            async Task<bool> CheckIfEntryExists(Creator creator, Guid entryId, CancellationToken cancellationToken)
-            {
-                var result = await _entryInfoService.Get(creator, entryId, cancellationToken);
-                return result.IsSuccess;
-            }
-        }
-    }
-
-
-    private static TimeSpan GetExpirationPeriod(int selectedPeriod)
-        => selectedPeriod switch
-        {
-            1 => new TimeSpan(0, 5, 0),
-            2 => new TimeSpan(0, 30, 0),
-            3 => new TimeSpan(1, 0, 0),
-            4 => new TimeSpan(8, 0, 0),
-            5 => new TimeSpan(24, 0, 0),
-            _ => new TimeSpan(0, 5, 0)
-        };
-
-
-    private static int GetExpirationPeriodId(TimeSpan expirationPeriod)
-    {
-        var ts5Min = new TimeSpan(0, 5, 0);
-        var ts30Min = new TimeSpan(0, 30, 0);
-        var ts1Hour = new TimeSpan(1, 0, 0);
-        var ts8Hours = new TimeSpan(8, 0, 0);
-
-        if (expirationPeriod <= ts5Min)
-            return 1;
-        if (expirationPeriod <= ts30Min && expirationPeriod > ts5Min)
-            return 2;
-        if (expirationPeriod <= ts1Hour && expirationPeriod > ts30Min)
-            return 3;
-        if (expirationPeriod <= ts8Hours && expirationPeriod > ts1Hour)
-            return 4;
-
-        return 5;
+        return RedirectToPage("./Preview", new { id = Id });
     }
 
 
     [BindProperty]
-    public string Id { get; set; }
+    public string? Id { get; set; }
 
     [BindProperty]
     public EditMode EditMode { get; set; } = EditMode.Unset;
@@ -241,10 +73,5 @@ public class IndexModel : BasePageModel
         ];
 
 
-    private readonly AnalyticsOptions _analyticsOptions;
-    private readonly ICookieService _cookieService;
-    private readonly ICreatorService _creatorService;
-    private readonly IEntryInfoService _entryInfoService;
     private readonly IStringLocalizer<IndexModel> _localizer;
-    private readonly IOpenGraphService _openGraphService;
 }

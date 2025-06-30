@@ -6,6 +6,8 @@
     
     // API routes
     ENTRY: '/entry',
+    PREVIEW: '/preview',
+
     API: {
         CREATORS: {
             GET_OR_SET: '/api/creators'
