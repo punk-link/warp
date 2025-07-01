@@ -52,7 +52,7 @@ const handleFormSubmit = (entryId, createButton) => async (event) => {
         const response = await entryApi.add(entryId, formData);
 
         if (response && response.id) {
-            redirectTo(ROUTES.PREVIEW, { id: response.id });
+            redirectTo(ROUTES.PREVIEW(response.id));
         } else {
             console.error('Failed to create entry - no valid response received');
         }

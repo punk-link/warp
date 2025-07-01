@@ -6,7 +6,7 @@
     
     // API routes
     ENTRY: '/entry',
-    PREVIEW: '/preview',
+    PREVIEW: (entryId) => `/preview/${entryId}`,
 
     API: {
         CREATORS: {

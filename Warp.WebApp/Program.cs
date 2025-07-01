@@ -84,15 +84,6 @@ try
             options.ExpireTimeSpan = TimeSpan.FromDays(365);
             options.SlidingExpiration = true;
         });
-    builder.Services.AddAntiforgery(options => 
-    {
-        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-        options.Cookie.SameSite = SameSiteMode.Strict;
-        options.Cookie.Name = "Warp.Antiforgery";
-        options.Cookie.HttpOnly = true;
-
-        options.HeaderName = "X-CSRF-TOKEN";
-    });
 
     builder.Services.AddHttpClient(HttpClients.Warmup);
 
