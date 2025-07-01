@@ -17,7 +17,6 @@ namespace Warp.WebApp.Controllers;
 /// </summary>
 [ApiController]
 [Route("/api/entries")]
-[RequireCreatorCookie]
 public class EntryController : BaseController
 {
     /// <summary>
@@ -50,6 +49,7 @@ public class EntryController : BaseController
     [HttpPost("{id}")]
     [ProducesResponseType(typeof(EntryApiResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(DomainError), StatusCodes.Status400BadRequest)]
+    [RequireCreatorCookie]
     [ValidateId]
     public async Task<IActionResult> AddOrUpdate([FromRoute] string id, [FromBody] EntryApiRequest request, CancellationToken cancellationToken = default)
     {
@@ -79,6 +79,7 @@ public class EntryController : BaseController
     [HttpPost("{id}/copy")]
     [ProducesResponseType(typeof(EntryApiResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(DomainError), StatusCodes.Status400BadRequest)]
+    [RequireCreatorCookie]
     [ValidateId]
     public async Task<IActionResult> Copy([FromRoute] string id, CancellationToken cancellationToken = default)
     {
@@ -97,6 +98,7 @@ public class EntryController : BaseController
     /// <returns></returns>
     [HttpGet]
     [ProducesResponseType(typeof(EntryApiResponse), StatusCodes.Status200OK)]
+    [RequireCreatorCookie]
     public IActionResult Create()
     {
         var encodedId = IdCoder.Encode(Guid.CreateVersion7());
@@ -114,6 +116,7 @@ public class EntryController : BaseController
     /// <returns>No content if successful.</returns>
     [HttpDelete("{id}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [RequireCreatorCookie]
     [ValidateId]
     public async Task<IActionResult> Delete([FromRoute] string id, CancellationToken cancellationToken = default)
     {
@@ -156,6 +159,7 @@ public class EntryController : BaseController
     /// <returns>No content if successful.</returns>
     [HttpPost("{id}/report")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [RequireCreatorCookie]
     [ValidateId]
     public async Task<IActionResult> Report([FromRoute] string id, CancellationToken cancellationToken = default)
     {
