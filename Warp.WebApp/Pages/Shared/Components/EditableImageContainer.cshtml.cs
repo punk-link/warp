@@ -5,10 +5,15 @@ namespace Warp.WebApp.Pages.Shared.Components;
 
 public class EditableImageContainerModel : PageModel
 {
-    public EditableImageContainerModel(ImageInfo imageInfo)
+    public EditableImageContainerModel(Guid imageId, Uri? imageUrl)
     {
-        ImageId = imageInfo.Id;
-        ImageUrl = imageInfo.Url;
+        ImageId = imageId;
+        ImageUrl = imageUrl;
+    }
+
+
+    public EditableImageContainerModel(ImageInfo imageInfo) : this(imageInfo.Id, imageInfo.Url)
+    {
     }
 
 
@@ -18,11 +23,7 @@ public class EditableImageContainerModel : PageModel
 
 
     public static EditableImageContainerModel Empty
-        => new()
-        {
-            ImageId = Guid.Empty,
-            ImageUrl = null
-        };
+        => new(Guid.Empty, null);
 
 
     public void OnGet()

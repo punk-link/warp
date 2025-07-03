@@ -120,6 +120,11 @@ public class ImageService : IImageService, IUnauthorizedImageService
     }
 
 
+    /// <inheritdoc cref="IUnauthorizedImageService.BuildUrl"/>
+    public Uri BuildUrl(in Guid entryId, in Guid imageId)
+        => BuildUrl(IdCoder.Encode(entryId), in imageId);
+
+
     /// <inheritdoc cref="IImageService.Copy"/>
     public async Task<Result<List<ImageInfo>, DomainError>> Copy(Guid sourceEntryId, Guid targetEntryId, List<ImageInfo> sourceImages, CancellationToken cancellationToken)
     {
@@ -243,12 +248,8 @@ public class ImageService : IImageService, IUnauthorizedImageService
     }
 
 
-    private static Uri BuildUrl(string encodedEntryId, Guid imageId)
+    private static Uri BuildUrl(string encodedEntryId, in Guid imageId)
         => new(string.Format("/api/images/entry-id/{0}/image-id/{1}", encodedEntryId, IdCoder.Encode(imageId)), UriKind.Relative);
-
-
-    private static Uri BuildUrl(Guid entryId, Guid imageId)
-        => BuildUrl(IdCoder.Encode(entryId), imageId);
     
     
     private static readonly HashSet<string> _imageMimeTypes = new(

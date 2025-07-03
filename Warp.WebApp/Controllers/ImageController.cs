@@ -90,6 +90,38 @@ public sealed class ImageController : BaseController
 
 
     /// <summary>
+    /// Returns the partial view HTML for a given image.
+    /// </summary>
+    /// <param name="entryId">Encoded identifier of the entry containing the image</param>
+    /// <param name="imageId">Encoded identifier of the image to retrieve</param>
+    /// <returns>
+    /// Returns the rendered HTML of the partial view containing the image information or an internal server error if rendering fails.
+    /// </returns>
+    [HttpGet("entry-id/{entryId}/image-id/{imageId}/partial")]
+    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ValidateId("entryId", "imageId")]
+    public async Task<IActionResult> GetImagePartial([FromRoute] string entryId, [FromRoute] string imageId, CancellationToken cancellationToken = default)
+    {
+        var decodedEntryId = IdCoder.Decode(entryId);
+        var decodedImageId = IdCoder.Decode(imageId);
+
+        var url = _unauthorizedImageService.BuildUrl(decodedEntryId, decodedImageId);
+        var partialView = new PartialViewResult
+        {
+            ViewName = "Components/EditableImageContainer",
+            ViewData = new ViewDataDictionary(new EmptyModelMetadataProvider(), new ModelStateDictionary())
+            {
+                Model = new EditableImageContainerModel(decodedImageId, url)
+            }
+        };
+
+        var renderResult = await _partialViewRenderHelper.Render(ControllerContext, HttpContext, partialView);
+        return Ok(renderResult);
+    }
+
+
+    /// <summary>
     /// Removes an image from an entry.
     /// </summary>
     /// <param name="entryId">Encoded identifier of the entry containing the image</param>
@@ -98,21 +130,18 @@ public sealed class ImageController : BaseController
     /// A no content (204) response if successful, forbidden (403) if the user is not authorized,
     /// or a bad request if the identifiers cannot be decoded.
     /// </returns>
+    [HttpDelete("entry-id/{entryId}/image-id/{imageId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [HttpDelete("entry-id/{entryId}/image-id/{imageId}")]
+    [RequireCreatorCookie]
+    [ValidateId("entryId", "imageId")]
     public async Task<IActionResult> Remove([FromRoute] string entryId, [FromRoute] string imageId, CancellationToken cancellationToken = default)
     {
         var decodedEntryId = IdCoder.Decode(entryId);
-        if (decodedEntryId == Guid.Empty)
-            return IdDecodingBadRequest();
-
         var decodedImageId = IdCoder.Decode(imageId);
-        if (decodedImageId == Guid.Empty)
-            return IdDecodingBadRequest();
 
-        var creatorResult = await GetCreator(cancellationToken);
+        var creatorResult = await TryGetCreator(cancellationToken);
         if (creatorResult.IsFailure)
             return Forbid();
 
@@ -137,16 +166,16 @@ public sealed class ImageController : BaseController
     [DisableFormValueModelBinding]
     [RequestFormLimits(MultipartBodyLengthLimit = 50 * 1024 * 1024)] // 50MB
     [RequestSizeLimit(50 * 1024 * 1024)]
+    [HttpPost("entry-id/{entryId}")]
     [ProducesResponseType(typeof(ImageResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [HttpPost("entry-id/{entryId}")]
+    [RequireCreatorCookie]
+    [ValidateId("entryId")]
     public async Task<IActionResult> Upload([FromRoute] string entryId, CancellationToken cancellationToken = default)
     {
         Debug.Assert(Request.ContentType is not null, "Content type is not null because of the [MultipartFormData] attribute");
 
         var decodedEntryId = IdCoder.Decode(entryId);
-        if (decodedEntryId == Guid.Empty)
-            return IdDecodingBadRequest();
 
         var boundaryResult = MultipartRequestHelper.GetBoundary(MediaTypeHeaderValue.Parse(Request.ContentType), _options.RequestBoundaryLengthLimit);
         if (boundaryResult.IsFailure)
@@ -157,13 +186,14 @@ public sealed class ImageController : BaseController
             return BadRequest(DomainErrors.MultipartReaderError());
 
         var uploadResults = await ProcessUploadedFiles(reader, decodedEntryId, cancellationToken);
-        return Ok(await BuildUploadResults(uploadResults));
+
+        return Ok(BuildUploadResults(uploadResults));
     }
 
 
-    private async Task<Dictionary<string, string>> BuildUploadResults(List<Result<ImageResponse, DomainError>> uploadResults)
+    private static Dictionary<string, string> BuildUploadResults(List<Result<ImageResponse, DomainError>> uploadResults)
     {
-        var results = new Dictionary<string, string>();
+        var results = new Dictionary<string, string>(uploadResults.Count);
         foreach (var (_, isFailure, imageResponse, error) in uploadResults)
         {
             if (isFailure)
@@ -175,18 +205,8 @@ public sealed class ImageController : BaseController
                 continue;
             }
 
-            var partialView = new PartialViewResult
-            {
-                
-                ViewName = "Components/EditableImageContainer",
-                ViewData = new ViewDataDictionary(new EmptyModelMetadataProvider(), new ModelStateDictionary())
-                {
-                    Model = new EditableImageContainerModel(imageResponse.ImageInfo)
-                }
-            };
-
-            var renderResult = await _partialViewRenderHelper.Render(ControllerContext, HttpContext, partialView);
-            results.Add(imageResponse.ClientFileName, renderResult);
+            var resultJson = JsonSerializer.Serialize(imageResponse);
+            results.Add(imageResponse.ClientFileName, resultJson);
         }
 
         return results;
@@ -198,6 +218,8 @@ public sealed class ImageController : BaseController
         var fileHelper = new FileHelper(_loggerFactory, _options.AllowedExtensions, _options.MaxFileSize);
 
         var uploadResults = new List<Result<ImageResponse, DomainError>>();
+        // TODO: Consider using a configurable limit for the number of files
+        // TODO: Use global limits for file count based by entry
         var uploadedFilesCount = 0;
         MultipartSection? section;
 
@@ -210,11 +232,11 @@ public sealed class ImageController : BaseController
             if (section is null)
                 break;
 
-            var (HasValue, Value) = await ProcessSection(section, fileHelper, decodedEntryId, cancellationToken);
-            if (!HasValue)
+            var (hasValue, value) = await ProcessSection(section, fileHelper, decodedEntryId, cancellationToken);
+            if (!hasValue)
                 continue;
             
-            uploadResults.Add(Value);
+            uploadResults.Add(value);
             uploadedFilesCount++;
         } while (section is not null);
 
@@ -222,7 +244,7 @@ public sealed class ImageController : BaseController
     }
 
 
-    private async Task<(bool HasValue, Result<ImageResponse, DomainError> Value)> ProcessSection(MultipartSection section, FileHelper fileHelper, Guid decodedEntryId, CancellationToken cancellationToken)
+    private async Task<(bool, Result<ImageResponse, DomainError>)> ProcessSection(MultipartSection section, FileHelper fileHelper, Guid decodedEntryId, CancellationToken cancellationToken)
     {
         if (!ContentDispositionHeaderValue.TryParse(section.ContentDisposition, out var contentDisposition))
             return (false, default);
@@ -232,12 +254,9 @@ public sealed class ImageController : BaseController
 
         var appFileResult = await fileHelper.ProcessStreamedFile(section, contentDisposition);
         if (appFileResult.IsFailure)
-        {
-            var enrichedError = EnrichProblemDetails(contentDisposition, appFileResult.Error);
-            return (true, enrichedError);
-        }
+            return (true, EnrichProblemDetails(contentDisposition, appFileResult.Error));
 
-        var uploadResult = (await _unauthorizedImageService.Add(decodedEntryId, appFileResult.Value, cancellationToken));
+        var uploadResult = await _unauthorizedImageService.Add(decodedEntryId, appFileResult.Value, cancellationToken);
         return (true, uploadResult);
 
 
