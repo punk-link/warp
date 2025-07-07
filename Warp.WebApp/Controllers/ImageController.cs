@@ -1,4 +1,5 @@
-﻿using CSharpFunctionalExtensions;
+﻿using Amazon.Runtime.Internal.Transform;
+using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
@@ -53,6 +54,68 @@ public sealed class ImageController : BaseController
         _options = options.Value;
         _partialViewRenderHelper = partialViewRenderHelper;
         _unauthorizedImageService = unauthorizedImageService;
+    }
+
+
+    /// <summary>
+    /// Adds one or more images to an entry.
+    /// </summary>
+    /// <param name="entryId">Encoded identifier of the entry to which the images will be uploaded</param>
+    /// <returns>
+    /// Dictionary mapping file names to either rendered HTML content (for successful uploads)
+    /// or error information (for failed uploads).
+    /// </returns>
+    /// <remarks>
+    /// This endpoint accepts multipart form data with a file size limit of 50MB.
+    /// It processes each file in the multipart request, validates it, and associates it with the entry.
+    /// </remarks>
+    [MultipartFormData]
+    [DisableFormValueModelBinding]
+    [RequestFormLimits(MultipartBodyLengthLimit = 50 * 1024 * 1024)] // 50MB
+    [RequestSizeLimit(50 * 1024 * 1024)]
+    [HttpPost("entry-id/{entryId}")]
+    [ProducesResponseType(typeof(ImageResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [RequireCreatorCookie]
+    [ValidateId("entryId")]
+    public async Task<IActionResult> Add([FromRoute] string entryId, CancellationToken cancellationToken = default)
+    {
+        Debug.Assert(Request.ContentType is not null, "Content type is not null because of the [MultipartFormData] attribute");
+
+        var decodedEntryId = IdCoder.Decode(entryId);
+
+        var boundaryResult = MultipartRequestHelper.GetBoundary(MediaTypeHeaderValue.Parse(Request.ContentType), _options.RequestBoundaryLengthLimit);
+        if (boundaryResult.IsFailure)
+            return BadRequest(boundaryResult.Error);
+
+        var reader = new MultipartReader(boundaryResult.Value, HttpContext.Request.Body);
+        if (reader is null)
+            return BadRequest(DomainErrors.MultipartReaderError());
+
+        var uploadResults = await ProcessUploadedFiles(reader, decodedEntryId, cancellationToken);
+
+        return Ok(BuildUploadResults(uploadResults));
+
+
+
+        static Dictionary<string, object> BuildUploadResults(List<Result<ImageResponse, DomainError>> uploadResults)
+        {
+            var results = new Dictionary<string, object>(uploadResults.Count);
+            foreach (var (_, isFailure, imageResponse, error) in uploadResults)
+            {
+                if (isFailure)
+                {
+                    var fileName = error.Extensions[ErrorExtensionKeys.FileName] as string ?? "unknown";
+
+                    results.Add(fileName, error);
+                    continue;
+                }
+
+                results.Add(imageResponse.ClientFileName, imageResponse);
+            }
+
+            return results;
+        }
     }
 
 
@@ -150,69 +213,6 @@ public sealed class ImageController : BaseController
     }
 
 
-    /// <summary>
-    /// Uploads one or more images to an entry.
-    /// </summary>
-    /// <param name="entryId">Encoded identifier of the entry to which the images will be uploaded</param>
-    /// <returns>
-    /// Dictionary mapping file names to either rendered HTML content (for successful uploads)
-    /// or error information (for failed uploads).
-    /// </returns>
-    /// <remarks>
-    /// This endpoint accepts multipart form data with a file size limit of 50MB.
-    /// It processes each file in the multipart request, validates it, and associates it with the entry.
-    /// </remarks>
-    [MultipartFormData]
-    [DisableFormValueModelBinding]
-    [RequestFormLimits(MultipartBodyLengthLimit = 50 * 1024 * 1024)] // 50MB
-    [RequestSizeLimit(50 * 1024 * 1024)]
-    [HttpPost("entry-id/{entryId}")]
-    [ProducesResponseType(typeof(ImageResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [RequireCreatorCookie]
-    [ValidateId("entryId")]
-    public async Task<IActionResult> Upload([FromRoute] string entryId, CancellationToken cancellationToken = default)
-    {
-        Debug.Assert(Request.ContentType is not null, "Content type is not null because of the [MultipartFormData] attribute");
-
-        var decodedEntryId = IdCoder.Decode(entryId);
-
-        var boundaryResult = MultipartRequestHelper.GetBoundary(MediaTypeHeaderValue.Parse(Request.ContentType), _options.RequestBoundaryLengthLimit);
-        if (boundaryResult.IsFailure)
-            return BadRequest(boundaryResult.Error);
-
-        var reader = new MultipartReader(boundaryResult.Value, HttpContext.Request.Body);
-        if (reader is null)
-            return BadRequest(DomainErrors.MultipartReaderError());
-
-        var uploadResults = await ProcessUploadedFiles(reader, decodedEntryId, cancellationToken);
-
-        return Ok(BuildUploadResults(uploadResults));
-    }
-
-
-    private static Dictionary<string, string> BuildUploadResults(List<Result<ImageResponse, DomainError>> uploadResults)
-    {
-        var results = new Dictionary<string, string>(uploadResults.Count);
-        foreach (var (_, isFailure, imageResponse, error) in uploadResults)
-        {
-            if (isFailure)
-            {
-                var fileName = error.Extensions[ErrorExtensionKeys.FileName] as string ?? "unknown";
-
-                var errorJson = JsonSerializer.Serialize(error);
-                results.Add(fileName, errorJson);
-                continue;
-            }
-
-            var resultJson = JsonSerializer.Serialize(imageResponse);
-            results.Add(imageResponse.ClientFileName, resultJson);
-        }
-
-        return results;
-    }
-
-
     private async Task<List<Result<ImageResponse, DomainError>>> ProcessUploadedFiles(MultipartReader reader, Guid decodedEntryId, CancellationToken cancellationToken)
     {
         var fileHelper = new FileHelper(_loggerFactory, _options.AllowedExtensions, _options.MaxFileSize);
@@ -257,6 +257,9 @@ public sealed class ImageController : BaseController
             return (true, EnrichProblemDetails(contentDisposition, appFileResult.Error));
 
         var uploadResult = await _unauthorizedImageService.Add(decodedEntryId, appFileResult.Value, cancellationToken);
+        if (uploadResult.IsFailure)
+            return (true, EnrichProblemDetails(contentDisposition, uploadResult.Error));
+
         return (true, uploadResult);
 
 
