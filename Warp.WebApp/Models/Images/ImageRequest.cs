@@ -1,4 +1,4 @@
-﻿namespace Warp.WebApp.Models;
+﻿namespace Warp.WebApp.Models.Images;
 
 public readonly record struct ImageRequest
 {

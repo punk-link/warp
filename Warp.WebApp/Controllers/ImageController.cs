@@ -1,5 +1,4 @@
-﻿using Amazon.Runtime.Internal.Transform;
-using CSharpFunctionalExtensions;
+﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
@@ -8,12 +7,13 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 using System.Diagnostics;
-using System.Text.Json;
+using System.Net.Mime;
 using Warp.WebApp.Attributes;
 using Warp.WebApp.Constants;
 using Warp.WebApp.Helpers;
-using Warp.WebApp.Models;
 using Warp.WebApp.Models.Errors;
+using Warp.WebApp.Models.Images;
+using Warp.WebApp.Models.Images.Converters;
 using Warp.WebApp.Models.Options;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
@@ -95,27 +95,6 @@ public sealed class ImageController : BaseController
         var uploadResults = await ProcessUploadedFiles(reader, decodedEntryId, cancellationToken);
 
         return Ok(BuildUploadResults(uploadResults));
-
-
-
-        static Dictionary<string, object> BuildUploadResults(List<Result<ImageResponse, DomainError>> uploadResults)
-        {
-            var results = new Dictionary<string, object>(uploadResults.Count);
-            foreach (var (_, isFailure, imageResponse, error) in uploadResults)
-            {
-                if (isFailure)
-                {
-                    var fileName = error.Extensions[ErrorExtensionKeys.FileName] as string ?? "unknown";
-
-                    results.Add(fileName, error);
-                    continue;
-                }
-
-                results.Add(imageResponse.ClientFileName, imageResponse);
-            }
-
-            return results;
-        }
     }
 
 
@@ -213,6 +192,27 @@ public sealed class ImageController : BaseController
     }
 
 
+
+    private Dictionary<string, object> BuildUploadResults(List<Result<ImageResponse, DomainError>> uploadResults)
+    {
+        var results = new Dictionary<string, object>(uploadResults.Count);
+        foreach (var (_, isFailure, imageResponse, error) in uploadResults)
+        {
+            if (isFailure)
+            {
+                var fileName = error.Extensions[ErrorExtensionKeys.FileName] as string;
+                results.Add(fileName!, error);
+
+                continue;
+            }
+
+            results.Add(imageResponse.ClientFileName, _unauthorizedImageService.BuildPartialUrl(imageResponse.EntryId, imageResponse.Id));
+        }
+
+        return results;
+    }
+
+
     private async Task<List<Result<ImageResponse, DomainError>>> ProcessUploadedFiles(MultipartReader reader, Guid decodedEntryId, CancellationToken cancellationToken)
     {
         var fileHelper = new FileHelper(_loggerFactory, _options.AllowedExtensions, _options.MaxFileSize);
@@ -254,16 +254,16 @@ public sealed class ImageController : BaseController
 
         var appFileResult = await fileHelper.ProcessStreamedFile(section, contentDisposition);
         if (appFileResult.IsFailure)
-            return (true, EnrichProblemDetails(contentDisposition, appFileResult.Error));
+            return (true, EnrichDomainErrorWithFileName(contentDisposition, appFileResult.Error));
 
-        var uploadResult = await _unauthorizedImageService.Add(decodedEntryId, appFileResult.Value, cancellationToken);
-        if (uploadResult.IsFailure)
-            return (true, EnrichProblemDetails(contentDisposition, uploadResult.Error));
-
+        var uploadResult = await _unauthorizedImageService.Add(decodedEntryId, appFileResult.Value, cancellationToken)
+            .ToImageResponse(contentDisposition.FileName.Value)
+            .OnFailureCompensate(x => EnrichDomainErrorWithFileName(contentDisposition, x));
+        
         return (true, uploadResult);
 
 
-        static DomainError EnrichProblemDetails(ContentDispositionHeaderValue contentDisposition, DomainError error)
+        static DomainError EnrichDomainErrorWithFileName(ContentDispositionHeaderValue contentDisposition, DomainError error)
         {
             error.Extensions.Add(ErrorExtensionKeys.FileName, contentDisposition.FileName.Value);
             return error;

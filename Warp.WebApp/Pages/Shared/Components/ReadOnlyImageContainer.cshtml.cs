@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.RazorPages;
-using Warp.WebApp.Models;
+using Warp.WebApp.Models.Images;
 
 namespace Warp.WebApp.Pages.Shared.Components;
 

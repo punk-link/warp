@@ -1,4 +1,5 @@
 ﻿using Warp.WebApp.Models.Entries.Enums;
+using Warp.WebApp.Models.Images;
 using Warp.WebApp.Services;
 
 namespace Warp.WebApp.Models.Entries;

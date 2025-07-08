@@ -1,15 +1,19 @@
-﻿namespace Warp.WebApp.Models;
+﻿using Warp.WebApp.Services;
+
+namespace Warp.WebApp.Models.Images;
 
 public readonly record struct ImageResponse
 {
     public ImageResponse(ImageInfo imageInfo, string clientFileName)
     {
+        Id = imageInfo.Id;
         ClientFileName = clientFileName;
-        ImageInfo = imageInfo;
+        EntryId = imageInfo.EntryId;
     }
 
 
-    public ImageInfo ImageInfo { get; }
+    public Guid Id { get; }
     public string ClientFileName { get; }
+    public Guid EntryId { get; }
 }
 

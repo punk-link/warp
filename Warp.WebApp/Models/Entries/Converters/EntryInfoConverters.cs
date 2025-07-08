@@ -9,10 +9,7 @@ public static class EntryInfoConverters
     public static async Task<Result<EntryApiResponse, DomainError>> ToEntryApiResponse(this Task<Result<EntryInfo, DomainError>> target)
     {
         var result = await target;
-        if (result.IsFailure)
-            return Result.Failure<EntryApiResponse, DomainError>(result.Error);
-
-        return Result.Success<EntryApiResponse, DomainError>(result.Value.ToEntryApiResponse());
+        return result.ToEntryApiResponse();
     }
 
 

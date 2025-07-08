@@ -1,6 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Entries.Enums;
+using Warp.WebApp.Models.Images;
 
 namespace Warp.WebApp.Models;
 
