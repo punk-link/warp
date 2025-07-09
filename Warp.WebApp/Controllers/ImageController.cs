@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 using System.Diagnostics;
-using System.Net.Mime;
 using Warp.WebApp.Attributes;
 using Warp.WebApp.Constants;
 using Warp.WebApp.Helpers;
@@ -206,7 +205,12 @@ public sealed class ImageController : BaseController
                 continue;
             }
 
-            results.Add(imageResponse.ClientFileName, _unauthorizedImageService.BuildPartialUrl(imageResponse.EntryId, imageResponse.Id));
+            // TODO: remove the partialUrl from the response when the frontend is updated to stop using Razor components
+            results.Add(imageResponse.ClientFileName, new 
+            {
+                partialUrl = _unauthorizedImageService.BuildPartialUrl(imageResponse.EntryId, imageResponse.Id),
+                imageInfo = imageResponse
+            });
         }
 
         return results;
