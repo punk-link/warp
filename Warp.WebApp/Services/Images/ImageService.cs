@@ -5,7 +5,6 @@ using System.IO.Hashing;
 using Warp.WebApp.Constants.Caching;
 using Warp.WebApp.Data;
 using Warp.WebApp.Data.S3;
-using Warp.WebApp.Models;
 using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Models.Files;
 using Warp.WebApp.Models.Images;
@@ -188,7 +187,9 @@ public class ImageService : IImageService, IUnauthorizedImageService
         async Task<Result<List<Guid>, DomainError>> GetUploaded()
         {
             var prefix = entryId.ToString();
-            var keys = imageIds.Select(imageId => imageId.ToString())
+            var keys = imageIds
+                .Where(imageId => imageId != Guid.Empty)
+                .Select(imageId => imageId.ToString())
                 .ToList();
             
             var (_, isFailure, stringKeys, error) = await _s3FileStorage.Contains(prefix, keys, cancellationToken);

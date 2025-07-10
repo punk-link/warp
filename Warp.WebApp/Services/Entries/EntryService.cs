@@ -1,6 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
 using Warp.WebApp.Attributes;
-using Warp.WebApp.Models;
+using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Models.Validators;
 

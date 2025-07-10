@@ -1,6 +1,6 @@
 ﻿using Warp.WebApp.Models.Entries.Enums;
 
-namespace Warp.WebApp.Models;
+namespace Warp.WebApp.Models.Entries;
 
 public readonly record struct EntryRequest
 {

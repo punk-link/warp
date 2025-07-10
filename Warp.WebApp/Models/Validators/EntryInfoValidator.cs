@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using Warp.WebApp.Extensions;
+using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Entries.Enums;
 using Warp.WebApp.Models.Errors;
 
