@@ -1,5 +1,6 @@
 ﻿using Warp.WebApp.Models.Entries.Enums;
 using Warp.WebApp.Models.Images;
+using Warp.WebApp.Models.Images.Converters;
 using Warp.WebApp.Services;
 
 namespace Warp.WebApp.Models.Entries;
@@ -11,7 +12,7 @@ public readonly record struct EntryApiResponse
         Id = id;
         EditMode = editMode;
         ExpirationPeriod = expirationPeriod;
-        Images = images ?? [];
+        Images = images.ToImageInfoResponse();
         OpenGraphDescription = openGraphDescription;
         // TODO: move out from the struct
         TextContent = TextFormatter.GetCleanString(textContent);
@@ -30,7 +31,7 @@ public readonly record struct EntryApiResponse
     public string Id { get; }
     public EditMode EditMode { get; } = EditMode.Unset;
     public ExpirationPeriod ExpirationPeriod { get; } = ExpirationPeriod.FiveMinutes;
-    public List<ImageInfo> Images { get; } = [];
+    public List<ImageInfoResponse> Images { get; } = [];
     public EntryOpenGraphDescription OpenGraphDescription { get; } = default!;
     public string TextContent { get; } = string.Empty;
 }

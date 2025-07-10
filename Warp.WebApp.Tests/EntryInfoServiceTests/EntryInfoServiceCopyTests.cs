@@ -6,7 +6,6 @@ using NSubstitute;
 using System.Net;
 using Warp.WebApp.Data;
 using Warp.WebApp.Helpers;
-using Warp.WebApp.Models;
 using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Entries.Enums;

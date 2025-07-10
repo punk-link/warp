@@ -73,7 +73,7 @@ public sealed class ImageController : BaseController
     [RequestFormLimits(MultipartBodyLengthLimit = 50 * 1024 * 1024)] // 50MB
     [RequestSizeLimit(50 * 1024 * 1024)]
     [HttpPost("entry-id/{entryId}")]
-    [ProducesResponseType(typeof(ImageResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ImageUploadResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [RequireCreatorCookie]
     [ValidateId("entryId")]
@@ -192,10 +192,10 @@ public sealed class ImageController : BaseController
 
 
 
-    private Dictionary<string, object> BuildUploadResults(List<Result<ImageResponse, DomainError>> uploadResults)
+    private Dictionary<string, object> BuildUploadResults(List<Result<ImageUploadResult, DomainError>> uploadResults)
     {
         var results = new Dictionary<string, object>(uploadResults.Count);
-        foreach (var (_, isFailure, imageResponse, error) in uploadResults)
+        foreach (var (_, isFailure, imageUploadResult, error) in uploadResults)
         {
             if (isFailure)
             {
@@ -206,22 +206,21 @@ public sealed class ImageController : BaseController
             }
 
             // TODO: remove the partialUrl from the response when the frontend is updated to stop using Razor components
-            results.Add(imageResponse.ClientFileName, new 
-            {
-                partialUrl = _unauthorizedImageService.BuildPartialUrl(imageResponse.EntryId, imageResponse.Id),
-                imageInfo = imageResponse
-            });
+            var partialUrl = _unauthorizedImageService.BuildPartialUrl(imageUploadResult.EntryId, imageUploadResult.Id);
+            var url = _unauthorizedImageService.BuildUrl(imageUploadResult.EntryId, imageUploadResult.Id);
+
+            results.Add(imageUploadResult.ClientFileName, imageUploadResult.ToImageUploadResponse(partialUrl, url));
         }
 
         return results;
     }
 
 
-    private async Task<List<Result<ImageResponse, DomainError>>> ProcessUploadedFiles(MultipartReader reader, Guid decodedEntryId, CancellationToken cancellationToken)
+    private async Task<List<Result<ImageUploadResult, DomainError>>> ProcessUploadedFiles(MultipartReader reader, Guid decodedEntryId, CancellationToken cancellationToken)
     {
         var fileHelper = new FileHelper(_loggerFactory, _options.AllowedExtensions, _options.MaxFileSize);
 
-        var uploadResults = new List<Result<ImageResponse, DomainError>>();
+        var uploadResults = new List<Result<ImageUploadResult, DomainError>>();
         // TODO: Consider using a configurable limit for the number of files
         // TODO: Use global limits for file count based by entry
         var uploadedFilesCount = 0;
@@ -248,7 +247,7 @@ public sealed class ImageController : BaseController
     }
 
 
-    private async Task<(bool, Result<ImageResponse, DomainError>)> ProcessSection(MultipartSection section, FileHelper fileHelper, Guid decodedEntryId, CancellationToken cancellationToken)
+    private async Task<(bool, Result<ImageUploadResult, DomainError>)> ProcessSection(MultipartSection section, FileHelper fileHelper, Guid decodedEntryId, CancellationToken cancellationToken)
     {
         if (!ContentDispositionHeaderValue.TryParse(section.ContentDisposition, out var contentDisposition))
             return (false, default);

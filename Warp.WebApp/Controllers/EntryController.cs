@@ -1,7 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
 using Warp.WebApp.Attributes;
-using Warp.WebApp.Models;
 using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Entries.Converters;
 using Warp.WebApp.Models.Errors;

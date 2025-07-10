@@ -1,4 +1,5 @@
 ﻿using Warp.WebApp.Models.Entries.Enums;
+using Warp.WebApp.Services;
 
 namespace Warp.WebApp.Models.Entries.Converters;
 
@@ -11,7 +12,7 @@ public static class EntryApiRequestConverters
             Id = id,
             EditMode = request.EditMode,
             ExpiresIn = GetExpirationPeriod(request.ExpirationPeriod),
-            ImageIds = request.ImageIds,
+            ImageIds = [.. request.ImageIds.Select(IdCoder.Decode)],
             TextContent = request.TextContent
         };
 
