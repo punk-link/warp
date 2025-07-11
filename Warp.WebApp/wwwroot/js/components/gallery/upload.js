@@ -61,7 +61,7 @@ const handlers = {
                 }
 
                 const results = await response.json();
-                preview.render(entryId, validImageFiles, results);
+                await preview.render(entryId, validImageFiles, results);
 
                 const fileInput = elements.getUploadElements().fileInput;
                 if (fileInput) 
