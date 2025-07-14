@@ -90,8 +90,10 @@ const handlers = {
             render: async (entryId, files, results, onDelete) => {
                 const gallery = elements.getGallery();
 
-                for (file of files) {
+                for (const file of files) {
                     const readFileAsync = () => new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+
                         reader.onloadend = () => resolve(reader.result);
                         reader.onerror = reject;
                         reader.readAsDataURL(file);
@@ -100,7 +102,7 @@ const handlers = {
                     try {
                         const imageUrl = await readFileAsync();
 
-                        const result = results.find(r => r.name === file.name);
+                        const result = results.find(r => r.key === file.name)?.value;
                         if (!result)
                             continue;
 
