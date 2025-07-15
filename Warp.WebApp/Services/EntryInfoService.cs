@@ -131,6 +131,26 @@ public class EntryInfoService : IEntryInfoService
 
     /// <inheritdoc/>
     [TraceMethod]
+    public async Task<UnitResult<DomainError>> CanEdit(Creator creator, Guid entryId, CancellationToken cancellationToken)
+    {
+        var entryInfoResult = await GetEntryInfo(entryId, cancellationToken);
+        if (entryInfoResult.IsFailure)
+            return entryInfoResult.Error;
+
+        var entryInfo = entryInfoResult.Value;
+        if (!IsBelongsToCreator(entryInfo, creator))
+            return DomainErrors.NoPermissionError();
+
+        var viewCount = await _viewCountService.Get(entryId, cancellationToken);
+        if (viewCount != 0)
+            return DomainErrors.EntryCannotBeEditedAfterViewed();
+
+        return UnitResult.Success<DomainError>();
+    }
+
+
+    /// <inheritdoc/>
+    [TraceMethod]
     public Task<Result<EntryInfo, DomainError>> Copy(Creator creator, Guid entryId, CancellationToken cancellationToken)
     {
         var newEntryId = Guid.CreateVersion7();

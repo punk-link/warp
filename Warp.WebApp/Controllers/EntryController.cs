@@ -58,9 +58,9 @@ public class EntryController : BaseController
         var req = request.ToEntryRequest(decodedId);
 
         // TODO: replace this check with a more performant version
-        var x = await _entryInfoService.Get(creator, decodedId, cancellationToken);
+        var entryInfo = await _entryInfoService.Get(creator, decodedId, cancellationToken);
         Result<EntryInfo, DomainError> result;
-        if (x.IsFailure)
+        if (entryInfo.IsFailure)
             result = await _entryInfoService.Add(creator, req, cancellationToken);
         else
             result = await _entryInfoService.Update(creator, req, cancellationToken);
