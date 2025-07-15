@@ -16,16 +16,13 @@
     <script type="module" src="~/dist/preview.js" asp-append-version="true"></script>
     <script type="module" defer>
         document.addEventListener('DOMContentLoaded', () => {
-            if (typeof window.addPreviewEvents === 'function') 
-                window.addPreviewEvents('@Model.Id', '@Model.ExpiresIn');
+            if (typeof window.initializePreviewPage === 'function') 
+                window.initializePreviewPage();
             else
-                console.error('addPreviewEvents function not available');
+                console.error('initializePreviewPage function not available');
         });
     </script>
 }
-
-<form method="post" id="copy-form" asp-page-handler="Copy" asp-route-id="@Model.Id"></form>
-<form method="post" id="edit-form" asp-page-handler="Edit" asp-route-id="@Model.Id"></form>
 
 <div class="min-h-screen">
     <div class="flex flex-col sm:flex-row items-baseline px-3">
@@ -57,26 +54,13 @@
             <!-- Content -->
             <article class="w-full md:w-1/2 bg-yellow-50 p-3 rounded-sm mb-10">
                 <div class="relative">
-                    @if (Model.CanEdit)
-                    {
-                        <div class="absolute -top-6 right-3 z-10">
-                            <button id="edit-entry-button" class="btn btn-round btn-outline-primary" title="@Localizer["EditButton"]" form="edit-form">
-                                <i class="icofont-pencil-alt-2 text-xl"></i>
-                            </button>
-                        </div>
-                    }
-                    @if (Model.ImageContainers.Count > 0)
-                    {
-                        <div class="gallery pt-5">
-                            @foreach (var imageContainer in Model.ImageContainers)
-                            {
-                                <partial name="Shared/Components/ReadOnlyImageContainer" model="imageContainer" />
-                            }
-                        </div>
-                    }
-                    <div class="font-sans-serif text-base pt-5">
-                        @Html.Raw(Model.TextContent)
+                    <div class="absolute -top-6 right-3 z-10">
+                        <button id="edit-entry-button" class="btn btn-round btn-outline-primary hidden" title="@Localizer["EditButton"]">
+                            <i class="icofont-pencil-alt-2 text-xl"></i>
+                        </button>
                     </div>
+                    <div class="gallery pt-5 hidden"></div>
+                    <div class="font-sans-serif text-base pt-5"></div>
                 </div>
             </article>
 
@@ -88,7 +72,7 @@
                     </button>
                 </div>
                 <div class="bg-white rounded-sm">
-                    <button id="edit-button" class="btn btn-outline-gray hidden" title="@Localizer["CloneAndEditButton"]" form="copy-form">
+                    <button id="edit-button" class="btn btn-outline-gray hidden" title="@Localizer["CloneAndEditButton"]">
                         <i class="icofont-loop text-xl"></i>
                     </button>
                 </div>
