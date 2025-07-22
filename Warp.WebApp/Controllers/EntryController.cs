@@ -151,6 +151,26 @@ public class EntryController : BaseController
 
 
     /// <summary>
+    /// Checks if an entry is editable by its identifier.
+    /// </summary>
+    /// <param name="id"> The encoded entry identifier.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A boolean indicating if the entry is editable.</returns>
+    [HttpGet("{id}/is-editable")]
+    [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+    [ValidateId]
+    public async Task<IActionResult> IsEditable([FromRoute] string id, CancellationToken cancellationToken = default)
+    {
+        var decodedId = IdCoder.Decode(id);
+        var creator = await GetCreator(cancellationToken);
+        
+        var isEditableResult = await _entryInfoService.IsEditable(creator, decodedId, cancellationToken);
+
+        return Ok(isEditableResult.IsSuccess);
+    }
+
+
+    /// <summary>
     /// Reports an entry by its identifier for inappropriate content.
     /// </summary>
     /// <param name="id">The encoded entry identifier.</param>

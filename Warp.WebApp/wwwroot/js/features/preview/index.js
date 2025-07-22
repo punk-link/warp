@@ -13,6 +13,19 @@ import { elements } from './elements.js';
 core.initialize();
 
 
+let pageController = null;
+
+
+export const addPreviewEvents = async (entryId) => {
+    try {
+        pageController = new PreviewPageController(entryId, elements);
+        await pageController.initialize();
+    } catch (error) {
+        console.error('Failed to initialize index page:', error);
+    }
+}
+
+
 const handlers = {
     actions: (() => {
         const handleError = async (response) => {
@@ -111,12 +124,12 @@ const handlers = {
 };
 
 
-export const addPreviewEvents = (entryId, expirationDate) => {
-    handlers.background.init();
-    handlers.countdown.init(expirationDate);
-    handlers.actions.init(entryId);
-    handlers.gallery.init();
-};
+//export const addPreviewEvents = (entryId, expirationDate) => {
+//    handlers.background.init();
+//    handlers.countdown.init(expirationDate);
+//    handlers.actions.init(entryId);
+//    handlers.gallery.init();
+//};
 
 
 window.addPreviewEvents = addPreviewEvents;

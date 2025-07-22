@@ -16,10 +16,10 @@
     <script type="module" src="~/dist/preview.js" asp-append-version="true"></script>
     <script type="module" defer>
         document.addEventListener('DOMContentLoaded', () => {
-            if (typeof window.initializePreviewPage === 'function') 
-                window.initializePreviewPage();
+            if (typeof window.addPreviewEvents === 'function')
+                window.addPreviewEvents('@Model.Id');
             else
-                console.error('initializePreviewPage function not available');
+                console.error('addPreviewEvents function not available');
         });
     </script>
 }

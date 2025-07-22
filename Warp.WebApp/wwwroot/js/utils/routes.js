@@ -19,6 +19,7 @@
             CREATE: `/api/entries`,
             DELETE: (entryId) => `/api/entries/${entryId}`,
             GET: (entryId) => `/api/entries/${entryId}`,
+            IS_EDITABLE: (entryId) => `/api/entries/${entryId}/is-editable`,
             REPORT: (entryId) => `/api/entries/${entryId}/report`
         },
 
