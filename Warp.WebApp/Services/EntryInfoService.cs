@@ -131,7 +131,7 @@ public class EntryInfoService : IEntryInfoService
 
     /// <inheritdoc/>
     [TraceMethod]
-    public async Task<UnitResult<DomainError>> CanEdit(Creator creator, Guid entryId, CancellationToken cancellationToken)
+    public async Task<UnitResult<DomainError>> IsEditable(Creator creator, Guid entryId, CancellationToken cancellationToken)
     {
         var entryInfoResult = await GetEntryInfo(entryId, cancellationToken);
         if (entryInfoResult.IsFailure)

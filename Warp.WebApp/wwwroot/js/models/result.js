@@ -17,7 +17,10 @@
 
 
     static fromJson(json) {
+        if (json.detail) 
+            return Result.failure(json.detail);
 
+        return Result.success(json);
     }
 
 
@@ -45,4 +48,9 @@
 
         return this.#data;
     }
+
+
+    #data
+    #details;
+    #isSuccess;
 }
