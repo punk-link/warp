@@ -27,31 +27,24 @@ function displayError(message) {
 export class PreviewPageController {
     constructor(entryId, elements) {
         this.elements = elements;
-        this.apiService = new PreviewApiService();
         this.entryId = entryId;
-
-        this.isEditable = false;
     }
     
 
     async initialize() {
         try {
-            this._initRoamingImage();
+            this.#initRoamingImage();
 
-            const entryResult = await this._getEntry(this.entryId);
+            const entryResult = await entryApi.get(this.entryId);
             if (entryResult.isFailure) {
-                displayError(entryResult.error());
+                displayError(entryResult.error);
                 return;
             }
 
-            const entry = entryResult.value();
-            isEditableResult = await this._isEditable(entry.id);
-            if (!isEditableResult.isSuccess)
-                this.isEditable = isEditableResult.value;
+            this.#setupEventHandlers(entryId);
 
-            this._setupEventHandlers(entryId);
-            
-            this._updateUIWithCanEdit();
+            const isEditableResult = await this.entryApi.isEditable(entryId);
+            this.#updateUIWithData(entryResult.value, isEditableResult.value);
             
         } catch (error) {
             captureException(error, 'Failed to initialize preview page', 'initialize');
@@ -59,12 +52,7 @@ export class PreviewPageController {
     }
 
 
-    async _getEntry(entryId) {
-        return await entryApi.get(entryId);
-    }
-
-
-    async _handleCopyLink(entryId) {
+    async #handleCopyLink(entryId) {
         const entryUrl = `${window.location.origin}${ROUTES.ENTRY}/${entryId}`;
         const success = await copyUrl(entryUrl);
 
@@ -100,7 +88,7 @@ export class PreviewPageController {
     }
 
 
-    async _handleEdit(entryId) {
+    async #handleEdit(entryId) {
         const result = await this.entryApi.copy(entryId);
         if (result.success) 
             redirectTo(ROUTES.ROOT, { id: result.data.id });
@@ -109,7 +97,7 @@ export class PreviewPageController {
     }
 
 
-    async _handleDelete(entryId) {
+    async #handleDelete(entryId) {
         const result = await this.entryApi.delete(entryId);
         if (result.success)
             redirectTo(ROUTES.DELETED);
@@ -118,7 +106,7 @@ export class PreviewPageController {
     }
 
 
-    _initRoamingImage() {
+    #initRoamingImage() {
         try {
             const roamingImage = this.elements.getRoamingImage();
             if (roamingImage) {
@@ -130,36 +118,26 @@ export class PreviewPageController {
     }
 
 
-    async _isEditable(entryId) {
-        try {
-            const response = await http.get(ROUTES.API.ENTRIES.IS_EDITABLE(entryId));
-            return await response.json();
-        } catch (error) {
-            captureException(error, 'Failed to check edit permissions', 'isEditable');
-        }
-    }
-
-
-    _setupEventHandlers(entryId) {
+    #setupEventHandlers(entryId) {
         const { copyLink: copyLinkButton, edit: editButton, delete: deleteButton } = this.elements.getActionButtons();
         
-        copyLinkButton.addEventListener('click', () => this._handleCopyLink(entryId));
-        editButton.addEventListener('click', () => this._handleEdit(entryId));
-        deleteButton.addEventListener('click', () => this._handleDelete(entryId));
+        copyLinkButton.addEventListener('click', () => this.#handleCopyLink(entryId));
+        editButton.addEventListener('click', () => this.#handleEdit(entryId));
+        deleteButton.addEventListener('click', () => this.#handleDelete(entryId));
     }
 
 
-    _updateUIWithCanEdit() {
-        // Show/hide edit buttons based on canEdit flag from server
+    #updateUIWithData(entry, isEditable) {
         const editButton = this.elements.getActionButtons().edit;
         const editEntryButton = document.getElementById('edit-entry-button');
         
-        if (editButton) {
-            editButton.classList.toggle('hidden', !this.canEdit);
-        }
+        if (editButton) 
+            editButton.classList.toggle('hidden', !isEditable);
         
-        if (editEntryButton) {
-            editEntryButton.style.display = this.canEdit ? 'block' : 'none';
-        }
+        if (editEntryButton) 
+            editEntryButton.style.display = isEditable ? 'block' : 'none';
+
+        const textContent = this.elements.getTextContentElement();
+        textContent.textContent = entry.content;
     }
 }
