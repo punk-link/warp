@@ -29,6 +29,15 @@ public abstract class BaseController : ControllerBase
     }
 
 
+    protected IActionResult OkOrBadRequest(UnitResult<DomainError> result)
+    {
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+        
+        return Ok(true);
+    }
+
+
     protected async Task<Creator> GetCreator(CancellationToken cancellationToken)
     {
         var (_, isFailure, creator, _) = await TryGetCreatorInternal(cancellationToken);

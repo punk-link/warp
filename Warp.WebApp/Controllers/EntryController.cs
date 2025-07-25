@@ -166,7 +166,7 @@ public class EntryController : BaseController
         
         var isEditableResult = await _entryInfoService.IsEditable(creator, decodedId, cancellationToken);
 
-        return Ok(isEditableResult.IsSuccess);
+        return OkOrBadRequest(isEditableResult);
     }
 
 

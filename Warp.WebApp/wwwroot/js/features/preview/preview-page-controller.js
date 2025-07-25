@@ -5,6 +5,7 @@ import { redirectTo, ROUTES } from '/js/utils/routes.js';
 import { copyUrl } from '/js/utils/clipboard.js';
 import { uiState } from '/js/utils/ui-core.js';
 import { CSS_CLASSES } from '/js/constants/css.js';
+import { initializeCountdown } from '/js/components/countdown.js'; 
 
 
 function captureException(error, errorMessage, action) {
@@ -41,11 +42,15 @@ export class PreviewPageController {
                 return;
             }
 
-            this.#setupEventHandlers(entryId);
+            const entry = entryResult.value;
+            this.#setupEventHandlers(entry.id);
 
-            const isEditableResult = await this.entryApi.isEditable(entryId);
-            this.#updateUIWithData(entryResult.value, isEditableResult.value);
-            
+            let isEditable = false;
+            const isEditableResult = await entryApi.isEditable(entry.id);
+            if (isEditableResult.isSuccess)
+                isEditable = isEditableResult.value;
+
+            this.#updateUIWithData(entry, isEditable);
         } catch (error) {
             captureException(error, 'Failed to initialize preview page', 'initialize');
         }
@@ -128,16 +133,12 @@ export class PreviewPageController {
 
 
     #updateUIWithData(entry, isEditable) {
-        const editButton = this.elements.getActionButtons().edit;
-        const editEntryButton = document.getElementById('edit-entry-button');
-        
-        if (editButton) 
-            editButton.classList.toggle('hidden', !isEditable);
-        
-        if (editEntryButton) 
-            editEntryButton.style.display = isEditable ? 'block' : 'none';
+        initializeCountdown(new Date(entry.expiresAt));
 
         const textContent = this.elements.getTextContentElement();
-        textContent.textContent = entry.content;
+        textContent.textContent = entry.textContent;
+
+        const editButton = this.elements.getEditEntryButton();
+        editButton.classList.toggle('hidden', !isEditable);
     }
 }
