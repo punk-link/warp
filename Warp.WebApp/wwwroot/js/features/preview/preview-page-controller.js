@@ -1,5 +1,7 @@
 import { entryApi } from '/js/api/entry-api.js';
 import { animateBackgroundImage } from '/js/components/background/image-positioner.js';
+import { galleryViewer } from '/js/components/gallery/viewer.js';
+import { http } from '/js/services/http/client.js';
 import { sentryService } from '/js/services/sentry.js';
 import { redirectTo, ROUTES } from '/js/utils/routes.js';
 import { copyUrl } from '/js/utils/clipboard.js';
@@ -22,6 +24,11 @@ function displayError(message) {
     } else {
         console.error(message);
     }
+}
+
+
+function setCursor(state) {
+    document.body.style.cursor = state;
 }
 
 
@@ -50,10 +57,30 @@ export class PreviewPageController {
             if (isEditableResult.isSuccess)
                 isEditable = isEditableResult.value;
 
-            this.#updateUIWithData(entry, isEditable);
+            await this.#updateUIWithData(entry, isEditable);
         } catch (error) {
             captureException(error, 'Failed to initialize preview page', 'initialize');
         }
+    }
+
+
+    async #attachImageContainersToGallery(gallery, images) {
+        if (images.length === 0)
+            return;
+
+        for (const image of images) {
+            const response = await http.get(image.url + '/partial/read-only');
+            if (!response.ok) {
+                displayError(response.error);
+                continue;
+            }
+
+            const imageContainer = await response.text();
+            gallery.insertAdjacentHTML('beforeend', imageContainer);
+        }
+
+        galleryViewer.init();
+        gallery.classList.toggle(CSS_CLASSES.HIDDEN, false);
     }
 
 
@@ -93,30 +120,48 @@ export class PreviewPageController {
     }
 
 
-    async #handleEdit(entryId) {
-        const result = await this.entryApi.copy(entryId);
-        if (result.success) 
-            redirectTo(ROUTES.ROOT, { id: result.data.id });
-        else 
-            displayError(result.error);
+    async #handleCopy(entryId) {
+        try {
+            setCursor('wait');
+            const result = await entryApi.copy(entryId);
+            if (result.isSuccess) 
+                redirectTo(ROUTES.ROOT, { id: result.value.id });
+            else 
+                displayError(result.error);
+        } finally {
+            setCursor('auto');
+        }
+    }
+
+
+    #handleEdit(entryId) {
+        try {
+            setCursor('wait');
+            redirectTo(ROUTES.ROOT, { id: entryId });
+        } finally {
+            setCursor('auto');
+        }
     }
 
 
     async #handleDelete(entryId) {
-        const result = await this.entryApi.delete(entryId);
-        if (result.success)
-            redirectTo(ROUTES.DELETED);
-        else
-            displayError(result.error);
+        try {
+            const result = await entryApi.delete(entryId);
+            if (result.isSuccess)
+                redirectTo(ROUTES.DELETED);
+            else
+                displayError(result.error);
+        } finally {
+            setCursor('auto');
+        }
     }
 
 
     #initRoamingImage() {
         try {
             const roamingImage = this.elements.getRoamingImage();
-            if (roamingImage) {
+            if (roamingImage) 
                 animateBackgroundImage(roamingImage);
-            }
         } catch (error) {
             console.error('Error initializing roaming image:', error);
         }
@@ -124,21 +169,25 @@ export class PreviewPageController {
 
 
     #setupEventHandlers(entryId) {
-        const { copyLink: copyLinkButton, edit: editButton, delete: deleteButton } = this.elements.getActionButtons();
+        const { copyLink: copyLinkButton,edit: editButton, editCopy: editCopyButton, delete: deleteButton } = this.elements.getActionButtons();
         
         copyLinkButton.addEventListener('click', () => this.#handleCopyLink(entryId));
-        editButton.addEventListener('click', () => this.#handleEdit(entryId));
+        editCopyButton.addEventListener('click', () => this.#handleCopy(entryId));
         deleteButton.addEventListener('click', () => this.#handleDelete(entryId));
+        editButton.addEventListener('click', () => this.#handleEdit(entryId));
     }
 
 
-    #updateUIWithData(entry, isEditable) {
+    async #updateUIWithData(entry, isEditable) {
         initializeCountdown(new Date(entry.expiresAt));
 
         const textContent = this.elements.getTextContentElement();
         textContent.textContent = entry.textContent;
 
+        const gallery = this.elements.getGallery();
+        await this.#attachImageContainersToGallery(gallery, entry.images);
+
         const editButton = this.elements.getEditEntryButton();
-        editButton.classList.toggle('hidden', !isEditable);
+        editButton.classList.toggle(CSS_CLASSES.HIDDEN, !isEditable);
     }
 }

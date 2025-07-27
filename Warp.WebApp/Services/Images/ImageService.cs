@@ -118,12 +118,17 @@ public class ImageService : IImageService, IUnauthorizedImageService
 
     /// <inheritdoc cref="IUnauthorizedImageService.BuildPartialUrl"/>
     public Uri BuildPartialUrl(in Guid entryId, in Guid imageId) 
-        => new(string.Format("/api/images/entry-id/{0}/image-id/{1}/partial", IdCoder.Encode(entryId), IdCoder.Encode(imageId)), UriKind.Relative);
+        => new(string.Format(ImageUrlBaseTemplate + "/partial", IdCoder.Encode(entryId), IdCoder.Encode(imageId)), UriKind.Relative);
+
+
+    /// <inheritdoc cref="IUnauthorizedImageService.BuildReadOnlyPartialUrl"/>
+    public Uri BuildReadOnlyPartialUrl(in Guid entryId, in Guid imageId) 
+        => new(string.Format(ImageUrlBaseTemplate + "/partial/read-only", IdCoder.Encode(entryId), IdCoder.Encode(imageId)), UriKind.Relative);
 
 
     /// <inheritdoc cref="IUnauthorizedImageService.BuildUrl"/>
     public Uri BuildUrl(in Guid entryId, in Guid imageId)
-        => new(string.Format("/api/images/entry-id/{0}/image-id/{1}", IdCoder.Encode(entryId), IdCoder.Encode(imageId)), UriKind.Relative);
+        => new(string.Format(ImageUrlBaseTemplate, IdCoder.Encode(entryId), IdCoder.Encode(imageId)), UriKind.Relative);
 
 
     /// <inheritdoc cref="IImageService.Copy"/>
@@ -258,6 +263,8 @@ public class ImageService : IImageService, IUnauthorizedImageService
         "image/webp",
         "image/x-icon"
     ], StringComparer.OrdinalIgnoreCase);
+
+    private const string ImageUrlBaseTemplate = "/api/images/entry-id/{0}/image-id/{1}";
 
 
     private readonly IDataStorage _dataStorage;

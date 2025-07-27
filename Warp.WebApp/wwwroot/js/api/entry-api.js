@@ -1,4 +1,5 @@
 ﻿import { Result } from '/js/models/result.js';
+import { UnitResult } from '/js/models/unit-result.js';
 import { http } from '/js/services/http/client.js';
 import { sentryService } from '/js/services/sentry.js';
 import { ROUTES } from '/js/utils/routes.js';
@@ -82,10 +83,11 @@ export const entryApi = {
     delete: async (entryId) => {
         try {
             const endpoint = ROUTES.API.ENTRIES.DELETE(entryId);
-            const response = await http.delete(ROUTES.API.ENTRIES.DELETE(endpoint));
-            const json = await response.json();
+            const response = await http.delete(endpoint);
+            if (!response.ok) 
+                return UnitResult.failure('Failed to delete entry');
 
-            return Result.fromJson(json);
+            return UnitResult.success();
         } catch (error) {
             const errorMessage = `Failed to delete entry: ${entryId}`;
             captureException(error, entryId, errorMessage, 'deleteEntry');

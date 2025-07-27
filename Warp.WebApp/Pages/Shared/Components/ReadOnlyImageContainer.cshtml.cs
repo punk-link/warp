@@ -5,9 +5,14 @@ namespace Warp.WebApp.Pages.Shared.Components;
 
 public class ReadOnlyImageContainerModel : PageModel
 {
-    public ReadOnlyImageContainerModel(ImageInfo imageInfo)
+    public ReadOnlyImageContainerModel(Uri imageUrl)
     {
-        ImageUrl = imageInfo.Url;
+        ImageUrl = imageUrl;
+    }
+
+
+    public ReadOnlyImageContainerModel(ImageInfo imageInfo) : this(imageInfo.Url)
+    {
     }
 
 

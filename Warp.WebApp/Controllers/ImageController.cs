@@ -163,6 +163,37 @@ public sealed class ImageController : BaseController
 
 
     /// <summary>
+    /// Retrieves a read-only image partial view HTML for a given image.
+    /// </summary>
+    /// <param name="entryId"></param>
+    /// <param name="imageId"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    [HttpGet("entry-id/{entryId}/image-id/{imageId}/partial/read-only")]
+    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ValidateId("entryId", "imageId")]
+    public async Task<IActionResult> GetReadOnlyImagePartial([FromRoute] string entryId, [FromRoute] string imageId, CancellationToken cancellationToken = default)
+    {
+        var decodedEntryId = IdCoder.Decode(entryId);
+        var decodedImageId = IdCoder.Decode(imageId);
+
+        var url = _unauthorizedImageService.BuildUrl(decodedEntryId, decodedImageId);
+        var partialView = new PartialViewResult
+        {
+            ViewName = "Components/ReadOnlyImageContainer",
+            ViewData = new ViewDataDictionary(new EmptyModelMetadataProvider(), new ModelStateDictionary())
+            {
+                Model = new ReadOnlyImageContainerModel(url)
+            }
+        };
+
+        var renderResult = await _partialViewRenderHelper.Render(ControllerContext, HttpContext, partialView);
+        return Ok(renderResult);
+    }
+
+
+    /// <summary>
     /// Removes an image from an entry.
     /// </summary>
     /// <param name="entryId">Encoded identifier of the entry containing the image</param>
