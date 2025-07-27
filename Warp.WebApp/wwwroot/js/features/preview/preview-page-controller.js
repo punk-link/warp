@@ -2,48 +2,25 @@ import { entryApi } from '/js/api/entry-api.js';
 import { animateBackgroundImage } from '/js/components/background/image-positioner.js';
 import { galleryViewer } from '/js/components/gallery/viewer.js';
 import { http } from '/js/services/http/client.js';
-import { sentryService } from '/js/services/sentry.js';
 import { redirectTo, ROUTES } from '/js/utils/routes.js';
 import { copyUrl } from '/js/utils/clipboard.js';
 import { uiState } from '/js/utils/ui-core.js';
 import { CSS_CLASSES } from '/js/constants/css.js';
 import { initializeCountdown } from '/js/components/countdown.js'; 
+import { BasePageController } from '/js/features/base-page-controller.js';
 
 
-function captureException(error, errorMessage, action) {
-    sentryService.captureError(error, { action }, errorMessage);
-    throw new Error(errorMessage);
-}
-
-
-function displayError(message) {
-    const errorElement = document.getElementById('error-message');
-    if (errorElement) {
-        errorElement.textContent = message;
-        uiState.toggleClasses(errorElement, { remove: [CSS_CLASSES.HIDDEN] });
-    } else {
-        console.error(message);
-    }
-}
-
-
-function setCursor(state) {
-    document.body.style.cursor = state;
-}
-
-
-export class PreviewPageController {
-    constructor(entryId, elements) {
-        this.elements = elements;
-        this.entryId = entryId;
+export class PreviewPageController extends BasePageController {
+    constructor(elements) {
+        super(elements);
     }
     
 
-    async initialize() {
+    async initialize(entryId) {
         try {
             this.#initRoamingImage();
 
-            const entryResult = await entryApi.get(this.entryId);
+            const entryResult = await entryApi.get(entryId);
             if (entryResult.isFailure) {
                 displayError(entryResult.error);
                 return;

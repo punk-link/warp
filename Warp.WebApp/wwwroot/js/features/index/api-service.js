@@ -37,6 +37,25 @@ export class IndexApiService {
         }
     }
 
+    async getEntry(entryId) {
+        try {
+            await this.apis.creatorApi.getOrSet();
+            const entryResult = await this.apis.entryApi.get(entryId);
+
+            if (entryResult.isFailure) 
+                throw new Error('Failed to get entry - invalid response');
+
+            return { success: true, data: entryResult.value };
+        } catch (error) {
+            console.error('Error initializing entry:', error);
+            return {
+                success: false,
+                error,
+                userMessage: 'Failed to get. Please refresh the page.'
+            };
+        }
+    }
+
     /**
      * Gets API instances for use by other services
      */

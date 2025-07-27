@@ -23,20 +23,7 @@
 @section Scripts {
     <script type="module" src="~/dist/main.js" asp-append-version="true"></script>
     <script type="module" defer>
-        document.addEventListener('DOMContentLoaded', async () => {
-            if (typeof window.addIndexEvents === 'function')
-                await window.addIndexEvents();
-            else
-                console.error('addIndexEvents function not available');
-        });
-
-        window.addEventListener('load', () => {
-            const editMode = document.getElementById('edit-mode-state').value;
-            if (typeof window.setupTextareas === 'function')
-                window.setupTextareas(editMode);
-            else
-                console.error('setupTextareas function not available');
-        });
+        window.initIndexPage('@Model.Id');
     </script>
 }
 

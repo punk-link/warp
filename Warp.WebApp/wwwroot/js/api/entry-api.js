@@ -69,7 +69,9 @@ export const entryApi = {
     create: async () => {
         try {
             const response = await http.get(ROUTES.API.ENTRIES.CREATE);
-            return await response.json();
+            const json = await response.json();
+
+            return Result.fromJson(json);
         } catch (error) {
             captureException(error, null, 'Failed to create new entry', 'createEntry');
         }

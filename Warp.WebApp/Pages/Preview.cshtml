@@ -15,9 +15,10 @@
 @section Scripts {
     <script type="module" src="~/dist/preview.js" asp-append-version="true"></script>
     <script type="module" defer>
+        window.initPreviewPage('@Model.Id');
         document.addEventListener('DOMContentLoaded', () => {
             if (typeof window.addPreviewEvents === 'function')
-                window.addPreviewEvents('@Model.Id');
+                
             else
                 console.error('addPreviewEvents function not available');
         });

@@ -25,7 +25,6 @@ public class IndexModel : BasePageModel
 
     public IActionResult OnGet(string? id)
     {
-        Id = IdCoder.Encode(Guid.CreateVersion7());
         if (!string.IsNullOrWhiteSpace(id))
             Id = id;
 

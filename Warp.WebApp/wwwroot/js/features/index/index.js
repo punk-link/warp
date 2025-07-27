@@ -1,42 +1,33 @@
 import { core } from '/js/core/initialize.js';
 import { IndexPageController } from './index-page-controller.js';
 import { elements } from './elements.js';
+import { creatorApi } from '/js/api/creator-api.js';
+import { entryApi } from '/js/api/entry-api.js';
+import { metadataApi } from '/js/api/metadata-api.js';
 
-// Initialize core functionality
-core.initialize();
 
-// Global page controller instance
-let pageController = null;
-
-/**
- * Initializes all index page events and functionality
- */
-export const addIndexEvents = async () => {
+export const initIndexPage = (entryId) => {
     try {
-        pageController = new IndexPageController(elements);
-        await pageController.initialize();
-        
-        // Set up cleanup on page unload
-        window.addEventListener('beforeunload', () => {
-            pageController?.cleanup();
+        core.initialize();
+
+        let pageController = new IndexPageController(elements, creatorApi, entryApi, metadataApi);
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await pageController.initialize(entryId);
+
+            window.addEventListener('beforeunload', () => {
+                pageController.cleanup();
+            });
         });
-        
+
+        window.addEventListener('load', () => {
+            const editMode = document.getElementById('edit-mode-state').value;
+            pageController.setupTextareas(editMode);
+        });
     } catch (error) {
         console.error('Failed to initialize index page:', error);
     }
-};
+}
 
-/**
- * Sets up textareas with proper sizing based on edit mode
- */
-export const setupTextareas = (currentEditMode) => {
-    try {
-        pageController?.setupTextareas(currentEditMode);
-    } catch (error) {
-        console.error('Failed to setup textareas:', error);
-    }
-};
 
-// Make functions available globally for Razor Pages
-window.addIndexEvents = addIndexEvents;
-window.setupTextareas = setupTextareas;
+window.initIndexPage = initIndexPage;
