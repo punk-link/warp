@@ -5,9 +5,9 @@ import { CONFIG } from './config.js';
  * Service for handling form data collection and validation for the index page
  */
 export class IndexFormService {
-    constructor(elements, apis) {
+    constructor(elements, entryApi) {
         this.elements = elements;
-        this.apis = apis;
+        this.entryApi = entryApi;
     }
 
     /**
@@ -65,7 +65,7 @@ export class IndexFormService {
 
         for (let attempt = 1; attempt <= maxAttempts; attempt++) {
             try {
-                const response = await this.apis.entryApi.add(entryId, formData);
+                const response = await this.entryApi.add(entryId, formData);
                 
                 if (response && response.id) {
                     return { success: true, data: response };
