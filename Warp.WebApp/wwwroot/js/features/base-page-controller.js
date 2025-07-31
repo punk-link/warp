@@ -1,5 +1,8 @@
-﻿import { animateBackgroundImage } from '/js/components/background/image-positioner.js';
+﻿import { CSS_CLASSES } from '/js/constants/css.js';
+import { animateBackgroundImage } from '/js/components/background/image-positioner.js';
 import { sentryService } from '/js/services/sentry.js';
+import { uiState } from '/js/utils/ui-core.js';
+
 
 export class BasePageController {
     constructor(elements) {

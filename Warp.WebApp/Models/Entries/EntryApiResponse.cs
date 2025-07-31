@@ -28,7 +28,7 @@ public readonly record struct EntryApiResponse
 
 
     public static EntryApiResponse Empty(string id, EntryOpenGraphDescription description) 
-        => new (id, EditMode.Unset, ExpirationPeriod.FiveMinutes, DateTime.MinValue, [], description!, string.Empty);
+        => new (id, EditMode.Unset, ExpirationPeriod.FiveMinutes, DateTime.MinValue, [], description, string.Empty);
 
 
     public string Id { get; }

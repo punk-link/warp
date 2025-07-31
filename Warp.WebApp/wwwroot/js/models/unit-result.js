@@ -12,7 +12,7 @@ export class UnitResult extends Result {
      * @returns {UnitResult} A successful UnitResult instance.
      */
     static success() {
-        return new Result(true, null, null);
+        return new UnitResult(true, null);
     }
 
 

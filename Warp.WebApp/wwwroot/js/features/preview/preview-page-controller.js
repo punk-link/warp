@@ -23,7 +23,7 @@ export class PreviewPageController extends BasePageController {
 
                 const entryResult = await entryApi.get(entryId);
                 if (entryResult.isFailure) {
-                    displayError(entryResult.error);
+                    this.displayError(entryResult.error);
                     return;
                 }
 
@@ -50,7 +50,7 @@ export class PreviewPageController extends BasePageController {
         for (const image of images) {
             const response = await http.get(image.url + '/partial/read-only');
             if (!response.ok) {
-                displayError(response.error);
+                this.displayError(response.error);
                 continue;
             }
 
@@ -105,7 +105,7 @@ export class PreviewPageController extends BasePageController {
             if (result.isSuccess)
                 redirectTo(ROUTES.ROOT, { id: result.value.id });
             else
-                displayError(result.error);
+                this.displayError(result.error);
         });
     }
 
@@ -123,7 +123,7 @@ export class PreviewPageController extends BasePageController {
             if (result.isSuccess)
                 redirectTo(ROUTES.DELETED);
             else
-                displayError(result.error);
+                this.displayError(result.error);
         });
     }
 

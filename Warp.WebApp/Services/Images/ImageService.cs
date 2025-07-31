@@ -110,7 +110,7 @@ public class ImageService : IImageService, IUnauthorizedImageService
 
         Result<ImageInfo, DomainError> BuildImageInfo((Guid ImageId, AppFile AppFile) tuple)
         {
-            var url = BuildUrl(entryId, tuple.ImageId);
+            var url = BuildUrl(in entryId, in tuple.ImageId);
             return new ImageInfo(tuple.ImageId, entryId, url);
         }
     }
