@@ -1,3 +1,7 @@
+import { CSS_CLASSES } from '/js/constants/css.js';
+import { EDIT_MODE } from '/js/constants/enums.js';
+import { BasePageController } from '/js/features/base-page-controller.js';
+import { http } from '/js/services/http/client.js';
 import { redirectTo, ROUTES } from '/js/utils/routes.js';
 import { uiState } from '/js/utils/ui-core.js';
 import { adjustTextareaSizes } from './textarea.js';
@@ -5,7 +9,6 @@ import { IndexFormService } from './form-service.js';
 import { IndexEventService } from './event-service.js';
 import { editModeService } from './edit-mode-service.js';
 import { createButtonService } from './create-button-service.js';
-import { BasePageController } from '/js/features/base-page-controller.js';
 
 
 export class IndexPageController extends BasePageController {
@@ -38,19 +41,25 @@ export class IndexPageController extends BasePageController {
                 this.#setEntryId(entry.id);
 
                 await this.#initUI(entry);
-                this.#initGallery(entry);
+                await this.#initGallery(entry);
                 this.#initEventListeners(entry);
+
+                this.setupTextareas();
             } catch (error) {
-                captureException(error, 'Failed to initialize index page', 'initialize');
+                this.captureException(error, 'Failed to initialize index page', 'initialize');
             }
         });
     }
 
 
-    setupTextareas(currentEditMode) {
+    setupTextareas() {
         try {
-            const textareas = this.elements.getTextareas();
-            adjustTextareaSizes(textareas, this.elements, currentEditMode);
+            setTimeout(() => {
+                const currentEditMode = this.elements.getModeElements().editModeInput.value;
+                const textareas = this.elements.getTextareas();
+
+                adjustTextareaSizes(textareas, this.elements, currentEditMode);
+            }, 0);
         } catch (error) {
             console.error('Error setting up textareas:', error);
         }
@@ -59,6 +68,30 @@ export class IndexPageController extends BasePageController {
 
     cleanup() {
         this.eventService.cleanup();
+    }
+    
+    
+    async #attachImageContainersToGallery(entry) {
+        if (!entry.images || entry.images.length === 0)
+            return;
+
+        const gallery = this.elements.getGallery();
+        for (const image of entry.images) {
+            try {
+                const response = await http.get(image.url + '/partial');
+                if (!response.ok) {
+                    console.error('Failed to load image:', image.url);
+                    continue;
+                }
+
+                const imageContainer = await response.text();
+                gallery.insertAdjacentHTML('afterbegin', imageContainer);
+            } catch (error) {
+                console.error('Error loading image container:', error);
+            }
+        }
+
+        gallery.classList.toggle(CSS_CLASSES.HIDDEN, false);
     }
 
 
@@ -127,10 +160,8 @@ export class IndexPageController extends BasePageController {
     }
 
 
-    #initGallery(entry) {
-        if (!this.entry)
-            return;
-
+    async #initGallery(entry) {
+        await this.#attachImageContainersToGallery(entry);
         this.eventService.initGalleryEvents(entry.id);
     }
 

@@ -17,27 +17,29 @@ export class PreviewPageController extends BasePageController {
     
 
     async initialize(entryId) {
-        try {
-            this.#initRoamingImage();
+        this.executeWithLoadingIndicator(async () => {
+                try {
+                this.#initRoamingImage();
 
-            const entryResult = await entryApi.get(entryId);
-            if (entryResult.isFailure) {
-                displayError(entryResult.error);
-                return;
+                const entryResult = await entryApi.get(entryId);
+                if (entryResult.isFailure) {
+                    displayError(entryResult.error);
+                    return;
+                }
+
+                const entry = entryResult.value;
+                this.#setupEventHandlers(entry.id);
+
+                let isEditable = false;
+                const isEditableResult = await entryApi.isEditable(entry.id);
+                if (isEditableResult.isSuccess)
+                    isEditable = isEditableResult.value;
+
+                await this.#updateUIWithData(entry, isEditable);
+            } catch (error) {
+                this.captureException(error, 'Failed to initialize preview page', 'initialize');
             }
-
-            const entry = entryResult.value;
-            this.#setupEventHandlers(entry.id);
-
-            let isEditable = false;
-            const isEditableResult = await entryApi.isEditable(entry.id);
-            if (isEditableResult.isSuccess)
-                isEditable = isEditableResult.value;
-
-            await this.#updateUIWithData(entry, isEditable);
-        } catch (error) {
-            captureException(error, 'Failed to initialize preview page', 'initialize');
-        }
+        });
     }
 
 
@@ -98,39 +100,31 @@ export class PreviewPageController extends BasePageController {
 
 
     async #handleCopy(entryId) {
-        try {
-            setCursor('wait');
+        this.executeWithLoadingIndicator(async () => {
             const result = await entryApi.copy(entryId);
-            if (result.isSuccess) 
+            if (result.isSuccess)
                 redirectTo(ROUTES.ROOT, { id: result.value.id });
-            else 
+            else
                 displayError(result.error);
-        } finally {
-            setCursor('auto');
-        }
+        });
     }
 
 
     #handleEdit(entryId) {
-        try {
-            setCursor('wait');
+        this.executeWithLoadingIndicator(() => {
             redirectTo(ROUTES.ROOT, { id: entryId });
-        } finally {
-            setCursor('auto');
-        }
+        });
     }
 
 
     async #handleDelete(entryId) {
-        try {
+        this.executeWithLoadingIndicator(async () => {
             const result = await entryApi.delete(entryId);
             if (result.isSuccess)
                 redirectTo(ROUTES.DELETED);
             else
                 displayError(result.error);
-        } finally {
-            setCursor('auto');
-        }
+        });
     }
 
 

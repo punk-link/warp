@@ -19,11 +19,6 @@ export const initIndexPage = (entryId) => {
                 pageController.cleanup();
             });
         });
-
-        window.addEventListener('load', () => {
-            const editMode = document.getElementById('edit-mode-state').value;
-            pageController.setupTextareas(editMode);
-        });
     } catch (error) {
         console.error('Failed to initialize index page:', error);
     }
