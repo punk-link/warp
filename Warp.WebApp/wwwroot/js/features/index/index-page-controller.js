@@ -54,12 +54,10 @@ export class IndexPageController extends BasePageController {
 
     setupTextareas() {
         try {
-            setTimeout(() => {
-                const currentEditMode = this.elements.getModeElements().editModeInput.value;
-                const textareas = this.elements.getTextareas();
+            const currentEditMode = this.elements.getModeElements().editModeInput.value;
+            const textareas = this.elements.getTextareas();
 
-                adjustTextareaSizes(textareas, this.elements, currentEditMode);
-            }, 0);
+            adjustTextareaSizes(textareas, this.elements, currentEditMode);
         } catch (error) {
             console.error('Error setting up textareas:', error);
         }
