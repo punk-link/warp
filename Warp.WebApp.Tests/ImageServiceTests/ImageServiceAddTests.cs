@@ -109,10 +109,9 @@ public class ImageServiceAddTests
         var result = await _imageService.Add(entryId, appFile, CancellationToken.None);
 
         Assert.True(result.IsSuccess);
-        Assert.NotEqual(result.Value.ImageInfo.EntryId, Guid.Empty);
-        Assert.NotEqual(result.Value.ImageInfo.Id, Guid.Empty);
-        Assert.NotNull(result.Value.ImageInfo.Url);
-        Assert.NotNull(result.Value.ClientFileName);
+        Assert.NotEqual(result.Value.EntryId, Guid.Empty);
+        Assert.NotEqual(result.Value.Id, Guid.Empty);
+        Assert.NotNull(result.Value.Url);
     }
 
     

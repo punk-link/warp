@@ -46,7 +46,7 @@ public class AesEncryptionServiceDecryptTests
     {
         byte[]? data = null;
         
-        var result = await _encryptionService.Decrypt(data);
+        var result = await _encryptionService.Decrypt(data!);
         
         Assert.Empty(result);
     }
