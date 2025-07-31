@@ -323,8 +323,8 @@
         {
           "id": 20305,
           "name": "EntryEditModeMismatch",
-          "description": "The entry '{EntryId:Guid}' edit mode is already set to '{EditMode:bool}'.",
-          "domainErrorDescription": "The entry edit mode is already set to and cannot be changed.",
+          "description": "The entry '{EntryId:Guid}' edit mode is already set to '{EditMode:string}'.",
+          "domainErrorDescription": "The entry edit mode is already set and cannot be changed.",
           "logLevel": "Warning",
           "generateLogMessage": false,
           "obsolete": false,
@@ -366,6 +366,16 @@
           "generateLogMessage": true,
           "obsolete": false,
           "httpCode": 500
+        },
+        {
+          "id": 20310,
+          "name": "EntryEditModeUnset",
+          "description": "The entry '{EntryId:Guid}' edit mode is not set. Please set the edit mode before editing the entry.",
+          "domainErrorDescription": "The entry edit mode is not set. Please set the edit mode before editing the entry.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
         }
       ]
     },

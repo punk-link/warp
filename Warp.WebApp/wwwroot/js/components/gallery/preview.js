@@ -87,30 +87,47 @@ const handlers = {
         };
 
         return {
-            render: (entryId, files, results, onDelete) => {
+            render: async (entryId, files, results, onDelete) => {
                 const gallery = elements.getGallery();
 
-                files.forEach(file => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                        const result = results[file.name];
+                for (const file of files) {
+                    const readFileAsync = () => new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+
+                        reader.onloadend = () => resolve(reader.result);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(file);
+                    });
+
+                    try {
+                        const imageUrl = await readFileAsync();
+
+                        const result = results.find(r => r.key === file.name)?.value;
                         if (!result)
-                            return;
+                            continue;
 
                         const error = parseResult(result);
                         if (error) {
                             console.error(`Error: ${error.title} - ${error.detail}`);
-                            return;
+                            continue;
                         }
 
-                        const container = createPreview(result, reader.result);
+                        const templateResponse = await http.get(result.partialUrl);
+                        if (!templateResponse.ok) {
+                            console.error(`Failed to fetch template for image: ${file.name}`);
+                            continue;
+                        }
+
+                        const template = await templateResponse.text();
+                        const container = createPreview(template, imageUrl);
 
                         attachEventHandlers(container, entryId, onDelete);
                         animateContainer(container, gallery);
-                    };
 
-                    reader.readAsDataURL(file);
-                });
+                    } catch (error) {
+                        console.error(`Failed to process file ${file.name}:`, error);
+                    }
+                }
             },
 
             initPreloadedImages: (entryId) => {

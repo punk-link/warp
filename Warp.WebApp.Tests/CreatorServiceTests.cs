@@ -4,7 +4,9 @@ using NSubstitute;
 using Warp.WebApp.Data;
 using Warp.WebApp.Models;
 using Warp.WebApp.Models.Creators;
+using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Errors;
+using Warp.WebApp.Models.Images;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Creators;
 

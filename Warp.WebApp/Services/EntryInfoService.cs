@@ -2,9 +2,10 @@
 using CSharpFunctionalExtensions.ValueTasks;
 using Warp.WebApp.Attributes;
 using Warp.WebApp.Data;
-using Warp.WebApp.Models;
 using Warp.WebApp.Models.Creators;
+using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Errors;
+using Warp.WebApp.Models.Images;
 using Warp.WebApp.Models.Validators;
 using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Entries;
@@ -125,6 +126,26 @@ public class EntryInfoService : IEntryInfoService
             var cacheKey = CacheKeyBuilder.BuildEntryInfoCacheKey(entryInfo.Id);
             return _dataStorage.Set(cacheKey, entryInfo, entryRequest.ExpiresIn, cancellationToken);
         }
+    }
+
+
+    /// <inheritdoc/>
+    [TraceMethod]
+    public async Task<UnitResult<DomainError>> IsEditable(Creator creator, Guid entryId, CancellationToken cancellationToken)
+    {
+        var entryInfoResult = await GetEntryInfo(entryId, cancellationToken);
+        if (entryInfoResult.IsFailure)
+            return entryInfoResult.Error;
+
+        var entryInfo = entryInfoResult.Value;
+        if (!IsBelongsToCreator(entryInfo, creator))
+            return DomainErrors.NoPermissionError();
+
+        var viewCount = await _viewCountService.Get(entryId, cancellationToken);
+        if (viewCount != 0)
+            return DomainErrors.EntryCannotBeEditedAfterViewed();
+
+        return UnitResult.Success<DomainError>();
     }
 
 

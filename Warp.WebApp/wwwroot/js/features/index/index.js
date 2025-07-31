@@ -1,55 +1,28 @@
-import { EDIT_MODE } from '/js/constants/enums.js'; 
-import { uiState } from '/js/utils/ui-core.js';
-import { addDropAreaEvents, pasteImages } from '/js/components/gallery/upload.js';
-import { animateBackgroundImage } from '/js/components/background/image-positioner.js';
-import { preview } from '/js/components/gallery/preview.js'; 
 import { core } from '/js/core/initialize.js';
+import { IndexPageController } from './index-page-controller.js';
 import { elements } from './elements.js';
-import { createButton } from './create-button.js';
-import { editMode } from './edit-mode.js';
-import { adjustTextareaSizes } from './textarea.js';
+import { creatorApi } from '/js/api/creator-api.js';
+import { entryApi } from '/js/api/entry-api.js';
+import { metadataApi } from '/js/api/metadata-api.js';
 
 
-core.initialize();
+export const initIndexPage = (entryId) => {
+    try {
+        core.initialize();
 
+        let pageController = new IndexPageController(elements, creatorApi, entryApi, metadataApi);
 
-const initPaste = (entryId) => {
-    document.addEventListener('paste', async (e) => {
-        await pasteImages(entryId, e);
-    });
-};
+        document.addEventListener('DOMContentLoaded', async () => {
+            await pageController.initialize(entryId);
 
-
-export const addIndexEvents = (entryId, initialEditMode) => {
-    const roamingImage = elements.getRoamingImage();
-    animateBackgroundImage(roamingImage);
-
-    const isSwitchAvailable = editMode.isSwitchAvailable(initialEditMode);
-    editMode.init(initialEditMode, elements);
-    
-    if (isSwitchAvailable) { 
-        const { advancedButton, simpleButton } = elements.getModeElements();
-        advancedButton.addEventListener('click', editMode.switch(EDIT_MODE.Advanced, elements));
-        simpleButton.addEventListener('click', editMode.switch(EDIT_MODE.Simple, elements));
-
-        uiState.setElementDisabled(advancedButton, false);
-        uiState.setElementDisabled(simpleButton, false);
+            window.addEventListener('beforeunload', () => {
+                pageController.cleanup();
+            });
+        });
+    } catch (error) {
+        console.error('Failed to initialize index page:', error);
     }
-    
-    createButton.init(elements);
-    
-    addDropAreaEvents(entryId);
-    initPaste(entryId);
-
-    preview.initPreloadedImages(entryId);
-};
+}
 
 
-export const setupTextareas = (currentEditMode) => {
-    const textareas = elements.getTextareas();
-    adjustTextareaSizes(textareas, elements, currentEditMode);
-};
-
-
-window.addIndexEvents = addIndexEvents;
-window.setupTextareas = setupTextareas;
+window.initIndexPage = initIndexPage;

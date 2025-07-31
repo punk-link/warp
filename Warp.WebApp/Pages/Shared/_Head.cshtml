@@ -11,6 +11,10 @@
 
 <script>
     window.appConfig = {
+        analytics: {
+            gTag: '@Configuration["AnalyticsOptions:GoogleGTag"]',
+            yandexMetrikaNumber: '@Configuration["AnalyticsOptions:YandexMetrikaNumber"]'
+        },
         environment: '@Configuration["Environment"]',
         sentryDsn: '@Configuration["Sentry:FrontendDsn"]'
     };

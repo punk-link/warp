@@ -6,10 +6,12 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.FeatureManagement;
 using System.Globalization;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Warp.WebApp.Constants;
 using Warp.WebApp.Data;
 using Warp.WebApp.Data.Redis;
 using Warp.WebApp.Data.S3;
+using Warp.WebApp.Filters;
 using Warp.WebApp.Helpers.Configuration;
 using Warp.WebApp.Helpers.HealthChecks;
 using Warp.WebApp.Helpers.Warmups;
@@ -54,6 +56,10 @@ try
         .AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix)
         .AddDataAnnotationsLocalization();
     builder.Services.AddControllers()
+        .AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        })
         .AddControllersAsServices();
     builder.Services.AddHealthChecks()
         .AddCheck<RedisHealthCheck>(nameof(RedisHealthCheck));
@@ -78,15 +84,6 @@ try
             options.ExpireTimeSpan = TimeSpan.FromDays(365);
             options.SlidingExpiration = true;
         });
-    builder.Services.AddAntiforgery(options => 
-    {
-        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-        options.Cookie.SameSite = SameSiteMode.Strict;
-        options.Cookie.Name = "Warp.Antiforgery";
-        options.Cookie.HttpOnly = true;
-
-        options.HeaderName = "X-CSRF-TOKEN";
-    });
 
     builder.Services.AddHttpClient(HttpClients.Warmup);
 
@@ -277,6 +274,9 @@ void AddServices(IServiceCollection services, IConfiguration configuration)
     services.AddSingleton<IRouteWarmer, RouteWarmerService>();
     services.AddSingleton<IServiceWarmer, ServiceWarmerService>();
     services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
+
+    services.AddScoped<RequireCreatorCookieFilter>();
+    services.AddScoped<ValidateIdFilter>();
 
     services.AddHostedService<WarmupService>();
 }

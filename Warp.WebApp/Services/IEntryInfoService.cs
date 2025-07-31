@@ -1,6 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
-using Warp.WebApp.Models;
 using Warp.WebApp.Models.Creators;
+using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Errors;
 
 namespace Warp.WebApp.Services;
@@ -21,6 +21,18 @@ public interface IEntryInfoService
     /// or a domain error if the operation fails.
     /// </returns>
     Task<Result<EntryInfo, DomainError>> Add(Creator creator, EntryRequest entryRequest, CancellationToken cancellationToken);
+    
+    /// <summary>
+    /// Determines if an entry can be edited by a specific creator.
+    /// </summary>
+    /// <param name="creator">The creator requesting edit permissions.</param>
+    /// <param name="entryId">The ID of the entry to check.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>
+    /// A result containing true if the entry can be edited, false otherwise,
+    /// or a domain error if the operation fails.
+    /// </returns>
+    Task<UnitResult<DomainError>> IsEditable(Creator creator, Guid entryId, CancellationToken cancellationToken);
     
     /// <summary>
     /// Creates a copy of an existing entry for a specific creator.

@@ -5,9 +5,9 @@ using System.IO.Hashing;
 using Warp.WebApp.Constants.Caching;
 using Warp.WebApp.Data;
 using Warp.WebApp.Data.S3;
-using Warp.WebApp.Models;
 using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Models.Files;
+using Warp.WebApp.Models.Images;
 
 namespace Warp.WebApp.Services.Images;
 
@@ -31,13 +31,13 @@ public class ImageService : IImageService, IUnauthorizedImageService
 
 
     /// <inheritdoc cref="IUnauthorizedImageService.Add"/>
-    public async Task<Result<ImageResponse, DomainError>> Add(Guid entryId, AppFile appFile, CancellationToken cancellationToken)
+    public async Task<Result<ImageInfo, DomainError>> Add(Guid entryId, AppFile appFile, CancellationToken cancellationToken)
     {
         Debug.Assert(appFile.Content is not null, "A file content is null, because we checked it already at the controller level.");
         
         return await UnitResult.Success<DomainError>()
             .Map(() => appFile)
-            .Ensure(IsImageMimeType,DomainErrors.UnsupportedFileExtension(appFile.ContentMimeType, string.Join(", ", _imageMimeTypes)))
+            .Ensure(IsImageMimeType, DomainErrors.UnsupportedFileExtension(appFile.ContentMimeType, string.Join(", ", _imageMimeTypes)))
             .Bind(CheckDuplicate)
             .Bind(Upload)
             .Bind(AddHash)
@@ -108,16 +108,27 @@ public class ImageService : IImageService, IUnauthorizedImageService
         }
 
 
-        Result<ImageResponse, DomainError> BuildImageInfo((Guid ImageId, AppFile AppFile) tuple)
+        Result<ImageInfo, DomainError> BuildImageInfo((Guid ImageId, AppFile AppFile) tuple)
         {
-            var encodedEntryId = IdCoder.Encode(entryId);
-
-            var url = BuildUrl(encodedEntryId, tuple.ImageId);
-            var imageInfo = new ImageInfo(tuple.ImageId, entryId, url);
-            
-            return new ImageResponse(imageInfo, tuple.AppFile.UntrustedFileName);
+            var url = BuildUrl(in entryId, in tuple.ImageId);
+            return new ImageInfo(tuple.ImageId, entryId, url);
         }
     }
+
+
+    /// <inheritdoc cref="IUnauthorizedImageService.BuildPartialUrl"/>
+    public Uri BuildPartialUrl(in Guid entryId, in Guid imageId) 
+        => new(string.Format(ImageUrlBaseTemplate + "/partial", IdCoder.Encode(entryId), IdCoder.Encode(imageId)), UriKind.Relative);
+
+
+    /// <inheritdoc cref="IUnauthorizedImageService.BuildReadOnlyPartialUrl"/>
+    public Uri BuildReadOnlyPartialUrl(in Guid entryId, in Guid imageId) 
+        => new(string.Format(ImageUrlBaseTemplate + "/partial/read-only", IdCoder.Encode(entryId), IdCoder.Encode(imageId)), UriKind.Relative);
+
+
+    /// <inheritdoc cref="IUnauthorizedImageService.BuildUrl"/>
+    public Uri BuildUrl(in Guid entryId, in Guid imageId)
+        => new(string.Format(ImageUrlBaseTemplate, IdCoder.Encode(entryId), IdCoder.Encode(imageId)), UriKind.Relative);
 
 
     /// <inheritdoc cref="IImageService.Copy"/>
@@ -145,14 +156,8 @@ public class ImageService : IImageService, IUnauthorizedImageService
             => new(image.Content, image.ContentType);
 
 
-        async Task<Result<ImageInfo, DomainError>> CopyToTarget(AppFile appFile)
-        {
-            var addResult = await Add(targetEntryId, appFile, cancellationToken);
-            if (addResult.IsFailure)
-                return addResult.Error;
-
-            return addResult.Value.ImageInfo;
-        }
+        Task<Result<ImageInfo, DomainError>> CopyToTarget(AppFile appFile) 
+            => Add(targetEntryId, appFile, cancellationToken);
     }
 
 
@@ -187,7 +192,9 @@ public class ImageService : IImageService, IUnauthorizedImageService
         async Task<Result<List<Guid>, DomainError>> GetUploaded()
         {
             var prefix = entryId.ToString();
-            var keys = imageIds.Select(imageId => imageId.ToString())
+            var keys = imageIds
+                .Where(imageId => imageId != Guid.Empty)
+                .Select(imageId => imageId.ToString())
                 .ToList();
             
             var (_, isFailure, stringKeys, error) = await _s3FileStorage.Contains(prefix, keys, cancellationToken);
@@ -241,14 +248,6 @@ public class ImageService : IImageService, IUnauthorizedImageService
         Task<UnitResult<DomainError>> DeleteFile(string? _)
             => _s3FileStorage.Delete(entryId.ToString(), imageId.ToString(), cancellationToken);
     }
-
-
-    private static Uri BuildUrl(string encodedEntryId, Guid imageId)
-        => new(string.Format("/api/images/entry-id/{0}/image-id/{1}", encodedEntryId, IdCoder.Encode(imageId)), UriKind.Relative);
-
-
-    private static Uri BuildUrl(Guid entryId, Guid imageId)
-        => BuildUrl(IdCoder.Encode(entryId), imageId);
     
     
     private static readonly HashSet<string> _imageMimeTypes = new(
@@ -264,6 +263,8 @@ public class ImageService : IImageService, IUnauthorizedImageService
         "image/webp",
         "image/x-icon"
     ], StringComparer.OrdinalIgnoreCase);
+
+    private const string ImageUrlBaseTemplate = "/api/images/entry-id/{0}/image-id/{1}";
 
 
     private readonly IDataStorage _dataStorage;

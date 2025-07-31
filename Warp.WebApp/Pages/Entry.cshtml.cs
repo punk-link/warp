@@ -1,7 +1,7 @@
 using CSharpFunctionalExtensions;
 using Microsoft.AspNetCore.Mvc;
-using Warp.WebApp.Models;
 using Warp.WebApp.Models.Creators;
+using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;

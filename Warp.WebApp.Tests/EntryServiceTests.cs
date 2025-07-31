@@ -1,5 +1,5 @@
 ﻿using Warp.WebApp.Constants.Logging;
-using Warp.WebApp.Models;
+using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Services.Entries;
 
 namespace Warp.WebApp.Tests;

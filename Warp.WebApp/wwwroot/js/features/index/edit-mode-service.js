@@ -27,7 +27,7 @@ const loadEditModeFromStorage = () => {
     try {
         const savedMode = localStorage.getItem(STORAGE_KEY);
         if (savedMode !== null) {
-            const parsedMode = parseInt(savedMode, 10);
+            const parsedMode = savedMode;
 
             if (parsedMode === EDIT_MODE.Advanced) 
                 return EDIT_MODE.Advanced;
@@ -92,7 +92,7 @@ const applyModeUIState = (mode, elements) => {
 }
 
 
-export const editMode = {
+export const editModeService = {
     init: (editMode, elements) => {
         const modeToUse = editMode === EDIT_MODE.Unset ? loadEditModeFromStorage() : editMode;
         applyModeUIState(modeToUse, elements);

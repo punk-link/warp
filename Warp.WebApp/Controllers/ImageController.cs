@@ -7,12 +7,12 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
 using System.Diagnostics;
-using System.Text.Json;
 using Warp.WebApp.Attributes;
 using Warp.WebApp.Constants;
 using Warp.WebApp.Helpers;
-using Warp.WebApp.Models;
 using Warp.WebApp.Models.Errors;
+using Warp.WebApp.Models.Images;
+using Warp.WebApp.Models.Images.Converters;
 using Warp.WebApp.Models.Options;
 using Warp.WebApp.Pages.Shared.Components;
 using Warp.WebApp.Services;
@@ -57,6 +57,47 @@ public sealed class ImageController : BaseController
 
 
     /// <summary>
+    /// Adds one or more images to an entry.
+    /// </summary>
+    /// <param name="entryId">Encoded identifier of the entry to which the images will be uploaded</param>
+    /// <returns>
+    /// Dictionary mapping file names to either rendered HTML content (for successful uploads)
+    /// or error information (for failed uploads).
+    /// </returns>
+    /// <remarks>
+    /// This endpoint accepts multipart form data with a file size limit of 50MB.
+    /// It processes each file in the multipart request, validates it, and associates it with the entry.
+    /// </remarks>
+    [MultipartFormData]
+    [DisableFormValueModelBinding]
+    [RequestFormLimits(MultipartBodyLengthLimit = 50 * 1024 * 1024)] // 50MB
+    [RequestSizeLimit(50 * 1024 * 1024)]
+    [HttpPost("entry-id/{entryId}")]
+    [ProducesResponseType(typeof(List<KeyValuePair<string, ImageUploadResponse>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<KeyValuePair<string, DomainError>>), StatusCodes.Status400BadRequest)]
+    [RequireCreatorCookie]
+    [ValidateId("entryId")]
+    public async Task<IActionResult> Add([FromRoute] string entryId, CancellationToken cancellationToken = default)
+    {
+        Debug.Assert(Request.ContentType is not null, "Content type is not null because of the [MultipartFormData] attribute");
+
+        var decodedEntryId = IdCoder.Decode(entryId);
+
+        var boundaryResult = MultipartRequestHelper.GetBoundary(MediaTypeHeaderValue.Parse(Request.ContentType), _options.RequestBoundaryLengthLimit);
+        if (boundaryResult.IsFailure)
+            return BadRequest(boundaryResult.Error);
+
+        var reader = new MultipartReader(boundaryResult.Value, HttpContext.Request.Body);
+        if (reader is null)
+            return BadRequest(DomainErrors.MultipartReaderError());
+
+        var uploadResults = await ProcessUploadedFiles(reader, decodedEntryId, cancellationToken);
+
+        return Ok(BuildUploadResults(uploadResults));
+    }
+
+
+    /// <summary>
     /// Retrieves an image by its entry and image identifiers.
     /// </summary>
     /// <param name="entryId">Encoded identifier of the entry containing the image</param>
@@ -90,6 +131,69 @@ public sealed class ImageController : BaseController
 
 
     /// <summary>
+    /// Returns the partial view HTML for a given image.
+    /// </summary>
+    /// <param name="entryId">Encoded identifier of the entry containing the image</param>
+    /// <param name="imageId">Encoded identifier of the image to retrieve</param>
+    /// <returns>
+    /// Returns the rendered HTML of the partial view containing the image information or an internal server error if rendering fails.
+    /// </returns>
+    [HttpGet("entry-id/{entryId}/image-id/{imageId}/partial")]
+    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ValidateId("entryId", "imageId")]
+    public async Task<IActionResult> GetImagePartial([FromRoute] string entryId, [FromRoute] string imageId, CancellationToken cancellationToken = default)
+    {
+        var decodedEntryId = IdCoder.Decode(entryId);
+        var decodedImageId = IdCoder.Decode(imageId);
+
+        var url = _unauthorizedImageService.BuildUrl(decodedEntryId, decodedImageId);
+        var partialView = new PartialViewResult
+        {
+            ViewName = "Components/EditableImageContainer",
+            ViewData = new ViewDataDictionary(new EmptyModelMetadataProvider(), new ModelStateDictionary())
+            {
+                Model = new EditableImageContainerModel(decodedImageId, url)
+            }
+        };
+
+        var renderResult = await _partialViewRenderHelper.Render(ControllerContext, HttpContext, partialView);
+        return Ok(renderResult);
+    }
+
+
+    /// <summary>
+    /// Retrieves a read-only image partial view HTML for a given image.
+    /// </summary>
+    /// <param name="entryId"></param>
+    /// <param name="imageId"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    [HttpGet("entry-id/{entryId}/image-id/{imageId}/partial/read-only")]
+    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ValidateId("entryId", "imageId")]
+    public async Task<IActionResult> GetReadOnlyImagePartial([FromRoute] string entryId, [FromRoute] string imageId, CancellationToken cancellationToken = default)
+    {
+        var decodedEntryId = IdCoder.Decode(entryId);
+        var decodedImageId = IdCoder.Decode(imageId);
+
+        var url = _unauthorizedImageService.BuildUrl(decodedEntryId, decodedImageId);
+        var partialView = new PartialViewResult
+        {
+            ViewName = "Components/ReadOnlyImageContainer",
+            ViewData = new ViewDataDictionary(new EmptyModelMetadataProvider(), new ModelStateDictionary())
+            {
+                Model = new ReadOnlyImageContainerModel(url)
+            }
+        };
+
+        var renderResult = await _partialViewRenderHelper.Render(ControllerContext, HttpContext, partialView);
+        return Ok(renderResult);
+    }
+
+
+    /// <summary>
     /// Removes an image from an entry.
     /// </summary>
     /// <param name="entryId">Encoded identifier of the entry containing the image</param>
@@ -98,21 +202,18 @@ public sealed class ImageController : BaseController
     /// A no content (204) response if successful, forbidden (403) if the user is not authorized,
     /// or a bad request if the identifiers cannot be decoded.
     /// </returns>
+    [HttpDelete("entry-id/{entryId}/image-id/{imageId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    [HttpDelete("entry-id/{entryId}/image-id/{imageId}")]
+    [RequireCreatorCookie]
+    [ValidateId("entryId", "imageId")]
     public async Task<IActionResult> Remove([FromRoute] string entryId, [FromRoute] string imageId, CancellationToken cancellationToken = default)
     {
         var decodedEntryId = IdCoder.Decode(entryId);
-        if (decodedEntryId == Guid.Empty)
-            return IdDecodingBadRequest();
-
         var decodedImageId = IdCoder.Decode(imageId);
-        if (decodedImageId == Guid.Empty)
-            return IdDecodingBadRequest();
 
-        var creatorResult = await GetCreator(cancellationToken);
+        var creatorResult = await TryGetCreator(cancellationToken);
         if (creatorResult.IsFailure)
             return Forbid();
 
@@ -121,83 +222,38 @@ public sealed class ImageController : BaseController
     }
 
 
-    /// <summary>
-    /// Uploads one or more images to an entry.
-    /// </summary>
-    /// <param name="entryId">Encoded identifier of the entry to which the images will be uploaded</param>
-    /// <returns>
-    /// Dictionary mapping file names to either rendered HTML content (for successful uploads)
-    /// or error information (for failed uploads).
-    /// </returns>
-    /// <remarks>
-    /// This endpoint accepts multipart form data with a file size limit of 50MB.
-    /// It processes each file in the multipart request, validates it, and associates it with the entry.
-    /// </remarks>
-    [MultipartFormData]
-    [DisableFormValueModelBinding]
-    [RequestFormLimits(MultipartBodyLengthLimit = 50 * 1024 * 1024)] // 50MB
-    [RequestSizeLimit(50 * 1024 * 1024)]
-    [ProducesResponseType(typeof(ImageResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [HttpPost("entry-id/{entryId}")]
-    public async Task<IActionResult> Upload([FromRoute] string entryId, CancellationToken cancellationToken = default)
+
+    private List<KeyValuePair<string, object>> BuildUploadResults(List<Result<ImageUploadResult, DomainError>> uploadResults)
     {
-        Debug.Assert(Request.ContentType is not null, "Content type is not null because of the [MultipartFormData] attribute");
-
-        var decodedEntryId = IdCoder.Decode(entryId);
-        if (decodedEntryId == Guid.Empty)
-            return IdDecodingBadRequest();
-
-        var boundaryResult = MultipartRequestHelper.GetBoundary(MediaTypeHeaderValue.Parse(Request.ContentType), _options.RequestBoundaryLengthLimit);
-        if (boundaryResult.IsFailure)
-            return BadRequest(boundaryResult.Error);
-
-        var reader = new MultipartReader(boundaryResult.Value, HttpContext.Request.Body);
-        if (reader is null)
-            return BadRequest(DomainErrors.MultipartReaderError());
-
-        var uploadResults = await ProcessUploadedFiles(reader, decodedEntryId, cancellationToken);
-        return Ok(await BuildUploadResults(uploadResults));
-    }
-
-
-    private async Task<Dictionary<string, string>> BuildUploadResults(List<Result<ImageResponse, DomainError>> uploadResults)
-    {
-        var results = new Dictionary<string, string>();
-        foreach (var (_, isFailure, imageResponse, error) in uploadResults)
+        var results = new List<KeyValuePair<string, object>>(uploadResults.Count);
+        foreach (var (_, isFailure, imageUploadResult, error) in uploadResults)
         {
             if (isFailure)
             {
-                var fileName = error.Extensions[ErrorExtensionKeys.FileName] as string ?? "unknown";
+                var fileName = error.Extensions[ErrorExtensionKeys.FileName] as string;
+                results.Add(new KeyValuePair<string, object>(fileName!, error));
 
-                var errorJson = JsonSerializer.Serialize(error);
-                results.Add(fileName, errorJson);
                 continue;
             }
 
-            var partialView = new PartialViewResult
-            {
-                
-                ViewName = "Components/EditableImageContainer",
-                ViewData = new ViewDataDictionary(new EmptyModelMetadataProvider(), new ModelStateDictionary())
-                {
-                    Model = new EditableImageContainerModel(imageResponse.ImageInfo)
-                }
-            };
+            // TODO: remove the partialUrl from the response when the frontend is updated to stop using Razor components
+            var partialUrl = _unauthorizedImageService.BuildPartialUrl(imageUploadResult.EntryId, imageUploadResult.Id);
+            var url = _unauthorizedImageService.BuildUrl(imageUploadResult.EntryId, imageUploadResult.Id);
 
-            var renderResult = await _partialViewRenderHelper.Render(ControllerContext, HttpContext, partialView);
-            results.Add(imageResponse.ClientFileName, renderResult);
+            results.Add(new KeyValuePair<string, object>(imageUploadResult.ClientFileName, imageUploadResult.ToImageUploadResponse(partialUrl, url)));
         }
 
         return results;
     }
 
 
-    private async Task<List<Result<ImageResponse, DomainError>>> ProcessUploadedFiles(MultipartReader reader, Guid decodedEntryId, CancellationToken cancellationToken)
+    private async Task<List<Result<ImageUploadResult, DomainError>>> ProcessUploadedFiles(MultipartReader reader, Guid decodedEntryId, CancellationToken cancellationToken)
     {
         var fileHelper = new FileHelper(_loggerFactory, _options.AllowedExtensions, _options.MaxFileSize);
 
-        var uploadResults = new List<Result<ImageResponse, DomainError>>();
+        var uploadResults = new List<Result<ImageUploadResult, DomainError>>();
+        // TODO: Consider using a configurable limit for the number of files
+        // TODO: Use global limits for file count based by entry
         var uploadedFilesCount = 0;
         MultipartSection? section;
 
@@ -210,11 +266,11 @@ public sealed class ImageController : BaseController
             if (section is null)
                 break;
 
-            var (HasValue, Value) = await ProcessSection(section, fileHelper, decodedEntryId, cancellationToken);
-            if (!HasValue)
+            var (hasValue, value) = await ProcessSection(section, fileHelper, decodedEntryId, cancellationToken);
+            if (!hasValue)
                 continue;
             
-            uploadResults.Add(Value);
+            uploadResults.Add(value);
             uploadedFilesCount++;
         } while (section is not null);
 
@@ -222,7 +278,7 @@ public sealed class ImageController : BaseController
     }
 
 
-    private async Task<(bool HasValue, Result<ImageResponse, DomainError> Value)> ProcessSection(MultipartSection section, FileHelper fileHelper, Guid decodedEntryId, CancellationToken cancellationToken)
+    private async Task<(bool, Result<ImageUploadResult, DomainError>)> ProcessSection(MultipartSection section, FileHelper fileHelper, Guid decodedEntryId, CancellationToken cancellationToken)
     {
         if (!ContentDispositionHeaderValue.TryParse(section.ContentDisposition, out var contentDisposition))
             return (false, default);
@@ -232,16 +288,16 @@ public sealed class ImageController : BaseController
 
         var appFileResult = await fileHelper.ProcessStreamedFile(section, contentDisposition);
         if (appFileResult.IsFailure)
-        {
-            var enrichedError = EnrichProblemDetails(contentDisposition, appFileResult.Error);
-            return (true, enrichedError);
-        }
+            return (true, EnrichDomainErrorWithFileName(contentDisposition, appFileResult.Error));
 
-        var uploadResult = (await _unauthorizedImageService.Add(decodedEntryId, appFileResult.Value, cancellationToken));
+        var uploadResult = await _unauthorizedImageService.Add(decodedEntryId, appFileResult.Value, cancellationToken)
+            .ToImageResponse(contentDisposition.FileName.Value)
+            .OnFailureCompensate(x => EnrichDomainErrorWithFileName(contentDisposition, x));
+        
         return (true, uploadResult);
 
 
-        static DomainError EnrichProblemDetails(ContentDispositionHeaderValue contentDisposition, DomainError error)
+        static DomainError EnrichDomainErrorWithFileName(ContentDispositionHeaderValue contentDisposition, DomainError error)
         {
             error.Extensions.Add(ErrorExtensionKeys.FileName, contentDisposition.FileName.Value);
             return error;

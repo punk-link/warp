@@ -23,20 +23,7 @@
 @section Scripts {
     <script type="module" src="~/dist/main.js" asp-append-version="true"></script>
     <script type="module" defer>
-        document.addEventListener('DOMContentLoaded', () => {
-            if (typeof window.addIndexEvents === 'function')
-                window.addIndexEvents('@Model.Id', @((int)Model.EditMode));
-            else
-                console.error('addIndexEvents function not available');
-        });
-
-        window.addEventListener('load', () => {
-            const editMode = document.getElementById('edit-mode-state').value;
-            if (typeof window.setupTextareas === 'function')
-                window.setupTextareas(parseInt(editMode, 10));
-            else
-                console.error('setupTextareas function not available');
-        });
+        window.initIndexPage('@Model.Id');
     </script>
 }
 
@@ -56,13 +43,13 @@
     </div>
 
     <section class="px-3 my-5">
-        <form method="post">
+        <form id="entry-form" method="post">
             <div class="flex flex-col items-center justify-around min-h-[75vh]">
                 <!-- Simple Mode Container -->
                 <div id="simple-mode-container" class="w-full">
                     <div class="w-full md:w-1/2 mb-5 mx-auto">
                         <div class="flex flex-col">
-                            <textarea id="simple-text-content" class="form-textarea order-2 bg-transparent" asp-for="TextContent" placeholder=" "></textarea>
+                            <textarea id="simple-text-content" class="form-textarea order-2 bg-transparent" placeholder=" "></textarea>
                             <label class="form-label floating-label order-1" for="simple-text-content">@Localizer["TextAreaLabel"]</label>
                         </div>
                     </div>
@@ -75,7 +62,7 @@
                             <div class="flex flex-col mb-15">
                                 <i class="icofont-align-left text-secondary text-2xl mb-2"></i>
                                 <label class="form-label" for="advanced-text-content">@Localizer["TextAreaLabel"]</label>
-                                <textarea id="advanced-text-content" class="form-textarea bg-transparent" asp-for="TextContent" placeholder=" "></textarea>
+                                <textarea id="advanced-text-content" class="form-textarea bg-transparent" placeholder=" "></textarea>
                             </div>
                             <div class="flex flex-col mb-5">
                                 <i class="icofont-hill-sunny text-secondary text-2xl mb-2"></i>
@@ -108,9 +95,8 @@
                     </div>
                 </div>
 
-                <input type="hidden" asp-for="Id" value="@Model.Id" />
-                <input id="edit-mode-state" type="hidden" asp-for="EditMode" />
-                @Html.AntiForgeryToken()
+                <input type="hidden" name="id" />
+                <input id="edit-mode-state" type="hidden" />
             </div>
         </form>
     </section>

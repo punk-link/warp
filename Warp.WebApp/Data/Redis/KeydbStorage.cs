@@ -1,6 +1,8 @@
 ﻿using StackExchange.Redis;
 using System.Text.Json;
 using Warp.WebApp.Models;
+using Warp.WebApp.Models.Entries;
+using Warp.WebApp.Models.Images;
 using Warp.WebApp.Services.Encryption;
 
 namespace Warp.WebApp.Data.Redis;

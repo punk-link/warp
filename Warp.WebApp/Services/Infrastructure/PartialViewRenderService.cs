@@ -19,15 +19,15 @@ public class PartialViewRenderService : IPartialViewRenderService
 
     public async Task<string> Render(ControllerContext controllerContext, HttpContext httpContext, PartialViewResult partialView)
     {
-        var viewResult = GetViewEngineResult(controllerContext, partialView.ViewName!);
+        var viewEngineResult = GetViewEngineResult(controllerContext, partialView.ViewName!);
 
         try
         {
             await using var writer = new StringWriter();
             var tempDataDictionary = _tempDataDictionaryFactory.GetTempData(httpContext);
-            var viewContext = new ViewContext(controllerContext, viewResult.View!, partialView.ViewData, tempDataDictionary, writer, new HtmlHelperOptions());
+            var viewContext = new ViewContext(controllerContext, viewEngineResult.View!, partialView.ViewData, tempDataDictionary, writer, new HtmlHelperOptions());
 
-            await viewResult.View!.RenderAsync(viewContext);
+            await viewEngineResult.View!.RenderAsync(viewContext);
 
             return writer.GetStringBuilder().ToString();
         }

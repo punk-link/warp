@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Warp.WebApp.Models;
+namespace Warp.WebApp.Models.Images;
 
 public readonly record struct ImageInfo
 {

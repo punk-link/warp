@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Warp.WebApp.Models;
+namespace Warp.WebApp.Models.Entries;
 
 public readonly record struct Entry
 {

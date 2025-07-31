@@ -20,23 +20,37 @@ public abstract class BaseController : ControllerBase
         => base.BadRequest(error.ToProblemDetails());
 
 
-    protected UnauthorizedObjectResult Unauthorized(in DomainError error)
-        => base.Unauthorized(error.ToProblemDetails());
-
-
-    protected IActionResult BadRequestOrNoContent<T>(Result<T, DomainError> result)
+    protected IActionResult OkOrBadRequest<T>(Result<T, DomainError> result)
     {
         if (result.IsFailure)
             return BadRequest(result.Error);
-
-        return NoContent();
+        
+        return Ok(result.Value);
     }
 
 
-    protected async Task<Result<Creator, DomainError>> GetCreator(CancellationToken cancellationToken)
+    protected IActionResult OkOrBadRequest(UnitResult<DomainError> result)
     {
-        var creatorId = _cookieService.GetCreatorId(HttpContext);
-        var (_, isFailure, creator, _) = await _creatorService.Get(creatorId, cancellationToken);
+        if (result.IsFailure)
+            return BadRequest(result.Error);
+        
+        return Ok(true);
+    }
+
+
+    protected async Task<Creator> GetCreator(CancellationToken cancellationToken)
+    {
+        var (_, isFailure, creator, _) = await TryGetCreatorInternal(cancellationToken);
+        if (isFailure)
+            throw new UnauthorizedAccessException("Unauthorized access to creator.");
+
+        return creator;
+    }
+
+
+    protected async Task<Result<Creator, DomainError>> TryGetCreator(CancellationToken cancellationToken)
+    {
+        var (_, isFailure, creator, _) = await TryGetCreatorInternal(cancellationToken);
         if (isFailure)
             return DomainErrors.UnauthorizedError();
         
@@ -46,6 +60,13 @@ public abstract class BaseController : ControllerBase
 
     protected IActionResult IdDecodingBadRequest() 
         => BadRequest(DomainErrors.IdDecodingError());
+
+
+    private Task<Result<Creator, DomainError>> TryGetCreatorInternal(CancellationToken cancellationToken)
+    {
+        var creatorId = _cookieService.GetCreatorId(HttpContext);
+        return _creatorService.Get(creatorId, cancellationToken);
+    }
 
 
     private readonly ICookieService _cookieService;

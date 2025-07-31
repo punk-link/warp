@@ -3,13 +3,25 @@
 export const elements = {
     getActionButtons: () => ({
         copyLink: dom.get('copy-link-button'),
-        edit: dom.get('edit-button'),
-        delete: dom.get('delete-button')
+        delete: dom.get('delete-button'),
+        edit: dom.get('edit-entry-button'),
+        editCopy: dom.get('edit-button')
     }),
-    getGalleryItems: () => dom.queryAll('[data-fancybox]'),
+
+    getGallery: () => dom.query('.gallery'),
+    
     getRoamingImage: () => dom.get('roaming-image'),
+    
     getServiceMessages: () => ({
         created: dom.query('.service-message-container #entry-created-message'),
         copied: dom.query('.service-message-container #link-copied-message')
-    })
+    }),
+    
+    getEditEntryButton: () => dom.get('edit-entry-button'),
+    
+    getTextContentElement: () => dom.query('.text-content'),
+    
+    getCopyForm: () => dom.get('copy-form'),
+    
+    getEditForm: () => dom.get('edit-form')
 };

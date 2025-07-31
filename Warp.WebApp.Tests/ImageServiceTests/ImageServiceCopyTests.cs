@@ -5,9 +5,9 @@ using Warp.WebApp.Constants.Caching;
 using Warp.WebApp.Constants.Logging;
 using Warp.WebApp.Data;
 using Warp.WebApp.Data.S3;
-using Warp.WebApp.Models;
 using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Models.Files;
+using Warp.WebApp.Models.Images;
 using Warp.WebApp.Services.Images;
 
 namespace Warp.WebApp.Tests.ImageServiceTests;
