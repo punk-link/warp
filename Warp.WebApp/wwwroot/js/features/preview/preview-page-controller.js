@@ -49,7 +49,6 @@ export class PreviewPageController extends BasePageController {
         if (images.length === 0)
             return;
 
-        // Mark gallery as dynamic content for animations
         gallery.classList.add('dynamic-content', 'expanded');
 
         for (const image of images) {
@@ -63,7 +62,6 @@ export class PreviewPageController extends BasePageController {
             const container = preview.animateReadOnlyContainer(imageContainerHtml, gallery);
             
             if (container) {
-                // Mark container as dynamic content for animations
                 container.classList.add('dynamic-content');
                 setTimeout(() => {
                     container.classList.add('loaded');
@@ -81,7 +79,7 @@ export class PreviewPageController extends BasePageController {
         const success = await copyUrl(entryUrl);
 
         if (success) {
-            const editButton = this.elements.getActionButtons().edit;
+            const editButton = this.elements.getActionButtons().editCopy;
             if (editButton) {
                 uiState.toggleClasses(editButton, {
                     remove: [CSS_CLASSES.HIDDEN],
