@@ -44,6 +44,9 @@ export class EntryPageController extends BasePageController {
         if (images.length === 0)
             return;
 
+        // Start gallery expansion animation
+        gallery.classList.add('expanded');
+
         for (const image of images) {
             const response = await http.get(image.url + '/partial/read-only');
             if (!response.ok) {
@@ -52,7 +55,14 @@ export class EntryPageController extends BasePageController {
             }
 
             const imageContainerHtml = await response.text();
-            preview.animateReadOnlyContainer(imageContainerHtml, gallery);
+            const container = preview.animateReadOnlyContainer(imageContainerHtml, gallery);
+            
+            // Add loaded class after a brief delay for smooth scaling
+            if (container) {
+                setTimeout(() => {
+                    container.classList.add('loaded');
+                }, 150);
+            }
         }
 
         galleryViewer.init();
@@ -128,15 +138,27 @@ export class EntryPageController extends BasePageController {
     }
 
 
+
+
     async #updateUIWithData(entry) {
         initializeCountdown(new Date(entry.expiresAt));
 
+        // Add smooth resize transitions to content areas
+        this.enableSmoothContentResize();
+
+        // Animate text content in
         const textContent = this.elements.getTextContentElement();
         textContent.textContent = entry.textContent;
+        if (entry.textContent) {
+            setTimeout(() => {
+                textContent.classList.add('visible');
+            }, 100);
+        }
 
         const viewCountElement = this.elements.getViewCountElement();
         viewCountElement.textContent = entry.viewCount || 0;
 
+        // Animate gallery and images
         const gallery = this.elements.getGallery();
         await this.#attachImageContainersToGallery(gallery, entry.images);
     }

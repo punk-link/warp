@@ -16,7 +16,7 @@ export const elements = {
     getGallery: () => dom.query('.gallery'),
     getGalleryItems: () => dom.queryAll('[data-fancybox]'),
     
-    getTextContentElement: () => dom.query('article .font-sans-serif.text-base'),
+    getTextContentElement: () => dom.query('.text-content'),
     getViewCountElement: () => dom.query('.flex.items-center span.text-gray-600.font-semibold'),
     
     getRoamingImage: () => dom.get('roaming-image'),

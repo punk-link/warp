@@ -75,9 +75,75 @@ const handlers = {
             });
         };
 
+        const createLoadingIndicator = () => {
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'loading-overlay absolute inset-0 flex flex-col items-center justify-center rounded';
+            
+            // Create CSS-based circular spinner
+            const spinner = document.createElement('div');
+            spinner.className = 'w-8 h-8 border-2 border-gray-300 border-t-gray-400 rounded-full mb-2';
+            spinner.style.animation = 'spin 1s linear infinite';
+            
+            const text = document.createElement('span');
+            text.className = 'text-gray-300 text-sm';
+            text.textContent = 'Loading...';
+            
+            loadingDiv.appendChild(spinner);
+            loadingDiv.appendChild(text);
+            
+            // Add CSS animation if not already present
+            if (!document.querySelector('#loading-spinner-styles')) {
+                const style = document.createElement('style');
+                style.id = 'loading-spinner-styles';
+                style.textContent = `
+                    @keyframes spin {
+                        0% { transform: rotate(0deg); }
+                        100% { transform: rotate(360deg); }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            return loadingDiv;
+        };
+
+        const showLoadingState = (imageContainer) => {
+            // Make container relative for absolute positioning
+            imageContainer.style.position = 'relative';
+            
+            // Hide the image temporarily
+            const imageElement = imageContainer.querySelector('img');
+            if (imageElement) {
+                imageElement.style.opacity = '0';
+            }
+            
+            // Add loading overlay
+            const loadingOverlay = createLoadingIndicator();
+            imageContainer.appendChild(loadingOverlay);
+            
+            return loadingOverlay;
+        };
+
+        const hideLoadingState = (imageContainer) => {
+            // Remove loading overlay
+            const loadingOverlay = imageContainer.querySelector('.loading-overlay');
+            if (loadingOverlay) {
+                loadingOverlay.remove();
+            }
+            
+            // Show the image
+            const imageElement = imageContainer.querySelector('img');
+            if (imageElement) {
+                imageElement.style.opacity = '1';
+            }
+            
+            // Reset container styles
+            imageContainer.style.minHeight = '';
+        };
+
         const triggerContainerAnimation = (imageContainer) => {
+            hideLoadingState(imageContainer);
             uiState.toggleClasses(imageContainer, {
-                remove: [CSS_CLASSES.HIDDEN],
                 add: [CSS_CLASSES.ANIMATE]
             });
         };
@@ -90,7 +156,8 @@ const handlers = {
 
         const handleAlreadyLoadedImage = (imageContainer, imageElement) => {
             if (imageElement.complete && imageElement.naturalHeight !== 0) {
-                animateContainerImmediately(imageContainer);
+                // Image is already loaded, just animate in
+                uiState.toggleClasses(imageContainer, { add: [CSS_CLASSES.ANIMATE] });
                 return true;
             }
 
@@ -120,13 +187,17 @@ const handlers = {
 
         const processImageElement = (imageContainer, imageElement) => {
             if (!imageElement) {
-                animateContainerImmediately(imageContainer);
+                // No image found, just animate in
+                uiState.toggleClasses(imageContainer, { add: [CSS_CLASSES.ANIMATE] });
                 return;
             }
 
             const isAlreadyLoaded = handleAlreadyLoadedImage(imageContainer, imageElement);
-            if (!isAlreadyLoaded) 
+            if (!isAlreadyLoaded) {
+                // Show loading state while image loads
+                showLoadingState(imageContainer);
                 attachImageLoadHandlers(imageContainer, imageElement);
+            }
         };
 
         const parseContainerFromHtml = (containerHtml) => {
@@ -142,7 +213,7 @@ const handlers = {
             if (!imageContainer) 
                 return null;
             
-            uiState.toggleClasses(imageContainer, { add: [CSS_CLASSES.HIDDEN] });
+            // Add container to gallery immediately (no hidden state)
             gallery.appendChild(imageContainer);
             
             const imageElement = imageContainer.querySelector('img');

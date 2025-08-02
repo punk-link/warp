@@ -49,6 +49,9 @@ export class PreviewPageController extends BasePageController {
         if (images.length === 0)
             return;
 
+        // Start gallery expansion animation
+        gallery.classList.add('expanded');
+
         for (const image of images) {
             const response = await http.get(image.url + '/partial/read-only');
             if (!response.ok) {
@@ -57,7 +60,14 @@ export class PreviewPageController extends BasePageController {
             }
 
             const imageContainerHtml = await response.text();
-            preview.animateReadOnlyContainer(imageContainerHtml, gallery);
+            const container = preview.animateReadOnlyContainer(imageContainerHtml, gallery);
+            
+            // Add loaded class after a brief delay for smooth scaling
+            if (container) {
+                setTimeout(() => {
+                    container.classList.add('loaded');
+                }, 150);
+            }
         }
 
         galleryViewer.init();
@@ -140,16 +150,35 @@ export class PreviewPageController extends BasePageController {
     }
 
 
+
+
     async #updateUIWithData(entry, isEditable) {
         initializeCountdown(new Date(entry.expiresAt));
 
+        // Add smooth resize transitions to content areas
+        this.enableSmoothContentResize();
+
+        // Animate text content in
         const textContent = this.elements.getTextContentElement();
         textContent.textContent = entry.textContent;
+        if (entry.textContent) {
+            setTimeout(() => {
+                textContent.classList.add('visible');
+            }, 100);
+        }
 
+        // Animate gallery and images
         const gallery = this.elements.getGallery();
         await this.#attachImageContainersToGallery(gallery, entry.images);
 
         const editButton = this.elements.getEditEntryButton();
-        editButton.classList.toggle(CSS_CLASSES.HIDDEN, !isEditable);
+        if (isEditable) {
+            uiState.toggleClasses(editButton, {
+                remove: [CSS_CLASSES.HIDDEN],
+                add: [CSS_CLASSES.ANIMATE]
+            });
+        } else {
+            editButton.classList.add(CSS_CLASSES.HIDDEN);
+        }
     }
 }
