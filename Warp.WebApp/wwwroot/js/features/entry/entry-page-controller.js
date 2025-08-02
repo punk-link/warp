@@ -1,5 +1,5 @@
+import { creatorApi } from '/js/api/creator-api.js';
 import { entryApi } from '/js/api/entry-api.js';
-import { animateBackgroundImage } from '/js/components/background/image-positioner.js';
 import { galleryViewer } from '/js/components/gallery/viewer.js';
 import { http } from '/js/services/http/client.js';
 import { redirectTo, ROUTES } from '/js/utils/routes.js';
@@ -22,6 +22,7 @@ export class EntryPageController extends BasePageController {
             try {
                 this.initRoamingImage();
 
+                await creatorApi.getOrSet();
                 const entryResult = await entryApi.get(entryId);
                 if (entryResult.isFailure) {
                     this.displayError(entryResult.error);

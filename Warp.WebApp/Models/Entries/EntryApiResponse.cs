@@ -7,7 +7,7 @@ namespace Warp.WebApp.Models.Entries;
 
 public readonly record struct EntryApiResponse
 {
-    public EntryApiResponse(string id, EditMode editMode, ExpirationPeriod expirationPeriod, DateTime expiresAt, List<ImageInfo> images, EntryOpenGraphDescription openGraphDescription, string textContent)
+    public EntryApiResponse(string id, EditMode editMode, ExpirationPeriod expirationPeriod, DateTime expiresAt, List<ImageInfo> images, EntryOpenGraphDescription openGraphDescription, string textContent, long viewCount)
     {
         Id = id;
         EditMode = editMode;
@@ -17,18 +17,19 @@ public readonly record struct EntryApiResponse
         OpenGraphDescription = openGraphDescription;
         // TODO: move out from the struct
         TextContent = TextFormatter.GetCleanString(textContent);
+        ViewCount = viewCount;
     }
 
 
     // TODO: save expiration period in the database
     public EntryApiResponse(string id, EntryInfo entryInfo) 
-        : this(id, entryInfo.EditMode, ExpirationPeriod.FiveMinutes, entryInfo.ExpiresAt, entryInfo.ImageInfos, entryInfo.OpenGraphDescription, entryInfo.Entry.Content)
+        : this(id, entryInfo.EditMode, ExpirationPeriod.FiveMinutes, entryInfo.ExpiresAt, entryInfo.ImageInfos, entryInfo.OpenGraphDescription, entryInfo.Entry.Content, entryInfo.ViewCount)
     {
     }
 
 
     public static EntryApiResponse Empty(string id, EntryOpenGraphDescription description) 
-        => new (id, EditMode.Unset, ExpirationPeriod.FiveMinutes, DateTime.MinValue, [], description, string.Empty);
+        => new (id, EditMode.Unset, ExpirationPeriod.FiveMinutes, DateTime.MinValue, [], description, string.Empty, 0);
 
 
     public string Id { get; }
@@ -38,4 +39,5 @@ public readonly record struct EntryApiResponse
     public List<ImageInfoResponse> Images { get; } = [];
     public EntryOpenGraphDescription OpenGraphDescription { get; } = default!;
     public string TextContent { get; } = string.Empty;
+    public long ViewCount { get; }
 }

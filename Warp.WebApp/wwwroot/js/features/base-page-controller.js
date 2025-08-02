@@ -39,9 +39,7 @@ export class BasePageController {
 
     initRoamingImage() {
         const roamingImage = this.elements.getRoamingImage();
-        if (roamingImage) {
-            animateBackgroundImage(roamingImage);
-        }
+        animateBackgroundImage(roamingImage);
     }
 
 
