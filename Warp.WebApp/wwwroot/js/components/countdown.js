@@ -90,6 +90,10 @@ const handlers = {
                 );
 
                 updateDisplay(countdownElement, targetDate, interval);
+                
+                setTimeout(() => {
+                    countdownElement.classList.add('visible');
+                }, 100);
             }
         };
     })()

@@ -75,6 +75,128 @@ const handlers = {
             });
         };
 
+        const createLoadingIndicator = () => {
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'loading-overlay';
+            
+            const spinner = document.createElement('div');
+            spinner.className = 'loading-spinner';
+            
+            const text = document.createElement('span');
+            text.className = 'loading-text';
+            text.textContent = 'Loading...';
+            
+            loadingDiv.appendChild(spinner);
+            loadingDiv.appendChild(text);
+            
+            return loadingDiv;
+        };
+
+        const showLoadingState = (imageContainer) => {
+            imageContainer.style.position = 'relative';
+            
+            const imageElement = imageContainer.querySelector('img');
+            if (imageElement) 
+                imageElement.style.opacity = '0';
+            
+            const loadingOverlay = createLoadingIndicator();
+            imageContainer.appendChild(loadingOverlay);
+            
+            return loadingOverlay;
+        };
+
+        const hideLoadingState = (imageContainer) => {
+            const loadingOverlay = imageContainer.querySelector('.loading-overlay');
+            if (loadingOverlay) 
+                loadingOverlay.remove();
+            
+            const imageElement = imageContainer.querySelector('img');
+            if (imageElement) 
+                imageElement.style.opacity = '1';
+            
+            imageContainer.style.minHeight = '';
+        };
+
+        const triggerContainerAnimation = (imageContainer) => {
+            hideLoadingState(imageContainer);
+            uiState.toggleClasses(imageContainer, {
+                add: [CSS_CLASSES.ANIMATE]
+            });
+        };
+
+        const animateContainerImmediately = (imageContainer) => {
+            requestAnimationFrame(() => {
+                triggerContainerAnimation(imageContainer);
+            });
+        };
+
+        const handleAlreadyLoadedImage = (imageContainer, imageElement) => {
+            if (imageElement.complete && imageElement.naturalHeight !== 0) {
+                uiState.toggleClasses(imageContainer, { add: [CSS_CLASSES.ANIMATE] });
+                return true;
+            }
+
+            return false;
+        };
+
+        const attachImageLoadHandlers = (imageContainer, imageElement) => {
+            const cleanup = (loadHandler, errorHandler) => {
+                imageElement.removeEventListener('load', loadHandler);
+                imageElement.removeEventListener('error', errorHandler);
+            };
+
+            const handleImageLoad = () => {
+                triggerContainerAnimation(imageContainer);
+                cleanup(handleImageLoad, handleImageError);
+            };
+            
+            const handleImageError = () => {
+                // Even if image fails to load, show the container
+                triggerContainerAnimation(imageContainer);
+                cleanup(handleImageLoad, handleImageError);
+            };
+            
+            imageElement.addEventListener('load', handleImageLoad);
+            imageElement.addEventListener('error', handleImageError);
+        };
+
+        const processImageElement = (imageContainer, imageElement) => {
+            if (!imageElement) {
+                // No image found, just animate in
+                uiState.toggleClasses(imageContainer, { add: [CSS_CLASSES.ANIMATE] });
+                return;
+            }
+
+            const isAlreadyLoaded = handleAlreadyLoadedImage(imageContainer, imageElement);
+            if (!isAlreadyLoaded) {
+                // Show loading state while image loads
+                showLoadingState(imageContainer);
+                attachImageLoadHandlers(imageContainer, imageElement);
+            }
+        };
+
+        const parseContainerFromHtml = (containerHtml) => {
+            const parser = new DOMParser();
+            const tempContainer = parser.parseFromString(containerHtml, 'text/html');
+
+            return tempContainer.querySelector('.image-container');
+        };
+
+        const animateReadOnlyContainer = (containerHtml, gallery) => {
+            const imageContainer = parseContainerFromHtml(containerHtml);
+            
+            if (!imageContainer) 
+                return null;
+            
+            // Add container to gallery immediately (no hidden state)
+            gallery.appendChild(imageContainer);
+            
+            const imageElement = imageContainer.querySelector('img');
+            processImageElement(imageContainer, imageElement);
+            
+            return imageContainer;
+        };
+
         const attachEventsToPreloadedImages = (entryId) => {
             const gallery = elements.getGallery();
             if (!gallery) 
@@ -132,7 +254,9 @@ const handlers = {
 
             initPreloadedImages: (entryId) => {
                 attachEventsToPreloadedImages(entryId);
-            }
+            },
+
+            animateReadOnlyContainer: animateReadOnlyContainer
         };
     })()
 };

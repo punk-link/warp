@@ -121,11 +121,6 @@ public class ImageService : IImageService, IUnauthorizedImageService
         => new(string.Format(ImageUrlBaseTemplate + "/partial", IdCoder.Encode(entryId), IdCoder.Encode(imageId)), UriKind.Relative);
 
 
-    /// <inheritdoc cref="IUnauthorizedImageService.BuildReadOnlyPartialUrl"/>
-    public Uri BuildReadOnlyPartialUrl(in Guid entryId, in Guid imageId) 
-        => new(string.Format(ImageUrlBaseTemplate + "/partial/read-only", IdCoder.Encode(entryId), IdCoder.Encode(imageId)), UriKind.Relative);
-
-
     /// <inheritdoc cref="IUnauthorizedImageService.BuildUrl"/>
     public Uri BuildUrl(in Guid entryId, in Guid imageId)
         => new(string.Format(ImageUrlBaseTemplate, IdCoder.Encode(entryId), IdCoder.Encode(imageId)), UriKind.Relative);

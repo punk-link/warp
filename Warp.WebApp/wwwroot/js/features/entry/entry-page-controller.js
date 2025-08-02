@@ -7,11 +7,12 @@ import { redirectTo, ROUTES } from '/js/utils/routes.js';
 import { copyUrl } from '/js/utils/clipboard.js';
 import { uiState } from '/js/utils/ui-core.js';
 import { CSS_CLASSES } from '/js/constants/css.js';
-import { initializeCountdown } from '/js/components/countdown.js'; 
+import { initializeCountdown } from '/js/components/countdown.js';
+import { modal } from '/js/components/modal.js';
 import { BasePageController } from '/js/features/base-page-controller.js';
 
 
-export class PreviewPageController extends BasePageController {
+export class EntryPageController extends BasePageController {
     constructor(elements) {
         super(elements);
     }
@@ -19,7 +20,7 @@ export class PreviewPageController extends BasePageController {
 
     async initialize(entryId) {
         this.executeWithLoadingIndicator(async () => {
-                try {
+            try {
                 this.initRoamingImage();
 
                 await creatorApi.getOrSet();
@@ -31,15 +32,9 @@ export class PreviewPageController extends BasePageController {
 
                 const entry = entryResult.value;
                 this.#setupEventHandlers(entry.id);
-
-                let isEditable = false;
-                const isEditableResult = await entryApi.isEditable(entry.id);
-                if (isEditableResult.isSuccess)
-                    isEditable = isEditableResult.value;
-
-                await this.#updateUIWithData(entry, isEditable);
+                await this.#updateUIWithData(entry);
             } catch (error) {
-                this.captureException(error, 'Failed to initialize preview page', 'initialize');
+                this.captureException(error, 'Failed to initialize entry page', 'initialize');
             }
         });
     }
@@ -49,6 +44,7 @@ export class PreviewPageController extends BasePageController {
         if (images.length === 0)
             return;
 
+        // Mark gallery as dynamic content for animations
         gallery.classList.add('dynamic-content', 'expanded');
 
         for (const image of images) {
@@ -62,6 +58,7 @@ export class PreviewPageController extends BasePageController {
             const container = preview.animateReadOnlyContainer(imageContainerHtml, gallery);
             
             if (container) {
+                // Mark container as dynamic content for animations
                 container.classList.add('dynamic-content');
                 setTimeout(() => {
                     container.classList.add('loaded');
@@ -79,79 +76,71 @@ export class PreviewPageController extends BasePageController {
         const success = await copyUrl(entryUrl);
 
         if (success) {
-            const editButton = this.elements.getActionButtons().editCopy;
-            if (editButton) {
-                uiState.toggleClasses(editButton, {
-                    remove: [CSS_CLASSES.HIDDEN],
-                    add: [CSS_CLASSES.ANIMATE]
-                });
-            }
-
-            const { created, copied } = this.elements.getServiceMessages();
-            if (created && copied) {
-                uiState.toggleClasses(created, { add: [CSS_CLASSES.HIDDEN] });
-                uiState.toggleClasses(copied, {
+            const serviceMessages = this.elements.getServiceMessages?.();
+            if (serviceMessages?.copied) {
+                uiState.toggleClasses(serviceMessages.copied, {
                     remove: [CSS_CLASSES.HIDDEN],
                     add: [CSS_CLASSES.ANIMATE, CSS_CLASSES.ANIMATE_SLOW_OUT]
                 });
 
                 setTimeout(() => {
-                    uiState.toggleClasses(copied, {
+                    uiState.toggleClasses(serviceMessages.copied, {
                         add: [CSS_CLASSES.HIDDEN],
                         remove: [CSS_CLASSES.ANIMATE]
                     });
-                    uiState.toggleClasses(created, {
-                        remove: [CSS_CLASSES.HIDDEN],
-                        add: [CSS_CLASSES.ANIMATE_SLOW]
-                    });
-                }, 4000);
+                }, 3000);
             }
         }
     }
 
 
-    async #handleCopy(entryId) {
-        this.executeWithLoadingIndicator(async () => {
-            const result = await entryApi.copy(entryId);
-            if (result.isSuccess)
-                redirectTo(ROUTES.ROOT, { id: result.value.id });
-            else
-                this.displayError(result.error);
-        });
+    #handleClose() {
+        redirectTo(ROUTES.ROOT);
     }
 
 
-    #handleEdit(entryId) {
-        this.executeWithLoadingIndicator(() => {
-            redirectTo(ROUTES.ROOT, { id: entryId });
-        });
-    }
-
-
-    async #handleDelete(entryId) {
+    async #handleReport(entryId) {
         this.executeWithLoadingIndicator(async () => {
-            const result = await entryApi.delete(entryId);
-            if (result.isSuccess)
-                redirectTo(ROUTES.DELETED);
+            const response = await http.post(ROUTES.API.ENTRIES.REPORT(entryId));
+            if (response.status === 204)
+                redirectTo(ROUTES.ROOT);
             else
-                this.displayError(result.error);
+                this.displayError({ message: 'Failed to report entry' });
         });
     }
 
 
     #setupEventHandlers(entryId) {
-        const { copyLink: copyLinkButton,edit: editButton, editCopy: editCopyButton, delete: deleteButton } = this.elements.getActionButtons();
+        const { close: closeButton, copyLink: copyLinkButton, showReportModalButton } = this.elements.getActionButtons();
+        const { reportModal, reportButton, cancelButton } = this.elements.getModalElements();
         
+        closeButton.addEventListener('click', () => this.#handleClose());
         copyLinkButton.addEventListener('click', () => this.#handleCopyLink(entryId));
-        editCopyButton.addEventListener('click', () => this.#handleCopy(entryId));
-        deleteButton.addEventListener('click', () => this.#handleDelete(entryId));
-        editButton.addEventListener('click', () => this.#handleEdit(entryId));
+
+        const reportModalControl = modal.create(reportModal);
+
+        showReportModalButton.addEventListener('click', () => {
+            reportModalControl.show();
+        });
+
+        if (cancelButton) {
+            cancelButton.addEventListener('click', () => {
+                reportModalControl.hide();
+            });
+        }
+
+        if (reportButton) {
+            reportButton.addEventListener('click', () => {
+                reportModalControl.hide();
+                this.#handleReport(entryId);
+            });
+        }
     }
 
 
 
 
-    async #updateUIWithData(entry, isEditable) {
+    async #updateUIWithData(entry) {
         initializeCountdown(new Date(entry.expiresAt));
 
         const textContent = this.elements.getTextContentElement();
@@ -162,17 +151,14 @@ export class PreviewPageController extends BasePageController {
             }, 100);
         }
 
+        const viewCountElement = this.elements.getViewCountElement();
+        const targetViewCount = entry.viewCount || 0;
+        
+        setTimeout(() => {
+            this.animateNumberCount(viewCountElement, targetViewCount, 1200);
+        }, 300);
+
         const gallery = this.elements.getGallery();
         await this.#attachImageContainersToGallery(gallery, entry.images);
-
-        const editButton = this.elements.getEditEntryButton();
-        if (isEditable) {
-            uiState.toggleClasses(editButton, {
-                remove: [CSS_CLASSES.HIDDEN],
-                add: [CSS_CLASSES.ANIMATE]
-            });
-        } else {
-            editButton.classList.add(CSS_CLASSES.HIDDEN);
-        }
     }
 }

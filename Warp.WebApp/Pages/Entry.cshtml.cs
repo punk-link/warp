@@ -26,7 +26,7 @@ public class EntryModel : BasePageModel
         return DecodeId(id)
             .Bind(GetCreator)
             .Bind(GetEntryInfo)
-            .Bind(BuildModel)
+            .Bind(BuildOpenGraphModel)
             .Finally(result => result.IsSuccess
                 ? Page()
                 : RedirectToError(result.Error));
@@ -42,30 +42,17 @@ public class EntryModel : BasePageModel
             => _entryPresentationService.Get(tuple.Creator, tuple.DecodedId, cancellationToken);
 
 
-        Result<EntryInfo, DomainError> BuildModel(EntryInfo entryInfo)
+        Result<EntryInfo, DomainError> BuildOpenGraphModel(EntryInfo entryInfo)
         {
             Id = id;
-            ExpiresIn = new DateTimeOffset(entryInfo.ExpiresAt).ToUnixTimeMilliseconds();
             OpenGraphModel = new OpenGraphModel(entryInfo.OpenGraphDescription);
-            TextContent = entryInfo.Entry.Content;
-            ViewCount = entryInfo.ViewCount;
-
-            foreach (var imageInfo in entryInfo.ImageInfos)
-                ImageContainers.Add(new ReadOnlyImageContainerModel(imageInfo));
-
             return entryInfo;
         }
     }
 
-
-    public OpenGraphModel OpenGraphModel { get; set; } = default!;
-
-
-    public long ExpiresIn { get; set; }
+    
     public string Id { get; set; } = default!;
-    public List<ReadOnlyImageContainerModel> ImageContainers { get; set; } = [];
-    public string TextContent { get; set; } = string.Empty;
-    public long ViewCount { get; set; } = 1;
+    public OpenGraphModel OpenGraphModel { get; set; } = default!;
 
 
     private readonly IEntryInfoService _entryPresentationService;

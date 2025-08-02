@@ -16,13 +16,7 @@
 @section Scripts {
     <script type="module" src="~/dist/entry.js" defer></script>
     <script type="module" defer>
-        document.addEventListener('DOMContentLoaded', () => {
-            if (typeof window.addEntryEvents === 'function')
-                window.addEntryEvents('@Model.Id', '@Model.ExpiresIn');
-            else
-                console.error('addEntryEvents function not available');
-        });
-
+        window.initEntryPage('@ViewContext.RouteData.Values["id"]');
     </script>
 }
 
@@ -42,7 +36,7 @@
             <div class="w-full md:w-1/2 flex justify-between items-baseline mb-5">
                 <div class="flex items-center">
                     <i class="icofont-eye text-gray-400 mr-2"></i>
-                    <span class="text-gray-600 font-semibold">@Model.ViewCount</span>
+                    <span class="text-gray-600 font-semibold">0</span>
                 </div>
                 <div class="text-right">
                     <div class="countdown text-gray-700 text-3xl font-sans-serif font-semibold">&nbsp;</div>
@@ -54,18 +48,8 @@
 
             <!-- Content -->
             <article class="w-full md:w-1/2 p-3 rounded-sm mb-10">
-                @if (Model.ImageContainers.Count > 0)
-                {
-                    <div class="gallery mb-5">
-                        @foreach (var imageContainer in Model.ImageContainers)
-                        {
-                            <partial name="Shared/Components/ReadOnlyImageContainer" model="imageContainer" />
-                        }
-                    </div>
-                }
-                <div class="font-sans-serif text-base">
-                    @Html.Raw(Model.TextContent)
-                </div>
+                <div class="gallery mb-5 hidden"></div>
+                <div class="text-content font-sans-serif text-base"></div>
             </article>
 
             <!-- Action Buttons -->

@@ -39,9 +39,35 @@ export class BasePageController {
 
     initRoamingImage() {
         const roamingImage = this.elements.getRoamingImage();
-        if (roamingImage) {
-            animateBackgroundImage(roamingImage);
-        }
+        animateBackgroundImage(roamingImage);
+    }
+
+
+    animateNumberCount(element, targetValue, duration = 1500) {
+        const startValue = parseInt(element.textContent) || 0;
+        const startTime = performance.now();
+        
+        element.classList.add('view-counter');
+        
+        const animate = (currentTime) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            const easeOutCubic = 1 - Math.pow(1 - progress, 3);
+            const currentValue = Math.round(startValue + (targetValue - startValue) * easeOutCubic);
+            
+            element.textContent = currentValue;
+            
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                setTimeout(() => {
+                    element.classList.remove('view-counter');
+                }, 500);
+            }
+        };
+        
+        requestAnimationFrame(animate);
     }
 
 
