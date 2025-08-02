@@ -1,5 +1,6 @@
 import { creatorApi } from '/js/api/creator-api.js';
 import { entryApi } from '/js/api/entry-api.js';
+import { preview } from '/js/components/gallery/preview.js';
 import { galleryViewer } from '/js/components/gallery/viewer.js';
 import { http } from '/js/services/http/client.js';
 import { redirectTo, ROUTES } from '/js/utils/routes.js';
@@ -55,8 +56,8 @@ export class PreviewPageController extends BasePageController {
                 continue;
             }
 
-            const imageContainer = await response.text();
-            gallery.insertAdjacentHTML('beforeend', imageContainer);
+            const imageContainerHtml = await response.text();
+            preview.animateReadOnlyContainer(imageContainerHtml, gallery);
         }
 
         galleryViewer.init();

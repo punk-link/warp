@@ -75,6 +75,82 @@ const handlers = {
             });
         };
 
+        const triggerContainerAnimation = (imageContainer) => {
+            uiState.toggleClasses(imageContainer, {
+                remove: [CSS_CLASSES.HIDDEN],
+                add: [CSS_CLASSES.ANIMATE]
+            });
+        };
+
+        const animateContainerImmediately = (imageContainer) => {
+            requestAnimationFrame(() => {
+                triggerContainerAnimation(imageContainer);
+            });
+        };
+
+        const handleAlreadyLoadedImage = (imageContainer, imageElement) => {
+            if (imageElement.complete && imageElement.naturalHeight !== 0) {
+                animateContainerImmediately(imageContainer);
+                return true;
+            }
+
+            return false;
+        };
+
+        const attachImageLoadHandlers = (imageContainer, imageElement) => {
+            const cleanup = (loadHandler, errorHandler) => {
+                imageElement.removeEventListener('load', loadHandler);
+                imageElement.removeEventListener('error', errorHandler);
+            };
+
+            const handleImageLoad = () => {
+                triggerContainerAnimation(imageContainer);
+                cleanup(handleImageLoad, handleImageError);
+            };
+            
+            const handleImageError = () => {
+                // Even if image fails to load, show the container
+                triggerContainerAnimation(imageContainer);
+                cleanup(handleImageLoad, handleImageError);
+            };
+            
+            imageElement.addEventListener('load', handleImageLoad);
+            imageElement.addEventListener('error', handleImageError);
+        };
+
+        const processImageElement = (imageContainer, imageElement) => {
+            if (!imageElement) {
+                animateContainerImmediately(imageContainer);
+                return;
+            }
+
+            const isAlreadyLoaded = handleAlreadyLoadedImage(imageContainer, imageElement);
+            if (!isAlreadyLoaded) 
+                attachImageLoadHandlers(imageContainer, imageElement);
+        };
+
+        const parseContainerFromHtml = (containerHtml) => {
+            const parser = new DOMParser();
+            const tempContainer = parser.parseFromString(containerHtml, 'text/html');
+
+            return tempContainer.querySelector('.image-container');
+        };
+
+        const animateReadOnlyContainer = (containerHtml, gallery) => {
+            const imageContainer = parseContainerFromHtml(containerHtml);
+            
+            if (!imageContainer) 
+                return null;
+            
+            uiState.toggleClasses(imageContainer, { add: [CSS_CLASSES.HIDDEN] });
+            gallery.appendChild(imageContainer);
+            
+            const imageElement = imageContainer.querySelector('img');
+            processImageElement(imageContainer, imageElement);
+            
+            return imageContainer;
+        };
+
         const attachEventsToPreloadedImages = (entryId) => {
             const gallery = elements.getGallery();
             if (!gallery) 
@@ -132,7 +208,9 @@ const handlers = {
 
             initPreloadedImages: (entryId) => {
                 attachEventsToPreloadedImages(entryId);
-            }
+            },
+
+            animateReadOnlyContainer: animateReadOnlyContainer
         };
     })()
 };
