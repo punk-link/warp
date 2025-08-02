@@ -49,8 +49,8 @@ export class PreviewPageController extends BasePageController {
         if (images.length === 0)
             return;
 
-        // Start gallery expansion animation
-        gallery.classList.add('expanded');
+        // Mark gallery as dynamic content for animations
+        gallery.classList.add('dynamic-content', 'expanded');
 
         for (const image of images) {
             const response = await http.get(image.url + '/partial/read-only');
@@ -62,8 +62,9 @@ export class PreviewPageController extends BasePageController {
             const imageContainerHtml = await response.text();
             const container = preview.animateReadOnlyContainer(imageContainerHtml, gallery);
             
-            // Add loaded class after a brief delay for smooth scaling
             if (container) {
+                // Mark container as dynamic content for animations
+                container.classList.add('dynamic-content');
                 setTimeout(() => {
                     container.classList.add('loaded');
                 }, 150);
@@ -155,10 +156,6 @@ export class PreviewPageController extends BasePageController {
     async #updateUIWithData(entry, isEditable) {
         initializeCountdown(new Date(entry.expiresAt));
 
-        // Add smooth resize transitions to content areas
-        this.enableSmoothContentResize();
-
-        // Animate text content in
         const textContent = this.elements.getTextContentElement();
         textContent.textContent = entry.textContent;
         if (entry.textContent) {
@@ -167,7 +164,6 @@ export class PreviewPageController extends BasePageController {
             }, 100);
         }
 
-        // Animate gallery and images
         const gallery = this.elements.getGallery();
         await this.#attachImageContainersToGallery(gallery, entry.images);
 

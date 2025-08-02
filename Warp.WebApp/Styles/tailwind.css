@@ -39,6 +39,16 @@
         }
     }
 
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
     .animate-catchy-fade-in {
         animation: catchy-fade-in 0.2s ease-in-out;
     }
@@ -49,6 +59,10 @@
 
     .animate-slow-fade-out {
         animation: fade-out 2s ease-in-out;
+    }
+
+    .animate-spin {
+        animation: spin 1s linear infinite;
     }
 }
 
@@ -119,8 +133,29 @@
         @apply grid grid-cols-3 gap-x-3 gap-y-6 w-full;
     }
 
+    /* Smooth content resize animations - only for dynamic galleries */
+    .gallery.dynamic-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.5s ease-out, opacity 0.3s ease-out;
+    }
+
+    .gallery.dynamic-content.expanded {
+        max-height: 2000px;
+    }
+
     .image-container {
         @apply relative aspect-square w-full border-1 border-gray-300 rounded-sm overflow-hidden cursor-pointer;
+    }
+
+    /* Smooth scaling animation - only for dynamically loaded images */
+    .image-container.dynamic-content {
+        transform: scale(0.95);
+        transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+    }
+
+    .image-container.dynamic-content.loaded {
+        transform: scale(1);
     }
 
     .image-container img {
@@ -145,6 +180,50 @@
 
     .paste-area-highlighted {
         @apply border-2 border-dashed border-secondary/70 bg-secondary/5 transition-all duration-200 ease-in-out;
+    }
+
+    .text-content {
+        opacity: 0;
+        transform: translateY(10px);
+        transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+    }
+
+    .text-content.visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    article {
+        transition: padding 0.3s ease-out;
+    }
+
+    .loading-overlay {
+        @apply absolute inset-0 flex flex-col items-center justify-center rounded;
+    }
+
+    .loading-spinner {
+        @apply w-8 h-8 border-2 border-gray-300 border-t-gray-400 rounded-full mb-2 animate-spin;
+    }
+
+    .loading-text {
+        @apply text-gray-300 text-sm;
+    }
+
+    .view-counter {
+        @apply transition-all duration-200 ease-out text-primary;
+        transform: scale(1.05);
+    }
+
+    /* Countdown appearance animation */
+    .countdown {
+        opacity: 0;
+        transform: translateY(10px);
+        transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    }
+
+    .countdown.visible {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 

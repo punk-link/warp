@@ -77,47 +77,28 @@ const handlers = {
 
         const createLoadingIndicator = () => {
             const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'loading-overlay absolute inset-0 flex flex-col items-center justify-center rounded';
+            loadingDiv.className = 'loading-overlay';
             
-            // Create CSS-based circular spinner
             const spinner = document.createElement('div');
-            spinner.className = 'w-8 h-8 border-2 border-gray-300 border-t-gray-400 rounded-full mb-2';
-            spinner.style.animation = 'spin 1s linear infinite';
+            spinner.className = 'loading-spinner';
             
             const text = document.createElement('span');
-            text.className = 'text-gray-300 text-sm';
+            text.className = 'loading-text';
             text.textContent = 'Loading...';
             
             loadingDiv.appendChild(spinner);
             loadingDiv.appendChild(text);
             
-            // Add CSS animation if not already present
-            if (!document.querySelector('#loading-spinner-styles')) {
-                const style = document.createElement('style');
-                style.id = 'loading-spinner-styles';
-                style.textContent = `
-                    @keyframes spin {
-                        0% { transform: rotate(0deg); }
-                        100% { transform: rotate(360deg); }
-                    }
-                `;
-                document.head.appendChild(style);
-            }
-            
             return loadingDiv;
         };
 
         const showLoadingState = (imageContainer) => {
-            // Make container relative for absolute positioning
             imageContainer.style.position = 'relative';
             
-            // Hide the image temporarily
             const imageElement = imageContainer.querySelector('img');
-            if (imageElement) {
+            if (imageElement) 
                 imageElement.style.opacity = '0';
-            }
             
-            // Add loading overlay
             const loadingOverlay = createLoadingIndicator();
             imageContainer.appendChild(loadingOverlay);
             
@@ -125,19 +106,14 @@ const handlers = {
         };
 
         const hideLoadingState = (imageContainer) => {
-            // Remove loading overlay
             const loadingOverlay = imageContainer.querySelector('.loading-overlay');
-            if (loadingOverlay) {
+            if (loadingOverlay) 
                 loadingOverlay.remove();
-            }
             
-            // Show the image
             const imageElement = imageContainer.querySelector('img');
-            if (imageElement) {
+            if (imageElement) 
                 imageElement.style.opacity = '1';
-            }
             
-            // Reset container styles
             imageContainer.style.minHeight = '';
         };
 
@@ -156,7 +132,6 @@ const handlers = {
 
         const handleAlreadyLoadedImage = (imageContainer, imageElement) => {
             if (imageElement.complete && imageElement.naturalHeight !== 0) {
-                // Image is already loaded, just animate in
                 uiState.toggleClasses(imageContainer, { add: [CSS_CLASSES.ANIMATE] });
                 return true;
             }

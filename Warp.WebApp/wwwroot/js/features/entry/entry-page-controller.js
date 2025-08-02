@@ -44,8 +44,8 @@ export class EntryPageController extends BasePageController {
         if (images.length === 0)
             return;
 
-        // Start gallery expansion animation
-        gallery.classList.add('expanded');
+        // Mark gallery as dynamic content for animations
+        gallery.classList.add('dynamic-content', 'expanded');
 
         for (const image of images) {
             const response = await http.get(image.url + '/partial/read-only');
@@ -57,8 +57,9 @@ export class EntryPageController extends BasePageController {
             const imageContainerHtml = await response.text();
             const container = preview.animateReadOnlyContainer(imageContainerHtml, gallery);
             
-            // Add loaded class after a brief delay for smooth scaling
             if (container) {
+                // Mark container as dynamic content for animations
+                container.classList.add('dynamic-content');
                 setTimeout(() => {
                     container.classList.add('loaded');
                 }, 150);
@@ -75,7 +76,6 @@ export class EntryPageController extends BasePageController {
         const success = await copyUrl(entryUrl);
 
         if (success) {
-            // Show success feedback if we have service messages
             const serviceMessages = this.elements.getServiceMessages?.();
             if (serviceMessages?.copied) {
                 uiState.toggleClasses(serviceMessages.copied, {
@@ -143,10 +143,6 @@ export class EntryPageController extends BasePageController {
     async #updateUIWithData(entry) {
         initializeCountdown(new Date(entry.expiresAt));
 
-        // Add smooth resize transitions to content areas
-        this.enableSmoothContentResize();
-
-        // Animate text content in
         const textContent = this.elements.getTextContentElement();
         textContent.textContent = entry.textContent;
         if (entry.textContent) {
@@ -156,9 +152,12 @@ export class EntryPageController extends BasePageController {
         }
 
         const viewCountElement = this.elements.getViewCountElement();
-        viewCountElement.textContent = entry.viewCount || 0;
+        const targetViewCount = entry.viewCount || 0;
+        
+        setTimeout(() => {
+            this.animateNumberCount(viewCountElement, targetViewCount, 1200);
+        }, 300);
 
-        // Animate gallery and images
         const gallery = this.elements.getGallery();
         await this.#attachImageContainersToGallery(gallery, entry.images);
     }

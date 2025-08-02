@@ -43,50 +43,33 @@ export class BasePageController {
     }
 
 
-    enableSmoothContentResize() {
-        if (!document.querySelector('#content-resize-styles')) {
-            const style = document.createElement('style');
-            style.id = 'content-resize-styles';
-            style.textContent = `
-                /* Smooth gallery expansion */
-                .gallery {
-                    max-height: 0;
-                    overflow: hidden;
-                    transition: max-height 0.5s ease-out, opacity 0.3s ease-out;
-                }
-                .gallery.expanded {
-                    max-height: 2000px;
-                }
-                
-                /* Smooth text content appearance */
-                .text-content {
-                    opacity: 0;
-                    transform: translateY(10px);
-                    transition: opacity 0.4s ease-out, transform 0.4s ease-out;
-                }
-                .text-content.visible {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-                
-                /* Individual image container animations */
-                .image-container {
-                    transform: scale(0.95);
-                    transition: transform 0.3s ease-out, opacity 0.3s ease-out;
-                }
-                .image-container.loaded {
-                    transform: scale(1);
-                }
-                
-                /* Article smooth transitions */
-                article {
-                    transition: padding 0.3s ease-out;
-                }
-            `;
-            document.head.appendChild(style);
-        }
+    animateNumberCount(element, targetValue, duration = 1500) {
+        const startValue = parseInt(element.textContent) || 0;
+        const startTime = performance.now();
+        
+        element.classList.add('view-counter');
+        
+        const animate = (currentTime) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            
+            const easeOutCubic = 1 - Math.pow(1 - progress, 3);
+            const currentValue = Math.round(startValue + (targetValue - startValue) * easeOutCubic);
+            
+            element.textContent = currentValue;
+            
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                setTimeout(() => {
+                    element.classList.remove('view-counter');
+                }, 500);
+            }
+        };
+        
+        requestAnimationFrame(animate);
     }
-    
+
 
     #setCursor(state) {
         document.body.style.cursor = state;
