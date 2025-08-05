@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using System.Text.Json.Serialization;
 
 namespace Warp.WebApp.Models.Options;
 
@@ -12,8 +12,8 @@ public readonly record struct ProgramSecrets
     }
 
 
-    [JsonProperty("consul-address")]
+    [JsonPropertyName("consul-address")]
     public string ConsulAddress { get; init; }
-    [JsonProperty("consul-token")]
+    [JsonPropertyName("consul-token")]
     public string ConsulToken { get; init; }
 }

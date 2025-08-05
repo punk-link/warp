@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Microsoft.Extensions.Options;
+using System.Text.Json;
 using VaultSharp;
 using VaultSharp.V1.AuthMethods.Token;
 using Warp.WebApp.Telemetry.Logging;
@@ -10,10 +11,11 @@ public static class VaultHelper
     public static async Task<T> GetSecrets<T>(ILogger logger, IConfiguration configuration)
     {
         var vaultClient = GetVaultClient(configuration);
-        object? response;
+        object? data;
         try
         {
-            response = await vaultClient.V1.Secrets.KeyValue.V2.ReadSecretAsync(path: configuration["ServiceName"], mountPoint: StorageName);
+            var response = await vaultClient.V1.Secrets.KeyValue.V2.ReadSecretAsync(path: configuration["ServiceName"], mountPoint: StorageName);
+            data = response.Data.Data;
         }
         catch (Exception ex)
         {
@@ -23,8 +25,37 @@ public static class VaultHelper
 
         try
         {
-            var jObject = JObject.FromObject(response!);
-            return jObject.ToObject<T>()!;
+            var rawData = new Dictionary<string, object?>();
+            foreach (var kvp in (IDictionary<string, object?>)data!)
+            {
+                if (kvp.Value is JsonElement jsonElement)
+                {
+                    rawData[kvp.Key] = jsonElement.ValueKind switch
+                    {
+                        JsonValueKind.String => jsonElement.GetString(),
+                        JsonValueKind.Number => 
+                            jsonElement.TryGetInt64(out var l) ? l :
+                            jsonElement.TryGetDecimal(out var d) ? d :
+                            jsonElement.GetDouble(),
+                        JsonValueKind.True => true,
+                        JsonValueKind.False => false,
+                        JsonValueKind.Object => jsonElement.GetRawText(),
+                        _ => jsonElement.GetRawText()
+                    };
+                }
+                else
+                {
+                    rawData[kvp.Key] = kvp.Value;
+                }
+            }
+
+            var options = new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+
+            var json = JsonSerializer.Serialize(rawData, options);
+            return JsonSerializer.Deserialize<T>(json, options)!;
         }
         catch (Exception ex)
         {
