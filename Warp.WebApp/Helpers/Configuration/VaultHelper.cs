@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+﻿using Microsoft.Extensions.Options;
 using System.Text.Json;
 using VaultSharp;
 using VaultSharp.V1.AuthMethods.Token;
@@ -47,8 +46,13 @@ public static class VaultHelper
                 }
             }
 
-            var json = JsonConvert.SerializeObject(rawData);
-            return JsonConvert.DeserializeObject<T>(json)!;
+            var options = new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            };
+
+            var json = JsonSerializer.Serialize(rawData, options);
+            return JsonSerializer.Deserialize<T>(json, options)!;
         }
         catch (Exception ex)
         {
