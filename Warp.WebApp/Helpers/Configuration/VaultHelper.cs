@@ -33,7 +33,10 @@ public static class VaultHelper
                     rawData[kvp.Key] = jsonElement.ValueKind switch
                     {
                         JsonValueKind.String => jsonElement.GetString(),
-                        JsonValueKind.Number => jsonElement.GetDouble(),
+                        JsonValueKind.Number => 
+                            jsonElement.TryGetInt64(out var l) ? l :
+                            jsonElement.TryGetDecimal(out var d) ? d :
+                            jsonElement.GetDouble(),
                         JsonValueKind.True => true,
                         JsonValueKind.False => false,
                         JsonValueKind.Object => jsonElement.GetRawText(),
