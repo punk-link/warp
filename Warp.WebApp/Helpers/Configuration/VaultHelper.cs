@@ -13,7 +13,7 @@ public static class VaultHelper
         object? response;
         try
         {
-            response = await vaultClient.V1.Secrets.KeyValue.V2.ReadSecretAsync($"{configuration["ServiceName"]}", mountPoint: StorageName);
+            response = await vaultClient.V1.Secrets.KeyValue.V2.ReadSecretAsync(path: configuration["ServiceName"], mountPoint: StorageName);
         }
         catch (Exception ex)
         {
