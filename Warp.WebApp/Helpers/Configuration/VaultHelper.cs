@@ -7,18 +7,13 @@ namespace Warp.WebApp.Helpers.Configuration;
 
 public static class VaultHelper
 {
-    public static T GetSecrets<T>(ILogger logger, IConfiguration configuration)
+    public static async Task<T> GetSecrets<T>(ILogger logger, IConfiguration configuration)
     {
         var vaultClient = GetVaultClient(configuration);
         object? response;
         try
         {
-            var secretTask = vaultClient.V1.Secrets.KeyValue.V2.ReadSecretAsync(
-                path: StorageName,
-                mountPoint: configuration["ServiceName"]);
-
-            secretTask.Wait();
-            response = secretTask.Result;
+            response = await vaultClient.V1.Secrets.KeyValue.V2.ReadSecretAsync(path: configuration["ServiceName"], mountPoint: StorageName);
         }
         catch (Exception ex)
         {

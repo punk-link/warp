@@ -39,7 +39,7 @@ var startupLogger = builder.GetStartUpLogger();
 
 try
 {
-    AddConfiguration(startupLogger, builder);
+    await AddConfiguration(startupLogger, builder);
 
     builder.AddLogging()
         .AddTelemetry();
@@ -136,7 +136,7 @@ catch (Exception ex)
 return;
 
 
-void AddConfiguration(ILogger<Program> logger, WebApplicationBuilder builder)
+async Task AddConfiguration(ILogger<Program> logger, WebApplicationBuilder builder)
 {
     if (builder.Environment.IsLocal())
     {
@@ -145,7 +145,7 @@ void AddConfiguration(ILogger<Program> logger, WebApplicationBuilder builder)
     }
     else
     {
-        var secrets = VaultHelper.GetSecrets<ProgramSecrets>(logger, builder.Configuration);
+        var secrets = await VaultHelper.GetSecrets<ProgramSecrets>(logger, builder.Configuration);
         builder.AddConsulConfiguration(secrets.ConsulAddress, secrets.ConsulToken);
     }
 
