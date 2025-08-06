@@ -50,6 +50,7 @@ public class EntryController : BaseController
     [ProducesResponseType(typeof(DomainError), StatusCodes.Status400BadRequest)]
     [RequireCreatorCookie]
     [ValidateId]
+    [IdempotentRequest]
     public async Task<IActionResult> AddOrUpdate([FromRoute] string id, [FromBody] EntryApiRequest request, CancellationToken cancellationToken = default)
     {
         var creator = await GetCreator(cancellationToken);
