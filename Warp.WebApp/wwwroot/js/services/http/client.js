@@ -44,17 +44,9 @@ const handlers = {
         const buildRequestOptions = (method, body = null, headers = HTTP_HEADERS.JSON, idempotencyKey = null) => {
             const options = { method, headers: { ...headers } };
 
-            // Add idempotency header for non-GET operations
-            if (idempotencyKey && method !== HTTP_METHOD.GET) {
-                options.headers[HTTP_HEADERS.IDEMPOTENCY_KEY] = idempotencyKey;
-            }
-
             if (body) {
                 if (body instanceof FormData) {
                     options.headers = { ...HTTP_HEADERS.FORM_DATA };
-                    if (idempotencyKey && method !== HTTP_METHOD.GET) 
-                        options.headers[HTTP_HEADERS.IDEMPOTENCY_KEY] = idempotencyKey;
-                    
                     options.body = body;
                 } else {
                     options.body = typeof body === 'string'
@@ -62,6 +54,9 @@ const handlers = {
                         : JSON.stringify(body);
                 }
             }
+
+            if (idempotencyKey && method !== HTTP_METHOD.GET)
+                options.headers[HTTP_HEADERS.IDEMPOTENCY_KEY] = idempotencyKey;
 
             return options;
         };

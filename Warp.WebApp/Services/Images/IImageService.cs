@@ -16,7 +16,7 @@ public interface IImageService
     /// A result containing a list of image metadata if successful, 
     /// or an error if the operation fails.
     /// </returns>
-    public Task<Result<List<ImageInfo>, DomainError>> GetAttached(Guid entryId, List<Guid> imageIds, CancellationToken cancellationToken);
+    public ValueTask<Result<List<ImageInfo>, DomainError>> GetAttached(Guid entryId, List<Guid> imageIds, CancellationToken cancellationToken);
 
     /// <summary>
     /// Copies all images from one entry to another.

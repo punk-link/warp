@@ -48,7 +48,7 @@ public class IdempotentRequestAttribute : ActionFilterAttribute
         await cache.RemoveAsync(cacheKey);
     }
 
-
-    private const string IdempotencyHeader = "X-Idempotency-Key";
+    
     private const int CacheInterval = 30;
+    private const string IdempotencyHeader = "X-Idempotency-Key";
 }

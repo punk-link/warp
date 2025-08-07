@@ -31,6 +31,9 @@ public class S3FileStorage : IS3FileStorage
     [TraceMethod]
     public async Task<Result<HashSet<string>, DomainError>> Contains(string prefix, List<string> keys, CancellationToken cancellationToken)
     {
+        if (keys is null || keys.Count == 0)
+            return Enumerable.Empty<string>().ToHashSet();
+
         string error;
         try
         {
@@ -44,6 +47,9 @@ public class S3FileStorage : IS3FileStorage
             var response = await _amazonS3Client.ListObjectsV2Async(request, cancellationToken);
             if (IsSuccess(response))
             {
+                if (response.S3Objects is null || response.S3Objects.Count == 0)
+                    return Enumerable.Empty<string>().ToHashSet();
+
                 var objectIdsSet = keys.Select(key => prefix + key)
                     .ToHashSet();
 
