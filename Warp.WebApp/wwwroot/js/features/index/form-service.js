@@ -8,6 +8,7 @@ export class IndexFormService {
     constructor(elements, entryApi) {
         this.elements = elements;
         this.entryApi = entryApi;
+        this.isSubmitting = false;
     }
 
     /**
@@ -58,37 +59,57 @@ export class IndexFormService {
     }
 
     /**
-     * Submits form data with retry mechanism
+     * Submits form data with idempotency protection and retry mechanism
      */
     async submitWithRetry(entryId, formData, maxAttempts = CONFIG.RETRY.MAX_ATTEMPTS) {
-        let lastError;
-
-        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-            try {
-                const response = await this.entryApi.add(entryId, formData);
-                
-                if (response && response.id) {
-                    return { success: true, data: response };
-                } else {
-                    throw new Error('Invalid response received');
-                }
-            } catch (error) {
-                lastError = error;
-                
-                if (attempt < maxAttempts) {
-                    await this._delay(CONFIG.RETRY.DELAY_MS * attempt);
-                }
-            }
+        if (this.isSubmitting) {
+            return {
+                success: false,
+                error: new Error('Submission already in progress'),
+                userMessage: 'Please wait, your request is being processed.'
+            };
         }
 
-        return { 
-            success: false, 
-            error: lastError,
-            userMessage: 'Failed to create entry. Please try again.'
-        };
+        this.isSubmitting = true;
+        let lastError;
+
+        try {
+            for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+                try {
+                    const response = await this.entryApi.add(entryId, formData);
+
+                    if (response && response.id) 
+                        return { success: true, data: response };
+                    
+                    throw new Error('Invalid response received');
+                } catch (error) {
+                    lastError = error;
+
+                    if (error.message.includes('409') || error.message.includes('Conflict')) {
+                        return {
+                            success: false,
+                            error: error,
+                            userMessage: 'This request has already been processed. Please refresh the page to continue.'
+                        };
+                    }
+
+                    if (attempt < maxAttempts) 
+                        await this.#delay(CONFIG.RETRY.DELAY_MS * attempt);
+                }
+            }
+
+            return {
+                success: false,
+                error: lastError,
+                userMessage: 'Failed to create entry. Please try again.'
+            };
+        } finally {
+            this.isSubmitting = false;
+        }
     }
 
-    _delay(ms) {
+
+    #delay(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 }

@@ -19,7 +19,8 @@ const HTTP_HEADERS = Object.freeze({
     JSON: {
         'Accept': 'application/json; charset=utf-8',
         'Content-Type': 'application/json; charset=utf-8'
-    }
+    },
+    IDEMPOTENCY_KEY: 'X-Idempotency-Key'
 });
 
 
@@ -33,23 +34,31 @@ const HTTP_ERROR = Object.freeze({
 const handlers = {
     request: (() => {
         const validateRequest = (url, method) => {
-            if (!url) 
+            if (!url)
                 throw new Error(HTTP_ERROR.MISSING_URL);
-            
-            if (!Object.values(HTTP_METHOD).includes(method)) 
+
+            if (!Object.values(HTTP_METHOD).includes(method))
                 throw new Error(HTTP_ERROR.INVALID_METHOD);
         };
 
-        const buildRequestOptions = (method, body = null, headers = HTTP_HEADERS.JSON) => {
-            const options = { method, headers };
+        const buildRequestOptions = (method, body = null, headers = HTTP_HEADERS.JSON, idempotencyKey = null) => {
+            const options = { method, headers: { ...headers } };
+
+            // Add idempotency header for non-GET operations
+            if (idempotencyKey && method !== HTTP_METHOD.GET) {
+                options.headers[HTTP_HEADERS.IDEMPOTENCY_KEY] = idempotencyKey;
+            }
 
             if (body) {
                 if (body instanceof FormData) {
-                    options.headers = HTTP_HEADERS.FORM_DATA;
+                    options.headers = { ...HTTP_HEADERS.FORM_DATA };
+                    if (idempotencyKey && method !== HTTP_METHOD.GET) 
+                        options.headers[HTTP_HEADERS.IDEMPOTENCY_KEY] = idempotencyKey;
+                    
                     options.body = body;
                 } else {
-                    options.body = typeof body === 'string' 
-                        ? body 
+                    options.body = typeof body === 'string'
+                        ? body
                         : JSON.stringify(body);
                 }
             }
@@ -58,13 +67,13 @@ const handlers = {
         };
 
         const validateResponse = async (response, url) => {
-            if (response.ok) 
+            if (response.ok)
                 return response;
 
             const problemDetails = await response.json();
-            
+
             sentryService.captureError(
-                new Error(HTTP_ERROR.REQUEST_FAILED), 
+                new Error(HTTP_ERROR.REQUEST_FAILED),
                 {
                     url: url,
                     status: response.status,
@@ -73,23 +82,23 @@ const handlers = {
                 },
                 'HTTP Request failed'
             );
-            
+
             // Redirect to error page if the response contains problem details
             // This is by design to handle specific error cases
             // Until we implement a front-end error handling strategy
-            location.href = buildUrl(ROUTES.ERROR, { 
-                details: JSON.stringify(problemDetails) 
+            location.href = buildUrl(ROUTES.ERROR, {
+                details: JSON.stringify(problemDetails)
             });
-            
+
             throw new Error(HTTP_ERROR.REQUEST_FAILED);
         };
 
         return {
-            execute: async (url, method, body = null) => {
+            execute: async (url, method, body = null, idempotencyKey = null) => {
                 try {
                     validateRequest(url, method);
-                    
-                    const options = buildRequestOptions(method, body);
+
+                    const options = buildRequestOptions(method, body, HTTP_HEADERS.JSON, idempotencyKey);
                     const response = await fetch(url, options);
 
                     await validateResponse(response, url);
@@ -97,7 +106,7 @@ const handlers = {
                     return response;
                 } catch (error) {
                     sentryService.captureError(
-                        error, 
+                        error,
                         {
                             url: url,
                             method: method,
@@ -114,21 +123,22 @@ const handlers = {
 
 export const { POST, GET, PUT, PATCH, DELETE } = HTTP_METHOD;
 
-export const makeHttpRequest = async (url, method, body = null) => handlers.request.execute(url, method, body);
+export const makeHttpRequest = async (url, method, body = null, idempotencyKey = null) =>
+    handlers.request.execute(url, method, body, idempotencyKey);
 
 export const http = {
-    get: (url) => 
+    get: (url) =>
         makeHttpRequest(url, GET),
-    
-    post: (url, data) => 
-        makeHttpRequest(url, POST, data),
-    
-    put: (url, data) => 
-        makeHttpRequest(url, PUT, data),
-    
-    patch: (url, data) => 
-        makeHttpRequest(url, PATCH, data),
-    
-    delete: (url) => 
+
+    post: (url, data, idempotencyKey = null) =>
+        makeHttpRequest(url, POST, data, idempotencyKey),
+
+    put: (url, data, idempotencyKey = null) =>
+        makeHttpRequest(url, PUT, data, idempotencyKey),
+
+    patch: (url, data, idempotencyKey = null) =>
+        makeHttpRequest(url, PATCH, data, idempotencyKey),
+
+    delete: (url) =>
         makeHttpRequest(url, DELETE)
 };

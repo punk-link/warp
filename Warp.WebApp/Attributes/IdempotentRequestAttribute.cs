@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc.Filters;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Caching.Distributed;
-using System;
-using System.Text.Json;
-using System.Threading.Tasks;
+using Warp.WebApp.Extensions;
+using Warp.WebApp.Models.Errors;
 
 namespace Warp.WebApp.Attributes;
 
@@ -26,12 +26,15 @@ public class IdempotentRequestAttribute : ActionFilterAttribute
         
         if (await cache.GetStringAsync(cacheKey) is not null)
         {
-            var result = "";
-            context.Result = new Microsoft.AspNetCore.Mvc.ContentResult
+            var result = DomainErrors.RequestIdempotencyKeyViolation()
+                .ToProblemDetails();
+
+            context.Result = new ObjectResult(result)
             {
-                Content = JsonSerializer.Serialize(result),
-                ContentType = "application/json"
+                StatusCode = StatusCodes.Status409Conflict,
+                ContentTypes = { "application/problem+json" }
             };
+
             return;
         }
 
