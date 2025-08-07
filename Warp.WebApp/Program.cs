@@ -45,6 +45,11 @@ try
         .AddTelemetry();
 
     builder.Services.AddSingleton(_ => DistributedCacheHelper.GetConnectionMultiplexer(startupLogger, builder.Configuration));
+    builder.Services.AddStackExchangeRedisCache(options => 
+    { 
+        options.Configuration = DistributedCacheHelper.GetConnectionString(startupLogger, builder.Configuration);
+        options.InstanceName = $"WarpCache::{builder.Environment}::";
+    });
 
     AddOptions(startupLogger, builder.Services, builder.Configuration);
     AddServices(builder.Services, builder.Configuration);

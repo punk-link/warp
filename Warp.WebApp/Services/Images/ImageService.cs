@@ -178,9 +178,12 @@ public class ImageService : IImageService, IUnauthorizedImageService
 
 
     /// <inheritdoc cref="IImageService.GetAttached"/>
-    public Task<Result<List<ImageInfo>, DomainError>> GetAttached(Guid entryId, List<Guid> imageIds, CancellationToken cancellationToken)
+    public async ValueTask<Result<List<ImageInfo>, DomainError>> GetAttached(Guid entryId, List<Guid> imageIds, CancellationToken cancellationToken)
     { 
-        return GetUploaded()
+        if (imageIds.Count == 0)
+            return Result.Success<List<ImageInfo>, DomainError>([]);
+
+        return await GetUploaded()
             .Bind(BuildImageInfo);
 
 

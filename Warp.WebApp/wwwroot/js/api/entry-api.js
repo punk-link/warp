@@ -20,7 +20,7 @@ async function addOrUpdate(entryId, formData) {
         textContent: formData.textContent || ''
     };
 
-    const response = await http.post(ROUTES.API.ENTRIES.ADD_OR_UPDATE(entryId), requestBody);
+    const response = await http.post(ROUTES.API.ENTRIES.ADD_OR_UPDATE(entryId), requestBody, entryId);
     return await response.json();
 }
 

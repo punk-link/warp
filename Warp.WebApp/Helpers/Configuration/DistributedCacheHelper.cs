@@ -36,4 +36,17 @@ public static class DistributedCacheHelper
             throw;
         }
     }
+
+
+    public static string GetConnectionString(ILogger logger, IConfiguration configuration)
+    {
+        var host = configuration["Redis:Host"]!;
+        if (string.IsNullOrWhiteSpace(host))
+            logger.LogRedisHostIsNotSpecified();
+
+        if (!int.TryParse(configuration["Redis:Port"]!, NumberStyles.Integer, CultureInfo.InvariantCulture, out var port))
+            logger.LogRedisPortIsNotSpecified();
+
+        return $"{host}:{port},abortConnect=true,ssl=false";
+    }
 }

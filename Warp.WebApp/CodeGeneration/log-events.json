@@ -202,6 +202,16 @@
           "generateLogMessage": true,
           "obsolete": false,
           "httpCode": 415
+        },
+        {
+          "id": 12401,
+          "name": "RequestIdempotencyKeyViolation",
+          "description": "Request idempotency key violation. The request with the same idempotency key '{IdempotencyKey:string}' is already being processed.",
+          "domainErrorDescription": "A request with the same idempotency key is already being processed.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 409
         }
       ]
     },
