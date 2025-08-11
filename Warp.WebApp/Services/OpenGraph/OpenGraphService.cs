@@ -1,16 +1,20 @@
-﻿using Microsoft.Extensions.Localization;
+﻿using CSharpFunctionalExtensions;
+using Microsoft.Extensions.Localization;
 using System.Globalization;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
+using Warp.WebApp.Data;
 using Warp.WebApp.Models.Entries;
+using Warp.WebApp.Models.Errors;
 
 namespace Warp.WebApp.Services.OpenGraph;
 
 public partial class OpenGraphService : IOpenGraphService
 {
-    public OpenGraphService(IStringLocalizer<ServerResources> localizer)
+    public OpenGraphService(IStringLocalizer<ServerResources> localizer, IDataStorage dataStorage)
     {
+        _dataStorage = dataStorage;
         _localizer = localizer;
     }
 
@@ -34,6 +38,34 @@ public partial class OpenGraphService : IOpenGraphService
     /// <returns></returns>
     public EntryOpenGraphDescription GetDefaultDescription() 
         => new(Title, _localizer["Warplyn is a simple and secure way to share text and images."], _defaultImageUrl);
+
+
+    public Task<UnitResult<DomainError>> Add(Guid entryId, EntryOpenGraphDescription openGraphDescription, TimeSpan expiresIn, CancellationToken cancellationToken) 
+        => AddInternal(entryId, openGraphDescription, expiresIn, cancellationToken);
+
+    public Task<UnitResult<DomainError>> Add(Guid entryId, string descriptionSource, Uri? previewImageUri, TimeSpan expiresIn, CancellationToken cancellationToken)
+    { 
+        var description = BuildDescription(descriptionSource, previewImageUri);
+        return AddInternal(entryId, description, expiresIn, cancellationToken);
+    }
+
+
+    public async Task<EntryOpenGraphDescription> Get(Guid entryId, CancellationToken cancellationToken)
+    {
+        var cacheKey = CacheKeyBuilder.BuildEntryOpenGraphDescriptionCacheKey(entryId);
+        
+        var description = await _dataStorage.TryGet<EntryOpenGraphDescription?>(cacheKey, cancellationToken);
+        if (description is not null)
+            return description.Value;
+
+        return GetDefaultDescription();
+    }
+
+    private Task<UnitResult<DomainError>> AddInternal(Guid entryId, EntryOpenGraphDescription openGraphDescription, TimeSpan expiresIn, CancellationToken cancellationToken)
+    {
+        var cacheKey = CacheKeyBuilder.BuildEntryOpenGraphDescriptionCacheKey(entryId);
+        return _dataStorage.Set(cacheKey, openGraphDescription, expiresIn, cancellationToken);
+    }
 
 
     private string GetDescription(string description)
@@ -133,19 +165,16 @@ public partial class OpenGraphService : IOpenGraphService
 
     private static Uri GetImageUrl(Uri? url)
     {
-        if (url is null)
+        if (url is null || !url.IsAbsoluteUri)
             return _defaultImageUrl;
 
-        if (!url.IsAbsoluteUri)
-            return _defaultImageUrl;
-            
         return url;
     }
 
 
     // TODO: Move to options
     private static readonly Uri _defaultImageUrl = new ("https://warp.punk.link/favicon.ico");
-    private const string Title = "Warp";
+    private const string Title = "Warplyn";
 
 
     [GeneratedRegex(@"<(?:[^""'<>]|""[^""]*""|'[^']*')*?>", RegexOptions.Compiled)]
@@ -158,5 +187,6 @@ public partial class OpenGraphService : IOpenGraphService
     private static partial Regex SpacesBeforePunctuation();
 
 
+    private readonly IDataStorage _dataStorage;
     private readonly IStringLocalizer<ServerResources> _localizer;
 }

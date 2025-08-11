@@ -14,7 +14,6 @@ public readonly record struct EntryInfo
         EditMode editMode,
         Entry entry, 
         List<ImageInfo> imageInfos,
-        EntryOpenGraphDescription openGraphDescription, 
         long viewCount)
     {
         CreatedAt = createdAt;
@@ -24,7 +23,6 @@ public readonly record struct EntryInfo
         ExpiresAt = expiresAt;
         Id = id;
         ImageInfos = imageInfos;
-        OpenGraphDescription = openGraphDescription;
         ViewCount = viewCount;
     }
 
@@ -36,6 +34,5 @@ public readonly record struct EntryInfo
     public Entry Entry { get; }
     public DateTime ExpiresAt { get; }
     public List<ImageInfo> ImageInfos { get; init; }
-    public EntryOpenGraphDescription OpenGraphDescription { get; }
     public long ViewCount { get; init; }
 }
