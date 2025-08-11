@@ -197,23 +197,11 @@ public class EntryInfoService : IEntryInfoService
 
     /// <inheritdoc/>
     [TraceMethod]
-    public async Task<Result<EntryInfo, DomainError>> Get(Creator creator, Guid entryId, CancellationToken cancellationToken)
+    public Task<Result<EntryInfo, DomainError>> Get(Creator creator, Guid entryId, CancellationToken cancellationToken)
     {
-        var result = await EnsureNotReported();
-        if (result.IsFailure)
-            return result.Error;
-
-        return await GetEntryInfo(entryId, cancellationToken)
+        return EnsureNotReported(entryId, cancellationToken)
+            .Bind(() => GetEntryInfo(entryId, cancellationToken))
             .Bind(GetOrAddViews);
-
-
-        async Task<UnitResult<DomainError>> EnsureNotReported()
-        {
-            if (await _reportService.Contains(entryId, cancellationToken))
-                return DomainErrors.EntryNotFound();
-
-            return UnitResult.Success<DomainError>();
-        }
 
 
         async Task<Result<EntryInfo, DomainError>> GetOrAddViews(EntryInfo entryInfo)
@@ -223,6 +211,22 @@ public class EntryInfoService : IEntryInfoService
                 : await _viewCountService.AddAndGet(entryId, cancellationToken);
 
             return entryInfo with { ViewCount = viewCount };
+        }
+    }
+
+
+    /// <inheritdoc/>
+    [TraceMethod]
+    public Task<Result<EntryOpenGraphDescription, DomainError>> GetOpenGraphDescription(Guid entryId, CancellationToken cancellationToken)
+    { 
+        return EnsureNotReported(entryId, cancellationToken)
+            .Bind(() => GetEntryInfo(entryId, cancellationToken))
+            .Bind(GetDescription);
+
+
+        Result<EntryOpenGraphDescription, DomainError> GetDescription(EntryInfo entryInfo)
+        {
+            return entryInfo.OpenGraphDescription;
         }
     }
 
@@ -274,6 +278,14 @@ public class EntryInfoService : IEntryInfoService
             var viewCount = await _viewCountService.Get(entryInfo.Id, cancellationToken);
             return entryInfo with { ViewCount = viewCount };
         }
+    }
+
+    private async Task<UnitResult<DomainError>> EnsureNotReported(Guid entryId, CancellationToken cancellationToken)
+    {
+        if (await _reportService.Contains(entryId, cancellationToken))
+            return DomainErrors.EntryNotFound();
+
+        return UnitResult.Success<DomainError>();
     }
 
 

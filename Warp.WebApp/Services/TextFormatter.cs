@@ -4,7 +4,11 @@ namespace Warp.WebApp.Services;
 
 public static partial class TextFormatter
 {
-    public static string Format(string text)
+    /// <summary>
+    /// Converts plain text into HTML paragraphs. 
+    /// Each line break in the input text is transformed into a separate &lt;p&gt; HTML tag.
+    /// </summary>
+    public static string ConvertToHtmlParagraphs(string text)
     {
         if (string.IsNullOrWhiteSpace(text))
             return string.Empty;
@@ -25,7 +29,10 @@ public static partial class TextFormatter
     }
 
 
-    public static string GetCleanString(string htmlText)
+    /// <summary>
+    /// Strips HTML tags from the provided text.
+    /// </summary>
+    public static string StripHtmlTags(string htmlText)
     {
         if (string.IsNullOrWhiteSpace(htmlText))
             return string.Empty;

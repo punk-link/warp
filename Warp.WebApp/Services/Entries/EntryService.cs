@@ -21,8 +21,10 @@ public sealed class EntryService : IEntryService
 
         Result<Entry, DomainError> BuildEntry()
         {
-            var formattedText = TextFormatter.Format(entryRequest.TextContent);
-            return new Entry(formattedText);
+            var paragraphHtml = TextFormatter.ConvertToHtmlParagraphs(entryRequest.TextContent);
+            var sanitizedText = TextFormatter.StripHtmlTags(paragraphHtml);
+            
+            return new Entry(sanitizedText);
         }
 
 

@@ -143,6 +143,7 @@ public partial class OpenGraphService : IOpenGraphService
     }
 
 
+    // TODO: Move to options
     private static readonly Uri _defaultImageUrl = new ("https://warp.punk.link/favicon.ico");
     private const string Title = "Warp";
 

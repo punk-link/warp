@@ -1,7 +1,6 @@
 ﻿using Warp.WebApp.Models.Entries.Enums;
 using Warp.WebApp.Models.Images;
 using Warp.WebApp.Models.Images.Converters;
-using Warp.WebApp.Services;
 
 namespace Warp.WebApp.Models.Entries;
 
@@ -15,8 +14,7 @@ public readonly record struct EntryApiResponse
         ExpiresAt = expiresAt;
         Images = images.ToImageInfoResponse();
         OpenGraphDescription = openGraphDescription;
-        // TODO: move out from the struct
-        TextContent = TextFormatter.GetCleanString(textContent);
+        TextContent = textContent;
         ViewCount = viewCount;
     }
 
