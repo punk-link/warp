@@ -35,7 +35,7 @@ public partial class OpenGraphService : IOpenGraphService
     }
 
 
-    //// <inheritdoc />
+    /// <inheritdoc />
     public EntryOpenGraphDescription Get() 
         => new(_options.Title, _localizer["Warplyn is a simple and secure way to share text and images."], _options.DefaultImageUrl);
 

@@ -5,42 +5,39 @@ namespace Warp.WebApp.Services;
 public static partial class TextFormatter
 {
     /// <summary>
-    /// Converts plain text into HTML paragraphs. 
-    /// Each line break in the input text is transformed into a separate &lt;p&gt; HTML tag.
+    /// Normalizes raw user text for storage while preserving Markdown semantics:
+    /// - Normalizes all line endings to '\n'
+    /// - Preserves blank lines (paragraph separators)
+    /// - Trims trailing spaces and tabs on non-blank lines
+    /// - Converts whitespace-only lines to empty string
+    /// Does not strip HTML so that future Markdown (which can allow or post-process raw HTML) has the original source.
     /// </summary>
-    public static string ConvertToHtmlParagraphs(string text)
+    public static string NormalizeForMarkdownSource(string text)
     {
-        if (string.IsNullOrWhiteSpace(text))
+        if (string.IsNullOrEmpty(text))
             return string.Empty;
 
-        var paragraphs = text.ReplaceLineEndings()
-            .Split(Environment.NewLine);
+        var normalized = text.ReplaceLineEndings("\n");
+        var lines = normalized.Split('\n');
 
-        var result = string.Empty;
-        foreach (var paragraph in paragraphs)
+        for (var i = 0; i < lines.Length; i++)
         {
-            if (string.IsNullOrWhiteSpace(paragraph))
-                continue;
+            var line = lines[i];
 
-            result += $"<p>{paragraph}</p>";
+            if (string.IsNullOrWhiteSpace(line))
+            {
+                lines[i] = string.Empty;
+                continue;
+            }
+
+            lines[i] = TrailingSpaceRegex().Replace(line, string.Empty);
         }
 
-        return result;
+        var result = string.Join('\n', lines);
+        return result.TrimEnd('\n') + '\n';
     }
 
 
-    /// <summary>
-    /// Strips HTML tags from the provided text.
-    /// </summary>
-    public static string StripHtmlTags(string htmlText)
-    {
-        if (string.IsNullOrWhiteSpace(htmlText))
-            return string.Empty;
-
-        return HTMLTagRegex().Replace(htmlText, string.Empty);
-    }
-
-
-    [GeneratedRegex(@"<(.|\n)*?>", RegexOptions.Compiled)]
-    private static partial Regex HTMLTagRegex();
+    [GeneratedRegex(@"[ \t]+$", RegexOptions.Compiled)]
+    private static partial Regex TrailingSpaceRegex();
 }
