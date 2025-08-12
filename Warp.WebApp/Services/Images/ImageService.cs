@@ -86,7 +86,7 @@ public class ImageService : IImageService, IUnauthorizedImageService
 
         async Task<Result<(Guid, AppFile), DomainError>> Upload(AppFile appFile)
         {
-            var imageId = Guid.NewGuid();
+            var imageId = Guid.CreateVersion7();
 
             var result = await _s3FileStorage.Save(entryId.ToString(), imageId.ToString(), appFile, cancellationToken);
             if (result.IsFailure)

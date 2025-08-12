@@ -102,9 +102,7 @@ public class EntryController : BaseController
     public IActionResult Create()
     {
         var encodedId = IdCoder.Encode(Guid.CreateVersion7());
-        var defaultDescription = _openGraphService.GetDefaultDescription();
-
-        return Ok(EntryApiResponse.Empty(encodedId, defaultDescription));
+        return Ok(EntryApiResponse.Empty(encodedId));
     }
 
 

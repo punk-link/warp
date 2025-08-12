@@ -14,7 +14,7 @@ public class MemoryBenchmarkDemo
     {
         for (var i = 0; i < 10_000; i++)
         {
-            var result = IdCoder.Encode(Guid.NewGuid());
+            var result = IdCoder.Encode(Guid.CreateVersion7());
             _guids.Add(result);
         }
     }
