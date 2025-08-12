@@ -62,6 +62,7 @@ public class EntryInfoService : IEntryInfoService
 
         return AddEntry()
             .Bind(GetImageInfos)
+            .Bind(AddOpenGraphDescription)
             .Bind(BuildEntryInfo)
             .Bind(Validate)
             .Bind(AttachToCreator)
@@ -82,17 +83,24 @@ public class EntryInfoService : IEntryInfoService
         }
 
 
-        Result<EntryInfo, DomainError> BuildEntryInfo((Entry Entry, List<ImageInfo> ImageInfos) tuple)
+        async Task<Result<(Entry, List<ImageInfo>), DomainError>> AddOpenGraphDescription((Entry Entry, List<ImageInfo> ImageInfos) tuple)
         {
-            var expirationTime = now + entryRequest.ExpiresIn;
-
             var previewImageUri = tuple.ImageInfos
                 .Select(imageInfo => imageInfo.Url)
                 .FirstOrDefault();
-        
-            var description = _openGraphService.BuildDescription(tuple.Entry.Content, previewImageUri);
-            
-            return new EntryInfo(entryInfoId, creator.Id, now, expirationTime, entryRequest.EditMode, tuple.Entry, tuple.ImageInfos, description, 0);
+
+            var addResult = await _openGraphService.Add(entryInfoId, tuple.Entry.Content, previewImageUri, entryRequest.ExpiresIn, cancellationToken);
+            if (addResult.IsFailure)
+                return addResult.Error;
+
+            return tuple;
+        }
+
+
+        Result<EntryInfo, DomainError> BuildEntryInfo((Entry Entry, List<ImageInfo> ImageInfos) tuple)
+        {
+            var expirationTime = now + entryRequest.ExpiresIn;
+            return new EntryInfo(entryInfoId, creator.Id, now, expirationTime, entryRequest.EditMode, tuple.Entry, tuple.ImageInfos, 0);
         }
 
 
@@ -131,35 +139,29 @@ public class EntryInfoService : IEntryInfoService
 
     /// <inheritdoc/>
     [TraceMethod]
-    public async Task<UnitResult<DomainError>> IsEditable(Creator creator, Guid entryId, CancellationToken cancellationToken)
-    {
-        var entryInfoResult = await GetEntryInfo(entryId, cancellationToken);
-        if (entryInfoResult.IsFailure)
-            return entryInfoResult.Error;
-
-        var entryInfo = entryInfoResult.Value;
-        if (!IsBelongsToCreator(entryInfo, creator))
-            return DomainErrors.NoPermissionError();
-
-        var viewCount = await _viewCountService.Get(entryId, cancellationToken);
-        if (viewCount != 0)
-            return DomainErrors.EntryCannotBeEditedAfterViewed();
-
-        return UnitResult.Success<DomainError>();
-    }
-
-
-    /// <inheritdoc/>
-    [TraceMethod]
     public Task<Result<EntryInfo, DomainError>> Copy(Creator creator, Guid entryId, CancellationToken cancellationToken)
     {
         var newEntryId = Guid.CreateVersion7();
 
         return GetEntryInfo(entryId, cancellationToken)
             .Ensure(entryInfo => IsBelongsToCreator(entryInfo, creator), DomainErrors.NoPermissionError())
+            .Bind(CopyOpenGraphDescription)
             .Bind(CopyImages)
             .Bind(BuildEntryRequest)
             .Bind(AddEntryInfo);
+
+
+        async Task<Result<EntryInfo, DomainError>> CopyOpenGraphDescription(EntryInfo entryInfo)
+        {
+            var description = await _openGraphService.Get(entryId, cancellationToken);
+            var expiresIn = entryInfo.ExpiresAt - entryInfo.CreatedAt;
+
+            var addResult = await _openGraphService.Add(newEntryId, description, expiresIn, cancellationToken);
+            if (addResult.IsFailure)
+                return addResult.Error;
+
+            return entryInfo;
+        }
 
 
         async Task<Result<(EntryInfo, List<Guid>), DomainError>> CopyImages(EntryInfo entryInfo)
@@ -197,23 +199,11 @@ public class EntryInfoService : IEntryInfoService
 
     /// <inheritdoc/>
     [TraceMethod]
-    public async Task<Result<EntryInfo, DomainError>> Get(Creator creator, Guid entryId, CancellationToken cancellationToken)
+    public Task<Result<EntryInfo, DomainError>> Get(Creator creator, Guid entryId, CancellationToken cancellationToken)
     {
-        var result = await EnsureNotReported();
-        if (result.IsFailure)
-            return result.Error;
-
-        return await GetEntryInfo(entryId, cancellationToken)
+        return EnsureNotReported(entryId, cancellationToken)
+            .Bind(() => GetEntryInfo(entryId, cancellationToken))
             .Bind(GetOrAddViews);
-
-
-        async Task<UnitResult<DomainError>> EnsureNotReported()
-        {
-            if (await _reportService.Contains(entryId, cancellationToken))
-                return DomainErrors.EntryNotFound();
-
-            return UnitResult.Success<DomainError>();
-        }
 
 
         async Task<Result<EntryInfo, DomainError>> GetOrAddViews(EntryInfo entryInfo)
@@ -224,6 +214,39 @@ public class EntryInfoService : IEntryInfoService
 
             return entryInfo with { ViewCount = viewCount };
         }
+    }
+
+
+    /// <inheritdoc/>
+    [TraceMethod]
+    public Task<Result<EntryOpenGraphDescription, DomainError>> GetOpenGraphDescription(Guid entryId, CancellationToken cancellationToken)
+    { 
+        return EnsureNotReported(entryId, cancellationToken)
+            .Bind(GetDescription);
+
+
+        async Task<Result<EntryOpenGraphDescription, DomainError>> GetDescription() 
+            => await _openGraphService.Get(entryId, cancellationToken);
+    }
+
+
+    /// <inheritdoc/>
+    [TraceMethod]
+    public async Task<UnitResult<DomainError>> IsEditable(Creator creator, Guid entryId, CancellationToken cancellationToken)
+    {
+        var entryInfoResult = await GetEntryInfo(entryId, cancellationToken);
+        if (entryInfoResult.IsFailure)
+            return entryInfoResult.Error;
+
+        var entryInfo = entryInfoResult.Value;
+        if (!IsBelongsToCreator(entryInfo, creator))
+            return DomainErrors.NoPermissionError();
+
+        var viewCount = await _viewCountService.Get(entryId, cancellationToken);
+        if (viewCount != 0)
+            return DomainErrors.EntryCannotBeEditedAfterViewed();
+
+        return UnitResult.Success<DomainError>();
     }
 
 
@@ -274,6 +297,14 @@ public class EntryInfoService : IEntryInfoService
             var viewCount = await _viewCountService.Get(entryInfo.Id, cancellationToken);
             return entryInfo with { ViewCount = viewCount };
         }
+    }
+
+    private async Task<UnitResult<DomainError>> EnsureNotReported(Guid entryId, CancellationToken cancellationToken)
+    {
+        if (await _reportService.Contains(entryId, cancellationToken))
+            return DomainErrors.EntryNotFound();
+
+        return UnitResult.Success<DomainError>();
     }
 
 

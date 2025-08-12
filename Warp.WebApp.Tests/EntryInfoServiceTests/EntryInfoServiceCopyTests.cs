@@ -1,11 +1,7 @@
 using CSharpFunctionalExtensions;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using System.Net;
 using Warp.WebApp.Data;
-using Warp.WebApp.Helpers;
 using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Entries.Enums;
@@ -43,7 +39,6 @@ public class EntryInfoServiceCopyTests
     public async Task Copy_ShouldReturnNewEntryInfo_WhenSuccessful()
     {
         var originalEntryId = Guid.NewGuid();
-        var newEntryId = Guid.NewGuid();
         var cancellationToken = CancellationToken.None;
 
         var originalImageId = Guid.NewGuid();
@@ -60,7 +55,6 @@ public class EntryInfoServiceCopyTests
             editMode: EditMode.Advanced,
             entry: new Entry("Original content"), 
             imageInfos: imageInfos, 
-            openGraphDescription: new EntryOpenGraphDescription("Test", "Test", imageInfos[0].Url), 
             viewCount: 10);
 
         _dataStorageSubstitute.TryGet<EntryInfo?>(Arg.Any<string>(), cancellationToken)
@@ -69,7 +63,7 @@ public class EntryInfoServiceCopyTests
         var newImageId = Guid.NewGuid();
         var copiedImageInfos = new List<ImageInfo>
         {
-            new(id: newImageId, entryId: newEntryId, url: new Uri("http://example.com/copied-image.jpg"))
+            new(id: newImageId, entryId: Guid.Empty, url: new Uri("http://example.com/copied-image.jpg")) // entryId unknown here, service sets it later
         };
 
         _imageServiceSubstitute.Copy(originalEntryId, Arg.Any<Guid>(), imageInfos, cancellationToken)
@@ -88,17 +82,31 @@ public class EntryInfoServiceCopyTests
         _dataStorageSubstitute.Set(Arg.Any<string>(), Arg.Any<EntryInfo>(), Arg.Any<TimeSpan>(), cancellationToken)
             .Returns(UnitResult.Success<DomainError>());
 
-        _openGraphServiceSubstitute.BuildDescription(Arg.Any<string>(), Arg.Any<Uri>())
-            .Returns(new EntryOpenGraphDescription("Test", "Test", copiedImageInfos[0].Url));
+        var existingDescription = new EntryOpenGraphDescription("Title", "Desc", imageInfos[0].Url);
+        _openGraphServiceSubstitute.Get(originalEntryId, cancellationToken)
+            .Returns(existingDescription);
+
+        _openGraphServiceSubstitute.Add(Arg.Any<Guid>(), existingDescription, Arg.Any<TimeSpan>(), cancellationToken)
+            .Returns(UnitResult.Success<DomainError>());
+
+        _openGraphServiceSubstitute.Add(Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<Uri?>(), Arg.Any<TimeSpan>(), cancellationToken)
+            .Returns(UnitResult.Success<DomainError>());
 
         var result = await _entryInfoService.Copy(_creator, originalEntryId, cancellationToken);
 
         Assert.True(result.IsSuccess);
+
         await _imageServiceSubstitute.Received()
             .Copy(originalEntryId, Arg.Any<Guid>(), imageInfos, cancellationToken);
 
         await _entryServiceSubstitute.Received()
             .Add(Arg.Is<EntryRequest>(req => req.TextContent == originalEntryInfo.Entry.Content && req.EditMode == originalEntryInfo.EditMode), cancellationToken);
+
+        await _openGraphServiceSubstitute.Received(1)
+            .Add(result.Value.Id, existingDescription, Arg.Any<TimeSpan>(), cancellationToken);
+
+        await _openGraphServiceSubstitute.Received(1)
+            .Add(result.Value.Id, originalEntryInfo.Entry.Content, copiedImageInfos[0].Url, Arg.Any<TimeSpan>(), cancellationToken);
     }
 
 
@@ -115,6 +123,9 @@ public class EntryInfoServiceCopyTests
 
         Assert.True(result.IsFailure);
         Assert.Equal(Constants.Logging.LogEvents.EntryNotFound, result.Error.Code);
+
+        await _openGraphServiceSubstitute.DidNotReceiveWithAnyArgs()
+            .Add(default, default(EntryOpenGraphDescription), default, default);
     }
 
 
@@ -133,7 +144,6 @@ public class EntryInfoServiceCopyTests
             editMode: EditMode.Simple,
             entry: new Entry("Test content"), 
             imageInfos: [], 
-            openGraphDescription: new EntryOpenGraphDescription("Test", "Test", null), 
             viewCount: 0);
 
         _dataStorageSubstitute.TryGet<EntryInfo?>(Arg.Any<string>(), cancellationToken)
@@ -143,6 +153,9 @@ public class EntryInfoServiceCopyTests
 
         Assert.True(result.IsFailure);
         Assert.Equal(Constants.Logging.LogEvents.NoPermissionError, result.Error.Code);
+
+        await _openGraphServiceSubstitute.DidNotReceiveWithAnyArgs()
+            .Add(default, default(EntryOpenGraphDescription), default, default);
     }
 
 
@@ -165,11 +178,15 @@ public class EntryInfoServiceCopyTests
             editMode: EditMode.Advanced,
             entry: new Entry("Original content"), 
             imageInfos: imageInfos, 
-            openGraphDescription: new EntryOpenGraphDescription("Test", "Test", imageInfos[0].Url), 
             viewCount: 0);
 
         _dataStorageSubstitute.TryGet<EntryInfo?>(Arg.Any<string>(), cancellationToken)
             .Returns(new ValueTask<EntryInfo?>(originalEntryInfo));
+
+        var existingDescription = new EntryOpenGraphDescription("Title", "Desc", imageInfos[0].Url);
+        _openGraphServiceSubstitute.Get(originalEntryId, cancellationToken).Returns(existingDescription);
+        _openGraphServiceSubstitute.Add(Arg.Any<Guid>(), existingDescription, Arg.Any<TimeSpan>(), cancellationToken)
+            .Returns(UnitResult.Success<DomainError>());
 
         var domainError = DomainErrors.S3UploadObjectError();
         _imageServiceSubstitute.Copy(originalEntryId, Arg.Any<Guid>(), imageInfos, cancellationToken)
@@ -196,7 +213,6 @@ public class EntryInfoServiceCopyTests
             editMode: EditMode.Simple,
             entry: new Entry("Original content"), 
             imageInfos: [], 
-            openGraphDescription: new EntryOpenGraphDescription("Test", "Test", null), 
             viewCount: 0);
 
         _dataStorageSubstitute.TryGet<EntryInfo?>(Arg.Any<string>(), cancellationToken)
@@ -215,14 +231,24 @@ public class EntryInfoServiceCopyTests
         _dataStorageSubstitute.Set(Arg.Any<string>(), Arg.Any<EntryInfo>(), Arg.Any<TimeSpan>(), cancellationToken)
             .Returns(UnitResult.Success<DomainError>());
 
-        _openGraphServiceSubstitute.BuildDescription(Arg.Any<string>(), Arg.Any<Uri>())
-            .Returns(new EntryOpenGraphDescription("Test", "Test", null));
+        var existingDescription = new EntryOpenGraphDescription("Title", "Desc", null);
+        _openGraphServiceSubstitute.Get(originalEntryId, cancellationToken).Returns(existingDescription);
+        _openGraphServiceSubstitute.Add(Arg.Any<Guid>(), existingDescription, Arg.Any<TimeSpan>(), cancellationToken)
+            .Returns(UnitResult.Success<DomainError>());
+        _openGraphServiceSubstitute.Add(Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<Uri?>(), Arg.Any<TimeSpan>(), cancellationToken)
+            .Returns(UnitResult.Success<DomainError>());
 
         var result = await _entryInfoService.Copy(_creator, originalEntryId, cancellationToken);
 
         Assert.True(result.IsSuccess);
         await _imageServiceSubstitute.DidNotReceive()
             .Copy(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<List<ImageInfo>>(), Arg.Any<CancellationToken>());
+
+        await _openGraphServiceSubstitute.Received(1)
+            .Add(result.Value.Id, existingDescription, Arg.Any<TimeSpan>(), cancellationToken);
+
+        await _openGraphServiceSubstitute.Received(1)
+            .Add(result.Value.Id, originalEntryInfo.Entry.Content, null, Arg.Any<TimeSpan>(), cancellationToken);
     }
 
 

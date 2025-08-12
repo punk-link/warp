@@ -57,6 +57,17 @@ public interface IEntryInfoService
     Task<Result<EntryInfo, DomainError>> Get(Creator creator, Guid entryId, CancellationToken cancellationToken);
 
     /// <summary>
+    /// Retrieves the Open Graph description for a specific entry.
+    /// </summary>
+    /// <param name="entryId">The ID of the entry for which to retrieve the Open Graph description.</param>
+    /// <param name="cancellationToken"> A cancellation token to observe while waiting for the task to complete.</param>
+    /// <returns>
+    /// An Open Graph description of the entry if successful,
+    /// or a domain error if the operation fails.
+    /// </returns>
+    Task<Result<EntryOpenGraphDescription, DomainError>> GetOpenGraphDescription(Guid entryId, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Removes an entry from the system.
     /// </summary>
     /// <param name="creator">The creator who is removing the entry.</param>

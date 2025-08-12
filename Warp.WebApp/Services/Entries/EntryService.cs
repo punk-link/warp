@@ -21,8 +21,8 @@ public sealed class EntryService : IEntryService
 
         Result<Entry, DomainError> BuildEntry()
         {
-            var formattedText = TextFormatter.Format(entryRequest.TextContent);
-            return new Entry(formattedText);
+            var normalized = TextFormatter.NormalizeForMarkdownSource(entryRequest.TextContent);
+            return new Entry(normalized);
         }
 
 

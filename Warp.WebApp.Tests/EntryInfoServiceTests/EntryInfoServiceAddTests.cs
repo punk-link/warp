@@ -2,7 +2,6 @@ using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Warp.WebApp.Data;
-using Warp.WebApp.Models;
 using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Entries.Enums;
@@ -52,20 +51,19 @@ public class EntryInfoServiceAddTests
         var entry = new Entry("Test");
         var imageInfos = new List<ImageInfo>
         {
-            new() { Id = Guid.NewGuid(), Url = new Uri("http://example.com/image.jpg") }
+            new(id: Guid.NewGuid(), entryId: entryRequest.Id, url: new Uri("http://example.com/image.jpg"))
         };
         var entryInfo = new EntryInfo(entryRequest.Id, _creator.Id, DateTime.UtcNow, DateTime.UtcNow + entryRequest.ExpiresIn, 
-            EditMode.Advanced, entry, imageInfos, new EntryOpenGraphDescription("Test", "Test", imageInfos[0].Url), 0);
-
-        var imageUrl = imageInfos.Select(x => x.Url).FirstOrDefault();
-        _openGraphServiceSubstitute.BuildDescription(entry.Content, imageUrl)
-            .Returns(new EntryOpenGraphDescription(entry.Content, entry.Content, imageUrl));
+            EditMode.Advanced, entry, imageInfos, 0);
 
         _entryServiceSubstitute.Add(entryRequest, cancellationToken)
             .Returns(Result.Success<Entry, DomainError>(entry));
 
         _imageServiceSubstitute.GetAttached(entryRequest.Id, entryRequest.ImageIds, cancellationToken)
             .Returns(Result.Success<List<ImageInfo>, DomainError>(imageInfos));
+
+        _openGraphServiceSubstitute.Add(entryRequest.Id, entry.Content, imageInfos[0].Url, entryRequest.ExpiresIn, cancellationToken)
+            .Returns(UnitResult.Success<DomainError>());
 
         _creatorServiceSubstitute.AttachEntry(_creator, Arg.Any<EntryInfo>(), cancellationToken)
             .Returns(Result.Success<EntryInfo, DomainError>(entryInfo));
@@ -84,10 +82,10 @@ public class EntryInfoServiceAddTests
         Assert.Equal(result.Value.EditMode, entryInfo.EditMode);
         Assert.Equal(result.Value.Entry.Content, entryInfo.Entry.Content);
         Assert.Equal(result.Value.ImageInfos.Count, entryInfo.ImageInfos.Count);
-        Assert.Equal(result.Value.OpenGraphDescription.Title, entryInfo.OpenGraphDescription.Title);
-        Assert.Equal(result.Value.OpenGraphDescription.Description, entryInfo.OpenGraphDescription.Description);
-        Assert.Equal(result.Value.OpenGraphDescription.ImageUrl, entryInfo.OpenGraphDescription.ImageUrl);
         Assert.Equal(result.Value.ViewCount, entryInfo.ViewCount);
+
+        await _openGraphServiceSubstitute.Received(1)
+            .Add(entryRequest.Id, entry.Content, imageInfos[0].Url, entryRequest.ExpiresIn, cancellationToken);
     }
 
 
@@ -160,8 +158,8 @@ public class EntryInfoServiceAddTests
         _imageServiceSubstitute.GetAttached(entryRequest.Id, entryRequest.ImageIds, cancellationToken)
             .Returns(Result.Success<List<ImageInfo>, DomainError>(imageInfos));
 
-        _openGraphServiceSubstitute.BuildDescription(entry.Content, null)
-            .Returns(new EntryOpenGraphDescription(entry.Content, entry.Content, null));
+        _openGraphServiceSubstitute.Add(entryRequest.Id, entry.Content, null, entryRequest.ExpiresIn, cancellationToken)
+            .Returns(UnitResult.Success<DomainError>());
 
         _creatorServiceSubstitute.AttachEntry(Arg.Any<Creator>(), Arg.Any<EntryInfo>(), cancellationToken)
             .Returns(Result.Failure<EntryInfo, DomainError>(domainError));
@@ -174,7 +172,7 @@ public class EntryInfoServiceAddTests
     }
 
 
-    private readonly IEntryInfoService _entryInfoService;
+    private readonly EntryInfoService _entryInfoService;
     private readonly Creator _creator;
     private readonly ILoggerFactory _loggerFactorySubstitute = Substitute.For<ILoggerFactory>();
     private readonly ILogger<EntryInfoService> _loggerSubstitute = Substitute.For<ILogger<EntryInfoService>>();

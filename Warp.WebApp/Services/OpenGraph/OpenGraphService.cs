@@ -1,60 +1,69 @@
-﻿using Microsoft.Extensions.Localization;
+﻿using CSharpFunctionalExtensions;
+using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Options;
 using System.Globalization;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
+using Warp.WebApp.Data;
 using Warp.WebApp.Models.Entries;
+using Warp.WebApp.Models.Errors;
+using Warp.WebApp.Models.Options;
 
 namespace Warp.WebApp.Services.OpenGraph;
 
 public partial class OpenGraphService : IOpenGraphService
 {
-    public OpenGraphService(IStringLocalizer<ServerResources> localizer)
+    public OpenGraphService(IOptionsSnapshot<OpenGraphOptions> options, IStringLocalizer<ServerResources> localizer, IDataStorage dataStorage)
     {
+        _dataStorage = dataStorage;
         _localizer = localizer;
+        _options = options.Value;
     }
 
 
-    /// <summary>
-    /// Builds an OpenGraph description from the provided description source and preview image URL.
-    /// </summary>
-    /// <param name="descriptionSource"></param>
-    /// <param name="previewImageUrl"></param>
-    /// <returns></returns>
-    public EntryOpenGraphDescription BuildDescription(string descriptionSource, Uri? previewImageUrl)
-    {
-        var description = GetDescription(descriptionSource);
-        return new EntryOpenGraphDescription(Title, description, GetImageUrl(previewImageUrl));
+    /// <inheritdoc />
+    public Task<UnitResult<DomainError>> Add(Guid entryId, EntryOpenGraphDescription openGraphDescription, TimeSpan expiresIn, CancellationToken cancellationToken) 
+        => AddInternal(entryId, openGraphDescription, expiresIn, cancellationToken);
+
+
+    /// <inheritdoc />
+    public Task<UnitResult<DomainError>> Add(Guid entryId, string descriptionSource, Uri? previewImageUri, TimeSpan expiresIn, CancellationToken cancellationToken)
+    { 
+        var description = BuildDescription(descriptionSource, previewImageUri);
+        return AddInternal(entryId, description, expiresIn, cancellationToken);
     }
 
 
-    /// <summary>
-    /// Returns the default OpenGraph description for the application.
-    /// </summary>
-    /// <returns></returns>
-    public EntryOpenGraphDescription GetDefaultDescription() 
-        => new(Title, _localizer["Warplyn is a simple and secure way to share text and images."], _defaultImageUrl);
+    /// <inheritdoc />
+    public EntryOpenGraphDescription Get() 
+        => new(_options.Title, _localizer["Warplyn is a simple and secure way to share text and images."], _options.DefaultImageUrl);
 
 
-    private string GetDescription(string description)
+    /// <inheritdoc />
+    public async Task<EntryOpenGraphDescription> Get(Guid entryId, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(description))
-            return _localizer["Warplyn is a simple and secure way to share text and images."];
-
-        var processedText = ProcessText(description);
-        if (string.IsNullOrWhiteSpace(processedText))
-            return _localizer["Warplyn is a simple and secure way to share text and images."];
-
-        return TrimDescription(processedText);
-    }
-
-
-    private static string ProcessText(string text)
-    {
-        var textWithoutTags = HtmlTagsExpression().Replace(text, " ");
-        var decodedText = WebUtility.HtmlDecode(textWithoutTags);
+        var cacheKey = CacheKeyBuilder.BuildEntryOpenGraphDescriptionCacheKey(entryId);
         
-        return NormalizeWhitespace(decodedText);
+        var description = await _dataStorage.TryGet<EntryOpenGraphDescription?>(cacheKey, cancellationToken);
+        if (description is not null)
+            return description.Value;
+
+        return Get();
+    }
+
+
+    private Task<UnitResult<DomainError>> AddInternal(Guid entryId, EntryOpenGraphDescription openGraphDescription, TimeSpan expiresIn, CancellationToken cancellationToken)
+    {
+        var cacheKey = CacheKeyBuilder.BuildEntryOpenGraphDescriptionCacheKey(entryId);
+        return _dataStorage.Set(cacheKey, openGraphDescription, expiresIn, cancellationToken);
+    }
+
+
+    private EntryOpenGraphDescription BuildDescription(string descriptionSource, Uri? previewImageUrl)
+    {
+        var description = ProcessAndTrimDescription(descriptionSource);
+        return new EntryOpenGraphDescription(_options.Title, description, ResolveImageUrlOrDefault(previewImageUrl, _options.DefaultImageUrl));
     }
 
 
@@ -96,6 +105,34 @@ public partial class OpenGraphService : IOpenGraphService
     }
 
 
+    private string ProcessAndTrimDescription(string description)
+    {
+        var processedText = StripHtmlAndNormalizeWhitespace(description);
+        if (string.IsNullOrWhiteSpace(processedText))
+            return _localizer["Warplyn is a simple and secure way to share text and images."];
+
+        return TrimDescription(processedText);
+    }
+
+
+    private static string StripHtmlAndNormalizeWhitespace(string text)
+    {
+        var textWithoutTags = HtmlTagsExpression().Replace(text, " ");
+        var decodedText = WebUtility.HtmlDecode(textWithoutTags);
+        
+        return NormalizeWhitespace(decodedText);
+    }
+
+
+    private static Uri ResolveImageUrlOrDefault(Uri? url, Uri defaultUrl)
+    {
+        if (url is null || !url.IsAbsoluteUri)
+            return defaultUrl;
+
+        return url;
+    }
+
+
     /// <summary>
     /// Trims the description to a maximum length of 200 characters. 
     /// If the text is longer, it tries to end at a sentence boundary or a word boundary.
@@ -131,22 +168,6 @@ public partial class OpenGraphService : IOpenGraphService
     }
 
 
-    private static Uri GetImageUrl(Uri? url)
-    {
-        if (url is null)
-            return _defaultImageUrl;
-
-        if (!url.IsAbsoluteUri)
-            return _defaultImageUrl;
-            
-        return url;
-    }
-
-
-    private static readonly Uri _defaultImageUrl = new ("https://warp.punk.link/favicon.ico");
-    private const string Title = "Warp";
-
-
     [GeneratedRegex(@"<(?:[^""'<>]|""[^""]*""|'[^']*')*?>", RegexOptions.Compiled)]
     private static partial Regex HtmlTagsExpression();
 
@@ -157,5 +178,7 @@ public partial class OpenGraphService : IOpenGraphService
     private static partial Regex SpacesBeforePunctuation();
 
 
+    private readonly IDataStorage _dataStorage;
     private readonly IStringLocalizer<ServerResources> _localizer;
+    private readonly OpenGraphOptions _options;
 }

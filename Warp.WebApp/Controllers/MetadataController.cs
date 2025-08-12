@@ -29,7 +29,7 @@ public class MetadataController : ControllerBase
     [HttpGet("opengraph/default")]
     [ProducesResponseType(typeof(EntryOpenGraphDescription), StatusCodes.Status200OK)]
     public IActionResult GetDefaultOpenGraphDescription() 
-        => Ok(_openGraphService.GetDefaultDescription());
+        => Ok(_openGraphService.Get());
 
 
     /// <summary>

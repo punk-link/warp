@@ -29,7 +29,7 @@ public class CreatorService : ICreatorService
     [TraceMethod]
     public async Task<Creator> Add(CancellationToken cancellationToken)
     {
-        var creatorId = Guid.NewGuid();
+        var creatorId = Guid.CreateVersion7();
         var creator = new Creator(creatorId);
         
         var userCacheKey = CacheKeyBuilder.BuildCreatorCacheKey(creatorId);

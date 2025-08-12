@@ -25,7 +25,7 @@ public class EntryModel : BasePageModel
     {
         return DecodeId(id)
             .Bind(GetCreator)
-            .Bind(GetEntryInfo)
+            .Bind(GetOpenGraphDescription)
             .Bind(BuildOpenGraphModel)
             .Finally(result => result.IsSuccess
                 ? Page()
@@ -38,15 +38,16 @@ public class EntryModel : BasePageModel
                 .Map(creator => (creator, decodedId));
 
 
-        Task<Result<EntryInfo, DomainError>> GetEntryInfo((Creator Creator, Guid DecodedId) tuple) 
-            => _entryPresentationService.Get(tuple.Creator, tuple.DecodedId, cancellationToken);
+        Task<Result<EntryOpenGraphDescription, DomainError>> GetOpenGraphDescription((Creator Creator, Guid DecodedId) tuple) 
+            => _entryPresentationService.GetOpenGraphDescription(tuple.DecodedId, cancellationToken);
 
 
-        Result<EntryInfo, DomainError> BuildOpenGraphModel(EntryInfo entryInfo)
+        UnitResult<DomainError> BuildOpenGraphModel(EntryOpenGraphDescription openGraphDescription)
         {
             Id = id;
-            OpenGraphModel = new OpenGraphModel(entryInfo.OpenGraphDescription);
-            return entryInfo;
+            OpenGraphModel = new OpenGraphModel(openGraphDescription);
+
+            return UnitResult.Success<DomainError>();
         }
     }
 

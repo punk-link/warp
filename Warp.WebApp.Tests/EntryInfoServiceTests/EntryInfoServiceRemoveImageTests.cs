@@ -1,12 +1,7 @@
 using CSharpFunctionalExtensions;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using System.Net;
 using Warp.WebApp.Data;
-using Warp.WebApp.Helpers;
-using Warp.WebApp.Models;
 using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Entries.Enums;
@@ -61,7 +56,6 @@ public class EntryInfoServiceRemoveImageTests
             editMode: EditMode.Advanced,
             entry: new Entry("Test content"), 
             imageInfos: imageInfos, 
-            openGraphDescription: new EntryOpenGraphDescription("Test", "Test", imageInfos[0].Url), 
             viewCount: 0);
 
         _dataStorageSubstitute.TryGet<EntryInfo?>(Arg.Any<string>(), cancellationToken)
@@ -125,7 +119,6 @@ public class EntryInfoServiceRemoveImageTests
             editMode: EditMode.Advanced,
             entry: new Entry("Test content"), 
             imageInfos: imageInfos, 
-            openGraphDescription: new EntryOpenGraphDescription("Test", "Test", imageInfos[0].Url), 
             viewCount: 0);
 
         _dataStorageSubstitute.TryGet<EntryInfo?>(Arg.Any<string>(), cancellationToken)
@@ -159,7 +152,6 @@ public class EntryInfoServiceRemoveImageTests
             editMode: EditMode.Advanced,
             entry: new Entry("Test content"), 
             imageInfos: imageInfos, 
-            openGraphDescription: new EntryOpenGraphDescription("Test", "Test", imageInfos[0].Url), 
             viewCount: 0);
 
         _dataStorageSubstitute.TryGet<EntryInfo?>(Arg.Any<string>(), cancellationToken)
@@ -170,7 +162,7 @@ public class EntryInfoServiceRemoveImageTests
 
         var domainError = DomainErrors.S3DeleteObjectError();
         _imageServiceSubstitute.Remove(entryId, imageId, cancellationToken)
-            .Returns(UnitResult.Failure<DomainError>(domainError));
+            .Returns(UnitResult.Failure(domainError));
 
         var result = await _entryInfoService.RemoveImage(_creator, entryId, imageId, cancellationToken);
 
