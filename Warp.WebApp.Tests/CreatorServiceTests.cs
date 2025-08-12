@@ -2,7 +2,6 @@
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Warp.WebApp.Data;
-using Warp.WebApp.Models;
 using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Errors;
@@ -17,7 +16,7 @@ public class CreatorServiceTests
     public CreatorServiceTests()
     {
         _creatorService = new CreatorService(_loggerFactorySubstitute, _dataStorageSubstitute);
-        _creator = new Creator(Guid.NewGuid());
+        _creator = new Creator(Guid.CreateVersion7());
     }
 
     [Fact]
@@ -60,20 +59,16 @@ public class CreatorServiceTests
             editMode: Models.Entries.Enums.EditMode.Simple,
             entry: new Entry("Some content"),
             imageInfos: new List<ImageInfo>(),
-            openGraphDescription: new Models.Entries.EntryOpenGraphDescription(
-                title: "Some content", 
-                description: "Some content", 
-                imageUrl: null),
             viewCount: 0);
 
         var userIdCacheKey = CacheKeyBuilder.BuildCreatorsEntrySetCacheKey(_creator.Id);
 
         _dataStorageSubstitute
             .TryGetSet<Guid>(userIdCacheKey, Arg.Any<CancellationToken>())
-            .Returns(new HashSet<Guid>());
+            .Returns([]);
 
         _dataStorageSubstitute
-            .AddToSet<Guid>(userIdCacheKey, entryInfo.Id, Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>())
+            .AddToSet(userIdCacheKey, entryInfo.Id, Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>())
             .Returns(UnitResult.Success<DomainError>());
 
         var result = await _creatorService.AttachEntry(_creator, entryInfo, CancellationToken.None);
@@ -92,10 +87,6 @@ public class CreatorServiceTests
             editMode: Models.Entries.Enums.EditMode.Simple,
             entry: new Entry("Some content"),
             imageInfos: new List<ImageInfo>(),
-            openGraphDescription: new Models.Entries.EntryOpenGraphDescription(
-                title: "Some content", 
-                description: "Some content", 
-                imageUrl: null),
             viewCount: 0);
 
         var userIdCacheKey = CacheKeyBuilder.BuildCreatorsEntrySetCacheKey(_creator.Id);
@@ -125,10 +116,6 @@ public class CreatorServiceTests
             editMode: Models.Entries.Enums.EditMode.Simple,
             entry: new Entry("Some content"),
             imageInfos: new List<ImageInfo>(),
-            openGraphDescription: new Models.Entries.EntryOpenGraphDescription(
-                title: "Some content", 
-                description: "Some content", 
-                imageUrl: null),
             viewCount: 0);
 
         var userIdCacheKey = CacheKeyBuilder.BuildCreatorsEntrySetCacheKey(_creator.Id);
@@ -143,10 +130,6 @@ public class CreatorServiceTests
             editMode: Models.Entries.Enums.EditMode.Simple,
             entry: new Entry("Some content"),
             imageInfos: new List<ImageInfo>(),
-            openGraphDescription: new Models.Entries.EntryOpenGraphDescription(
-                title: "Some content", 
-                description: "Some content", 
-                imageUrl: null),
             viewCount: 0);
 
         var existingEntryInfoSecond = new EntryInfo(
@@ -157,10 +140,6 @@ public class CreatorServiceTests
             editMode: Models.Entries.Enums.EditMode.Simple,
             entry: new Entry("Some content"),
             imageInfos: new List<ImageInfo>(),
-            openGraphDescription: new Models.Entries.EntryOpenGraphDescription(
-                title: "Some content", 
-                description: "Some content", 
-                imageUrl: null),
             viewCount: 0);
 
         _dataStorageSubstitute

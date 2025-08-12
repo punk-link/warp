@@ -1,9 +1,6 @@
 using CSharpFunctionalExtensions;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using System.Net;
 using Warp.WebApp.Data;
 using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Models.Entries;
@@ -68,7 +65,6 @@ public class EntryInfoServiceUpdateTests
             editMode: EditMode.Advanced, 
             entry: existingEntry, 
             imageInfos: new List<ImageInfo>(), 
-            openGraphDescription: new EntryOpenGraphDescription("Original", "Original", null), 
             viewCount: 0);
         
         var updatedEntryInfo = new EntryInfo(
@@ -79,7 +75,6 @@ public class EntryInfoServiceUpdateTests
             editMode: EditMode.Advanced, 
             entry: updatedEntry, 
             imageInfos: imageInfos, 
-            openGraphDescription: new EntryOpenGraphDescription("Updated", "Updated", imageInfos[0].Url), 
             viewCount: 0);
 
         var entryInfoCacheKey = CacheKeyBuilder.BuildEntryInfoCacheKey(entryId);
@@ -94,10 +89,6 @@ public class EntryInfoServiceUpdateTests
 
         _imageServiceSubstitute.GetAttached(entryId, entryRequest.ImageIds, cancellationToken)
             .Returns(Result.Success<List<ImageInfo>, DomainError>(imageInfos));
-
-        var imageUrl = imageInfos.Select(x => x.Url).FirstOrDefault();
-        _openGraphServiceSubstitute.BuildDescription(updatedEntry.Content, imageUrl)
-            .Returns(new EntryOpenGraphDescription("Updated", "Updated", imageUrl));
 
         _creatorServiceSubstitute.AttachEntry(_creator, Arg.Any<EntryInfo>(), cancellationToken)
             .Returns(Result.Success<EntryInfo, DomainError>(updatedEntryInfo));
@@ -138,7 +129,6 @@ public class EntryInfoServiceUpdateTests
             editMode: EditMode.Simple, 
             entry: new Entry("Original content"), 
             imageInfos: new List<ImageInfo>(), 
-            openGraphDescription: new EntryOpenGraphDescription("Original", "Original", null), 
             viewCount: 0);
 
         var entryInfoCacheKey = CacheKeyBuilder.BuildEntryInfoCacheKey(entryId);
@@ -175,7 +165,6 @@ public class EntryInfoServiceUpdateTests
             editMode: EditMode.Simple, 
             entry: new Entry("Original content"), 
             imageInfos: new List<ImageInfo>(), 
-            openGraphDescription: new EntryOpenGraphDescription("Original", "Original", null), 
             viewCount: 0);
 
         var entryInfoCacheKey = CacheKeyBuilder.BuildEntryInfoCacheKey(entryId);
@@ -242,7 +231,6 @@ public class EntryInfoServiceUpdateTests
             editMode: EditMode.Simple, 
             entry: new Entry("Original content"), 
             imageInfos: new List<ImageInfo>(), 
-            openGraphDescription: new EntryOpenGraphDescription("Original", "Original", null), 
             viewCount: 0);
 
         var entryInfoCacheKey = CacheKeyBuilder.BuildEntryInfoCacheKey(entryId);

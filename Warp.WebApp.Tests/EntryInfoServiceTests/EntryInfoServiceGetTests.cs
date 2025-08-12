@@ -1,7 +1,6 @@
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Warp.WebApp.Data;
-using Warp.WebApp.Models;
 using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Entries.Enums;
@@ -41,7 +40,6 @@ public class EntryInfoServiceGetTests
         var cancellationToken = CancellationToken.None;
         var viewCount = 42L;
 
-        // Different creator than the one requesting
         var entryInfo = new EntryInfo(
             id: entryId, 
             creatorId: creatorId, 
@@ -50,7 +48,6 @@ public class EntryInfoServiceGetTests
             editMode: EditMode.Simple,
             entry: new Entry("Test content"), 
             imageInfos: [], 
-            openGraphDescription: new EntryOpenGraphDescription("Test", "Test", null), 
             viewCount: 5);
 
         _dataStorageSubstitute.TryGet<EntryInfo?>(Arg.Any<string>(), cancellationToken)
@@ -78,7 +75,6 @@ public class EntryInfoServiceGetTests
         var viewCount = 42L;
         var cancellationToken = CancellationToken.None;
 
-        // Same creator as the one requesting
         var entryInfo = new EntryInfo(
             id: entryId, 
             creatorId: _creator.Id, 
@@ -87,7 +83,6 @@ public class EntryInfoServiceGetTests
             editMode: EditMode.Simple, 
             entry: new Entry("Test content"), 
             imageInfos: [], 
-            openGraphDescription: new EntryOpenGraphDescription("Test", "Test", null), 
             viewCount: 5);
 
         _dataStorageSubstitute.TryGet<EntryInfo?>(Arg.Any<string>(), cancellationToken)
@@ -159,7 +154,6 @@ public class EntryInfoServiceGetTests
             editMode: EditMode.Advanced,
             entry: new Entry(content), 
             imageInfos: [], 
-            openGraphDescription: new EntryOpenGraphDescription("Test", "Test", null), 
             viewCount: 5);
 
         _dataStorageSubstitute.TryGet<EntryInfo?>(Arg.Any<string>(), cancellationToken)

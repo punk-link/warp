@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Localization;
 using NSubstitute;
+using Warp.WebApp.Data;
 using Warp.WebApp.Services.OpenGraph;
 
 namespace Warp.WebApp.Tests;
@@ -14,13 +15,14 @@ public class OpenGraphServiceTests
             .Returns(new LocalizedString("Warplyn is a simple and secure way to share text and images.", DefaultDescription));
 
         _localizer = localizerSubstitute;
+        _dataStorage = Substitute.For<IDataStorage>();
     }
 
 
     [Fact]
     public void GetDefaultDescription_ReturnsDefaultDescription()
     {
-        var service = new OpenGraphService(_localizer);
+        var service = new OpenGraphService(_localizer, _dataStorage);
 
         var result = service.GetDefaultDescription();
 
@@ -33,7 +35,7 @@ public class OpenGraphServiceTests
     [Fact]
     public void BuildDescription_WithDescription_ReturnsProcessedDescription()
     {
-        var service = new OpenGraphService(_localizer);
+        var service = new OpenGraphService(_localizer, _dataStorage);
 
         var result = service.BuildDescription(Description, _defaultUri);
 
@@ -49,7 +51,7 @@ public class OpenGraphServiceTests
     [InlineData("This is a very long description with no sentence breaks and the words just keep going on and on without any periods so it needs to find a good word boundary to trim at which is hard with such a long text without proper punctuation", "This is a very long description with no sentence breaks and the words just keep going on and on without any periods so it needs to find a good word boundary to trim at which is hard with such a...")]
     public void BuildDescription_WithLongDescription_ReturnsProcessedDescription(string description, string expected)
     {
-        var service = new OpenGraphService(_localizer);
+        var service = new OpenGraphService(_localizer, _dataStorage);
 
         var result = service.BuildDescription(description, _defaultUri);
 
@@ -63,7 +65,7 @@ public class OpenGraphServiceTests
     [InlineData("<div class='content'><h1>Title</h1><p>First paragraph</p><p>Second with <br/> line break</p></div>", "Title First paragraph Second with line break")]
     public void BuildDescription_WithHtmlTags_ReturnsSanitizedDescription(string htmlDescription, string expected)
     {
-        var service = new OpenGraphService(_localizer);
+        var service = new OpenGraphService(_localizer, _dataStorage);
         
         var result = service.BuildDescription(htmlDescription, _defaultUri);
         
@@ -74,7 +76,7 @@ public class OpenGraphServiceTests
     [Fact]
     public void BuildDescription_WithHtmlEntities_ReturnsSanitizedDescription()
     {
-        var service = new OpenGraphService(_localizer);
+        var service = new OpenGraphService(_localizer, _dataStorage);
         
         var htmlDescription = "Special characters: &quot;quotes&quot;, &amp;ampersand, &lt;brackets&gt;";
         var expected = "Special characters: \"quotes\", &ampersand, <brackets>";
@@ -92,7 +94,7 @@ public class OpenGraphServiceTests
     [InlineData("<p>Text with\r\nnewlines\r\nand\ttabs</p>", "Text with newlines and tabs")]
     public void BuildDescription_WithSpecialCharacters_ReturnsCleanedDescription(string input, string expected)
     {
-        var service = new OpenGraphService(_localizer);
+        var service = new OpenGraphService(_localizer, _dataStorage);
         
         var result = service.BuildDescription(input, _defaultUri);
         
@@ -105,7 +107,7 @@ public class OpenGraphServiceTests
     [InlineData("<div>Some text with unclosed div and <p>nested paragraph</div>", "Some text with unclosed div and nested paragraph")]
     public void BuildDescription_WithIncompleteHtmlTags_ReturnsSanitizedDescription(string htmlDescription, string expected)
     {
-        var service = new OpenGraphService(_localizer);
+        var service = new OpenGraphService(_localizer, _dataStorage);
         
         var result = service.BuildDescription(htmlDescription, _defaultUri);
         
@@ -116,7 +118,7 @@ public class OpenGraphServiceTests
     [Fact]
     public void BuildDescription_WithOnlyHtmlTags_ReturnsDefaultDescription()
     {
-        var service = new OpenGraphService(_localizer);
+        var service = new OpenGraphService(_localizer, _dataStorage);
         
         var result = service.BuildDescription("<div></div>", _defaultUri);
         
@@ -129,4 +131,5 @@ public class OpenGraphServiceTests
     private readonly Uri _defaultUri = new("https://example.com/image.jpg");
 
     private readonly IStringLocalizer<ServerResources> _localizer;
+    private readonly IDataStorage _dataStorage;
 }

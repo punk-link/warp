@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Warp.WebApp.Data;
-using Warp.WebApp.Models;
 using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Entries.Enums;
@@ -47,7 +46,6 @@ public class EntryInfoServiceRemoveTests
             editMode: EditMode.Simple,
             entry: new Entry("Some content"), 
             imageInfos: [], 
-            openGraphDescription: new EntryOpenGraphDescription("Some content", "Some content", null), 
             viewCount: 0);
 
         _dataStorageSubstitute.TryGet<EntryInfo?>(Arg.Any<string>(), cancellationToken)
@@ -75,7 +73,6 @@ public class EntryInfoServiceRemoveTests
             editMode: EditMode.Simple,
             entry: new Entry("Some content"), 
             imageInfos: [], 
-            openGraphDescription: new EntryOpenGraphDescription("Some content", "Some content", null), 
             viewCount: 0);
 
         _dataStorageSubstitute.TryGet<EntryInfo?>(Arg.Any<string>(), cancellationToken)
@@ -118,7 +115,6 @@ public class EntryInfoServiceRemoveTests
             editMode: EditMode.Simple,
             entry: new Entry("Some content"), 
             imageInfos: [], 
-            openGraphDescription: new EntryOpenGraphDescription("Some content", "Some content", null), 
             viewCount: 0);
 
         _dataStorageSubstitute.TryGet<EntryInfo?>(Arg.Any<string>(), cancellationToken)
