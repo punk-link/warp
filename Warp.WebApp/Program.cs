@@ -238,6 +238,13 @@ void AddOptions(ILogger<Program> logger, IServiceCollection services, IConfigura
                 })
             .ValidateDataAnnotations();
         }
+
+        services.AddOptions<OpenGraphOptions>()
+            .Configure(options =>
+            {
+                options.DefaultImageUrl = new Uri(configuration["OpenGraph:DefaultImageUrl"]!);
+                options.Title = configuration["OpenGraph:Title"]!;
+            });
     }
     catch (Exception ex)
     {

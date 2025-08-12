@@ -41,7 +41,9 @@ public interface IOpenGraphService
     /// </returns>
     Task<EntryOpenGraphDescription> Get(Guid entryId, CancellationToken cancellationToken);
 
-    EntryOpenGraphDescription BuildDescription(string descriptionSource, Uri? previewImageUrl);
-    
-    EntryOpenGraphDescription GetDefaultDescription();
+    /// <summary>
+    /// Gets a default OpenGraph description.
+    /// </summary>
+    /// <returns></returns>
+    EntryOpenGraphDescription Get();
 }
