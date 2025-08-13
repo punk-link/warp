@@ -14,6 +14,25 @@ const elements = {
 };
 
 
+function buildCountdownMarkup(timeString, significantIndex) {
+    const digitSpanClass = 'inline-block w-[1ch] text-center leading-none';
+    const colonSpanClass = 'inline-block text-center leading-none';
+
+    const chars = timeString.split('');
+    const spans = chars.map((ch, i) => {
+        if (ch === ':') {
+            const color = i < significantIndex ? 'text-gray-300' : 'text-secondary';
+            return `<span class="${colonSpanClass} ${color}">:</span>`;
+        }
+
+        const color = i < significantIndex ? 'text-gray-300' : '';
+        return `<span class="${digitSpanClass} ${color}">${ch}</span>`;
+    });
+
+    return spans.join('');
+}
+
+
 const handlers = {
     countdown: (() => {
         const formatTimeSection = timeSection => 
@@ -36,9 +55,11 @@ const handlers = {
         const hasTimeRemaining = ({ hours, minutes, seconds }) => 
             hours > 0 || minutes > 0 || seconds > 0;
 
+        const getEmptyCountdownMarkup = () => buildCountdownMarkup('00:00:00', 0);
+
         const formatCountdown = (hours, minutes, seconds) => {
             if (!hasTimeRemaining({ hours, minutes, seconds })) 
-                return EMPTY_COUNTDOWN;
+                return getEmptyCountdownMarkup();
 
             const timeString = [hours, minutes, seconds]
                 .map(formatTimeSection)
@@ -46,36 +67,33 @@ const handlers = {
 
             const significantIndex = findFirstSignificantDigitIndex(timeString);
             if (significantIndex === 0) 
-                return EMPTY_COUNTDOWN;
+                return getEmptyCountdownMarkup();
 
-            const insignificantPart = timeString.substring(0, significantIndex);
-            const significantPart = timeString
-                .substring(significantIndex)
-                .replace(/:/g, '<span class="text-secondary">:</span>');
-
-            return `<span class="text-gray-400">${insignificantPart}</span>${significantPart}`;
+            return buildCountdownMarkup(timeString, significantIndex);
         };
 
-        const updateDisplay = (countdownElement, targetDate, interval) => {
-            const currentTime = new Date().getTime();
+        const updateDisplay = (countdownElement, targetDate) => {
+            const currentTime = Date.now();
             const remainingTime = targetDate - currentTime;
 
             if (remainingTime <= 0) {
-                uiState.setElementHtml(countdownElement, EMPTY_COUNTDOWN);
-                clearInterval(interval);
-                location.reload();
-
-                return;
+                uiState.setElementHtml(countdownElement, getEmptyCountdownMarkup());
+                return false;
             }
 
             const timeSegments = calculateTimeSegments(remainingTime);
-            const formattedDisplay = formatCountdown(
-                timeSegments.hours,
-                timeSegments.minutes,
-                timeSegments.seconds
-            );
+            const formattedDisplay = formatCountdown(timeSegments.hours, timeSegments.minutes, timeSegments.seconds);
 
             uiState.setElementHtml(countdownElement, formattedDisplay);
+
+            return true;
+        };
+
+        const scheduleNextAlignedTick = (tick) => {
+            const now = Date.now();
+            const delay = MILLISECONDS.SECOND - (now % MILLISECONDS.SECOND);
+
+            return setTimeout(tick, delay);
         };
 
         return {
@@ -84,13 +102,30 @@ const handlers = {
                 if (!countdownElement) 
                     return;
 
-                const interval = setInterval(
-                    () => updateDisplay(countdownElement, targetDate, interval), 
-                    UPDATE_INTERVAL
-                );
+                countdownElement.classList.add('tabular-nums');
 
-                updateDisplay(countdownElement, targetDate, interval);
-                
+                let timeoutId = 0;
+
+                const tick = () => {
+                    requestAnimationFrame(() => {
+                        const keepGoing = updateDisplay(countdownElement, targetDate);
+                        if (!keepGoing) {
+                            if (timeoutId)
+                                clearTimeout(timeoutId);
+
+                            window.location.reload();
+                            return;
+                        }
+
+                        timeoutId = scheduleNextAlignedTick(tick);
+                    });
+                };
+
+                requestAnimationFrame(() => {
+                    updateDisplay(countdownElement, targetDate);
+                    timeoutId = scheduleNextAlignedTick(tick);
+                });
+
                 setTimeout(() => {
                     countdownElement.classList.add('visible');
                 }, 100);
