@@ -1,6 +1,6 @@
 import { dom, uiState } from '/js/utils/ui-core.js';
 
-const EMPTY_COUNTDOWN = '<span class="text-gray-400">00:00:00<span>';
+const EMPTY_COUNTDOWN = '<span class="text-gray-300">00:00:00<span>';
 const MILLISECONDS = Object.freeze({
     SECOND: 1000,
     MINUTE: 1000 * 60,

@@ -60,12 +60,14 @@
                     <div class="drop-area w-full p-2 md:w-1/2 mb-5 mx-auto">
                         <div class="flex flex-col">
                             <div class="flex flex-col mb-15">
-                                <i class="icofont-align-left text-secondary text-2xl mb-2"></i>
+                                @* <i class="icofont-align-left text-secondary text-2xl mb-2"></i> *@
+                                <img src="~/img/text_icon.svg" class="inline-block w-6 h-6 mb-2" alt="" aria-hidden="true" />
                                 <label class="form-label" for="advanced-text-content">@Localizer["TextAreaLabel"]</label>
                                 <textarea id="advanced-text-content" class="form-textarea bg-transparent" placeholder=" "></textarea>
                             </div>
                             <div class="flex flex-col mb-5">
-                                <i class="icofont-hill-sunny text-secondary text-2xl mb-2"></i>
+                                @* <i class="icofont-hill-sunny text-secondary text-2xl mb-2"></i> *@
+                                <img src="~/img/image_icon.svg" class="inline-block w-6 h-6 mb-2" alt="" aria-hidden="true" />
                                 <label class="form-label mb-3">@Localizer["ImageAreaLabel"]</label>
                                 <div class="gallery">
                                     @foreach (var imageContainer in Model.ImageContainers)
