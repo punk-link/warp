@@ -3,7 +3,7 @@
   <div class="min-h-screen">
     <div class="flex flex-col sm:flex-row items-baseline px-3">
       <div class="w-full sm:w-1/2 flex justify-start md:justify-center">
-        <!-- Logo -->
+  <Logo />
       </div>
       <div class="w-full sm:w-1/2 flex justify-end md:justify-center">
         <button id="simple-mode-nav-button" class="nav-button" disabled>
@@ -70,3 +70,7 @@
     </section>
   </div>
 </template>
+
+<script setup lang="ts">
+import Logo from '../components/Logo.vue'
+</script>

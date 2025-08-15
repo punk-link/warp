@@ -1,12 +1,12 @@
 <template>
   <div class="app">
-    <nav class="nav">
+    <!-- <nav class="nav">
       <RouterLink to="/">Index</RouterLink>
       <RouterLink to="/preview">Preview</RouterLink>
       <RouterLink to="/entry">Entry</RouterLink>
       <RouterLink to="/deleted">Deleted</RouterLink>
       <RouterLink to="/privacy">Privacy</RouterLink>
-    </nav>
+    </nav> -->
     <RouterView />
     <Footer />
   </div>
