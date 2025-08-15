@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "packageManager": "yarn",
+  "packageManager": "yarn@1.22.19",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

@@ -1,16 +1,19 @@
 <template>
   <div class="app">
-    <h1>Warplyn</h1>
-    <p>Mounted under <code>/app</code>. Router-ready.</p>
     <nav class="nav">
-      <RouterLink to="/">Home</RouterLink>
-      <RouterLink to="/about">About</RouterLink>
+      <RouterLink to="/">Index</RouterLink>
+      <RouterLink to="/preview">Preview</RouterLink>
+      <RouterLink to="/entry">Entry</RouterLink>
+      <RouterLink to="/deleted">Deleted</RouterLink>
+      <RouterLink to="/privacy">Privacy</RouterLink>
     </nav>
     <RouterView />
+    <Footer />
   </div>
 </template>
 
 <script setup lang="ts">
+import Footer from './components/Footer.vue';
 </script>
 
 <style scoped>
