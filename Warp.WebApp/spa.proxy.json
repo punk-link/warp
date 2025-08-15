@@ -1,0 +1,6 @@
+{
+  "ServerUrl": "http://localhost:5173",
+  "LaunchCommand": "yarn dev",
+  "WorkingDirectory": "..\\Warp.ClientApp",
+  "MaxTimeoutInSeconds": 120
+}

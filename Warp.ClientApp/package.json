@@ -1,0 +1,46 @@
+{
+  "name": "warp-clientapp",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "yarn",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 5174",
+    "typecheck": "vue-tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "prepare": "husky install",
+    "_lint-staged-run": "lint-staged",
+    "test": "vitest --run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "vue": "^3.4.0",
+    "vue-router": "^4.3.0"
+  },
+  "devDependencies": {
+    "@testing-library/vue": "^8.1.0",
+    "@types/node": "^22.5.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "@vitejs/plugin-vue": "^5.0.0",
+    "eslint": "^9.21.0",
+    "eslint-plugin-vue": "^9.27.0",
+    "husky": "^9.0.0",
+    "jsdom": "^25.0.0",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.3.0",
+    "typescript": "^5.5.0",
+    "vite": "^6.0.0",
+    "vitest": "^2.0.0",
+    "vue-tsc": "^2.0.0"
+  },
+  "lint-staged": {
+    "*.{js,ts,vue,json,css,md}": [
+      "prettier --write",
+      "eslint --fix"
+    ]
+  }
+}

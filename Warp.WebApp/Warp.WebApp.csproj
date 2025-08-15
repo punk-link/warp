@@ -57,6 +57,8 @@
     <PackageReference Include="System.IO.Hashing" Version="9.0.8" />
     <PackageReference Include="System.Text.Json" Version="9.0.8" />
     <PackageReference Include="VaultSharp" Version="1.17.5.1" />
+    <PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="9.0.8" />
+    <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="9.0.8" />
   </ItemGroup>
 
   <ItemGroup>

@@ -20,7 +20,8 @@ const HTTP_HEADERS = Object.freeze({
         'Accept': 'application/json; charset=utf-8',
         'Content-Type': 'application/json; charset=utf-8'
     },
-    IDEMPOTENCY_KEY: 'X-Idempotency-Key'
+    IDEMPOTENCY_KEY: 'X-Idempotency-Key',
+    CSRF: 'X-CSRF-TOKEN'
 });
 
 
@@ -33,6 +34,11 @@ const HTTP_ERROR = Object.freeze({
 
 const handlers = {
     request: (() => {
+        const getCsrfToken = () => {
+            const match = document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]*)/);
+            return match ? decodeURIComponent(match[1]) : null;
+        };
+
         const validateRequest = (url, method) => {
             if (!url)
                 throw new Error(HTTP_ERROR.MISSING_URL);
@@ -44,9 +50,18 @@ const handlers = {
         const buildRequestOptions = (method, body = null, headers = HTTP_HEADERS.JSON, idempotencyKey = null) => {
             const options = { method, headers: { ...headers } };
 
+            if (method !== HTTP_METHOD.GET) {
+                const csrf = getCsrfToken();
+                if (csrf)
+                    options.headers[HTTP_HEADERS.CSRF] = csrf;
+            }
+
             if (body) {
                 if (body instanceof FormData) {
                     options.headers = { ...HTTP_HEADERS.FORM_DATA };
+                    const csrf = getCsrfToken();
+                    if (csrf)
+                        options.headers[HTTP_HEADERS.CSRF] = csrf;
                     options.body = body;
                 } else {
                     options.body = typeof body === 'string'
@@ -78,9 +93,6 @@ const handlers = {
                 'HTTP Request failed'
             );
 
-            // Redirect to error page if the response contains problem details
-            // This is by design to handle specific error cases
-            // Until we implement a front-end error handling strategy
             location.href = buildUrl(ROUTES.ERROR, {
                 details: JSON.stringify(problemDetails)
             });

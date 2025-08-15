@@ -1,6 +1,7 @@
 export default {
     content: [
         "./**/*.{html,cshtml,js,jsx,ts,tsx}",
+        "../Warp.ClientApp/src/**/*.{vue,js,ts,jsx,tsx}"
     ],
     theme: {
         screens: {

@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.FeatureManagement;
+using Microsoft.AspNetCore.SpaServices.Extensions;
+using Microsoft.AspNetCore.Antiforgery;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -90,6 +92,17 @@ try
             options.SlidingExpiration = true;
         });
 
+    // Antiforgery for SPA + API (same-origin)
+    builder.Services.AddAntiforgery(options =>
+    {
+        options.HeaderName = "X-CSRF-TOKEN";
+        options.FormFieldName = "__RequestVerificationToken";
+        options.Cookie.Name = "Warp.AntiForgery";
+        options.Cookie.SameSite = SameSiteMode.Strict;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.HttpOnly = true;
+    });
+
     builder.Services.AddHttpClient(HttpClients.Warmup);
 
     var app = builder.Build();
@@ -129,6 +142,56 @@ try
 
     app.MapControllers();
     app.MapRazorPages();
+
+    app.MapGet("/app/config.js", async (HttpContext ctx, IConfiguration configuration, IWebHostEnvironment env) =>
+    {
+        var config = new
+        {
+            environment = env.EnvironmentName,
+            sentryDsn = configuration["Sentry:FrontendDsn"]
+        };
+
+        var js = $"window.appConfig = {JsonSerializer.Serialize(config)};";
+        ctx.Response.ContentType = "application/javascript";
+        ctx.Response.Headers.CacheControl = "no-store, no-cache, must-revalidate, max-age=0";
+        await ctx.Response.WriteAsync(js);
+    });
+
+    // CSRF token issuance endpoint for SPA: sets a readable XSRF-TOKEN cookie with the request token
+    app.MapGet("/api/security/csrf", (IAntiforgery antiforgery, HttpContext ctx) =>
+    {
+        var tokens = antiforgery.GetAndStoreTokens(ctx);
+        if (!string.IsNullOrEmpty(tokens.RequestToken))
+        {
+            ctx.Response.Cookies.Append(
+                "XSRF-TOKEN",
+                tokens.RequestToken!,
+                new CookieOptions
+                {
+                    HttpOnly = false,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Path = "/"
+                });
+        }
+        return Results.NoContent();
+    });
+
+    if (app.Environment.IsLocal())
+    {
+        app.Map("/app", spaApp =>
+        {
+            spaApp.UseSpa(spa =>
+            {
+                spa.Options.SourcePath = Path.Combine(app.Environment.ContentRootPath, "..", "Warp.ClientApp");
+                spa.UseProxyToSpaDevelopmentServer("http://localhost:5173");
+            });
+        });
+    }
+    else
+    {
+        app.MapFallbackToFile(pattern: "/app/{*path}", filePath: "app/index.html");
+    }
 
     app.Run();
 }
