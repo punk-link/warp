@@ -19,20 +19,14 @@
       share the moments instantly, knowing they'll disappear in no time
     </p>
     <nav class="text-gray-400 text-sm mt-3">
-      <a href="/" class="hover:underline">
-        Index
-      </a>
+      <a href="/" class="hover:underline">Index</a>
       <span class="mx-2">|</span>
-      <a href="/privacy" class="hover:underline">
-        Privacy
-      </a>
+      <a href="/privacy" class="hover:underline">Privacy</a>
       <span class="mx-2">|</span>
-      <a href="https://github.com/punk-link/warp" target="_blank" class="hover:underline">
-        Sources
-      </a>
+      <a href="https://github.com/punk-link/warp" target="_blank" class="hover:underline">Sources</a>
     </nav>
     <p class="text-gray-300 text-sm mt-3">
-      � warplyn.com 2024&ndash;2025 | all rights reserved
+      &copy; warplyn.com 2024&ndash;2025 | all rights reserved
     </p>
   </footer>
 </template>
