@@ -1,76 +1,95 @@
 <template>
-  <!-- moved from pages/Index.vue -->
   <div class="min-h-screen">
     <div class="flex flex-col sm:flex-row items-baseline px-3">
       <div class="w-full sm:w-1/2 flex justify-start md:justify-center">
-  <Logo />
+        <Logo />
       </div>
       <div class="w-full sm:w-1/2 flex justify-end md:justify-center">
-        <button id="simple-mode-nav-button" class="nav-button" disabled>
-          Text mode
-        </button>
-        <button id="advanced-mode-nav-button" class="nav-button" disabled>
-          Advanced mode
-        </button>
+        <ModeSwitch v-model="mode" :disabled="pending" simple-label="Text" advanced-label="Advanced" />
       </div>
     </div>
 
     <section class="px-3 my-5">
-      <form id="entry-form" method="post">
-        <div class="flex flex-col items-center justify-around min-h-[75vh]">
-          <!-- Simple Mode Container -->
-          <div id="simple-mode-container" class="w-full">
-            <div class="w-full md:w-1/2 mb-5 mx-auto">
-              <div class="flex flex-col">
-                <textarea id="simple-text-content" class="form-textarea order-2 bg-transparent" placeholder=" "></textarea>
-                <label class="form-label floating-label order-1" for="simple-text-content">Text</label>
-              </div>
-            </div>
-          </div>
+      <div class="flex flex-col items-center justify-around min-h-[75vh]">
 
-          <!-- Advanced Mode Container -->
-          <div id="advanced-mode-container" class="w-full">
-            <div class="drop-area w-full p-2 md:w-1/2 mb-5 mx-auto">
-              <div class="flex flex-col">
-                <div class="flex flex-col mb-15">
-                  <img src="/img/text_icon.svg" class="inline-block w-6 h-6 mb-2" alt="" aria-hidden="true" />
-                  <label class="form-label" for="advanced-text-content">Text</label>
-                  <textarea id="advanced-text-content" class="form-textarea bg-transparent" placeholder=" "></textarea>
-                </div>
-                <div class="flex flex-col mb-5">
-                  <img src="/img/image_icon.svg" class="inline-block w-6 h-6 mb-2" alt="" aria-hidden="true" />
-                  <label class="form-label mb-3">Image</label>
-                  <div class="gallery"></div>
-                  <input type="file" id="file" class="file-input hidden" multiple="multiple" accept="image/*">
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Shared Form Controls -->
-          <div class="flex justify-between items-center w-full md:w-1/2 pb-3 sticky bottom-0 bg-transparent">
-            <div class="bg-white rounded-sm">
-              <label class="form-label" for="expiration-selector">Expiration period</label>
-              <div class="flex items-baseline">
-                <i class="icofont-close text-primary text-base mr-2"></i>
-                <select id="expiration-selector" class="form-select"></select>
-              </div>
-            </div>
-            <div class="bg-white rounded-sm">
-              <button id="create-button" class="btn btn-primary" type="submit" disabled>
-                Create
-              </button>
-            </div>
-          </div>
-
-          <input type="hidden" name="id" />
-          <input id="edit-mode-state" type="hidden" />
+        <div v-if="mode === 'simple'" class="w-full">
+          <SimpleEditor>
+            <template #text>
+              <DynamicTextArea v-model="text" placeholder="Type or paste your text here" />
+            </template>
+          </SimpleEditor>
         </div>
-      </form>
+
+        <div v-else class="w-full">
+          <AdvancedEditor>
+            <template #text>
+              <DynamicTextArea v-model="text" label="Text" />
+            </template>
+            <template #gallery>
+              <div class="flex flex-col gap-3">
+                <div class="flex flex-wrap gap-2">
+                  <GalleryItem
+                    v-for="(f, idx) in files"
+                    :key="idx"
+                    :name="f.name"
+                    @remove="removeFile(idx)"
+                  />
+                </div>
+                <input type="file" class="file-input" multiple accept="image/*" @change="onFilesSelected" />
+              </div>
+            </template>
+          </AdvancedEditor>
+        </div>
+
+        <div class="flex justify-between items-center w-full md:w-1/2 pb-3 sticky bottom-0 bg-transparent">
+          <div class="bg-white rounded-sm p-2">
+            <ExpirationSelect v-model="expiration" :options="expirationOptions" label="Expires in" />
+          </div>
+          <div class="bg-white rounded-sm p-2">
+            <CreateButton :disabled="!isValid" :pending="pending" @click="onCreate" />
+          </div>
+        </div>
+      </div>
     </section>
   </div>
+  
 </template>
 
 <script setup lang="ts">
+import { ref, computed } from 'vue'
 import Logo from '../components/Logo.vue'
+import ModeSwitch from '../components/ModeSwitch.vue'
+import SimpleEditor from '../components/SimpleEditor.vue'
+import DynamicTextArea from '../components/DynamicTextArea.vue'
+import AdvancedEditor from '../components/AdvancedEditor.vue'
+import GalleryItem from '../components/GalleryItem.vue'
+import ExpirationSelect, { type ExpirationOption } from '../components/ExpirationSelect.vue'
+import CreateButton from '../components/CreateButton.vue'
+
+type Mode = 'simple' | 'advanced'
+
+const mode = ref<Mode>('simple')
+const text = ref<string>('')
+const files = ref<File[]>([])
+const expiration = ref<string | null>(null)
+const expirationOptions = ref<ExpirationOption[]>([])
+const pending = ref(false)
+
+const isValid = computed(() => text.value.trim().length > 0 || files.value.length > 0)
+
+function onFilesSelected(e: Event) {
+  const input = e.target as HTMLInputElement
+  if (!input.files) return
+  files.value = [...files.value, ...Array.from(input.files)]
+  input.value = ''
+}
+
+function removeFile(index: number) {
+  files.value.splice(index, 1)
+}
+
+async function onCreate() {
+  if (!isValid.value || pending.value) return
+  // TODO: integrate with useIndexForm composable (create/update with CSRF)
+}
 </script>
