@@ -1,11 +1,12 @@
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.ResponseCompression;
-using Microsoft.FeatureManagement;
 using Microsoft.AspNetCore.SpaServices.Extensions;
-using Microsoft.AspNetCore.Antiforgery;
+using Microsoft.FeatureManagement;
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -115,6 +116,11 @@ try
         SupportedUICultures = supportedCultures
     });
 
+    app.UseForwardedHeaders(new ForwardedHeadersOptions
+    {
+        ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedFor
+    });
+
     if (!app.Environment.IsDevelopmentOrLocal())
     {
         app.UseExceptionHandler("/Error");
@@ -179,13 +185,10 @@ try
 
     if (app.Environment.IsLocal())
     {
-        app.Map("/app", spaApp =>
+        app.UseSpa(spa =>
         {
-            spaApp.UseSpa(spa =>
-            {
-                spa.Options.SourcePath = Path.Combine(app.Environment.ContentRootPath, "..", "Warp.ClientApp");
-                spa.UseProxyToSpaDevelopmentServer("http://localhost:5173");
-            });
+            spa.Options.SourcePath = Path.Combine(app.Environment.ContentRootPath, "..", "Warp.ClientApp");
+            spa.UseProxyToSpaDevelopmentServer("http://localhost:5173");
         });
     }
     else
