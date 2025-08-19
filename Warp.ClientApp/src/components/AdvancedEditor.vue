@@ -9,12 +9,9 @@
         <div class="flex flex-col mb-5">
           <i class="icofont-hill-sunny text-secondary text-2xl mb-2"></i>
           <label class="form-label mb-3">Drag and drop or browse for images</label>
-          <div class="border border-dashed border-gray-600 rounded p-4 text-center">
-            <slot name="gallery"></slot>
-          </div>
+          <slot name="gallery"></slot>
         </div>
       </div>
-      
     </div>
   </div>
 </template>
