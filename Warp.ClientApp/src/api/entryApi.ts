@@ -1,3 +1,4 @@
+import { Entry } from '../types/entry';
 import { fetchJson } from './fetchHelper'
 
 export interface EntryCreateResponse { id: string; previewUrl?: string }
@@ -8,9 +9,9 @@ export async function createEntry(form: FormData) {
 
 export async function getEntry(id?: string) {
   if (!id)
-    return fetchJson(`/api/entries`)
+    return fetchJson<Entry>(`/api/entries`)
 
-  return fetchJson(`/api/entries/${encodeURIComponent(id!)}`)
+  return fetchJson<Entry>(`/api/entries/${encodeURIComponent(id!)}`)
 }
 
 export async function updateEntry(id: string, form: FormData) {

@@ -1,9 +1,9 @@
 <template>
   <div class="flex items-center gap-2">
-  <button type="button" :class="['nav-button', { active: modelValue === 'simple' }]" :disabled="disabled || modelValue === 'simple'" @click="$emit('update:modelValue', 'simple')" data-testid="mode-simple">
+  <button type="button" :class="['nav-button', { active: modelValue === 'Simple' }]" :disabled="disabled || modelValue === 'Simple'" @click="$emit('update:modelValue', 'Simple')" data-testid="mode-simple">
       {{ simpleLabel }}
     </button>
-  <button type="button" :class="['nav-button', { active: modelValue === 'advanced' }]" :disabled="disabled || modelValue === 'advanced'" @click="$emit('update:modelValue', 'advanced')" data-testid="mode-advanced">
+  <button type="button" :class="['nav-button', { active: modelValue === 'Advanced' }]" :disabled="disabled || modelValue === 'Advanced'" @click="$emit('update:modelValue', 'Advanced')" data-testid="mode-advanced">
       {{ advancedLabel }}
     </button>
   </div>
@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 interface Props {
-  modelValue: 'simple' | 'advanced';
+  modelValue: 'Simple' | 'Advanced';
   disabled?: boolean;
   simpleLabel?: string;
   advancedLabel?: string;
@@ -24,6 +24,6 @@ withDefaults(defineProps<Props>(), {
 });
 
 defineEmits<{
-  (e: 'update:modelValue', value: 'simple' | 'advanced'): void;
+  (e: 'update:modelValue', value: 'Simple' | 'Advanced'): void;
 }>();
 </script>

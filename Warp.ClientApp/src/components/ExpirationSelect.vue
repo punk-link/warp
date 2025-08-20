@@ -7,8 +7,8 @@
     <select
       class="form-select"
       :disabled="disabled"
-      :value="modelValue ?? ''"
-      @change="$emit('update:modelValue', ($event.target as HTMLSelectElement).value || null)"
+      :value="modelValue ?? '0'"
+      @change="$emit('update:modelValue', ($event.target as HTMLSelectElement).value || '0')"
       :aria-label="ariaLabel || label"
     >
       <option v-for="opt in options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-export interface ExpirationOption { value: string; label: string }
+import type { ExpirationOption } from '../types/expiration'
 
 interface Props {
   modelValue: string | null;

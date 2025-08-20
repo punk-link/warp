@@ -1,16 +1,20 @@
 export async function fetchJson<T = any>(url: string, opts: RequestInit = {}) {
-  const res = await fetch(url, { credentials: 'include', ...opts })
-  const contentType = res.headers.get('content-type') || ''
-  if (!res.ok) {
+  const response = await fetch(url, { credentials: 'include', headers: { 'Accept': 'application/json' }, ...opts })
+
+  const contentType = response.headers.get('content-type') || ''
+  if (!response.ok) {
     let body: any = null
     try {
       if (contentType.includes('application/json')) 
-        body = await res.json()
-      else body = await res.text()
+        body = await response.json()
+      else 
+        body = await response.text()
     } catch {}
-    throw new Error(body?.message ?? `Request failed: ${res.status}`)
+    throw new Error(body?.message ?? `Request failed: ${response.status}`)
   }
 
-  if (contentType.includes('application/json')) return (await res.json()) as T
-  return (await res.text()) as unknown as T
+  if (contentType.includes('application/json')) 
+    return (await response.json()) as T
+  
+  return (await response.text()) as unknown as T
 }
