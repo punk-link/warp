@@ -7,7 +7,7 @@ import Deleted from '../views/DeletedView.vue'
 import Privacy from '../views/Privacy.vue'
 
 const router = createRouter({
-  history: createWebHistory('/'),
+  history: createWebHistory('/app'),
   routes: [
     { path: '/', name: 'Home', component: Home },
     { path: '/preview', name: 'Preview', component: Preview },

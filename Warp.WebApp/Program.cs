@@ -185,10 +185,13 @@ try
 
     if (app.Environment.IsLocal())
     {
-        app.UseSpa(spa =>
+        app.MapWhen(ctx => ctx.Request.Path.StartsWithSegments("/app"), spaApp =>
         {
-            spa.Options.SourcePath = Path.Combine(app.Environment.ContentRootPath, "..", "Warp.ClientApp");
-            spa.UseProxyToSpaDevelopmentServer("http://localhost:5173");
+            spaApp.UseSpa(spa =>
+            {
+                spa.Options.SourcePath = Path.Combine(app.Environment.ContentRootPath, "..", "Warp.ClientApp");
+                spa.UseProxyToSpaDevelopmentServer("http://localhost:5173");
+            });
         });
     }
     else
