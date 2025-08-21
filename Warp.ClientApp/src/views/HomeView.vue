@@ -18,15 +18,17 @@
               <DynamicTextArea v-model="text" label="Text" />
             </template>
             <template #gallery>
-              <div class="gallery">
+              <div class="gallery" ref="dropAreaRef">
                 <GalleryItem
-                  v-for="(f, idx) in files"
+                  v-for="(it, idx) in items"
                   :key="idx"
                   :id="`file-${idx}`"
-                  :name="f.name"
-                  @remove="removeFile(idx)"
+                  :src="it.url"
+                  :name="it.file.name"
+                  @remove="() => removeItem(idx)"
                 />
-                <GalleryItem id="empty" />
+                <GalleryItem id="empty" @click="() => fileInputRef?.click()" />
+                <input ref="fileInputRef" type="file" class="hidden" multiple accept="image/*" @change="onFileInputChange" />
               </div>
             </template>
           </AdvancedEditor>
@@ -55,7 +57,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { useGallery } from '../composables/useGallery'
+import { initDropAreaHandlers, handlePaste, uploadImages } from '../composables/useImageUpload'
 import { useRoute, useRouter } from 'vue-router'
 import type { EditMode } from '../types/edit-mode'
 import { entryApi } from '../api/entryApi'
@@ -72,16 +76,27 @@ import ExpirationSelect from '../components/ExpirationSelect.vue'
 import CreateButton from '../components/CreateButton.vue'
 
 const EDIT_MODE_STORAGE_KEY = 'warp.editMode'
-const mode = ref<EditMode>('Unset')
+const mode = ref<EditMode>('Simple')
 const text = ref<string>('')
 const files = ref<File[]>([])
 const expiration = ref<string | null>(null)
 const expirationOptions = ref<ExpirationOption[]>([])
 const pending = ref(false)
 
+
+const dropAreaRef = ref<HTMLElement | null>(null)
+const fileInputRef = ref<HTMLInputElement | null>(null)
+const { items, addFiles, remove } = useGallery()
+
+
+function removeItem(idx: number) {
+  remove(idx)
+}
+
 const route = useRoute()
 const router = useRouter()
 const metadata = useMetadata()
+
 
 function getInitialEditMode(mode: EditMode): EditMode {
   if (mode !== 'Unset')
@@ -94,7 +109,9 @@ function getInitialEditMode(mode: EditMode): EditMode {
   return 'Simple' as EditMode
 }
 
+
 const isValid = computed(() => text.value.trim().length > 0 || files.value.length > 0)
+
 
 function onFilesSelected(e: Event) {
   const input = e.target as HTMLInputElement
@@ -103,35 +120,91 @@ function onFilesSelected(e: Event) {
   input.value = ''
 }
 
+
 function removeFile(index: number) {
   files.value.splice(index, 1)
+}
+
+
+function onFileInputChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  if (!input.files) 
+    return
+
+  addFiles(input.files)
+
+  files.value = [...files.value, ...Array.from(input.files)]
+  input.value = ''
 }
 
 async function onCreate() {
   if (!isValid.value || pending.value) 
     return
-  
-    // TODO: integrate with useIndexForm composable (create/update with CSRF)
+
+  try {
+    pending.value = true
+
+    const form = new FormData()
+    form.append('textContent', text.value)
+    form.append('expiration', expiration.value!)
+    form.append('editMode', mode.value)
+
+    // If route has id, update; otherwise create
+    let response: any = null
+    const entryId = (route.query?.id as string | undefined) ?? undefined
+    if (entryId) {
+      await entryApi.updateEntry(entryId, form)
+      response = { id: entryId }
+    } else {
+      response = await entryApi.createEntry(form)
+    }
+
+    // if there are files selected, upload them to images endpoint
+    if (files.value.length > 0 && response && response.id) {
+      await uploadImages(response.id, files.value)
+    }
+
+    // navigate to preview if available
+    if (response && response.previewUrl) {
+      window.location.href = response.previewUrl
+    } else if (response && response.id) {
+      router.push({ name: 'Preview', params: { id: response.id } })
+    }
+  } catch (err) {
+    console.error(err)
+  } finally {
+    pending.value = false
+  }
 }
 
 onMounted(async () => {
-  pending.value = true
-
-  const opts = await metadata.loadExpirationOptions()
-  expirationOptions.value = opts as ExpirationOption[]
-
-  await creatorApi.getOrSetCreator()
-
-  let entryId = (route.query?.id as string | undefined) ?? undefined
-  let entry = entryId === undefined
-    ? await entryApi.getEntry()
-    : await entryApi.getEntry(entryId)
-
   try {
+    pending.value = true
+
+    const opts = await metadata.loadExpirationOptions()
+    expirationOptions.value = opts as ExpirationOption[]
+
+    await creatorApi.getOrSetCreator()
+
+    let entryId = (route.query?.id as string | undefined) ?? undefined
+    let entry = entryId === undefined
+      ? await entryApi.getEntry()
+      : await entryApi.getEntry(entryId)
+
     entry.editMode = getInitialEditMode(entry.editMode)
     mode.value = entry.editMode
 
     text.value = entry.textContent
+
+    if (dropAreaRef.value && fileInputRef.value) {
+      const cleanup = initDropAreaHandlers(dropAreaRef.value, fileInputRef.value, () => (route.query.id as string | undefined) ?? undefined)
+      if (cleanup && typeof cleanup === 'function')
+        onBeforeUnmount(() => cleanup())
+    }
+
+    const pasteHandler = (e: ClipboardEvent) => void handlePaste(e, () => (route.query.id as string | undefined) ?? undefined)
+    window.addEventListener('paste', pasteHandler as EventListener)
+    onBeforeUnmount(() => window.removeEventListener('paste', pasteHandler as EventListener))
   } catch {
     router.replace({ name: 'Error' })
   } finally {
@@ -143,7 +216,7 @@ watch(mode, (val) => {
   try {
     localStorage.setItem(EDIT_MODE_STORAGE_KEY, val)
   } catch {
-    // ignore
+    throw new Error('Failed to save edit mode')
   }
 })
 </script>
