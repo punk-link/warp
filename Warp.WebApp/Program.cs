@@ -221,6 +221,11 @@ async Task AddConfiguration(ILogger<Program> logger, WebApplicationBuilder build
     {
         var secrets = await VaultHelper.GetSecrets<ProgramSecrets>(logger, builder.Configuration);
         builder.AddConsulConfiguration(secrets.ConsulAddress, secrets.ConsulToken);
+
+        builder.Configuration.AddInMemoryCollection(
+        [
+            new KeyValuePair<string, string?>("S3Options:SecretAccessKey", secrets.S3SecretAccessKey)
+        ]);
     }
 
     builder.Services.AddFeatureManagement();
@@ -238,7 +243,12 @@ void AddOptions(ILogger<Program> logger, IServiceCollection services, IConfigura
             .BindConfiguration(nameof(AnalyticsOptions));
 
         services.AddOptions<S3Options>()
-            .BindConfiguration(nameof(S3Options))
+            .Configure(options =>
+            {
+                options.AccessKey = configuration["S3Options:AccessKey"]!;
+                options.BucketName = configuration["S3Options:BucketName"]!;
+                options.SecretAccessKey = configuration["S3Options:SecretAccessKey"]!;
+            })
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
@@ -305,7 +315,8 @@ void AddOptions(ILogger<Program> logger, IServiceCollection services, IConfigura
                     options.TransitKeyName = configuration["EncryptionOptions:TransitKeyName"];
                     options.EncryptionKey = null;
                 })
-            .ValidateDataAnnotations();
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
         }
 
         services.AddOptions<OpenGraphOptions>()
