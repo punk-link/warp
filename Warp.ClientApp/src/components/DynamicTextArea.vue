@@ -3,15 +3,16 @@
   <div class="flex flex-col">
     <label v-if="label" class="form-label floating-label order-1">{{ label }}</label>
     <textarea
+      ref="element"
       class="form-textarea order-2 bg-transparent"
-      placeholder=" " style="z-index: 10; height:40px; overflow-y:hidden;"
+      placeholder=" " style="height:40px; overflow-y:hidden;"
       :maxlength="maxLength ?? undefined"
       :disabled="disabled"
       :aria-label="ariaLabel || 'Text'"
       :value="modelValue"
-      @input="$emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)"
+      @input="onInput"
     />
-    <label class="form-label floating-label order-1">{{ placeholder }}</label>
+    <label class="form-label floating-label order-1" style="z-index: -1;">{{ placeholder }}</label>
     <p v-if="helper" class="text-xs text-gray-400 mt-2">{{ helper }}</p>
   </div>
 </template>
@@ -27,7 +28,7 @@ interface Props {
   ariaLabel?: string;
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   modelValue: '',
   placeholder: '',
   helper: '',
@@ -35,7 +36,38 @@ withDefaults(defineProps<Props>(), {
   disabled: false,
 });
 
-defineEmits<{
-  (e: 'update:modelValue', value: string): void;
-}>();
+import { ref, watch, onMounted, nextTick } from 'vue'
+
+
+const element = ref<HTMLTextAreaElement | null>(null)
+const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
+
+
+function resize() {
+  const textArea = element.value
+  if (!textArea)
+    return
+
+  const minHeight = 40
+
+  textArea.style.height = 'auto'
+  const newHeight = Math.max(textArea.scrollHeight, minHeight)
+  textArea.style.height = newHeight + 'px'
+}
+
+
+function onInput(e: Event) {
+  const val = (e.target as HTMLTextAreaElement).value
+  emit('update:modelValue', val)
+  resize()
+}
+
+
+watch(() => props.modelValue, async () => {
+  await nextTick()
+  resize()
+})
+
+
+onMounted(() => resize())
 </script>
