@@ -10,8 +10,10 @@
 </template>
 
 <script setup lang="ts">
+import { EditMode } from '../types/edit-mode';
+
 interface Props {
-  modelValue: 'Simple' | 'Advanced';
+  modelValue: EditMode;
   disabled?: boolean;
   simpleLabel?: string;
   advancedLabel?: string;
@@ -24,6 +26,6 @@ withDefaults(defineProps<Props>(), {
 });
 
 defineEmits<{
-  (e: 'update:modelValue', value: 'Simple' | 'Advanced'): void;
+  (e: 'update:modelValue', value: EditMode): void;
 }>();
 </script>
