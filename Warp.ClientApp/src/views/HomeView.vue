@@ -58,14 +58,14 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import type { EditMode } from '../types/edit-mode'
+import type { ExpirationOption } from '../types/expiration'
 import { useGallery } from '../composables/useGallery'
 import { initDropAreaHandlers, handlePaste, uploadImages } from '../composables/useImageUpload'
 import { useRoute, useRouter } from 'vue-router'
-import type { EditMode } from '../types/edit-mode'
 import { entryApi } from '../api/entryApi'
 import { creatorApi } from '../api/creatorApi'
 import { useMetadata } from '../composables/useMetadata'
-import type { ExpirationOption } from '../types/expiration'
 import Logo from '../components/Logo.vue'
 import ModeSwitch from '../components/ModeSwitch.vue'
 import SimpleEditor from '../components/SimpleEditor.vue'
@@ -118,11 +118,6 @@ function onFilesSelected(e: Event) {
   if (!input.files) return
   files.value = [...files.value, ...Array.from(input.files)]
   input.value = ''
-}
-
-
-function removeFile(index: number) {
-  files.value.splice(index, 1)
 }
 
 
@@ -211,6 +206,7 @@ onMounted(async () => {
     pending.value = false
   }
 })
+
 
 watch(mode, (val) => {
   try {
