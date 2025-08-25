@@ -74,6 +74,8 @@ import AdvancedEditor from '../components/AdvancedEditor.vue'
 import GalleryItem from '../components/GalleryItem.vue'
 import ExpirationSelect from '../components/ExpirationSelect.vue'
 import CreateButton from '../components/CreateButton.vue'
+import { useDraftEntry } from '../composables/useDraftEntry'
+import { DraftEntry } from '../types/draft-entry'
 
 const EDIT_MODE_STORAGE_KEY = 'warp.editMode'
 const mode = ref<EditMode>('Simple')
@@ -82,20 +84,22 @@ const files = ref<File[]>([])
 const expiration = ref<string | null>(null)
 const expirationOptions = ref<ExpirationOption[]>([])
 const pending = ref(false)
+const entryIdRef = ref<string | null>(null)
 
 
 const dropAreaRef = ref<HTMLElement | null>(null)
 const fileInputRef = ref<HTMLInputElement | null>(null)
 const { items, addFiles, remove } = useGallery()
 
+const { setDraft } = useDraftEntry()
+const route = useRoute()
+const router = useRouter()
+const metadata = useMetadata()
+
 
 function removeItem(idx: number) {
   remove(idx)
 }
-
-const route = useRoute()
-const router = useRouter()
-const metadata = useMetadata()
 
 
 function getInitialEditMode(mode: EditMode): EditMode {
@@ -132,44 +136,21 @@ function onFileInputChange(e: Event) {
   input.value = ''
 }
 
-async function onCreate() {
+function onCreate() {
   if (!isValid.value || pending.value) 
     return
 
-  try {
-    pending.value = true
-
-    const form = new FormData()
-    form.append('textContent', text.value)
-    form.append('expiration', expiration.value!)
-    form.append('editMode', mode.value)
-
-    // If route has id, update; otherwise create
-    let response: any = null
-    const entryId = (route.query?.id as string | undefined) ?? undefined
-    if (entryId) {
-      await entryApi.updateEntry(entryId, form)
-      response = { id: entryId }
-    } else {
-      response = await entryApi.createEntry(form)
-    }
-
-    // if there are files selected, upload them to images endpoint
-    if (files.value.length > 0 && response && response.id) {
-      await uploadImages(response.id, files.value)
-    }
-
-    // navigate to preview if available
-    if (response && response.previewUrl) {
-      window.location.href = response.previewUrl
-    } else if (response && response.id) {
-      router.push({ name: 'Preview', params: { id: response.id } })
-    }
-  } catch (err) {
-    console.error(err)
-  } finally {
-    pending.value = false
-  }
+  const entryId = entryIdRef.value
+  if (!entryId)
+    return
+  setDraft({
+    id: entryId,
+    editMode: mode.value,
+    expirationPeriod: expiration.value!,
+    images: [],
+    textContent: text.value
+  } as DraftEntry)
+  router.push({ name: 'Preview' })
 }
 
 onMounted(async () => {
@@ -181,10 +162,14 @@ onMounted(async () => {
 
     await creatorApi.getOrSetCreator()
 
-    let entryId = (route.query?.id as string | undefined) ?? undefined
-    let entry = entryId === undefined
+    let existingId = (route.query?.id as string | undefined) ?? undefined
+    let entry = existingId === undefined
       ? await entryApi.getEntry()
-      : await entryApi.getEntry(entryId)
+      : await entryApi.getEntry(existingId)
+
+    entryIdRef.value = entry.id
+    if (!existingId) 
+      router.replace({ query: { ...route.query, id: entry.id } })
 
     entry.editMode = getInitialEditMode(entry.editMode)
     mode.value = entry.editMode

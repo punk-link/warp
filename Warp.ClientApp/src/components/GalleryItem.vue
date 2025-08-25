@@ -26,7 +26,7 @@ interface Props {
   editable?: boolean
 }
 
-const { id, src, name, editable } = withDefaults(defineProps<Props>(), { editable: true })
+const { id, src, name, editable = true } = defineProps<Props>()
 
 const emit = defineEmits<{ (e: 'remove'): void }>()
 

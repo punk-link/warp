@@ -10,12 +10,12 @@ const router = createRouter({
   history: createWebHistory('/app'),
   routes: [
     { path: '/', name: 'Home', component: Home },
-    { path: '/preview', name: 'Preview', component: Preview },
+    { path: '/preview/:id?', name: 'Preview', component: Preview, props: true },
     { path: '/entry', name: 'Entry', component: Entry },
     { path: '/error', name: 'Error', component: ErrorPage },
-  { path: '/deleted', name: 'Deleted', component: Deleted },
-  { path: '/privacy', name: 'Privacy', component: Privacy },
-  { path: '/:pathMatch(.*)*', name: 'NotFound', component: ErrorPage }
+    { path: '/deleted', name: 'Deleted', component: Deleted },
+    { path: '/privacy', name: 'Privacy', component: Privacy },
+    { path: '/:pathMatch(.*)*', name: 'NotFound', component: ErrorPage }
   ]
 })
 
