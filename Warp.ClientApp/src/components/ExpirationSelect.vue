@@ -7,32 +7,43 @@
     <select
       class="form-select"
       :disabled="disabled"
-      :value="modelValue ?? '0'"
-      @change="$emit('update:modelValue', ($event.target as HTMLSelectElement).value || '0')"
+      :value="modelValue"
+      @change="onChange"
       :aria-label="ariaLabel || label"
     >
-      <option v-for="opt in options" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
+      <option v-for="opt in options" :key="Number(opt)" :value="Number(opt)">{{ ExpirationPeriod[opt] }}</option>
     </select>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { ExpirationOption } from '../types/expiration'
+import { ExpirationPeriod } from '../types/expiration-periods'
+
 
 interface Props {
-  modelValue: string | null;
-  options: ExpirationOption[];
+  modelValue: ExpirationPeriod;
+  options: ExpirationPeriod[];
   label?: string;
   disabled?: boolean;
   ariaLabel?: string;
 }
 
+
 withDefaults(defineProps<Props>(), {
+  modelValue: ExpirationPeriod.FiveMinutes,
   label: 'Expires in',
   disabled: false,
 });
 
-defineEmits<{
-  (e: 'update:modelValue', value: string | null): void;
+
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: ExpirationPeriod): void;
 }>();
+
+
+function onChange(e: Event) {
+  const val = (e.target as HTMLSelectElement).value
+  const num = Number(val)
+  emit('update:modelValue', num as ExpirationPeriod)
+}
 </script>

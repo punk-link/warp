@@ -1,9 +1,10 @@
-import { EditMode } from "./edit-mode";
+import { EditMode } from "./edit-modes";
+import { ExpirationPeriod } from './expiration-periods'
 
 export interface Entry { 
   id: string;
   editMode: EditMode;
-  expirationPeriod: string;
+  expirationPeriod: ExpirationPeriod;
   expiresAt: Date;
   images: string[] | [];
   textContent: string | '';

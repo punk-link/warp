@@ -7,7 +7,7 @@ export async function createEntry(form: FormData) {
   return fetchJson<EntryCreateResponse>('/api/entries', { method: 'POST', body: form })
 }
 
-export async function getEntry(id?: string) {
+export async function getEntry(id?: string): Promise<Entry> {
   if (!id)
     return fetchJson<Entry>(`/api/entries`)
 
