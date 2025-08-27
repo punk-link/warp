@@ -52,7 +52,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
-import { EditMode } from '../types/edit-modes'
+import { EditMode, parseEditMode } from '../types/edit-modes'
 import { useGallery } from '../composables/useGallery'
 import { initDropAreaHandlers, handlePaste, uploadImages } from '../composables/useImageUpload'
 import { useRoute, useRouter } from 'vue-router'
@@ -90,33 +90,30 @@ const route = useRoute()
 const router = useRouter()
 const metadata = useMetadata()
 
+// Collect cleanup callbacks so we can register a single lifecycle hook during setup.
+const cleanupFns: Array<() => void> = []
+onBeforeUnmount(() => {
+    for (const fn of cleanupFns) {
+        try { fn() } catch { /* noop */ }
+    }
+})
+
 
 function removeItem(idx: number) {
     remove(idx)
 }
 
 
-function coerceExpiration(val: unknown): ExpirationPeriod {
-    if (typeof val === 'number') return val as ExpirationPeriod
-    if (typeof val === 'string') {
-        const n = Number(val)
-        if (!Number.isNaN(n)) return n as ExpirationPeriod
-    }
-    return ExpirationPeriod.FiveMinutes
-}
-
-
 const isValid = computed(() => text.value.trim().length > 0 || files.value.length > 0)
 
 
-function getInitialEditMode(mode: EditMode): EditMode {
-    if (mode !== EditMode.Unset)
-        return mode
+function getEditMode(editMode: EditMode): EditMode {
+    if (editMode !== EditMode.Unset)
+        return editMode
 
     const stored = localStorage.getItem(EDIT_MODE_STORAGE_KEY)
-    const num = stored != null ? Number(stored) : NaN
-    if (!Number.isNaN(num) && (num in EditMode))
-        return num as EditMode
+    if (stored) 
+        return parseEditMode(stored)
 
     return EditMode.Simple
 }
@@ -145,9 +142,8 @@ function onFileInputChange(e: Event) {
 function hydrateStateFromDraft(draft: DraftEntry): string {
     entryIdRef.value = draft.id
 
-    mode.value = getInitialEditMode(draft.editMode)
+    mode.value = getEditMode(parseEditMode(draft.editMode as unknown))
     expiration.value = draft.expirationPeriod ?? ExpirationPeriod.FiveMinutes
-
     text.value = draft.textContent
 
     return draft.id
@@ -164,10 +160,9 @@ async function initiateStateFromServer(): Promise<string> {
 
     entryIdRef.value = entry.id
 
-    entry.editMode = getInitialEditMode(entry.editMode)
+    entry.editMode = getEditMode(parseEditMode(entry.editMode as unknown))
     mode.value = entry.editMode
     expiration.value = entry.expirationPeriod ?? ExpirationPeriod.FiveMinutes
-
     text.value = entry.textContent
 
     return entry.id
@@ -181,7 +176,7 @@ function onPreview() {
     setDraft({
         id: entryIdRef.value,
         editMode: mode.value,
-    expirationPeriod: expiration.value!,
+        expirationPeriod: expiration.value!,
         images: [],
         textContent: text.value
     } as DraftEntry)
@@ -194,8 +189,7 @@ onMounted(async () => {
     try {
         pending.value = true
 
-        expirationOptions.value = (await metadata.loadExpirationOptions())
-            .map(option => coerceExpiration(option))
+        expirationOptions.value = await metadata.loadExpirationOptions()
 
         let entryId: string | null = null
         if (draft.value) 
@@ -208,13 +202,13 @@ onMounted(async () => {
         
         if (dropAreaRef.value && fileInputRef.value) {
             const cleanup = initDropAreaHandlers(dropAreaRef.value, fileInputRef.value, () => (route.query.id as string | undefined) ?? undefined)
-            if (cleanup && typeof cleanup === 'function')
-                onBeforeUnmount(() => cleanup())
+            if (typeof cleanup === 'function')
+                cleanupFns.push(cleanup)
         }
 
         const pasteHandler = (e: ClipboardEvent) => void handlePaste(e, () => (route.query.id as string | undefined) ?? undefined)
         window.addEventListener('paste', pasteHandler as EventListener)
-        onBeforeUnmount(() => window.removeEventListener('paste', pasteHandler as EventListener))
+        cleanupFns.push(() => window.removeEventListener('paste', pasteHandler as EventListener))
     } catch {
         router.replace({ name: 'Error' })
     } finally {
@@ -224,10 +218,6 @@ onMounted(async () => {
 
 
 watch(mode, (val) => {
-    try {
-        localStorage.setItem(EDIT_MODE_STORAGE_KEY, String(val))
-    } catch {
-        throw new Error('Failed to save edit mode')
-    }
+    localStorage.setItem(EDIT_MODE_STORAGE_KEY, val)
 })
 </script>

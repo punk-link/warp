@@ -81,7 +81,7 @@ import Logo from '../components/Logo.vue'
 import { useDraftEntry } from '../composables/useDraftEntry'
 import { uploadImages } from '../composables/useImageUpload'
 import type { DraftEntry } from '../types/draft-entry'
-import { ExpirationPeriod } from '../types/expiration-periods'
+import { ExpirationPeriod, parseExpirationPeriod } from '../types/expiration-periods'
 import { EditMode } from '../types/edit-modes'
 
 const route = useRoute()
@@ -97,7 +97,7 @@ const text = ref('')
 const images = ref<string[]>([])
 const files = ref<File[]>([])
 const expiration = ref<ExpirationPeriod | null>(null)
-const mode = ref<number>(EditMode.Simple) // EditMode.Simple numeric value
+const mode = ref<EditMode>(EditMode.Simple)
 const copied = ref(false)
 const saved = ref<boolean>(!!routeId)
 const showContent = ref(false)
@@ -126,9 +126,8 @@ function loadDraft(): string {
     if (!d)
         return ''
     text.value = d.textContent || ''
-    // Support legacy string persisted draft values (pre-enum migration)
     const raw = (d as any).expirationPeriod
-    expiration.value = (typeof raw === 'string' ? Number(raw) : raw) as ExpirationPeriod
+    expiration.value = parseExpirationPeriod(raw)
     return d.id || ''
 }
 
@@ -143,8 +142,8 @@ async function onSave() {
         saving.value = true
         const form = new FormData()
         form.append('textContent', text.value)
-    form.append('expiration', expiration.value != null ? String(expiration.value) : '')
-    form.append('editMode', String(mode.value))
+    form.append('expiration', expiration.value != null ? expiration.value : '')
+    form.append('editMode', mode.value)
         let id = draft.value?.id
         if (id) {
             await entryApi.updateEntry(id, form)

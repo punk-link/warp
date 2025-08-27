@@ -1,17 +1,20 @@
 import { ref } from 'vue'
 import { fetchJson } from '../api/fetchHelper'
-import { EditMode } from '../types/edit-modes'
-import { ExpirationPeriod } from '../types/expiration-periods'
+import { EditMode, parseEditMode } from '../types/edit-modes'
+import { ExpirationPeriod, parseExpirationPeriod } from '../types/expiration-periods'
 
 
-async function convertToArray<TOption>(data: any): Promise<TOption[]> {
+async function convertEnumDictionaryToValues<TOption>(data: any): Promise<TOption[]> {
+    if (!data)
+        return []
+
     if (Array.isArray(data))
-        return data.map((v: any) => ({ value: v, label: v })) as TOption[]
+        return data as TOption[]
 
     const mapped = Object.entries(data as Record<string, string>)
-        .map(([k, v]) => ({ key: Number(k), label: v }))
-        .sort((a, b) => a.key - b.key)
-        .map(e => e.key as TOption)
+        .map(([, v]) => v) 
+        .filter(v => typeof v === 'string')
+        .map(v => parseEditMode(v) as unknown as TOption)
 
     return mapped as TOption[]
 }
@@ -28,7 +31,7 @@ export function useMetadata() {
 
         try {
             const json = await fetchJson('/api/metadata/enums/edit-modes')
-            editModes.value = await convertToArray<EditMode>(json)
+            editModes.value = await convertEnumDictionaryToValues<EditMode>(json)
         } catch {
             console.error('Failed to load edit modes')
         }
@@ -43,7 +46,13 @@ export function useMetadata() {
 
         try {
             const json = await fetchJson('/api/metadata/enums/expiration-periods')
-            expirationOptions.value = await convertToArray<ExpirationPeriod>(json)
+            if (Array.isArray(json)) {
+                expirationOptions.value = json.map(v => parseExpirationPeriod(v)) as ExpirationPeriod[]
+            } else {
+                const mapped = Object.entries(json as Record<string, string>)
+                    .map(([, v]) => parseExpirationPeriod(v))
+                expirationOptions.value = mapped
+            }
         } catch {
             console.error('Failed to load expiration options')
         }

@@ -1,9 +1,14 @@
 export enum ExpirationPeriod {
-	FiveMinutes = 0,
-	ThirtyMinutes = 1,
-	OneHour = 2,
-	EightHours = 3,
-	OneDay = 4
+	FiveMinutes = 'FiveMinutes',
+	ThirtyMinutes = 'ThirtyMinutes',
+	OneHour = 'OneHour',
+	EightHours = 'EightHours',
+	OneDay = 'OneDay'
 }
 
-export interface ExpirationOption { value: ExpirationPeriod; label: string }
+
+export function parseExpirationPeriod(value: unknown): ExpirationPeriod {
+	return (typeof value === 'string' && (Object.values(ExpirationPeriod) as string[]).includes(value))
+		? (value as ExpirationPeriod)
+		: ExpirationPeriod.FiveMinutes
+}
