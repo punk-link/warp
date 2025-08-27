@@ -1,3 +1,7 @@
+---
+applyTo: '**/*.md'
+---
+
 # How to Write GitHub Issues for the Warp Project
 
 When creating GitHub issues for the Warp project, follow these guidelines to ensure they are clear, actionable, and facilitate efficient resolution:
