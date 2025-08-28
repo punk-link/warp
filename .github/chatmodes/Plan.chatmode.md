@@ -13,3 +13,5 @@ The plan consists of a Markdown document that describes the implementation plan,
 * Requirements: A list of requirements for the feature or refactoring task.
 * Implementation Steps: A detailed list of steps to implement the feature or refactoring task. Each step must have its own step number.
 * Testing: A list of tests that need to be implemented to verify the feature or refactoring task.
+
+If not specified, the default plan consumer is an AI Agent, so adopt steps accordingly.
