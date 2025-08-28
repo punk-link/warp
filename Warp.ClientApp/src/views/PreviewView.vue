@@ -11,13 +11,10 @@
 
         <section class="px-3 my-5">
             <div class="flex flex-col items-center justify-around min-h-[75vh]">
-                <!-- Content -->
                 <article class="w-full md:w-1/2 bg-yellow-50 p-3 rounded-sm mb-10">
                     <div class="relative min-h-[200px]">
                         <div class="absolute -top-6 right-3 z-10" v-if="!loading && !error && !saving && !saved">
-                            <button class="btn btn-round btn-outline-primary" title="Edit" @click="onEdit">
-                                <i class="icofont-pencil-alt-2 text-xl" />
-                            </button>
+                            <OutlinePrimaryRoundButton title="Edit" @click="onEdit" icon-class="icofont-pencil-alt-2 text-xl" />
                         </div>
 
                         <div v-if="loading || saving" class="p-5 text-center text-gray-400">{{ loading ? 'loading...' : 'saving...' }}</div>
@@ -29,42 +26,22 @@
                     </div>
                 </article>
 
-                <!-- Action Buttons -->
                 <div class="flex justify-between items-center w-full md:w-1/2 pb-3 sticky bottom-0 bg-transparent">
-                    <template v-if="!saved">
+                    <template v-if="saved">
+                        <div></div>
                         <div class="bg-white rounded-sm">
-                            <button class="btn btn-outline-gray" title="Cancel" :disabled="saving" @click="onCancel">
-                                <i class="icofont-close text-xl" />
-                            </button>
-                        </div>
-                        <div class="bg-white rounded-sm">
-                            <button class="btn btn-outline-gray" title="Back & edit" :disabled="saving" @click="onEdit">
-                                <i class="icofont-pencil-alt-2 text-xl" />
-                            </button>
-                        </div>
-                        <div class="bg-white rounded-sm">
-                            <button class="btn btn-primary" title="Save" :disabled="saving" @click="onSave">
-                                <i class="icofont-save text-white/50" />
-                                Save
-                            </button>
+                            <PrimaryButton :disabled="saving" @click="onSave" label="Copy Link" icon-class="icofont-link text-white/50" />
                         </div>
                     </template>
                     <template v-else>
                         <div class="bg-white rounded-sm">
-                            <button class="btn btn-outline-gray" title="Delete" :disabled="deleting" @click="onDelete">
-                                <i class="icofont-bin text-xl" />
-                            </button>
+                            <OutlineGrayButton title="Delete" :disabled="deleting" @click="onDelete" icon-class="icofont-bin text-xl" />
                         </div>
                         <div class="bg-white rounded-sm">
-                            <button class="btn btn-outline-gray" title="Clone & edit" :disabled="deleting" @click="onCloneEdit">
-                                <i class="icofont-loop text-xl" />
-                            </button>
+                            <OutlineGrayButton title="Clone & Edit" :disabled="deleting" @click="onCloneEdit" icon-class="icofont-loop text-xl" />
                         </div>
                         <div class="bg-white rounded-sm">
-                            <button class="btn btn-primary" title="Copy link" :disabled="deleting" @click="onCopy">
-                                <i class="icofont-link text-white/50" />
-                                Copy link
-                            </button>
+                            <PrimaryButton :disabled="deleting" @click="onCopyLink" label="Copy Link" icon-class="icofont-link text-white/50" />
                         </div>
                     </template>
                 </div>
@@ -74,15 +51,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, onMounted, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { entryApi } from '../api/entryApi'
 import Logo from '../components/Logo.vue'
 import { useDraftEntry } from '../composables/useDraftEntry'
 import { uploadImages } from '../composables/useImageUpload'
+import { useGallery } from '../composables/useGallery'
 import type { DraftEntry } from '../types/draft-entry'
-import { ExpirationPeriod, parseExpirationPeriod } from '../types/expiration-periods'
-import { EditMode } from '../types/edit-modes'
+import PrimaryButton from '../components/PrimaryButton.vue'
+import OutlineGrayButton from '../components/OutlineGrayButton.vue'
+import OutlinePrimaryRoundButton from '../components/OutlinePrimaryRoundButton.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -95,102 +74,29 @@ const deleting = ref(false)
 const error = ref(false)
 const text = ref('')
 const images = ref<string[]>([])
-const files = ref<File[]>([])
-const expiration = ref<ExpirationPeriod | null>(null)
-const mode = ref<EditMode>(EditMode.Simple)
+const entryIdRef = ref<string | null>(null)
+const { items: galleryItems, clear: clearGallery } = useGallery(entryIdRef)
 const copied = ref(false)
 const saved = ref<boolean>(!!routeId)
 const showContent = ref(false)
-let objectUrls: string[] = []
 
-function buildObjectUrls(fs: File[]) {
-    cleanupObjectUrls()
-    for (const f of fs) {
-        const url = URL.createObjectURL(f)
-        objectUrls.push(url)
-    }
-    images.value = [...objectUrls]
-}
+// Mirror gallery item urls
+watchEffect(() => {
+    images.value = galleryItems.value.map(g => g.url)
+})
 
-function cleanupObjectUrls() {
-    for (const u of objectUrls) {
-        try { URL.revokeObjectURL(u) } catch {}
-    }
-    objectUrls = []
-}
-
-onBeforeUnmount(cleanupObjectUrls)
 
 function loadDraft(): string {
-    const d = draft.value as DraftEntry | null
-    if (!d)
+    const entry = draft.value as DraftEntry | null
+    if (!entry)
         return ''
-    text.value = d.textContent || ''
-    const raw = (d as any).expirationPeriod
-    expiration.value = parseExpirationPeriod(raw)
-    return d.id || ''
+
+    text.value = entry.textContent || ''
+    return entry.id || ''
 }
 
-function onEdit() {
-    // Navigate back to home with draft intact
-    router.push({ name: 'Home', query: draft.value?.id ? { id: draft.value.id } : {} })
-}
 
-async function onSave() {
-    if (saving.value) return
-    try {
-        saving.value = true
-        const form = new FormData()
-        form.append('textContent', text.value)
-    form.append('expiration', expiration.value != null ? expiration.value : '')
-    form.append('editMode', mode.value)
-        let id = draft.value?.id
-        if (id) {
-            await entryApi.updateEntry(id, form)
-        } else {
-            const resp: any = await entryApi.createEntry(form)
-            id = resp.id
-        }
-        if (files.value.length > 0 && id) {
-            await uploadImages(id, files.value)
-        }
-        clearDraft()
-        saved.value = true
-        router.replace({ name: 'Preview', params: { id } })
-    } catch (e) {
-        console.error(e)
-    } finally {
-        saving.value = false
-    }
-}
-
-function onCancel() {
-    clearDraft()
-    router.push({ name: 'Home' })
-}
-
-async function onDelete() {
-    if (!routeId || deleting.value) return
-    try {
-        deleting.value = true
-        await entryApi.deleteEntry(routeId)
-        router.replace({ name: 'Deleted' })
-    } catch (e) {
-        console.error(e)
-    } finally {
-        deleting.value = false
-    }
-}
-
-function onCloneEdit() {
-    if (!routeId) return
-    // load existing text into draft for editing
-    setTimeout(() => { // ensure navigation after draft set
-        router.push({ name: 'Home', query: { id: routeId } })
-    })
-}
-
-async function onCopy() {
+async function onCopyLink() {
     try {
         const link = `${window.location.origin}/entry/${encodeURIComponent(routeId!)}`
         await navigator.clipboard.writeText(link)
@@ -201,15 +107,79 @@ async function onCopy() {
     }
 }
 
+
+async function onDelete() {
+    if (!routeId || deleting.value) 
+        return
+
+    try {
+        deleting.value = true
+        
+        await entryApi.deleteEntry(routeId)
+        router.replace({ name: 'Deleted' })
+    } catch (e) {
+        console.error(e)
+    } finally {
+        deleting.value = false
+    }
+}
+
+
+function onEdit() {
+    router.push({ 
+        name: 'Home', 
+        query: draft.value?.id ? { id: draft.value.id } : {} 
+    })
+}
+
+
+async function onSave() {
+    if (saving.value || !draft.value)
+        return
+
+    try {
+        saving.value = true
+    
+        const entry = draft.value
+
+        const form = new FormData()
+        form.append('textContent', entry.textContent)
+        form.append('expirationPeriod', entry.expirationPeriod)
+        form.append('editMode', entry.editMode)
+
+        const response: any = await entryApi.createEntry(form)
+        if (response.ok) {
+            if (galleryItems.value.length && entry.id) {
+                try { await uploadImages(entry.id, galleryItems.value.map(g => g.file)) } catch (e) { console.error(e) }
+            }
+            clearDraft()
+            clearGallery()
+            saved.value = true
+        }
+    } catch (e) {
+        console.error(e)
+    } finally {
+        saving.value = false
+    }
+}
+
+
+function onCloneEdit() {
+    if (!routeId) return
+    // load existing text into draft for editing
+    setTimeout(() => { // ensure navigation after draft set
+        router.push({ name: 'Home', query: { id: routeId } })
+    })
+}
+
+
 onMounted(() => {
     const entryId = loadDraft()
     if (!entryId) {
         router.replace({ name: 'Home' })
         return
     }
-    
+    entryIdRef.value = entryId
     requestAnimationFrame(() => { showContent.value = true })
-    router.replace({ query: { ...route.query, id: entryId } })
 })
 </script>
-

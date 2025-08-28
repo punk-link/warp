@@ -74,16 +74,14 @@ import { ExpirationPeriod } from '../types/expiration-periods'
 const EDIT_MODE_STORAGE_KEY = 'warp.editMode'
 const mode = ref<EditMode>(EditMode.Simple)
 const text = ref<string>('')
-const files = ref<File[]>([])
 const expiration = ref<ExpirationPeriod>(ExpirationPeriod.FiveMinutes)
 const expirationOptions = ref<ExpirationPeriod[]>([])
 const pending = ref(false)
 const entryIdRef = ref<string | null>(null)
 
-
 const dropAreaRef = ref<HTMLElement | null>(null)
 const fileInputRef = ref<HTMLInputElement | null>(null)
-const { items, addFiles, remove } = useGallery()
+const { items, addFiles, remove, count: galleryCount } = useGallery(entryIdRef)
 
 const { setDraft, draft } = useDraftEntry()
 const route = useRoute()
@@ -104,7 +102,7 @@ function removeItem(idx: number) {
 }
 
 
-const isValid = computed(() => text.value.trim().length > 0 || files.value.length > 0)
+const isValid = computed(() => text.value.trim().length > 0 || galleryCount.value > 0)
 
 
 function getEditMode(editMode: EditMode): EditMode {
@@ -122,19 +120,15 @@ function getEditMode(editMode: EditMode): EditMode {
 function onFilesSelected(e: Event) {
     const input = e.target as HTMLInputElement
     if (!input.files) return
-    files.value = [...files.value, ...Array.from(input.files)]
+    addFiles(input.files)
     input.value = ''
 }
 
 
 function onFileInputChange(e: Event) {
     const input = e.target as HTMLInputElement
-    if (!input.files)
-        return
-
+    if (!input.files) return
     addFiles(input.files)
-
-    files.value = [...files.value, ...Array.from(input.files)]
     input.value = ''
 }
 
@@ -181,7 +175,10 @@ function onPreview() {
         textContent: text.value
     } as DraftEntry)
 
-    router.push({ name: 'Preview' })
+    router.push({ 
+        name: 'Preview', 
+        query: { id: entryIdRef.value }
+    })
 }
 
 
