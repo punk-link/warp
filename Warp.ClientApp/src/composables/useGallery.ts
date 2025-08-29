@@ -28,6 +28,38 @@ const DEFAULT_MAX_FILE_COUNT = 10
 
 
 const stores = new Map<string, InternalStore>()
+const disposalTimers = new Map<string, number>()
+const DISPOSE_DELAY_MS = 4000
+
+
+function scheduleDispose(id: string) {
+    if (!id) return
+    // Clear any existing timer for id before scheduling a new one
+    const existing = disposalTimers.get(id)
+    if (existing) {
+        clearTimeout(existing)
+        disposalTimers.delete(id)
+    }
+    const timer = window.setTimeout(() => {
+        const current = stores.get(id)
+        if (current && current.refs <= 0)
+            disposeStore(id)
+        disposalTimers.delete(id)
+    }, DISPOSE_DELAY_MS)
+    disposalTimers.set(id, timer)
+}
+
+
+function cancelScheduledDispose(id: string | null | undefined) {
+    if (!id) 
+        return
+
+    const timer = disposalTimers.get(id)
+    if (timer) {
+        clearTimeout(timer)
+        disposalTimers.delete(id)
+    }
+}
 
 
 function createStore(): InternalStore {
@@ -48,12 +80,11 @@ function getOrCreateStore(entryId: string): InternalStore {
 
 function disposeStore(entryId: string) {
     const store = stores.get(entryId)
-    if (!store) 
+    if (!store)
         return
     
-    for (const it of store.items.value) {
+    for (const it of store.items.value) 
         URL.revokeObjectURL(it.url)
-    }
 
     stores.delete(entryId)
 }
@@ -74,11 +105,6 @@ export interface GalleryApi {
 }
 
 
-/**
- * Provides a reactive gallery of images keyed by an entry id. Multiple component instances
- * using the same entry id will share the same underlying store (in‑memory only).
- * Data is lost on full page reload which is acceptable for ephemeral drafts.
- */
 export function useGallery(entryIdRef?: Ref<string | null | undefined>, options?: UseGalleryOptions): GalleryApi {
     const maxBytes = options?.maxFileBytes ?? DEFAULT_MAX_FILE_BYTES
     const maxCount = options?.maxFileCount ?? DEFAULT_MAX_FILE_COUNT
@@ -100,41 +126,41 @@ export function useGallery(entryIdRef?: Ref<string | null | undefined>, options?
         items.value = store.items.value
     }
 
-    function withStore<T>(fn: () => T): T | undefined {
+    function withStore<T>(func: () => T): T | undefined {
         if (!store) 
             return undefined
         
-        return fn()
+        return func()
     }
 
-    function addFiles(list: FileList | File[] | null | undefined) {
-        if (!list) 
+    function addFiles(files: FileList | File[] | null | undefined) {
+        if (!files) 
             return { added: 0, rejected: 0 }
 
         if (!store) 
-            return { added: 0, rejected: (list as any as File[]).length }
+            return { added: 0, rejected: (files as any as File[]).length }
 
-        const arr = Array.from(list as any as File[])
+        const fileArray = Array.from(files as any as File[])
         let added = 0
         let rejected = 0
-        for (const f of arr) {
+        for (const file of fileArray) {
             if (store.items.value.length >= maxCount) { 
                 rejected += 1
                 continue 
             }
 
-            if (!accept(f)) { 
+            if (!accept(file)) { 
                 rejected += 1
                 continue 
             }
 
-            if (f.size > maxBytes) { 
+            if (file.size > maxBytes) { 
                 rejected += 1
                 continue 
             }
 
-            const url = URL.createObjectURL(f)
-            store.items.value.push({ file: f, url, name: f.name, type: f.type, size: f.size, addedAt: Date.now() })
+            const url = URL.createObjectURL(file)
+            store.items.value.push({ file: file, url, name: file.name, type: file.type, size: file.size, addedAt: Date.now() })
             added += 1
         }
         
@@ -144,19 +170,19 @@ export function useGallery(entryIdRef?: Ref<string | null | undefined>, options?
 
     function remove(index: number) {
         withStore(() => {
-            const it = store!.items.value.splice(index, 1)[0]
-            if (it) {
-                try { URL.revokeObjectURL(it.url) } catch { }
-            }
+            const item = store!.items.value.splice(index, 1)[0]
+            if (item) 
+                URL.revokeObjectURL(item.url)
+            
             syncLocalToStore()
         })
     }
 
     function clear() {
         withStore(() => {
-            for (const it of store!.items.value) {
-                try { URL.revokeObjectURL(it.url) } catch { }
-            }
+            for (const item of store!.items.value) 
+                URL.revokeObjectURL(item.url)
+            
             store!.items.value = []
             syncLocalToStore()
         })
@@ -172,11 +198,17 @@ export function useGallery(entryIdRef?: Ref<string | null | undefined>, options?
             // decrement old
             if (store) {
                 store.refs--
-                if (store.refs <= 0) disposeStore(prev || '')
+                if (store.refs <= 0 && prev) 
+                    scheduleDispose(prev)
             }
+
             activeEntryId.value = val || null
             store = val ? getOrCreateStore(val) : null
-            if (store) store.refs++
+            if (store) 
+                store.refs++
+
+            cancelScheduledDispose(val)
+
             syncLocalToStore()
         })
     }
@@ -184,7 +216,8 @@ export function useGallery(entryIdRef?: Ref<string | null | undefined>, options?
     onBeforeUnmount(() => {
         if (store) {
             store.refs--
-            if (store.refs <= 0 && activeEntryId.value) disposeStore(activeEntryId.value)
+            if (store.refs <= 0 && activeEntryId.value) 
+                scheduleDispose(activeEntryId.value)
         }
     })
 

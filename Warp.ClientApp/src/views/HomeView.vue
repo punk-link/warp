@@ -168,12 +168,12 @@ function onPreview() {
         return
     
     setDraft({
-        id: entryIdRef.value,
+        id: entryIdRef.value!,
         editMode: mode.value,
         expirationPeriod: expiration.value!,
-        images: [],
+        images: items.value.map(i => i.url),
         textContent: text.value
-    } as DraftEntry)
+    })
 
     router.push({ 
         name: 'Preview', 

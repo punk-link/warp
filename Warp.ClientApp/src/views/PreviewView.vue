@@ -20,17 +20,17 @@
                         <div v-if="loading || saving" class="p-5 text-center text-gray-400">{{ loading ? 'loading...' : 'saving...' }}</div>
                         <div v-else-if="error" class="p-5 text-center text-red-500">failed to load entry</div>
                         <div v-if="images.length" class="gallery pt-5 grid grid-cols-3 gap-2">
-                            <img v-for="(img, idx) in images" :key="idx" :src="img" class="rounded shadow-sm object-cover max-h-40" />
+                            <GalleryItem  v-for="(img, idx) in images" :key="idx" :id="`preview-${idx}`" :src="img" :editable="false" />
                         </div>
                         <div class="text-content font-sans-serif text-base pt-5 whitespace-pre-wrap break-words" :class="{ visible: showContent }">{{ text }}</div>
                     </div>
                 </article>
 
                 <div class="flex justify-between items-center w-full md:w-1/2 pb-3 sticky bottom-0 bg-transparent">
-                    <template v-if="saved">
+                    <template v-if="!saved">
                         <div></div>
                         <div class="bg-white rounded-sm">
-                            <PrimaryButton :disabled="saving" @click="onSave" label="Copy Link" icon-class="icofont-link text-white/50" />
+                            <PrimaryButton :disabled="saving" @click="onSave" label="Save" />
                         </div>
                     </template>
                     <template v-else>
@@ -56,12 +56,12 @@ import { useRoute, useRouter } from 'vue-router'
 import { entryApi } from '../api/entryApi'
 import Logo from '../components/Logo.vue'
 import { useDraftEntry } from '../composables/useDraftEntry'
-import { uploadImages } from '../composables/useImageUpload'
 import { useGallery } from '../composables/useGallery'
 import type { DraftEntry } from '../types/draft-entry'
 import PrimaryButton from '../components/PrimaryButton.vue'
 import OutlineGrayButton from '../components/OutlineGrayButton.vue'
 import OutlinePrimaryRoundButton from '../components/OutlinePrimaryRoundButton.vue'
+import GalleryItem from '../components/GalleryItem.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -92,6 +92,9 @@ function loadDraft(): string {
         return ''
 
     text.value = entry.textContent || ''
+    if (images.value.length === 0 && entry.images && entry.images.length) 
+        images.value = [...entry.images]
+    
     return entry.id || ''
 }
 
@@ -139,23 +142,22 @@ async function onSave() {
 
     try {
         saving.value = true
-    
         const entry = draft.value
+        const entryId = entry.id
+        if (!entryId) 
+            return
 
-        const form = new FormData()
-        form.append('textContent', entry.textContent)
-        form.append('expirationPeriod', entry.expirationPeriod)
-        form.append('editMode', entry.editMode)
-
-        const response: any = await entryApi.createEntry(form)
-        if (response.ok) {
-            if (galleryItems.value.length && entry.id) {
-                try { await uploadImages(entry.id, galleryItems.value.map(g => g.file)) } catch (e) { console.error(e) }
-            }
-            clearDraft()
-            clearGallery()
-            saved.value = true
-        }
+        const response: any = await entryApi.addOrUpdateEntry(entryId, {
+            editMode: entry.editMode,
+            expirationPeriod: entry.expirationPeriod,
+            textContent: entry.textContent,
+            imageIds: [] // handled server-side from uploaded files
+        }, galleryItems.value.map(g => g.file))
+        
+        clearDraft()
+        clearGallery()
+        
+        saved.value = true
     } catch (e) {
         console.error(e)
     } finally {
@@ -165,7 +167,9 @@ async function onSave() {
 
 
 function onCloneEdit() {
-    if (!routeId) return
+    if (!routeId) 
+        return
+
     // load existing text into draft for editing
     setTimeout(() => { // ensure navigation after draft set
         router.push({ name: 'Home', query: { id: routeId } })
@@ -179,6 +183,7 @@ onMounted(() => {
         router.replace({ name: 'Home' })
         return
     }
+
     entryIdRef.value = entryId
     requestAnimationFrame(() => { showContent.value = true })
 })
