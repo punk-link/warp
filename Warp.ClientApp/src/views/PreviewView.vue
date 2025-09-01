@@ -96,6 +96,18 @@ function loadDraft(): string {
 }
 
 
+async function onCloneEdit() {
+    if (!entryIdRef.value) 
+        return
+
+    const clone = await entryApi.copyEntry(entryIdRef.value)
+    // load existing text into draft for editing
+    setTimeout(() => { // ensure navigation after draft set
+        router.push({ name: 'Home', query: { id: clone.id } })
+    })
+}
+
+
 async function onCopyLink() {
     try {
         const link = `${window.location.origin}/app/entry/${encodeURIComponent(entryIdRef.value!)}`
@@ -178,17 +190,6 @@ async function onSave() {
     } finally {
         saving.value = false
     }
-}
-
-
-function onCloneEdit() {
-    if (!routeId) 
-        return
-
-    // load existing text into draft for editing
-    setTimeout(() => { // ensure navigation after draft set
-        router.push({ name: 'Home', query: { id: routeId } })
-    })
 }
 
 
