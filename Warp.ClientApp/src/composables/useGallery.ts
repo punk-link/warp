@@ -1,6 +1,7 @@
 import { ref, readonly, watch, onBeforeUnmount, type Ref, computed } from 'vue'
 
-export interface GalleryItemDraft {
+export interface LocalGalleryItem {
+    kind: 'local'
     file: File
     url: string
     name: string
@@ -9,9 +10,20 @@ export interface GalleryItemDraft {
     addedAt: number
 }
 
+export interface RemoteGalleryItem {
+    kind: 'remote'
+    url: string
+    name: string
+    type?: string
+    size?: number
+    addedAt: number
+}
+
+export type GalleryItem = LocalGalleryItem | RemoteGalleryItem
+
 
 interface InternalStore {
-    items: Ref<GalleryItemDraft[]>
+    items: Ref<GalleryItem[]>
     refs: number
 }
 
@@ -63,7 +75,7 @@ function cancelScheduledDispose(id: string | null | undefined) {
 
 
 function createStore(): InternalStore {
-    return { items: ref<GalleryItemDraft[]>([]), refs: 0 }
+    return { items: ref<GalleryItem[]>([]), refs: 0 }
 }
 
 
@@ -83,8 +95,10 @@ function disposeStore(entryId: string) {
     if (!store)
         return
     
-    for (const it of store.items.value) 
-        URL.revokeObjectURL(it.url)
+    for (const it of store.items.value) {
+        if ((it as LocalGalleryItem).file)
+            URL.revokeObjectURL(it.url)
+    }
 
     stores.delete(entryId)
 }
@@ -96,12 +110,13 @@ function defaultAccept(file: File) {
 
 
 export interface GalleryApi {
-    items: Ref<GalleryItemDraft[]>
+    items: Ref<GalleryItem[]>
     count: Ref<number>
     totalBytes: Ref<number>
     addFiles: (list: FileList | File[] | null | undefined) => { added: number; rejected: number }
     remove: (index: number) => void
     clear: () => void
+    setServerImages: (urls: string[]) => void
 }
 
 
@@ -115,7 +130,7 @@ export function useGallery(entryIdRef?: Ref<string | null | undefined>, options?
     if (store) 
         store.refs++
 
-    const items = ref<GalleryItemDraft[]>(store ? store.items.value : [])
+    const items = ref<GalleryItem[]>(store ? store.items.value : [])
 
     function syncLocalToStore() {
         if (!store) { 
@@ -160,7 +175,8 @@ export function useGallery(entryIdRef?: Ref<string | null | undefined>, options?
             }
 
             const url = URL.createObjectURL(file)
-            store.items.value.push({ file: file, url, name: file.name, type: file.type, size: file.size, addedAt: Date.now() })
+            const localItem: LocalGalleryItem = { kind: 'local', file: file, url, name: file.name, type: file.type, size: file.size, addedAt: Date.now() }
+            store.items.value.push(localItem)
             added += 1
         }
         
@@ -171,7 +187,7 @@ export function useGallery(entryIdRef?: Ref<string | null | undefined>, options?
     function remove(index: number) {
         withStore(() => {
             const item = store!.items.value.splice(index, 1)[0]
-            if (item) 
+            if (item && item.kind === 'local')
                 URL.revokeObjectURL(item.url)
             
             syncLocalToStore()
@@ -180,16 +196,44 @@ export function useGallery(entryIdRef?: Ref<string | null | undefined>, options?
 
     function clear() {
         withStore(() => {
-            for (const item of store!.items.value) 
-                URL.revokeObjectURL(item.url)
-            
+            for (const item of store!.items.value) {
+                if (item.kind === 'local')
+                    URL.revokeObjectURL(item.url)
+            }
+
             store!.items.value = []
+            syncLocalToStore()
+        })
+    }
+    function setServerImages(urls: string[]) {
+        return withStore(() => {
+            for (const it of store!.items.value) {
+                if (it.kind === 'local')
+                    URL.revokeObjectURL(it.url)
+            }
+
+            store!.items.value = urls.map(u => ({
+                kind: 'remote',
+                url: u,
+                name: (() => {
+                    try {
+                        const p = new URL(u).pathname
+                        return p.substring(p.lastIndexOf('/') + 1) || u
+                    } catch {
+                        return u
+                    }
+                })(),
+                type: '',
+                size: 0,
+                addedAt: Date.now()
+            }))
+
             syncLocalToStore()
         })
     }
 
     const count = computed(() => items.value.length)
-    const totalBytes = computed(() => items.value.reduce((sum, it) => sum + it.size, 0))
+    const totalBytes = computed(() => items.value.reduce((sum, it) => sum + (it.size ?? 0), 0))
 
     // React to external ref changes
     if (entryIdRef) {
@@ -221,5 +265,5 @@ export function useGallery(entryIdRef?: Ref<string | null | undefined>, options?
         }
     })
 
-    return { items: readonly(items) as Ref<GalleryItemDraft[]>, count, totalBytes, addFiles, remove, clear }
+    return { items: readonly(items) as Ref<GalleryItem[]>, count, totalBytes, addFiles, remove, clear, setServerImages }
 }

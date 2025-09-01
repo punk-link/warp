@@ -39,8 +39,9 @@ export async function getEntry(id?: string): Promise<Entry> {
 }
 
 
-export async function deleteEntry(id: string) {
+export async function deleteEntry(id: string): Promise<void> {
     return fetchJson(`/api/entries/${encodeURIComponent(id)}`, { method: 'DELETE' })
 }
+
 
 export const entryApi = { addOrUpdateEntry, getEntry, deleteEntry }

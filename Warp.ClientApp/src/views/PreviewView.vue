@@ -51,7 +51,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watchEffect } from 'vue'
+import { ref, onMounted, watchEffect, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { entryApi } from '../api/entryApi'
 import Logo from '../components/Logo.vue'
@@ -75,15 +75,12 @@ const error = ref(false)
 const text = ref('')
 const images = ref<string[]>([])
 const entryIdRef = ref<string | null>(null)
-const { items: galleryItems, clear: clearGallery } = useGallery(entryIdRef)
+const { items: galleryItems, clear: clearGallery, setServerImages } = useGallery(entryIdRef)
 const copied = ref(false)
 const saved = ref<boolean>(!!routeId)
+// when true we keep gallery items across unmount (used when navigating back to edit)
+const preserveGalleryOnUnmount = ref(false)
 const showContent = ref(false)
-
-// Mirror gallery item urls
-watchEffect(() => {
-    images.value = galleryItems.value.map(g => g.url)
-})
 
 
 function loadDraft(): string {
@@ -101,7 +98,7 @@ function loadDraft(): string {
 
 async function onCopyLink() {
     try {
-        const link = `${window.location.origin}/entry/${encodeURIComponent(routeId!)}`
+        const link = `${window.location.origin}/app/entry/${encodeURIComponent(entryIdRef.value!)}`
         await navigator.clipboard.writeText(link)
         copied.value = true
         setTimeout(() => copied.value = false, 2500)
@@ -112,13 +109,13 @@ async function onCopyLink() {
 
 
 async function onDelete() {
-    if (!routeId || deleting.value) 
+    if (!entryIdRef.value || deleting.value) 
         return
 
     try {
         deleting.value = true
         
-        await entryApi.deleteEntry(routeId)
+        await entryApi.deleteEntry(entryIdRef.value)
         router.replace({ name: 'Deleted' })
     } catch (e) {
         console.error(e)
@@ -129,6 +126,9 @@ async function onDelete() {
 
 
 function onEdit() {
+    // preserve gallery so Home can show the previews while editing
+    preserveGalleryOnUnmount.value = true
+
     router.push({ 
         name: 'Home', 
         query: draft.value?.id ? { id: draft.value.id } : {} 
@@ -147,16 +147,31 @@ async function onSave() {
         if (!entryId) 
             return
 
-        const response: any = await entryApi.addOrUpdateEntry(entryId, {
+    const response: any = await entryApi.addOrUpdateEntry(entryId, {
             editMode: entry.editMode,
             expirationPeriod: entry.expirationPeriod,
             textContent: entry.textContent,
             imageIds: [] // handled server-side from uploaded files
-        }, galleryItems.value.map(g => g.file))
-        
+    }, galleryItems.value.filter((g: any) => g.kind === 'local').map((g: any) => g.file))
+
+        // fetch saved entry to get server image urls; replace local previews with server-backed urls
+        try {
+            const savedEntry: any = await entryApi.getEntry(entryId)
+            const serverUrls: string[] = Array.isArray(savedEntry?.images)
+                ? savedEntry.images.map((i: any) => typeof i === 'string' ? i : (i?.url ?? '')).filter((u: string) => !!u)
+                : []
+
+            if (serverUrls.length) {
+                setServerImages(serverUrls)
+                images.value = [...serverUrls]
+            }
+        } catch (e) {
+            console.error('failed to rehydrate server image urls', e)
+        }
+
         clearDraft()
-        clearGallery()
-        
+
+        // keep gallery items so previews remain visible to the user (now server-backed)
         saved.value = true
     } catch (e) {
         console.error(e)
@@ -177,6 +192,12 @@ function onCloneEdit() {
 }
 
 
+onBeforeUnmount(() => {
+    if (!preserveGalleryOnUnmount.value) 
+        clearGallery()
+})
+
+
 onMounted(() => {
     const entryId = loadDraft()
     if (!entryId) {
@@ -186,5 +207,11 @@ onMounted(() => {
 
     entryIdRef.value = entryId
     requestAnimationFrame(() => { showContent.value = true })
+})
+
+
+// Mirror gallery item urls
+watchEffect(() => {
+    images.value = galleryItems.value.map(g => g.url)
 })
 </script>
