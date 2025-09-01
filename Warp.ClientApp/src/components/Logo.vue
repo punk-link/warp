@@ -8,16 +8,20 @@
 </template>
 
 <script setup lang="ts">
-import { useDraftEntry } from '../composables/useDraftEntry'
 import { useRouter } from 'vue-router'
+import { useDraftEntry } from '../composables/useDraftEntry'
+import { useGallery } from '../composables/useGallery'
 
 
 const { clearDraft } = useDraftEntry()
+const { clear: clearGallery } = useGallery()
 const router = useRouter()
 
 
 function onLogoClick() {
     clearDraft()
+    clearGallery()
+    
     router.push({ name: 'Home' })
 }
 </script>
