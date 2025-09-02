@@ -14,7 +14,7 @@
                 <article class="w-full md:w-1/2 bg-yellow-50 p-3 rounded-sm mb-10">
                     <div class="relative min-h-[200px]">
                         <div class="absolute -top-6 right-3 z-10" v-if="!loading && !error && !saving && !saved">
-                            <OutlinePrimaryRoundButton title="Edit" @click="onEdit" icon-class="icofont-pencil-alt-2 text-xl" />
+                            <Button variant="outline-primary-round" title="Edit" @click="onEdit" icon-class="icofont-pencil-alt-2 text-xl" />
                         </div>
 
                         <div v-if="loading || saving" class="p-5 text-center text-gray-400">{{ loading ? 'loading...' : 'saving...' }}</div>
@@ -30,18 +30,18 @@
                     <template v-if="!saved">
                         <div></div>
                         <div class="bg-white rounded-sm">
-                            <PrimaryButton :disabled="saving" @click="onSave" label="Save" />
+                            <Button variant="primary" :disabled="saving" @click="onSave" label="Save" />
                         </div>
                     </template>
                     <template v-else>
                         <div class="bg-white rounded-sm">
-                            <OutlineGrayButton title="Delete" :disabled="deleting" @click="onDelete" icon-class="icofont-bin text-xl" />
+                            <Button variant="outline-gray" title="Delete" :disabled="deleting" @click="onDelete" icon-class="icofont-bin text-xl" />
                         </div>
                         <div class="bg-white rounded-sm">
-                            <OutlineGrayButton title="Clone & Edit" :disabled="deleting" @click="onCloneEdit" icon-class="icofont-loop text-xl" />
+                            <Button variant="outline-gray" title="Clone & Edit" :disabled="deleting" @click="onCloneEdit" icon-class="icofont-loop text-xl" />
                         </div>
                         <div class="bg-white rounded-sm">
-                            <PrimaryButton :disabled="deleting" @click="onCopyLink" label="Copy Link" icon-class="icofont-link text-white/50" />
+                            <Button variant="primary" :disabled="deleting" @click="onCopyLink" label="Copy Link" icon-class="icofont-link text-white/50" />
                         </div>
                     </template>
                 </div>
@@ -58,9 +58,7 @@ import Logo from '../components/Logo.vue'
 import { useDraftEntry } from '../composables/useDraftEntry'
 import { useGallery } from '../composables/useGallery'
 import type { DraftEntry } from '../types/draft-entry'
-import PrimaryButton from '../components/PrimaryButton.vue'
-import OutlineGrayButton from '../components/OutlineGrayButton.vue'
-import OutlinePrimaryRoundButton from '../components/OutlinePrimaryRoundButton.vue'
+import Button from '../components/Button.vue'
 import GalleryItem from '../components/GalleryItem.vue'
 
 const route = useRoute()

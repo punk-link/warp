@@ -21,7 +21,7 @@
                 <!-- Action Button -->
                 <div class="flex justify-center items-center w-full md:w-1/2 pb-3 sticky bottom-0 bg-transparent">
                     <div class="bg-white rounded-sm">
-                        <PrimaryButton @click="onCreate" label="Create" icon-class="icofont-plus text-white/50" />
+                        <Button variant="primary" @click="onCreate" label="Create" icon-class="icofont-plus text-white/50" />
                     </div>
                 </div>
             </div>
@@ -32,7 +32,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
 import Logo from '../components/Logo.vue'
-import PrimaryButton from '../components/PrimaryButton.vue';
+import Button from '../components/Button.vue'
 
 
 const router = useRouter();

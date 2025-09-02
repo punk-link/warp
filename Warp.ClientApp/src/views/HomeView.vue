@@ -42,7 +42,7 @@
                         <ExpirationSelect v-model="expiration" :options="expirationOptions" label="Expires in" />
                     </div>
                     <div class="bg-white rounded-sm p-2">
-                        <PrimaryButton :disabled="!isValid" :pending="pending" @click="onPreview" label="Preview" />
+                        <Button variant="primary" :disabled="!isValid" :pending="pending" @click="onPreview" label="Preview" />
                     </div>
                 </div>
             </div>
@@ -66,7 +66,7 @@ import DynamicTextArea from '../components/DynamicTextArea.vue'
 import AdvancedEditor from '../components/AdvancedEditor.vue'
 import GalleryItem from '../components/GalleryItem.vue'
 import ExpirationSelect from '../components/ExpirationSelect.vue'
-import PrimaryButton from '../components/PrimaryButton.vue'
+import Button from '../components/Button.vue'
 import { useDraftEntry } from '../composables/useDraftEntry'
 import { DraftEntry } from '../types/draft-entry'
 import { ExpirationPeriod } from '../types/expiration-periods'
