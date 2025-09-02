@@ -55,4 +55,9 @@ export async function deleteEntry(id: string): Promise<void> {
 }
 
 
-export const entryApi = { addOrUpdateEntry, copyEntry, getEntry, deleteEntry }
+export async function reportEntry(id: string): Promise<void> {
+    return await fetchJson(`/api/entries/${encodeURIComponent(id)}/report`, { method: 'POST' })
+}
+
+
+export const entryApi = { addOrUpdateEntry, copyEntry, getEntry, deleteEntry, reportEntry }

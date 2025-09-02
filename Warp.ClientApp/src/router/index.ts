@@ -11,7 +11,7 @@ const router = createRouter({
   routes: [
     { path: '/', name: 'Home', component: Home },
     { path: '/preview/:id?', name: 'Preview', component: Preview, props: true },
-    { path: '/entry', name: 'Entry', component: Entry },
+    { path: '/entry/:id', name: 'Entry', component: Entry, props: true },
     { path: '/error', name: 'Error', component: ErrorPage },
     { path: '/deleted', name: 'Deleted', component: Deleted },
     { path: '/privacy', name: 'Privacy', component: Privacy },
