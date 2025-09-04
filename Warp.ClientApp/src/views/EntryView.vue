@@ -66,8 +66,8 @@
                 </div>
             </div>
             <div class="flex justify-end gap-3 p-4 border-t border-gray-200">
-                <button class="btn btn-outline-gray" type="button" @click="showReportModal = false">Cancel</button>
-                <button class="btn btn-primary" type="button" :disabled="reporting" @click="onReport">{{ reporting ? 'Reporting...' : 'Report' }}</button>
+                <Button variant="outline-gray" type="button" @click="showReportModal = false" label="Cancel" />
+                <Button variant="primary" type="button" :disabled="reporting" @click="onReport" :label="reporting ? 'Reporting...' : 'Report'" />
             </div>
         </div>
     </div>
@@ -122,7 +122,7 @@ async function load() {
 
     if (!currentId) { 
         error.value = true; 
-        router.replace({ name: 'Home' })
+        router.replace({ name: 'Error' })
         return 
     }
 
@@ -132,7 +132,6 @@ async function load() {
         const fetchedEntry = await entryApi.getEntry(currentId)
         entry.value = fetchedEntry as Entry
         if (Array.isArray((fetchedEntry as any).images)) {
-            // Normalize images: elements might be strings or objects { entryId, id, url }
             images.value = (fetchedEntry as any).images
                 .map((imageInfo: any) => {
                     return {
@@ -145,6 +144,7 @@ async function load() {
         } else {
             images.value = []
         }
+
         countdownTarget.value = fetchedEntry.expiresAt
 
         if (fetchedEntry.textContent) 
@@ -156,7 +156,7 @@ async function load() {
     } catch (e) {
         console.error('failed to load entry', e)
         error.value = true
-        router.replace({ name: 'Home' })
+        router.replace({ name: 'Error' })
     } finally {
         loading.value = false
     }
@@ -222,7 +222,7 @@ function scheduleExpirationRedirect() {
     const now = Date.now()
     const delay = targetTs - now
     if (delay <= 0) {
-        router.replace({ name: 'Home' })
+        router.replace({ name: 'Error' })
         return
     }
     
@@ -245,6 +245,3 @@ onMounted(load)
 
 watch(() => props.id, () => { load() })
 </script>
-
-<style scoped>
-</style>
