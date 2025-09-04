@@ -17,12 +17,19 @@
                             <Button variant="outline-primary-round" title="Edit" @click="onEdit" icon-class="icofont-pencil-alt-2 text-xl" />
                         </div>
 
-                        <div v-if="loading || saving" class="p-5 text-center text-gray-400">{{ loading ? 'loading...' : 'saving...' }}</div>
+                        <div v-if="loading || saving" class="p-5 text-center text-gray-400">
+                            <div class="flex flex-col items-center justify-center">
+                                <span class="loading-spinner w-5 h-5 mb-0" aria-hidden="true"></span>
+                                <span class="loading-text">{{ loading ? 'loading...' : 'saving...' }}</span>
+                            </div>
+                        </div>
                         <div v-else-if="error" class="p-5 text-center text-red-500">failed to load entry</div>
                         <div v-if="images.length" class="gallery pt-5 grid grid-cols-3 gap-2">
-                            <GalleryItem  v-for="(img, idx) in images" :key="idx" :id="`preview-${idx}`" :src="img" :editable="false" />
+                            <GalleryItem v-for="(img, idx) in images" :key="idx" :id="`preview-${idx}`" :src="img" :editable="false" />
                         </div>
-                        <div class="text-content font-sans-serif text-base pt-5 whitespace-pre-wrap break-words" :class="{ visible: showContent }">{{ text }}</div>
+                        <div class="text-content font-sans-serif text-base pt-5 whitespace-pre-wrap break-words" :class="{ visible: showContent }">
+                            {{ text }}
+                        </div>
                     </div>
                 </article>
 
@@ -76,7 +83,6 @@ const entryIdRef = ref<string | null>(null)
 const { items: galleryItems, clear: clearGallery, setServerImages } = useGallery(entryIdRef)
 const copied = ref(false)
 const saved = ref<boolean>(!!routeId)
-// when true we keep gallery items across unmount (used when navigating back to edit)
 const preserveGalleryOnUnmount = ref(false)
 const showContent = ref(false)
 
@@ -99,8 +105,7 @@ async function onCloneEdit() {
         return
 
     const clone = await entryApi.copyEntry(entryIdRef.value)
-    // load existing text into draft for editing
-    setTimeout(() => { // ensure navigation after draft set
+    setTimeout(() => {
         router.push({ name: 'Home', query: { id: clone.id } })
     })
 }
@@ -136,7 +141,6 @@ async function onDelete() {
 
 
 function onEdit() {
-    // preserve gallery so Home can show the previews while editing
     preserveGalleryOnUnmount.value = true
 
     router.push({ 
@@ -157,14 +161,13 @@ async function onSave() {
         if (!entryId) 
             return
 
-    const response: any = await entryApi.addOrUpdateEntry(entryId, {
-            editMode: entry.editMode,
-            expirationPeriod: entry.expirationPeriod,
-            textContent: entry.textContent,
-            imageIds: [] // handled server-side from uploaded files
-    }, galleryItems.value.filter((g: any) => g.kind === 'local').map((g: any) => g.file))
+        const response: any = await entryApi.addOrUpdateEntry(entryId, {
+                editMode: entry.editMode,
+                expirationPeriod: entry.expirationPeriod,
+                textContent: entry.textContent,
+                imageIds: []
+        }, galleryItems.value.filter((g: any) => g.kind === 'local').map((g: any) => g.file))
 
-        // fetch saved entry to get server image urls; replace local previews with server-backed urls
         try {
             const savedEntry: any = await entryApi.getEntry(entryId)
             const serverUrls: string[] = Array.isArray(savedEntry?.images)
@@ -180,8 +183,6 @@ async function onSave() {
         }
 
         clearDraft()
-
-        // keep gallery items so previews remain visible to the user (now server-backed)
         saved.value = true
     } catch (e) {
         console.error(e)
