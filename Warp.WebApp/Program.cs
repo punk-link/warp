@@ -3,9 +3,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
-using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.AspNetCore.ResponseCompression;
-using Microsoft.AspNetCore.SpaServices.Extensions;
 using Microsoft.FeatureManagement;
 using System.Globalization;
 using System.Text.Json;
@@ -60,9 +58,6 @@ try
     builder.Services.AddLocalization(o => o.ResourcesPath = "Resources");
 
     builder.Services.AddMemoryCache();
-    builder.Services.AddRazorPages()
-        .AddViewLocalization(LanguageViewLocationExpanderFormat.Suffix)
-        .AddDataAnnotationsLocalization();
     builder.Services.AddControllers()
         .AddJsonOptions(options =>
         {
@@ -147,20 +142,63 @@ try
     app.UseOutputCache();
 
     app.MapControllers();
-    app.MapRazorPages();
+    // Razor Pages mapping removed (SPA only frontend now).
 
-    app.MapGet("/app/config.js", async (HttpContext ctx, IConfiguration configuration, IWebHostEnvironment env) =>
+    app.MapGet("/config.js", async (HttpContext ctx, IConfiguration configuration, IWebHostEnvironment env) =>
     {
         var config = new
         {
             environment = env.EnvironmentName,
-            sentryDsn = configuration["Sentry:FrontendDsn"]
+            sentryDsn = configuration["Sentry:FrontendDsn"],
+            apiBaseUrl = $"{ctx.Request.Scheme}://{ctx.Request.Host}/api"
         };
 
         var js = $"window.appConfig = {JsonSerializer.Serialize(config)};";
+
         ctx.Response.ContentType = "application/javascript";
         ctx.Response.Headers.CacheControl = "no-store, no-cache, must-revalidate, max-age=0";
         await ctx.Response.WriteAsync(js);
+    });
+
+    app.MapGet("/analytics.js", async (HttpContext ctx, IConfiguration configuration, IWebHostEnvironment env) => 
+    {
+        var analyticsOptions = configuration.GetSection(nameof(AnalyticsOptions)).Get<AnalyticsOptions>() ?? new AnalyticsOptions();
+
+        var analytics = string.Empty;
+
+        if (!string.IsNullOrWhiteSpace(analyticsOptions.GoogleGTag))
+        {
+            analytics += """
+            (function() {
+                window.dataLayer = window.dataLayer || [];
+                function gtag() { dataLayer.push(arguments); }
+                gtag('js', new Date());
+
+                gtag('config', '@Model.GTag');
+            })();
+            """.Replace("@Model.GTag", analyticsOptions.GoogleGTag);
+        }
+
+        if (!string.IsNullOrWhiteSpace(analyticsOptions.YandexMetrikaNumber))
+        {
+            analytics += """
+            (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+            m[i].l=1*new Date();
+            for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+            k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+            (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
+
+            ym(@Model.YandexMetrikaNumber, "init", {
+                clickmap:true,
+                trackLinks:true,
+                accurateTrackBounce:true
+            });
+            """.Replace("@Model.YandexMetrikaNumber", analyticsOptions.YandexMetrikaNumber);
+        }
+
+        ctx.Response.ContentType = "application/javascript";
+        ctx.Response.Headers.CacheControl = "no-store, no-cache, must-revalidate, max-age=0";
+        await ctx.Response.WriteAsync(analytics);
     });
 
     // CSRF token issuance endpoint for SPA: sets a readable XSRF-TOKEN cookie with the request token
@@ -182,22 +220,6 @@ try
         }
         return Results.NoContent();
     });
-
-    if (app.Environment.IsLocal())
-    {
-        app.MapWhen(ctx => ctx.Request.Path.StartsWithSegments("/app"), spaApp =>
-        {
-            spaApp.UseSpa(spa =>
-            {
-                spa.Options.SourcePath = Path.Combine(app.Environment.ContentRootPath, "..", "Warp.ClientApp");
-                spa.UseProxyToSpaDevelopmentServer("http://localhost:5173");
-            });
-        });
-    }
-    else
-    {
-        app.MapFallbackToFile(pattern: "/app/{*path}", filePath: "app/index.html");
-    }
 
     app.Run();
 }
@@ -348,7 +370,6 @@ void AddServices(IServiceCollection services, IConfiguration configuration)
     else
         services.AddSingleton<IEncryptionService, TransitEncryptionService>();
 
-    services.AddTransient<IPartialViewRenderService, PartialViewRenderService>();
     services.AddTransient<IUrlService, UrlService>();
     services.AddTransient<IOpenGraphService, OpenGraphService>();
 
