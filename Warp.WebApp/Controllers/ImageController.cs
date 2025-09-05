@@ -37,21 +37,18 @@ public sealed class ImageController : BaseController
     /// <param name="creatorService">Service for managing creators</param>
     /// <param name="entryInfoService">Service for managing entry information</param>
     /// <param name="loggerFactory">Factory for creating loggers</param>
-    /// <param name="partialViewRenderHelper">Service for rendering partial views</param>
     /// <param name="unauthorizedImageService">Service for handling images without authorization</param>
     public ImageController(IOptions<ImageUploadOptions> options,
         ICookieService cookieService, 
         ICreatorService creatorService,
         IEntryInfoService entryInfoService,
         ILoggerFactory loggerFactory,
-        IPartialViewRenderService partialViewRenderHelper,
         IUnauthorizedImageService unauthorizedImageService) 
         : base(cookieService, creatorService)
     {
         _entryInfoService = entryInfoService;
         _loggerFactory = loggerFactory;
         _options = options.Value;
-        _partialViewRenderHelper = partialViewRenderHelper;
         _unauthorizedImageService = unauthorizedImageService;
     }
 
@@ -127,69 +124,6 @@ public sealed class ImageController : BaseController
             return BadRequest(error);
 
         return new FileStreamResult(value.Content, value.ContentType);
-    }
-
-
-    /// <summary>
-    /// Returns the partial view HTML for a given image.
-    /// </summary>
-    /// <param name="entryId">Encoded identifier of the entry containing the image</param>
-    /// <param name="imageId">Encoded identifier of the image to retrieve</param>
-    /// <returns>
-    /// Returns the rendered HTML of the partial view containing the image information or an internal server error if rendering fails.
-    /// </returns>
-    [HttpGet("entry-id/{entryId}/image-id/{imageId}/partial")]
-    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    [ValidateId("entryId", "imageId")]
-    public async Task<IActionResult> GetImagePartial([FromRoute] string entryId, [FromRoute] string imageId, CancellationToken cancellationToken = default)
-    {
-        var decodedEntryId = IdCoder.Decode(entryId);
-        var decodedImageId = IdCoder.Decode(imageId);
-
-        var url = _unauthorizedImageService.BuildUrl(decodedEntryId, decodedImageId);
-        var partialView = new PartialViewResult
-        {
-            ViewName = "Components/EditableImageContainer",
-            ViewData = new ViewDataDictionary(new EmptyModelMetadataProvider(), new ModelStateDictionary())
-            {
-                Model = new EditableImageContainerModel(decodedImageId, url)
-            }
-        };
-
-        var renderResult = await _partialViewRenderHelper.Render(ControllerContext, HttpContext, partialView);
-        return Ok(renderResult);
-    }
-
-
-    /// <summary>
-    /// Retrieves a read-only image partial view HTML for a given image.
-    /// </summary>
-    /// <param name="entryId"></param>
-    /// <param name="imageId"></param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    [HttpGet("entry-id/{entryId}/image-id/{imageId}/partial/read-only")]
-    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    [ValidateId("entryId", "imageId")]
-    public async Task<IActionResult> GetReadOnlyImagePartial([FromRoute] string entryId, [FromRoute] string imageId, CancellationToken cancellationToken = default)
-    {
-        var decodedEntryId = IdCoder.Decode(entryId);
-        var decodedImageId = IdCoder.Decode(imageId);
-
-        var url = _unauthorizedImageService.BuildUrl(decodedEntryId, decodedImageId);
-        var partialView = new PartialViewResult
-        {
-            ViewName = "Components/ReadOnlyImageContainer",
-            ViewData = new ViewDataDictionary(new EmptyModelMetadataProvider(), new ModelStateDictionary())
-            {
-                Model = new ReadOnlyImageContainerModel(url)
-            }
-        };
-
-        var renderResult = await _partialViewRenderHelper.Render(ControllerContext, HttpContext, partialView);
-        return Ok(renderResult);
     }
 
 
@@ -308,6 +242,5 @@ public sealed class ImageController : BaseController
     private readonly IEntryInfoService _entryInfoService;
     private readonly ILoggerFactory _loggerFactory;
     private readonly ImageUploadOptions _options;
-    private readonly IPartialViewRenderService _partialViewRenderHelper;
     private readonly IUnauthorizedImageService _unauthorizedImageService;
 }
