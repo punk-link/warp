@@ -1,26 +1,34 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Krona%20One">
-    <link rel="stylesheet" href="/css/tailwind.min.css" />
-    <link rel="stylesheet" href="/fonts/icofont/icofont.css" />
-    <link rel="stylesheet" href="/vendor/fancybox/fancybox.css" />
-    
-    <title>Warplyn</title>
-  </head>
-  <body class="m-0 min-h-full">
-    <main class="h-full">
-      <div id="app" class="container mx-auto px-4 mt-3"></div>
-    </main>
-    <script src="/app/config.js"></script>
-    <script src="/app/analytics.js"></script>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Krona%20One">
+        <link rel="stylesheet" href="/fonts/icofont/icofont.css" />
+
+        <!-- analytics -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=@Model.GTag"></script>
+        <noscript>
+            <div>
+                <img src="https://mc.yandex.ru/watch/@Model.YandexMetrikaNumber" style="position:absolute; left:-9999px;" alt=""/>
+            </div>
+        </noscript>
+
+        <title>Warplyn</title>
+    </head>
+
+    <body class="m-0 min-h-full">
+        <main class="h-full">
+            <div id="app" class="container mx-auto px-4 mt-3"></div>
+        </main>
+        
+        <script src="/config.js"></script>
+        <script src="/analytics.js"></script>
+        <script type="module" src="/src/main.ts"></script>
+    </body>
 </html>
