@@ -142,7 +142,6 @@ try
     app.UseOutputCache();
 
     app.MapControllers();
-    // Razor Pages mapping removed (SPA only frontend now).
 
     app.MapGet("/config.js", async (HttpContext ctx, IConfiguration configuration, IWebHostEnvironment env) =>
     {
@@ -201,7 +200,6 @@ try
         await ctx.Response.WriteAsync(analytics);
     });
 
-    // CSRF token issuance endpoint for SPA: sets a readable XSRF-TOKEN cookie with the request token
     app.MapGet("/api/security/csrf", (IAntiforgery antiforgery, HttpContext ctx) =>
     {
         var tokens = antiforgery.GetAndStoreTokens(ctx);
@@ -220,6 +218,48 @@ try
         }
         return Results.NoContent();
     });
+
+    if (app.Environment.IsLocal())
+    {
+        var spaDevServerUrl = builder.Configuration["Spa:ServerUrl"];
+        if (string.IsNullOrWhiteSpace(spaDevServerUrl))
+            throw new Exception("Spa:ServerUrl configuration is required");
+
+        string[] passthroughPrefixes = [ "/api", "/health", "/config.js", "/analytics.js" ];
+        string[] spaAssetPrefixes = [ "/@vite", "/src", "/node_modules", "/assets" ];
+
+        app.MapWhen(ctx => ShouldProxyToSpa(ctx), spaApp =>
+        {
+            spaApp.UseSpa(spa =>
+            {
+                spa.Options.SourcePath = Path.Combine(app.Environment.ContentRootPath, "..", "Warp.ClientApp");
+                spa.UseProxyToSpaDevelopmentServer(spaDevServerUrl);
+            });
+        });
+
+        bool ShouldProxyToSpa(HttpContext ctx)
+        {
+            var path = ctx.Request.Path.Value ?? string.Empty;
+
+            // Skip API / health / backend-served resources
+            if (passthroughPrefixes.Any(p => path.StartsWith(p, StringComparison.OrdinalIgnoreCase)))
+                return false;
+
+            // Always proxy known Vite runtime/module/asset paths
+            if (spaAssetPrefixes.Any(p => path.StartsWith(p, StringComparison.OrdinalIgnoreCase)))
+                return true;
+
+            // If request Accept header asks for HTML (navigation / client route), proxy.
+            if (ctx.Request.Headers.TryGetValue("Accept", out var accept) && accept.ToString().Contains("text/html", StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            // Root path or no extension path (e.g., /preview/123) -> SPA
+            if (path == "/" || (!Path.HasExtension(path)))
+                return true;
+
+            return false;
+        }
+    }
 
     app.Run();
 }
