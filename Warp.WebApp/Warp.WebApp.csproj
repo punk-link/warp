@@ -75,23 +75,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Update="wwwroot\favicon.ico">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup>
     <EmbeddedResource Update="Resources\IndexModel.en-US.resx">
       <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
-
-  <Target Name="NpmInstall" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' ">
-    <Exec Command="yarn install" WorkingDirectory="$(ProjectDir)" />
-  </Target>
-
-  <Target Name="NpmRunBuild" AfterTargets="NpmInstall" Condition=" '$(Configuration)' == 'Debug' ">
-    <Exec Command="yarn build" WorkingDirectory="$(ProjectDir)" />
-  </Target>
 
 </Project>
