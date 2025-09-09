@@ -111,10 +111,17 @@ internal static class WebApplicationExtensions
             {
                 analytics += """
                 (function() {
-                    window.dataLayer = window.dataLayer || [];
-                    function gtag() { dataLayer.push(arguments); }
-                    gtag('js', new Date());
+                    const script = document.createElement('script');
+                    script.async = true;
+                    script.src = `https://www.googletagmanager.com/gtag/js?id=$@Model.GTag`;
+                    document.head.appendChild(script);
 
+                    window.dataLayer = window.dataLayer || [];
+                    function gtag() { 
+                        dataLayer.push(arguments); 
+                    }
+
+                    gtag('js', new Date());
                     gtag('config', '@Model.GTag');
                 })();
                 """.Replace("@Model.GTag", analyticsOptions.GoogleGTag);
@@ -219,6 +226,6 @@ internal static class WebApplicationExtensions
     }
 
 
-    private static HashSet<string> _passthroughPrefixes = [ "/api", "/health", "/config.js", "/analytics.js", "/robots.txt" ];
-    private static HashSet<string> _spaAssetPrefixes = [ "/@vite", "/src", "/node_modules", "/assets" ];
+    private static readonly HashSet<string> _passthroughPrefixes = [ "/api", "/health", "/config.js", "/analytics.js", "/robots.txt" ];
+    private static readonly HashSet<string> _spaAssetPrefixes = [ "/@vite", "/src", "/node_modules", "/assets" ];
 }
