@@ -17,16 +17,7 @@ export default defineConfig(({ mode }) => {
                     changeOrigin: true, 
                     secure: false 
                 },
-                '/config.js': { 
-                    target: origin, 
-                    changeOrigin: true, 
-                    secure: false 
-                },
-                '/analytics.js': { 
-                    target: origin, 
-                    changeOrigin: true, 
-                    secure: false 
-                },
+                // Removed legacy Razor-served static scripts (/config.js, /analytics.js)
             }
         },
         build: {
