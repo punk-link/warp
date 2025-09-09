@@ -25,8 +25,10 @@
                 </div>
 
                 <article class="w-full md:w-1/2 p-3 rounded-sm mb-10">
-                    <div v-if="images.length" class="gallery mb-5 grid grid-cols-3 gap-2">
-                        <GalleryItem v-for="(img, i) in images" :key="img.id || i" :id="img.id" :src="img.url" :editable="false" />
+                    <div v-if="images.length" ref="galleryElement" class="gallery mb-5 grid grid-cols-3 gap-2">
+                        <a v-for="(img, i) in images" :key="img.id || i" :href="img.url" data-fancybox="entry" class="block focus:outline-none focus:ring-2 focus:ring-primary rounded-sm">
+                            <GalleryItem :id="img.id" :src="img.url" :editable="false" />
+                        </a>
                     </div>
                     <div ref="textContentEl" class="text-content font-sans-serif text-base whitespace-pre-wrap break-words">
                         {{ entry?.textContent }}
@@ -74,7 +76,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, onBeforeUnmount } from 'vue'
+import { ref, onMounted, watch, onBeforeUnmount, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { entryApi } from '../api/entryApi'
 import type { Entry } from '../types/entry'
@@ -98,9 +100,11 @@ const showReportModal = ref(false)
 interface EntryImage { entryId: string; id: string; url: string }
 const images = ref<EntryImage[]>([])
 const textContentEl = ref<HTMLElement | null>(null)
+const galleryElement = ref<HTMLElement | null>(null)
 const animatedViewCount = ref(0)
 const countdownTarget = ref<Date | string | null>(null)
 let expirationTimer: number | null = null
+let fancyboxBound = false
 
 
 function animateCount(target: number, durationMs = 1200) {
@@ -150,9 +154,12 @@ async function load() {
         if (fetchedEntry.textContent) 
             setTimeout(() => { textContentEl.value?.classList.add('visible') }, 100)
 
-        animateCount(fetchedEntry.viewCount || 0)
-    
-        scheduleExpirationRedirect()
+    animateCount(fetchedEntry.viewCount || 0)
+
+    scheduleExpirationRedirect()
+
+    await nextTick()
+    bindFancybox()
     } catch (e) {
         console.error('failed to load entry', e)
         error.value = true
@@ -170,7 +177,7 @@ async function onCopyLink() {
         return
 
     try {
-        const link = `${window.location.origin}/app/entry/${encodeURIComponent(currentId)}`
+        const link = `${window.location.origin}/entry/${encodeURIComponent(currentId)}`
         await navigator.clipboard.writeText(link)
         
         copied.value = true
@@ -231,11 +238,39 @@ function scheduleExpirationRedirect() {
     }, delay)
 }
 
+function bindFancybox() {
+    if (!(window as any).Fancybox) 
+        return
+    
+    const Fb = (window as any).Fancybox
+    
+    if (fancyboxBound) {
+        try { Fb.unbind('[data-fancybox="entry"]') } catch { /* noop */ }
+        fancyboxBound = false
+    }
+
+    Fb.bind('[data-fancybox="entry"]', {
+        placeFocusBack: true,
+        groupAll: true,
+        Thumbs: false
+    })
+
+    fancyboxBound = true
+}
+
 
 onBeforeUnmount(() => {
     if (expirationTimer) {
         clearTimeout(expirationTimer)
         expirationTimer = null
+    }
+    
+    if (fancyboxBound && (window as any).Fancybox) {
+        try { 
+            (window as any).Fancybox.unbind('[data-fancybox="entry"]') 
+        } catch { 
+            console.warn('failed to unbind Fancybox')
+        }
     }
 })
 
@@ -244,4 +279,9 @@ onMounted(load)
 
 
 watch(() => props.id, () => { load() })
+
+// Rebind Fancybox if images array changes independently (defensive)
+watch(images, () => { 
+    nextTick().then(bindFancybox) 
+})
 </script>

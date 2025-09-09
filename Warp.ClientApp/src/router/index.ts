@@ -12,10 +12,10 @@ const router = createRouter({
         { path: '/', name: 'Home', component: Home },
         { path: '/preview/:id?', name: 'Preview', component: Preview, props: true },
         { path: '/entry/:id', name: 'Entry', component: Entry, props: true },
-        { path: '/error', name: 'Error', component: ErrorPage },
+        { path: '/error', name: 'Error', component: ErrorPage, meta: { pageBg: 'bg-gray-300' } },
         { path: '/deleted', name: 'Deleted', component: Deleted },
         { path: '/privacy', name: 'Privacy', component: Privacy },
-        { path: '/:pathMatch(.*)*', name: 'NotFound', component: ErrorPage }
+        { path: '/:pathMatch(.*)*', name: 'NotFound', component: ErrorPage, meta: { pageBg: 'bg-gray-300' } }
     ]
 })
 

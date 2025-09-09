@@ -113,7 +113,7 @@ async function onCloneEdit() {
 
 async function onCopyLink() {
     try {
-        const link = `${window.location.origin}/app/entry/${encodeURIComponent(entryIdRef.value!)}`
+        const link = `${window.location.origin}/entry/${encodeURIComponent(entryIdRef.value!)}`
         await navigator.clipboard.writeText(link)
         copied.value = true
         setTimeout(() => copied.value = false, 2500)

@@ -1,12 +1,5 @@
 <template>
-  <div class="app">
-    <!-- <nav class="nav">
-      <RouterLink to="/">Index</RouterLink>
-      <RouterLink to="/preview">Preview</RouterLink>
-      <RouterLink to="/entry">Entry</RouterLink>
-      <RouterLink to="/deleted">Deleted</RouterLink>
-      <RouterLink to="/privacy">Privacy</RouterLink>
-    </nav> -->
+  <div :class="['app flex flex-col flex-1 min-h-screen w-full px-4 py-6 md:px-8 md:py-8', route.meta.pageBg]">
     <RouterView />
     <Footer />
   </div>
@@ -14,9 +7,8 @@
 
 <script setup lang="ts">
 import Footer from './components/Footer.vue';
+import { useRoute } from 'vue-router';
+
+const route = useRoute();
 </script>
 
-<style scoped>
-.app { padding: 1rem; }
-.nav { display: flex; gap: 1rem; margin-bottom: 1rem; }
-</style>

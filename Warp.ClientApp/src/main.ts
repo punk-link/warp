@@ -1,6 +1,7 @@
 import { createApp } from 'vue'
 import { Fancybox } from '@fancyapps/ui'
 import '@fancyapps/ui/dist/fancybox/fancybox.css'
+import './styles/fancybox-overrides.css'
 import App from './App.vue'
 import router from './router'
 import './styles/tailwind.css'

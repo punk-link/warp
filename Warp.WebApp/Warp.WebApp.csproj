@@ -69,12 +69,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="wwwroot\css\" />
-    <Folder Include="wwwroot\img\" />
-    <Folder Include="wwwroot\js\core\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <EmbeddedResource Update="Resources\IndexModel.en-US.resx">
       <SubType>Designer</SubType>
     </EmbeddedResource>
