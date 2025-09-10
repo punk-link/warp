@@ -40,6 +40,39 @@ This document refines general repository standards for `.ts` and `.vue` files un
   - Wrap network calls in `try/finally` to clear pending state (pattern in [`useIndexForm`](Warp.ClientApp/src/composables/useIndexForm.ts)).
   - Log with `console.error` only; user‑facing messaging belongs in the UI, not the composable.
 
+### Formatting Addendum
+
+The following formatting rules are enforced in addition to repository defaults:
+
+1. Multi‑line object literal returns: Any returned object with more than one property ("complex object") must be written multi‑line with one property per line, trailing comma optional per existing style. Never inline these.
+
+```ts
+// ✅ Correct
+return {
+  ok: true,
+  kind: ApiResultKind.Success,
+  data
+}
+
+// ❌ Avoid
+return { ok: true, kind: ApiResultKind.Success, data }
+```
+
+2. Single statement control structures: For `if` / `for` (and `while`) containing a single statement without braces, place the statement on the next line (never on the same line as the condition). Braces remain required when the body spans multiple statements.
+
+```ts
+// ✅ Correct (single statement without braces)
+if (kind === ApiResultKind.NotFound)
+  return true
+
+// ❌ Avoid (inline single statement)
+if (kind === ApiResultKind.NotFound) return true
+```
+
+3. Vertical spacing: Use two blank lines between top‑level constructs (imports block vs next declaration, standalone functions, classes, interfaces, type aliases). Within a class or module, one blank line between logically distinct groups (properties, constructors, methods) is acceptable, but preserve two blank lines between separate top‑level exported items.
+
+These rules supplement (do not override) any automatic formatter; adjust formatter configuration if it conflicts.
+
 ## Async & Network
 
 - All API calls must use `credentials: 'include'` (handled centrally in [`fetchJson`](Warp.ClientApp/src/api/fetchHelper.ts); replicate for raw `fetch` when sending `FormData` as in [`uploadImages`](Warp.ClientApp/src/composables/useImageUpload.ts)).
@@ -129,6 +162,7 @@ Template:
 ```ts
 // Example composable skeleton
 import { ref, onBeforeUnmount } from 'vue';
+
 
 export function useSomething() {
   const value = ref<string | null>(null);
