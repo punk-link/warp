@@ -1,9 +1,15 @@
 import { fetchJson } from './fetchHelper'
 import { API_BASE } from './constants'
+import { routeApiError } from './errorRouting'
 
 
 export async function getOrSetCreator() {
-    return fetchJson(`${API_BASE}/creators`)
+    try {
+        return await fetchJson(`${API_BASE}/creators`)
+    } catch (e) {
+        routeApiError(e)
+        throw e
+    }
 }
 
 

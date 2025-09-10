@@ -1,6 +1,7 @@
 import { Entry } from '../types/entry';
 import { fetchJson } from './fetchHelper'
 import { API_BASE } from './constants'
+import { routeApiError } from './errorRouting'
 
 // Server pattern: GET /api/entries returns a new entry shell with id. Then POST /api/entries/{id}
 // with JSON payload (AddOrUpdate) and optional separate image uploads.
@@ -29,35 +30,60 @@ export async function addOrUpdateEntry(id: string, payload: EntryAddOrUpdateRequ
     for (const file of files) 
         form.append('images', file, file.name)
 
-    return await fetchJson<EntryCreateResponse>(`${API_BASE}/entries/${encodeURIComponent(id)}`, {
-        method: 'POST',
-        body: form
-    })
+    try {
+        return await fetchJson<EntryCreateResponse>(`${API_BASE}/entries/${encodeURIComponent(id)}`, {
+            method: 'POST',
+            body: form
+        })
+    } catch (e) {
+        routeApiError(e)
+        throw e
+    }
 }
 
 
 export async function copyEntry(id: string): Promise<EntryCopyResponse> {
-    return await fetchJson<EntryCopyResponse>(`${API_BASE}/entries/${encodeURIComponent(id)}/copy`, {
-        method: 'POST'
-    })
+    try {
+        return await fetchJson<EntryCopyResponse>(`${API_BASE}/entries/${encodeURIComponent(id)}/copy`, {
+            method: 'POST'
+        })
+    } catch (e) {
+        routeApiError(e)
+        throw e
+    }
 }
 
 
 export async function getEntry(id?: string): Promise<Entry> {
-    if (!id)
-        return await fetchJson<Entry>(`${API_BASE}/entries`)
+    try {
+        if (!id)
+            return await fetchJson<Entry>(`${API_BASE}/entries`)
 
-    return await fetchJson<Entry>(`${API_BASE}/entries/${encodeURIComponent(id!)}`)
+        return await fetchJson<Entry>(`${API_BASE}/entries/${encodeURIComponent(id!)}`)
+    } catch (e) {
+        routeApiError(e)
+        throw e
+    }
 }
 
 
 export async function deleteEntry(id: string): Promise<void> {
-    return await fetchJson(`${API_BASE}/entries/${encodeURIComponent(id)}`, { method: 'DELETE' })
+    try {
+        return await fetchJson(`${API_BASE}/entries/${encodeURIComponent(id)}`, { method: 'DELETE' })
+    } catch (e) {
+        routeApiError(e)
+        throw e
+    }
 }
 
 
 export async function reportEntry(id: string): Promise<void> {
-    return await fetchJson(`${API_BASE}/entries/${encodeURIComponent(id)}/report`, { method: 'POST' })
+    try {
+        return await fetchJson(`${API_BASE}/entries/${encodeURIComponent(id)}/report`, { method: 'POST' })
+    } catch (e) {
+        routeApiError(e)
+        throw e
+    }
 }
 
 

@@ -79,6 +79,7 @@
 import { ref, onMounted, watch, onBeforeUnmount, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { entryApi } from '../api/entryApi'
+import { routeApiError } from '../api/errorRouting'
 import type { Entry } from '../types/entry'
 import CountdownTimer from '../components/CountdownTimer.vue'
 import GalleryItem from '../components/GalleryItem.vue'
@@ -163,7 +164,7 @@ async function load() {
     } catch (e) {
         console.error('failed to load entry', e)
         error.value = true
-        router.replace({ name: 'Error' })
+        routeApiError(e)
     } finally {
         loading.value = false
     }

@@ -1,14 +1,25 @@
 import { fetchJson } from './fetchHelper'
 import { API_BASE } from './constants'
+import { routeApiError } from './errorRouting'
 
 
 export async function getExpirationPeriods() {
-    return fetchJson<Record<string, string>>(`${API_BASE}/metadata/enums/expiration-periods`)
+    try {
+        return await fetchJson<Record<string, string>>(`${API_BASE}/metadata/enums/expiration-periods`)
+    } catch (e) {
+        routeApiError(e)
+        throw e
+    }
 }
 
 
 export async function getEditModes() {
-    return fetchJson<Record<string, string>>(`${API_BASE}/metadata/enums/edit-modes`)
+    try {
+        return await fetchJson<Record<string, string>>(`${API_BASE}/metadata/enums/edit-modes`)
+    } catch (e) {
+        routeApiError(e)
+        throw e
+    }
 }
 
 

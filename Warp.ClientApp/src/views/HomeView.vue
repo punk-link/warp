@@ -20,7 +20,7 @@
                         <template #gallery>
                             <div class="gallery" ref="dropAreaRef">
                                 <GalleryItem v-for="(it, idx) in items" :key="idx" :id="`file-${idx}`" :src="it.url"
-                                    :name="it.file.name" @remove="() => removeItem(idx)" />
+                                    :name="it.name" @remove="() => removeItem(idx)" />
                                 <GalleryItem id="empty" @click="() => fileInputRef?.click()" />
                                 <input ref="fileInputRef" type="file" class="hidden" multiple accept="image/*"
                                     @change="onFileInputChange" />
@@ -68,6 +68,7 @@ import GalleryItem from '../components/GalleryItem.vue'
 import ExpirationSelect from '../components/ExpirationSelect.vue'
 import Button from '../components/Button.vue'
 import { useDraftEntry } from '../composables/useDraftEntry'
+import { routeApiError } from '../api/errorRouting'
 import { DraftEntry } from '../types/draft-entry'
 import { ExpirationPeriod } from '../types/expiration-periods'
 
@@ -206,8 +207,8 @@ onMounted(async () => {
         const pasteHandler = (e: ClipboardEvent) => void handlePaste(e, () => (route.query.id as string | undefined) ?? undefined)
         window.addEventListener('paste', pasteHandler as EventListener)
         cleanupFns.push(() => window.removeEventListener('paste', pasteHandler as EventListener))
-    } catch {
-        router.replace({ name: 'Error' })
+    } catch (e) {
+        routeApiError(e)
     } finally {
         pending.value = false
     }
