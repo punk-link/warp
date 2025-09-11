@@ -1,8 +1,7 @@
 <template>
         <div class="container mx-auto px-4 py-6">
-                <article v-if="html" class="privacy-content" v-html="html"></article>
-                <p v-else class="text-gray-500">Loading…</p>
-                <Footer />
+            <article v-if="html" class="privacy-content" v-html="html"></article>
+            <p v-else class="text-gray-500">Loading…</p>
         </div>
  </template>
 

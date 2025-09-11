@@ -5,6 +5,7 @@ import './styles/fancybox-overrides.css'
 import App from './App.vue'
 import router from './router'
 import './styles/tailwind.css'
+import { createI18nInstance } from './i18n'
 
 async function ensureCsrf() {
     try {
@@ -19,8 +20,11 @@ async function ensureCsrf() {
 
 await ensureCsrf()
 
+const i18n = await createI18nInstance()
+
 createApp(App)
     .use(router)
+    .use(i18n)
     .mount('#app')
 
     
