@@ -19,11 +19,11 @@
             {{ t('components.footer.tagline') }}
         </p>
         <nav class="text-gray-400 text-sm mt-3">
-            <a href="/" class="hover:underline">{{ t('components.footer.links.index') }}</a>
+            <router-link to="/" class="hover:underline">{{ t('components.footer.links.index') }}</router-link>
             <span class="mx-2">|</span>
-            <a href="/privacy" class="hover:underline">{{ t('components.footer.links.privacy') }}</a>
+            <router-link to="/privacy" class="hover:underline">{{ t('components.footer.links.privacy') }}</router-link>
             <span class="mx-2">|</span>
-            <a href="https://github.com/punk-link/warp" target="_blank" class="hover:underline">{{ t('components.footer.links.sources') }}</a>
+            <a href="https://github.com/punk-link/warp" target="_blank" rel="noopener" class="hover:underline">{{ t('components.footer.links.sources') }}</a>
         </nav>
         <p class="text-gray-300 text-sm mt-3">
             &copy; warplyn.com {{ yearDisplay }} | {{ t('components.footer.copyright') }}
