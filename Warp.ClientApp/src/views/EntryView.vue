@@ -6,10 +6,10 @@
             </div>
             <div class="w-full sm:w-1/2 flex justify-end md:justify-center service-message-container">
                 <span v-if="copied" id="link-copied-message" class="text-secondary font-semibold text-base">
-                    link copied
+                    {{ t('entry.linkCopied') }}
                 </span>
                 <span v-else-if="reported" class="text-secondary font-semibold text-base">
-                    reported
+                    {{ t('entry.reported') }}
                 </span>
             </div>
         </div>
@@ -34,7 +34,7 @@
                         {{ entry?.textContent }}
                     </div>
                     <div v-if="loading" class="text-center text-gray-400 py-10">
-                        loading...
+                        {{ t('entry.loading') }}
                     </div>
                 </article>
 
@@ -43,7 +43,7 @@
                         <Button variant="outline-secondary" :disabled="reporting || loading || error" @click="showReportModal = true" icon-class="icofont-exclamation-tringle text-xl" />
                     </div>
                     <div class="bg-white rounded-sm">
-                        <Button variant="gray" label="Close" @click="onClose" icon-class="icofont-close text-xl" />
+                        <Button variant="gray" :label="t('entry.actions.close')" @click="onClose" icon-class="icofont-close text-xl" />
                     </div>
                     <div class="bg-white rounded-sm">
                         <Button variant="outline-gray" :disabled="loading || error" @click="onCopyLink" icon-class="icofont-link text-xl" />
@@ -62,14 +62,13 @@
                 </div>
                 <div class="text-center px-4">
                     <p class="font-sans-serif text-lg text-gray-600 mb-4">
-                        You are about to report this content. Use the feature in case of inappropriate content only.
-                        This action restricts access to the content for all viewers. Are you sure?
+                        {{ t('entry.reportModal.description') }}
                     </p>
                 </div>
             </div>
             <div class="flex justify-end gap-3 p-4 border-t border-gray-200">
-                <Button variant="outline-gray" type="button" @click="showReportModal = false" label="Cancel" />
-                <Button variant="primary" type="button" :disabled="reporting" @click="onReport" :label="reporting ? 'Reporting...' : 'Report'" />
+                <Button variant="outline-gray" type="button" @click="showReportModal = false" :label="t('app.actions.cancel')" />
+                <Button variant="primary" type="button" :disabled="reporting" @click="onReport" :label="reporting ? t('entry.reportModal.reporting') : t('entry.reportModal.confirm')" />
             </div>
         </div>
     </div>
@@ -77,6 +76,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch, onBeforeUnmount, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { entryApi } from '../api/entryApi'
 import { routeApiError } from '../api/errorRouting'
@@ -88,6 +88,7 @@ import Button from '../components/Button.vue'
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 
 const props = defineProps<{ id?: string }>()
 
@@ -115,7 +116,7 @@ function animateCount(target: number, durationMs = 1200) {
     function step(ts: number) {
         const progressPercentage = Math.min(1, (ts - start) / durationMs)
         animatedViewCount.value = Math.round(from + (target - from) * progressPercentage)
-        if (progressPercentage < 1) 
+        if (progressPercentage < 1)
             requestAnimationFrame(step)
     }
 
@@ -125,10 +126,10 @@ function animateCount(target: number, durationMs = 1200) {
 async function load() {
     const currentId = props.id || (route.params.id as string | undefined)
 
-    if (!currentId) { 
-        error.value = true; 
+    if (!currentId) {
+        error.value = true;
         router.replace({ name: 'Error' })
-        return 
+        return
     }
 
     try {
@@ -152,15 +153,15 @@ async function load() {
 
         countdownTarget.value = fetchedEntry.expiresAt
 
-        if (fetchedEntry.textContent) 
+        if (fetchedEntry.textContent)
             setTimeout(() => { textContentEl.value?.classList.add('visible') }, 100)
 
-    animateCount(fetchedEntry.viewCount || 0)
+        animateCount(fetchedEntry.viewCount || 0)
 
-    scheduleExpirationRedirect()
+        scheduleExpirationRedirect()
 
-    await nextTick()
-    bindFancybox()
+        await nextTick()
+        bindFancybox()
     } catch (e) {
         console.error('failed to load entry', e)
         error.value = true
@@ -174,18 +175,18 @@ async function load() {
 async function onCopyLink() {
     const currentId = props.id
 
-    if (!currentId) 
+    if (!currentId)
         return
 
     try {
         const link = `${window.location.origin}/entry/${encodeURIComponent(currentId)}`
         await navigator.clipboard.writeText(link)
-        
+
         copied.value = true
 
         setTimeout(() => copied.value = false, 2500)
-    } catch (e) { 
-        console.error('copy failed', e) 
+    } catch (e) {
+        console.error('copy failed', e)
     }
 }
 
@@ -198,7 +199,7 @@ function onClose() {
 async function onReport() {
     const currentId = props.id
 
-    if (!currentId || reporting.value) 
+    if (!currentId || reporting.value)
         return
 
     try {
@@ -211,14 +212,14 @@ async function onReport() {
         setTimeout(() => router.replace({ name: 'Home' }), 1200)
     } catch (e) {
         console.error('report failed', e)
-    } finally { 
+    } finally {
         reporting.value = false
     }
 }
 
 
 function scheduleExpirationRedirect() {
-    if (!countdownTarget.value) 
+    if (!countdownTarget.value)
         return
 
     if (expirationTimer) {
@@ -233,18 +234,18 @@ function scheduleExpirationRedirect() {
         router.replace({ name: 'Error' })
         return
     }
-    
+
     expirationTimer = window.setTimeout(() => {
         router.replace({ name: 'Home' })
     }, delay)
 }
 
 function bindFancybox() {
-    if (!(window as any).Fancybox) 
+    if (!(window as any).Fancybox)
         return
-    
+
     const Fb = (window as any).Fancybox
-    
+
     if (fancyboxBound) {
         try { Fb.unbind('[data-fancybox="entry"]') } catch { /* noop */ }
         fancyboxBound = false
@@ -265,11 +266,11 @@ onBeforeUnmount(() => {
         clearTimeout(expirationTimer)
         expirationTimer = null
     }
-    
+
     if (fancyboxBound && (window as any).Fancybox) {
-        try { 
-            (window as any).Fancybox.unbind('[data-fancybox="entry"]') 
-        } catch { 
+        try {
+            (window as any).Fancybox.unbind('[data-fancybox="entry"]')
+        } catch {
             console.warn('failed to unbind Fancybox')
         }
     }
@@ -282,7 +283,7 @@ onMounted(load)
 watch(() => props.id, () => { load() })
 
 // Rebind Fancybox if images array changes independently (defensive)
-watch(images, () => { 
-    nextTick().then(bindFancybox) 
+watch(images, () => {
+    nextTick().then(bindFancybox)
 })
 </script>

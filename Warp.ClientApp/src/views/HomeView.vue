@@ -5,7 +5,7 @@
                 <Logo />
             </div>
             <div class="w-full sm:w-1/2 flex justify-end md:justify-center">
-                <ModeSwitch v-model="mode" :disabled="pending" simple-label="Text" advanced-label="Advanced" />
+                <ModeSwitch v-model="mode" :disabled="pending" :simple-label="t('home.mode.text')" :advanced-label="t('home.mode.advanced')" />
             </div>
         </div>
 
@@ -32,17 +32,17 @@
                 <div v-else class="w-full">
                     <SimpleEditor>
                         <template #text>
-                            <DynamicTextArea v-model="text" placeholder="Type or paste your text here" />
+                            <DynamicTextArea v-model="text" :placeholder="t('home.editor.textPlaceholder')" />
                         </template>
                     </SimpleEditor>
                 </div>
 
                 <div class="flex justify-between items-center w-full md:w-1/2 pb-3 sticky bottom-0 bg-transparent">
                     <div class="bg-white rounded-sm p-2">
-                        <ExpirationSelect v-model="expiration" :options="expirationOptions" label="Expires in" />
+                        <ExpirationSelect v-model="expiration" :options="expirationOptions" :label="t('components.expirationSelect.label')" />
                     </div>
                     <div class="bg-white rounded-sm p-2">
-                        <Button variant="primary" :disabled="!isValid" :pending="pending" @click="onPreview" label="Preview" />
+                        <Button variant="primary" :disabled="!isValid" :pending="pending" @click="onPreview" :label="t('home.editor.preview')" />
                     </div>
                 </div>
             </div>
@@ -56,6 +56,7 @@ import { EditMode, parseEditMode } from '../types/edit-modes'
 import { useGallery } from '../composables/useGallery'
 import { initDropAreaHandlers, handlePaste, uploadImages } from '../composables/useImageUpload'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { entryApi } from '../api/entryApi'
 import { creatorApi } from '../api/creatorApi'
 import { useMetadata } from '../composables/useMetadata'
@@ -88,6 +89,7 @@ const { setDraft, draft } = useDraftEntry()
 const route = useRoute()
 const router = useRouter()
 const metadata = useMetadata()
+const { t } = useI18n()
 
 // Collect cleanup callbacks so we can register a single lifecycle hook during setup.
 const cleanupFns: Array<() => void> = []

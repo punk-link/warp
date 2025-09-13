@@ -20,7 +20,7 @@
                             </p>
 
                             <div v-if="isServerError && requestId" class="text-base text-gray-700 text-sm relative">
-                                <span class="font-semibold">Request ID:</span>
+                                <span class="font-semibold">{{ t('error.requestIdLabel') }}</span>
                                 <code class="bg-gray-100 p-1 rounded border border-transparent hover:bg-gray-50 hover:border-secondary cursor-pointer transition-all duration-200"
                                     :title="copied ? 'Copied!' : 'Click to copy'" @click="copy">
                                     <span class="text-gray-400 select-none">REQ-</span>
@@ -28,18 +28,17 @@
                                     <span class="text-gray-500" v-if="requestId.length > 8">...</span>
                                     <i class="icofont-copy ml-1 text-gray-400"></i>
                                 </code>
-                                <span
-                                    class="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-semibold text-white bg-secondary px-2 py-1 rounded shadow-md transition-opacity duration-200"
+                                <span class="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-semibold text-white bg-secondary px-2 py-1 rounded shadow-md transition-opacity duration-200"
                                     :class="copied ? 'opacity-100' : 'opacity-0 pointer-events-none'">
-                                    Copied!
+                                    {{ t('app.actions.copy') }}
                                 </span>
                                 <p class="text-xs text-gray-500 mt-1">
-                                    Include this ID when reporting issues
+                                    {{ t('error.requestIdLabel') }}
                                 </p>
                             </div>
 
                             <div v-if="isServerError && errorItems.length" class="mt-4">
-                                <h3 class="text-xl text-gray-300 font-semibold mb-2">Errors:</h3>
+                                <h3 class="text-xl text-gray-300 font-semibold mb-2">{{ t('error.errorsTitle') }}</h3>
                                 <div v-for="(err, idx) in errorItems" :key="idx" class="mb-1 text-sm text-gray-400">
                                     <span class="font-semibold">{{ err.code }}.</span>
                                     <span class="ml-1">{{ err.message }}</span>
@@ -51,7 +50,8 @@
 
                 <div class="flex justify-center items-center w-full md:w-1/2 pb-3 sticky bottom-0 bg-transparent">
                     <div>
-                        <Button variant="primary" icon-class="icofont-simple-left text-white/50" label="Go to main" @click="goHome" />
+                        <Button variant="primary" icon-class="icofont-simple-left text-white/50"
+                            :label="t('error.goHome')" @click="goHome" />
                     </div>
                 </div>
             </div>
@@ -62,33 +62,73 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import Button from '../components/Button.vue'
 import Logo from '../components/Logo.vue'
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 const hasErrorParams = computed(() => ['status', 'title', 'detail', 'rid'].some(k => route.query[k] != null))
 
 
 const status = computed<number>(() => {
-    if (!hasErrorParams.value) 
+    if (!hasErrorParams.value)
         return 404
 
     const rawStatus = route.query.status as string | undefined
-    const parsed = rawStatus 
-        ? parseInt(rawStatus, 10) 
+    const parsed = rawStatus
+        ? parseInt(rawStatus, 10)
         : NaN
-    
-    return Number.isFinite(parsed) 
-        ? parsed 
+
+    return Number.isFinite(parsed)
+        ? parsed
         : 500
 })
 
+function parsePossibleJson(input?: string | null): string | undefined {
+    if (!input)
+        return undefined
+
+    // Try to handle values that were URL-encoded into the query string
+    let maybe = input
+    try {
+        maybe = decodeURIComponent(input)
+    } catch {
+        // ignore decode errors, keep original
+    }
+
+    // Some encoders use '+' for spaces in query-string context; normalize those
+    maybe = maybe.replace(/\+/g, ' ')
+
+    try {
+        const parsed = JSON.parse(maybe)
+        if (parsed && typeof parsed === 'object') {
+            if (typeof parsed.detail === 'string' && parsed.detail)
+                return parsed.detail
+
+            if (typeof parsed.message === 'string' && parsed.message)
+                return parsed.message
+            
+            if (typeof parsed.title === 'string' && parsed.title)
+                return parsed.title
+        }
+    } catch (e) {
+        // not JSON, fall through to return normalized string
+    }
+
+    return maybe
+}
+
 const message = computed<string>(() => {
-    if (!hasErrorParams.value) 
-        return 'The page you are looking for does not exist.'
-    
-    return (route.query.title as string) || (route.query.detail as string) || 'An unexpected error occurred.'
+    if (!hasErrorParams.value)
+        return t('error.defaultNotFound')
+
+    const title = route.query.title as string | undefined
+    const detailRaw = route.query.detail as string | undefined
+    const parsedDetail = parsePossibleJson(detailRaw)
+
+    return title || parsedDetail || t('error.defaultUnexpected')
 })
 
 
@@ -102,13 +142,13 @@ const isServerError = computed(() => status.value >= 500)
 
 interface Item { code: string; message: string }
 const errorItems = computed<Item[]>(() => {
-    if (!isServerError.value) 
+    if (!isServerError.value)
         return []
-    
+
     const rawErrors = route.query.errs as string | undefined
-    if (!rawErrors) 
+    if (!rawErrors)
         return []
-    
+
     return rawErrors.split('|')
         .map(segment => {
             const [c, ...rest] = segment.split(':')
@@ -119,10 +159,10 @@ const errorItems = computed<Item[]>(() => {
 
 
 async function copy() {
-    if (!requestId.value) 
+    if (!requestId.value)
         return
-    
-        try {
+
+    try {
         await navigator.clipboard.writeText(requestId.value)
         copied.value = true
         setTimeout(() => copied.value = false, 1800)

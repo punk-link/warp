@@ -5,13 +5,14 @@
         <span v-if="!pending && label !== null">{{ label }}</span>
         <span v-else-if="pending" class="inline-flex items-center justify-center">
             <span class="loading-spinner w-5 h-5 mb-0" aria-hidden="true"></span>
-            <span class="sr-only">{{ pendingLabel }}</span>
+            <span class="sr-only">{{ pendingLabelComputed }}</span>
         </span>
     </button>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 
 interface Props {
@@ -29,11 +30,14 @@ const props = withDefaults(defineProps<Props>(), {
     variant: 'primary',
     label: null,
     pending: false,
-    pendingLabel: 'Pending…',
+    pendingLabel: undefined,
     disabled: false,
     iconClass: undefined,
     type: 'button'
 })
+
+const { t } = useI18n()
+const pendingLabelComputed = computed(() => props.pendingLabel ?? t('components.buttons.pending') ?? 'Pending…')
 
 
 const emit = defineEmits<{ (e: 'click'): void }>()

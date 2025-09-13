@@ -8,7 +8,7 @@
         </div>
         <input v-if="editable" type="hidden" name="ImageIds" :value="id" />
         <div v-if="editable" class="absolute bottom-0 w-full flex justify-center" style="transform: translateY(50%);">
-            <button @click.prevent="emitRemove" type="button" class="delete-image-button btn btn-round" title="Delete">
+            <button @click.prevent="emitRemove" type="button" class="delete-image-button btn btn-round" :title="t('app.actions.delete')">
                 <i class="icofont-bin text-xl"></i>
             </button>
         </div>
@@ -21,6 +21,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 interface Props {
     id: string
     src?: string
@@ -31,6 +32,7 @@ interface Props {
 const { id, src, name, editable = true } = defineProps<Props>()
 
 const loaded = ref(false)
+const { t } = useI18n()
 
 function onLoad() { loaded.value = true }
 function onError() { loaded.value = true }

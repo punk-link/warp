@@ -1,1 +1,0 @@
-<!-- Removed: obsolete scaffolded view -->

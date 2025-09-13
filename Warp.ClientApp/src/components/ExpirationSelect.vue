@@ -1,18 +1,19 @@
 <template>
     <label class="form-label">
-        {{ label }}
+        {{ t('components.expirationSelect.label') || label }}
     </label>
     <div class="flex items-baseline">
         <i class="icofont-close text-primary text-base mr-2"></i>
         <select class="form-select" :disabled="disabled" :value="modelValue" @change="onChange"
             :aria-label="ariaLabel || label">
-            <option v-for="opt in options" :key="opt" :value="opt">{{ opt }}</option>
+            <option v-for="opt in options" :key="opt" :value="opt">{{ t(`components.expirationSelect.options.${opt}`) || opt }}</option>
         </select>
     </div>
 </template>
 
 <script setup lang="ts">
 import { ExpirationPeriod, parseExpirationPeriod } from '../types/expiration-periods'
+import { useI18n } from 'vue-i18n'
 
 
 interface Props {
@@ -30,6 +31,8 @@ withDefaults(defineProps<Props>(), {
     disabled: false,
 });
 
+
+const { t } = useI18n()
 
 const emit = defineEmits<{
     (e: 'update:modelValue', value: ExpirationPeriod): void;
