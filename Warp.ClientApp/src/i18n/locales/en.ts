@@ -104,8 +104,8 @@ export default {
       imagesHint: 'Drag and drop or browse for images'
     },
     logo: {
-      title: 'Warplyn',
-      beta: 'beta'
+      title: 'Warplyn', // do not translate
+      beta: 'beta' // do not translate
     },
     footer: {
       taglineStrong: 'snap, share and say goodbye',
