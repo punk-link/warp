@@ -19,8 +19,7 @@
                         </template>
                         <template #gallery>
                             <div class="gallery" ref="dropAreaRef">
-                                <GalleryItem v-for="(it, idx) in items" :key="idx" :id="`file-${idx}`" :src="it.url"
-                                    :name="it.name" @remove="() => removeItem(idx)" />
+                                <GalleryItem v-for="(it, idx) in items" :key="idx" :id="`file-${idx}`" :src="it.url" :name="it.name" @remove="() => removeItem(idx)" />
                                 <GalleryItem id="empty" @click="() => fileInputRef?.click()" />
                                 <input ref="fileInputRef" type="file" class="hidden" multiple accept="image/*"
                                     @change="onFileInputChange" />
