@@ -21,8 +21,7 @@
                             <div class="gallery" ref="dropAreaRef">
                                 <GalleryItem v-for="(it, idx) in items" :key="idx" :id="`file-${idx}`" :src="it.url" :name="it.name" @remove="() => removeItem(idx)" />
                                 <GalleryItem id="empty" @click="() => fileInputRef?.click()" />
-                                <input ref="fileInputRef" type="file" class="hidden" multiple accept="image/*"
-                                    @change="onFileInputChange" />
+                                <input ref="fileInputRef" type="file" class="hidden" multiple accept="image/*" @change="onFileInputChange" />
                             </div>
                         </template>
                     </AdvancedEditor>
@@ -53,7 +52,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { EditMode, parseEditMode } from '../types/edit-modes'
 import { useGallery } from '../composables/useGallery'
-import { initDropAreaHandlers, handlePaste, uploadImages } from '../composables/useImageUpload'
+import { initDropAreaHandlers, handlePaste } from '../composables/useImageUpload'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { entryApi } from '../api/entryApi'
@@ -169,6 +168,9 @@ function onPreview() {
     if (!isValid.value || pending.value)
         return
     
+    if (!route.query.id && entryIdRef.value)
+        router.replace({ query: { ...route.query, id: entryIdRef.value } })
+
     setDraft({
         id: entryIdRef.value!,
         editMode: mode.value,
@@ -195,17 +197,14 @@ onMounted(async () => {
             entryId = hydrateStateFromDraft(draft.value)
         else 
             entryId = await initiateStateFromServer()
-
-        if (!route.query.id && entryId) 
-            router.replace({ query: { ...route.query, id: entryId } })
         
         if (dropAreaRef.value && fileInputRef.value) {
-            const cleanup = initDropAreaHandlers(dropAreaRef.value, fileInputRef.value, () => (route.query.id as string | undefined) ?? undefined)
+            const cleanup = initDropAreaHandlers(dropAreaRef.value, fileInputRef.value, () => entryIdRef.value ?? undefined)
             if (typeof cleanup === 'function')
                 cleanupFns.push(cleanup)
         }
 
-        const pasteHandler = (e: ClipboardEvent) => void handlePaste(e, () => (route.query.id as string | undefined) ?? undefined)
+        const pasteHandler = (e: ClipboardEvent) => void handlePaste(e, () => entryIdRef.value ?? undefined)
         window.addEventListener('paste', pasteHandler as EventListener)
         cleanupFns.push(() => window.removeEventListener('paste', pasteHandler as EventListener))
     } catch (e) {
