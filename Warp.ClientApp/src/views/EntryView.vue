@@ -40,13 +40,13 @@
 
                 <div class="flex justify-between items-center w-full md:w-1/2 pb-3 sticky bottom-0 bg-transparent">
                     <div class="bg-white rounded-sm">
-                        <Button variant="outline-secondary" :disabled="reporting || loading || error" @click="showReportModal = true" icon-class="icofont-exclamation-tringle text-xl" />
+                        <Button variant="outline-secondary" :disabled="reporting || loading || error" @click="showReportModal = true" :title="t('entry.actions.report')" icon-class="icofont-exclamation-tringle text-xl" />
                     </div>
                     <div class="bg-white rounded-sm">
-                        <Button variant="gray" :label="t('entry.actions.close')" @click="onClose" icon-class="icofont-close text-xl" />
+                        <Button variant="gray" @click="onClose" :label="t('entry.actions.close')" icon-class="icofont-close text-xl" />
                     </div>
                     <div class="bg-white rounded-sm">
-                        <Button variant="outline-gray" :disabled="loading || error" @click="onCopyLink" icon-class="icofont-link text-xl" />
+                        <Button variant="outline-gray" :disabled="loading || error" @click="onCopyLink" :title="t('entry.actions.copyLink')" icon-class="icofont-link text-xl" />
                     </div>
                 </div>
             </div>
