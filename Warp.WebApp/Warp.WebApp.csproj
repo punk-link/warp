@@ -34,6 +34,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="BinarySources\warp.xcf" />
+    <Content Include="robots.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Consul" Version="1.7.14.8" />
     <PackageReference Include="CSharpFunctionalExtensions" Version="3.6.0" />
     <PackageReference Include="FluentValidation" Version="12.0.0" />
@@ -59,19 +66,6 @@
     <PackageReference Include="VaultSharp" Version="1.17.5.1" />
     <PackageReference Include="Microsoft.AspNetCore.SpaProxy" Version="9.0.8" />
     <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="9.0.8" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="BinarySources\warp.xcf" />
-    <Content Include="robots.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Update="Resources\IndexModel.en-US.resx">
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
   </ItemGroup>
 
 </Project>
