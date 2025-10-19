@@ -363,13 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 /Warp.WebApp/appsettings.Local.json
 /data
-/Warp.WebApp/wwwroot/css/
-/Warp.WebApp/wwwroot/dist
-/Warp.WebApp/wwwroot/assets
-/Warp.WebApp/wwwroot/fonts/icofont
-/Warp.WebApp/wwwroot/img
-/Warp.WebApp/wwwroot/vendor/fancybox
-/Warp.WebApp/wwwroot/favicon-mono.ico
-/Warp.WebApp/wwwroot/favicon.ico
-/Warp.WebApp/wwwroot/index.html
-/Warp.WebApp/wwwroot/privacy.html
+/Warp.WebApp/wwwroot/**
