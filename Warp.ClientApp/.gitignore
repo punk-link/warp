@@ -1,0 +1,21 @@
+# npm and yarn caches
+node_modules/
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# editor and tool artifacts
+.DS_Store
+.vscode/**
+!.vscode/extensions.json
+.idea/
+
+# build outputs
+/dist/

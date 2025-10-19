@@ -1,0 +1,38 @@
+/* IcoFont copied for SPA public use */
+@font-face {
+  font-family: "IcoFont";
+  font-weight: normal;
+  font-style: normal;
+  src: url("./fonts/icofont.woff2") format("woff2"),
+       url("./fonts/icofont.woff") format("woff");
+}
+
+[class^="icofont-"], [class*=" icofont-"] {
+  font-family: 'IcoFont' !important;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  line-height: 1;
+  font-feature-settings: "liga";
+  -webkit-font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+}
+
+.icofont-copy:before { content: "\edea"; }
+.icofont-align-left:before { content: "\ede0"; }
+.icofont-bin:before { content: "\eebb"; }
+.icofont-clock-time:before { content: "\eedc"; }
+.icofont-exclamation-tringle:before { content: "\ef1b"; }
+.icofont-eye:before { content: "\ef24"; }
+.icofont-hill-sunny:before { content: "\ee63"; }
+.icofont-link:before { content: "\ef71"; }
+.icofont-loop:before { content: "\ef80"; }
+.icofont-pencil-alt-2:before { content: "\ebf6"; }
+.icofont-plus:before { content: "\efc2"; }
+.icofont-simple-left:before { content: "\eab5"; }
+.icofont-worried:before { content: "\eb07"; }
+.icofont-close:before { content: "\eee4"; }

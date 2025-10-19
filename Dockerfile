@@ -1,12 +1,9 @@
+# Build Vue (Warp.ClientApp)
 FROM node:22-alpine AS frontend-builder
-WORKDIR /src
-COPY ["Warp.WebApp/package.json", "Warp.WebApp/yarn.lock", "./"]
-RUN --mount=type=cache,target=/root/.yarn-cache yarn install
-COPY ["Warp.WebApp/postcss.config.js", "Warp.WebApp/tailwind.config.js", "Warp.WebApp/vite.config.js", "./"]
-COPY ["Warp.WebApp/Pages", "./Pages"]
-COPY ["Warp.WebApp/wwwroot/js", "./wwwroot/js"]
-COPY ["Warp.WebApp/Styles", "./Styles"]
-RUN mkdir -p ./wwwroot/css ./wwwroot/dist
+WORKDIR /src/Warp.ClientApp
+COPY ["Warp.ClientApp/package.json", "Warp.ClientApp/yarn.lock", "./"]
+RUN --mount=type=cache,target=/root/.yarn-cache yarn install --frozen-lockfile
+COPY ["Warp.ClientApp/", "./"]
 RUN yarn build
 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
@@ -24,8 +21,7 @@ RUN --mount=type=cache,target=/root/.nuget/packages dotnet restore "./Warp.WebAp
 RUN --mount=type=cache,target=/root/.nuget/packages dotnet restore "./Warp.WebApp.Tests/Warp.WebApp.Tests.csproj" --runtime linux-x64
 COPY . .
 WORKDIR "/src/Warp.WebApp"
-COPY --from=frontend-builder /src/wwwroot/css ./wwwroot/css
-COPY --from=frontend-builder /src/wwwroot/dist ./wwwroot/dist
+COPY --from=frontend-builder /src/Warp.ClientApp/dist/. ./wwwroot/
 RUN --mount=type=cache,target=/root/.nuget/packages dotnet build "./Warp.WebApp.csproj" -c $BUILD_CONFIGURATION \
     -o /app/build --runtime linux-x64
 

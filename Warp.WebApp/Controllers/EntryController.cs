@@ -1,5 +1,7 @@
-﻿using CSharpFunctionalExtensions;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Options;
+using Microsoft.Net.Http.Headers;
 using Warp.WebApp.Attributes;
 using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Entries.Converters;
@@ -7,7 +9,9 @@ using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Entries;
-using Warp.WebApp.Services.OpenGraph;
+using Warp.WebApp.Services.Images;
+using Warp.WebApp.Helpers;
+using Warp.WebApp.Models.Options;
 
 namespace Warp.WebApp.Controllers;
 
@@ -24,49 +28,111 @@ public class EntryController : BaseController
     /// <param name="cookieService">The cookie service.</param>
     /// <param name="creatorService">The creator service.</param>
     /// <param name="entryInfoService">The entry info service.</param>
-    /// <param name="openGraphService">The open graph service.</param>
     /// <param name="reportService">The report service.</param>
-    public EntryController(ICookieService cookieService, 
+    public EntryController(
+        ILoggerFactory loggerFactory, 
+        IOptions<ImageUploadOptions> imageOptions, 
+        ICookieService cookieService, 
         ICreatorService creatorService,
         IEntryInfoService entryInfoService,
-        IOpenGraphService openGraphService,
-        IReportService reportService) : base(cookieService, creatorService)
+        IReportService reportService,
+        IUnauthorizedImageService unauthorizedImageService) : base(cookieService, creatorService)
     {
+        _imageOptions = imageOptions.Value;
+
         _entryInfoService = entryInfoService;
-        _openGraphService = openGraphService;
+        _loggerFactory = loggerFactory;
         _reportService = reportService;
+        _unauthorizedImageService = unauthorizedImageService;
     }
 
 
     /// <summary>
-    /// Adds or updates an entry.
+    /// Adds or updates an entry with optional image files supplied in the same multipart request.
     /// </summary>
     /// <param name="id">The encoded entry identifier.</param>
-    /// <param name="request">The entry API request.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
-    /// <returns>The entry response or error.</returns>
+    /// <returns>Returns the added or updated entry response or error.</returns>
     [HttpPost("{id}")]
     [ProducesResponseType(typeof(EntryApiResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(DomainError), StatusCodes.Status400BadRequest)]
     [RequireCreatorCookie]
     [ValidateId]
-    [IdempotentRequest]
-    public async Task<IActionResult> AddOrUpdate([FromRoute] string id, [FromBody] EntryApiRequest request, CancellationToken cancellationToken = default)
+    [MultipartFormData]
+    //[IdempotentRequest] // TODO: implement idempotency for multipart requests
+    [DisableFormValueModelBinding]
+    [RequestFormLimits(MultipartBodyLengthLimit = 50 * 1024 * 1024)]
+    [RequestSizeLimit(50 * 1024 * 1024)]
+    public async Task<IActionResult> AddOrUpdateWithImages([FromRoute] string id, CancellationToken cancellationToken = default)
     {
-        var creator = await GetCreator(cancellationToken);
-        
-        var decodedId = IdCoder.Decode(id);
-        var req = request.ToEntryRequest(decodedId);
+        if (Request.ContentType is null || !MultipartRequestHelper.IsMultipartContentType(Request.ContentType))
+            return BadRequest(DomainErrors.MultipartContentTypeBoundaryError());
 
-        // TODO: replace this check with a more performant version
-        var entryInfo = await _entryInfoService.Get(creator, decodedId, cancellationToken);
-        Result<EntryInfo, DomainError> result;
-        if (entryInfo.IsFailure)
-            result = await _entryInfoService.Add(creator, req, cancellationToken);
-        else
-            result = await _entryInfoService.Update(creator, req, cancellationToken);
+        var boundaryResult = MultipartRequestHelper.GetBoundary(MediaTypeHeaderValue.Parse(Request.ContentType), _imageOptions.RequestBoundaryLengthLimit);
+        if (boundaryResult.IsFailure)
+            return BadRequest(boundaryResult.Error);
 
-        return OkOrBadRequest(result.ToEntryApiResponse());
+        var multipartReader = new MultipartReader(boundaryResult.Value, HttpContext.Request.Body);
+        if (multipartReader is null)
+            return BadRequest(DomainErrors.MultipartReaderError());
+
+        var formValues = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var uploadedImageIds = new List<string>(_imageOptions.MaxFileCount);
+        var fileHelper = new FileHelper(_loggerFactory, _imageOptions.AllowedExtensions, _imageOptions.MaxFileSize);
+
+        // DO NOT refactor this to separate method - relies on memory management specific to file uploads.
+        MultipartSection? section;
+        do
+        {
+            section = await multipartReader.ReadNextSectionAsync(cancellationToken);
+            if (section is null)
+                break;
+
+            if (!ContentDispositionHeaderValue.TryParse(section.ContentDisposition, out var contentDisposition))
+                continue;
+
+            if (MultipartRequestHelper.HasFileContentDisposition(contentDisposition))
+            {
+                var appFileResult = await fileHelper.ProcessStreamedFile(section, contentDisposition);
+                if (appFileResult.IsFailure)
+                    continue; // skip failed file silently (could collect errors)
+
+                var decodedEntryId = IdCoder.Decode(id);
+                var addResult = await _unauthorizedImageService.Add(decodedEntryId, appFileResult.Value, cancellationToken);
+                if (addResult.IsSuccess)
+                    uploadedImageIds.Add(IdCoder.Encode(addResult.Value.Id));
+            }
+            else if (MultipartRequestHelper.HasFormDataContentDisposition(contentDisposition))
+            {
+                using var formDataReader = new StreamReader(section.Body);
+                var value = await formDataReader.ReadToEndAsync(cancellationToken);
+                var key = contentDisposition.Name.Value?.Trim('"');
+                if (!string.IsNullOrEmpty(key))
+                    formValues[key] = value;
+            }
+        } while (section is not null);
+
+        var apiRequest = CreateEntryApiRequest(formValues, uploadedImageIds);
+        return await AddOrUpdateInternal(id, apiRequest, cancellationToken);
+
+
+        static EntryApiRequest CreateEntryApiRequest(Dictionary<string, string> formValues, List<string> uploadedImageIds)
+        {
+            var editModeStr = formValues.TryGetValue("editMode", out var editModeValue) ? editModeValue : "0";
+            var expirationStr = formValues.TryGetValue("expirationPeriod", out var expirationPeriodValue) ? expirationPeriodValue : "0";
+            var textContent = formValues.TryGetValue("textContent", out var textContentValue) ? textContentValue : string.Empty;
+
+            Enum.TryParse(editModeStr, true, out Models.Entries.Enums.EditMode editMode);
+            Enum.TryParse(expirationStr, true, out Models.Entries.Enums.ExpirationPeriod expirationPeriod);
+
+            return new EntryApiRequest
+            {
+                EditMode = editMode,
+                ExpirationPeriod = expirationPeriod,
+                ImageIds = uploadedImageIds,
+                TextContent = textContent
+            };
+        }
     }
 
 
@@ -188,7 +254,24 @@ public class EntryController : BaseController
     }
 
 
+    private async Task<IActionResult> AddOrUpdateInternal(string id, EntryApiRequest request, CancellationToken cancellationToken)
+    {
+        var creator = await GetCreator(cancellationToken);
+        var decodedId = IdCoder.Decode(id);
+        var entryRequest = request.ToEntryRequest(decodedId);
+
+        var entryInfo = await _entryInfoService.Get(creator, decodedId, cancellationToken);
+        var result = entryInfo.IsFailure
+            ? await _entryInfoService.Add(creator, entryRequest, cancellationToken)
+            : await _entryInfoService.Update(creator, entryRequest, cancellationToken);
+
+        return OkOrBadRequest(result.ToEntryApiResponse());
+    }
+
+
     private readonly IEntryInfoService _entryInfoService;
-    private readonly IOpenGraphService _openGraphService;
     private readonly IReportService _reportService;
+    private readonly IUnauthorizedImageService _unauthorizedImageService;
+    private readonly ImageUploadOptions _imageOptions;
+    private readonly ILoggerFactory _loggerFactory;
 }

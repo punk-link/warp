@@ -1,0 +1,20 @@
+{
+  "name": "Warp ClientApp CI",
+  "on": {
+    "push": { "branches": ["main", "master"] },
+    "pull_request": { "branches": ["*"] }
+  },
+  "jobs": {
+    "client-tests": {
+      "runs-on": "ubuntu-latest",
+      "steps": [
+        { "uses": "actions/checkout@v4" },
+        { "uses": "actions/setup-node@v4", "with": { "node-version": "20", "cache": "yarn", "cache-dependency-path": "Warp.ClientApp/yarn.lock" } },
+        { "name": "Install deps", "run": "corepack enable && cd Warp.ClientApp && yarn install --immutable" },
+        { "name": "Typecheck", "run": "cd Warp.ClientApp && yarn typecheck" },
+        { "name": "Lint", "run": "cd Warp.ClientApp && yarn lint" },
+        { "name": "Unit tests", "run": "cd Warp.ClientApp && yarn test" }
+      ]
+    }
+  }
+}

@@ -1,0 +1,12 @@
+.fancybox__container, .fancybox__backdrop {
+  --fancybox-color: rgba(255,255,255,0.05);
+}
+
+.fancybox__backdrop {
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.fancybox__slide.has-image .fancybox__content {
+  box-shadow: 0 8px 30px -6px rgba(0,0,0,0.35);
+}
