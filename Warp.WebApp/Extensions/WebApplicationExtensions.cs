@@ -164,7 +164,7 @@ internal static class WebApplicationExtensions
         {
             var config = new
             {
-                apiBaseUrl = $"{ctx.Request.Scheme}://{ctx.Request.Host}/api",
+                apiBaseUrl = "/api",
                 environment = env.EnvironmentName,
                 sentryDsn = configuration["Sentry:FrontendDsn"]
             };
