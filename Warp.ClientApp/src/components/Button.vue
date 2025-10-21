@@ -36,15 +36,22 @@ const props = withDefaults(defineProps<Props>(), {
     type: 'button'
 })
 
+
 const { t } = useI18n()
 const pendingLabelComputed = computed(() => props.pendingLabel ?? t('components.buttons.pending') ?? 'Pending…')
+const computedClasses = computed(() => [
+    variantClassMap[props.variant],
+    { '!cursor-wait': props.pending }
+])
 
 
 const emit = defineEmits<{ (e: 'click'): void }>()
 
 
 function onClick() {
-    if (props.disabled || props.pending) return
+    if (props.disabled || props.pending) 
+        return
+
     emit('click')
 }
 
@@ -57,7 +64,4 @@ const variantClassMap: Record<NonNullable<Props['variant']>, string> = {
     'outline-secondary': 'btn btn-outline-secondary',
     'outline-primary-round': 'btn btn-round btn-outline-primary'
 }
-
-
-const computedClasses = computed(() => variantClassMap[props.variant])
 </script>
