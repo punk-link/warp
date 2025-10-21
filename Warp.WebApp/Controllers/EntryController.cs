@@ -207,7 +207,7 @@ public class EntryController : BaseController
         if (decodedId == Guid.Empty)
             return Create();
 
-        var creator = await GetCreator(cancellationToken);
+        var creator = await GetCreatorOrDefault(cancellationToken);
         var result = await _entryInfoService.Get(creator, decodedId, cancellationToken)
             .ToEntryApiResponse();
 

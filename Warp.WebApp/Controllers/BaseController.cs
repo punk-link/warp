@@ -48,6 +48,16 @@ public abstract class BaseController : ControllerBase
     }
 
 
+    protected async Task<Creator> GetCreatorOrDefault(CancellationToken cancellationToken)
+    {
+        var (_, isFailure, creator, _) = await TryGetCreatorInternal(cancellationToken);
+        if (isFailure)
+            return default;
+
+        return creator;
+    }
+
+
     protected async Task<Result<Creator, DomainError>> TryGetCreator(CancellationToken cancellationToken)
     {
         var (_, isFailure, creator, _) = await TryGetCreatorInternal(cancellationToken);
