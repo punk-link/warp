@@ -50,20 +50,19 @@ service:
 
 ingress:
   enabled: true
-  className: ""
+  className: "nginx"
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
-    kubernetes.io/ingress.class: nginx
-    ingress.kubernetes.io/force-ssl-redirect: "true" 
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
   hosts:
-    - host: warplyn.punk.link
+    - host: warplyn.com
       paths:
         - path: /
           pathType: Prefix
   tls:
    - secretName: warplynprod-tls
      hosts:
-       - warplyn.punk.link
+       - warplyn.com
 
 resources:
   limits:
@@ -85,7 +84,7 @@ affinity: {}
 
 env:
   ASPNETCORE_URLS: http://*:8080
-  ASPNETCORE_ENVIRONMENT: "Development"
+  ASPNETCORE_ENVIRONMENT: "Production"
   PNKL_VAULT_ADDR: "http://vault.vault.svc.cluster.local:8200"
   
 
