@@ -52,7 +52,7 @@ jobs:
       - name: Deploy Helm Chart
         run: |
           helm upgrade --install warp-webapp ./helm-chart \
-            --namespace default \
+            --namespace dev \
             --set image.repository=${{ secrets.REGISTRY_URL }}/warp-webapp \
             --set image.tag=${{ github.run_id }} \
             --atomic \
