@@ -50,6 +50,7 @@ jobs:
           chmod 600 ~/.kube/config
 
       - name: Deploy Helm Chart
+        id: helm_deploy
         run: |
           helm upgrade --install warp-webapp ./Helm \
             --namespace dev \
@@ -60,6 +61,7 @@ jobs:
             --timeout 600s
 
       - name: Send message to Telegram
+        if: success()
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -72,3 +74,18 @@ jobs:
             Details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}         
             Image name: ${{ secrets.REGISTRY_URL }}/warp-webapp:${{ github.run_id }}
             Helm release: warp-webapp deployed
+
+      - name: Send failure message to Telegram
+        if: failure()
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          message: |
+            🚨 Deployment failed for ${{ github.repository }}!
+            Run ID: ${{ github.run_id }}
+            Commit: ${{ github.sha }}
+            Status: Failed
+            Details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}         
+            Image name: ${{ secrets.REGISTRY_URL }}/warp-webapp:${{ github.run_id }}
+            Check  deploy steps for errors.            
