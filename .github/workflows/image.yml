@@ -53,6 +53,7 @@ jobs:
         run: |
           helm upgrade --install warp-webapp ./Helm \
             --namespace dev \
+            --values ./Helm/values_dev.yaml \
             --set image.repository=${{ secrets.REGISTRY_URL }}/warp-webapp \
             --set image.tag=${{ github.run_id }} \
             --atomic \
