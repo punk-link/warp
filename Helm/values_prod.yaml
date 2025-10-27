@@ -60,7 +60,7 @@ ingress:
         - path: /
           pathType: Prefix
   tls:
-   - secretName: warplynprod-tls
+   - secretName: warplynprod-prod-apex-tls
      hosts:
        - warplyn.com
 
