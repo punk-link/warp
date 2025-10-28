@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 
@@ -40,8 +40,7 @@ const props = withDefaults(defineProps<Props>(), {
 const { t } = useI18n()
 const pendingLabelComputed = computed(() => props.pendingLabel ?? t('components.buttons.pending') ?? 'Pending…')
 const computedClasses = computed(() => [
-    variantClassMap[props.variant],
-    { '!cursor-wait': props.pending }
+    variantClassMap[props.variant]
 ])
 
 
@@ -64,4 +63,38 @@ const variantClassMap: Record<NonNullable<Props['variant']>, string> = {
     'outline-secondary': 'btn btn-outline-secondary',
     'outline-primary-round': 'btn btn-round btn-outline-primary'
 }
+
+
+let globalPendingCount = 0
+
+function updateRootPendingClass() {
+    const root = document.documentElement
+    if (!root) 
+        return
+
+    if (globalPendingCount > 0)
+        root.classList.add('app-pending')
+    else
+        root.classList.remove('app-pending')
+}
+
+
+watch(() => props.pending, (now, prev) => {
+    if (now && !prev) {
+        globalPendingCount++
+        updateRootPendingClass()
+    } else if (!now && prev) {
+        globalPendingCount = Math.max(0, globalPendingCount - 1)
+        updateRootPendingClass()
+    }
+}, { immediate: true })
+
+
+onBeforeUnmount(() => {
+    if (props.pending) {
+        globalPendingCount = Math.max(0, globalPendingCount - 1)
+        updateRootPendingClass()
+    }
+})
 </script>
+
