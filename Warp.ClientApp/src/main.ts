@@ -6,6 +6,7 @@ import App from './App.vue'
 import router from './router'
 import './styles/tailwind.css'
 import { createI18nInstance } from './i18n'
+import { setupDefaultErrorBridge } from './api/errorBridge'
 
 
 async function ensureCsrf() {
@@ -23,6 +24,8 @@ async function ensureCsrf() {
     await ensureCsrf()
 
     const i18n = await createI18nInstance()
+
+    setupDefaultErrorBridge(router)
 
     createApp(App)
         .use(router)

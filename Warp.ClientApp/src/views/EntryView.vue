@@ -40,7 +40,7 @@
 
                 <div class="flex justify-between items-center w-full md:w-1/2 pb-3 sticky bottom-0 bg-transparent">
                     <div class="bg-white rounded-sm">
-                        <Button variant="outline-secondary" :disabled="reporting || loading || error" @click="showReportModal = true" :title="t('entry.actions.report')" icon-class="icofont-exclamation-tringle text-xl" />
+                        <Button variant="outline-secondary" :disabled="reporting || loading || error" :pending="reporting" @click="showReportModal = true" :title="t('entry.actions.report')" icon-class="icofont-exclamation-tringle text-xl" />
                     </div>
                     <div class="bg-white rounded-sm">
                         <Button variant="gray" @click="onClose" :label="t('entry.actions.close')" icon-class="icofont-close text-xl" />
@@ -68,7 +68,7 @@
             </div>
             <div class="flex justify-end gap-3 p-4 border-t border-gray-200">
                 <Button variant="outline-gray" type="button" @click="showReportModal = false" :label="t('app.actions.cancel')" />
-                <Button variant="primary" type="button" :disabled="reporting" @click="onReport" :label="reporting ? t('entry.reportModal.reporting') : t('entry.reportModal.confirm')" />
+                <Button variant="primary" type="button" :disabled="reporting" :pending="reporting" @click="onReport" :label="reporting ? t('entry.reportModal.reporting') : t('entry.reportModal.confirm')" />
             </div>
         </div>
     </div>

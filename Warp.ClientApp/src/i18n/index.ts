@@ -100,3 +100,21 @@ export async function setLocale(next: SupportedLocale): Promise<void> {
 
 
 export { supportedLocales };
+
+
+// Lightweight helper to translate outside components with a fallback
+export function tOr(key: string, fallback: string, params?: Record<string, unknown>): string {
+    if (!i18nSingleton)
+        return fallback
+
+    const comp = i18nSingleton.global as unknown as Composer
+    if (typeof (comp as any).te === 'function' && (comp as any).te(key))
+        return comp.t(key as any, params as any) as unknown as string
+
+    try {
+        const translated = comp.t(key as any, params as any) as unknown as string
+        return translated || fallback
+    } catch {
+        return fallback
+    }
+}
