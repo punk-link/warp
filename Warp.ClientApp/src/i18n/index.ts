@@ -102,7 +102,6 @@ export async function setLocale(next: SupportedLocale): Promise<void> {
 export { supportedLocales };
 
 
-// Lightweight helper to translate outside components with a fallback
 export function tOr(key: string, fallback: string, params?: Record<string, unknown>): string {
     if (!i18nSingleton)
         return fallback

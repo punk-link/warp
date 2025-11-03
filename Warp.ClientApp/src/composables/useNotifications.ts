@@ -4,9 +4,9 @@ import type { NotificationItem } from '../types/notification-item'
 import type { NotificationOptions } from '../types/notification-options'
 
 
-const DEFAULT_TTL_INFO_MS = 3_500
-const DEFAULT_TTL_WARN_MS = 6_000
-const DEFAULT_TTL_ERROR_MS = 8_000
+const DEFAULT_TTL_INFO_MS = 3_5000
+const DEFAULT_TTL_WARN_MS = 6_0000
+const DEFAULT_TTL_ERROR_MS = 8_0000
 
 
 interface RateLimitConfig {

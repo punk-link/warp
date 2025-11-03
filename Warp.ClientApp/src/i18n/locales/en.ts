@@ -118,6 +118,10 @@ export default {
         },
         countdown: {
             label: 'the entry expires in'
+        },
+        notifications: {
+            close: 'Close',
+            ariaClose: 'Close notification'
         }
     },
 

@@ -118,6 +118,10 @@ export default {
         },
         countdown: {
             label: 'la entrada expira en'
+        },
+        notifications: {
+            close: 'Cerrar',
+            ariaClose: 'Cerrar notificación'
         }
     },
 

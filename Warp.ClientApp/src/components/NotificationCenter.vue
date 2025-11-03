@@ -18,23 +18,26 @@
                             {{ n.details }}
                         </p>
                         <div v-if="n.actions?.length" class="mt-2 flex flex-wrap gap-2">
-                            <button v-for="(a, i) in n.actions" :key="i" type="button"
-                                class="inline-flex items-center rounded border border-white/30 bg-white/10 px-2 py-1 text-xs font-medium hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/60"
-                                :title="a.title || a.label" @click="a.onClick()">
-                                {{ a.label }}
-                            </button>
+                            <Button
+                                v-for="(a, i) in n.actions"
+                                :key="i"
+                                variant="outline-gray"
+                                :label="a.label"
+                                :title="a.title || a.label"
+                                class="!bg-white/10 !text-white hover:!bg-white/20 focus:!ring-2 focus:!ring-offset-2 focus:!ring-white/60 text-xs"
+                                @click="a.onClick()"
+                            />
                         </div>
                     </div>
 
-                    <button type="button"
-                        class="shrink-0 inline-flex items-center justify-center rounded-md p-1 opacity-80 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white/60"
-                        :aria-label="'Close notification'" title="Close" @click="remove(n.id)">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="h-4 w-4">
-                            <path fill-rule="evenodd"
-                                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                                clip-rule="evenodd" />
-                        </svg>
-                    </button>
+                    <Button
+                        variant="outline-gray"
+                        :label="null"
+                        :aria-label="t('components.notifications.ariaClose')"
+                        :title="t('components.notifications.close')"
+                        icon-class="icofont-close text-white/90"
+                        @click="remove(n.id)"
+                    />
                 </div>
             </div>
         </div>
@@ -44,11 +47,14 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useNotifications } from '../composables/useNotifications'
 import { NotifyLevel } from '../types/notify-level'
+import Button from './Button.vue'
 
 
 const { items, remove } = useNotifications()
+const { t } = useI18n()
 
 
 function containerClass(level: NotifyLevel): string {
@@ -56,9 +62,9 @@ function containerClass(level: NotifyLevel): string {
         return 'bg-red-600/95 text-white'
 
     if (level === NotifyLevel.Warn)
-        return 'bg-indigo-600/90 text-white'
+        return 'bg-secondary/90 text-white'
 
-    return 'bg-sky-600/90 text-white'
+    return 'bg-primary/90 text-white'
 }
 
 
