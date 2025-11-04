@@ -74,13 +74,38 @@ function pushNotification(error: ApiError, req: AppRequestInit, dedupeKey: strin
         return 'api.error.generic'
     })()
 
-    const localized = tOr(key, briefMessage)
+    let title = tOr(key, briefMessage)
+    let message: string | undefined
+
+    let details: string | undefined
+    if (error.problem) {
+        const p = error.problem
+
+        if (p.status)
+            title = `${p.status}: ${title}`
+
+        message = p.detail || undefined
+
+        if (p.detail) {
+            const lines: string[] = []
+            if (p.eventId)
+                lines.push(`Event ID: ${p.eventId}`)
+
+            if (p.traceId)
+                lines.push(`Trace ID: ${p.traceId}`)
+            
+            details = lines.join('\n').trim() || undefined
+        }
+    } else {
+        const errMsg = error.message?.trim()
+        message = errMsg && errMsg !== title ? errMsg : ''
+    }
 
     push({
         level,
-        message: localized,
-        title: undefined,
-        details: undefined,
+        message: message,
+        title: title,
+        details: details || undefined,
         dedupeKey,
         actions: level >= NotifyLevel.Warn ? actions : undefined
     })

@@ -81,7 +81,7 @@ export async function fetchJson<T = any>(url: string, opts: AppRequestInit = {})
     const requestId = response.headers.get('x-request-id')
 
     let parsedBody: any = undefined
-    let isJson = contentType.includes('application/json')
+    let isJson = /json/i.test(contentType)
 
     try {
         if (isJson)

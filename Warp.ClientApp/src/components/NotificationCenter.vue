@@ -8,35 +8,27 @@
                 <div class="p-3 pl-3 pr-2 sm:pl-4 sm:pr-3 flex items-start gap-3">
                     <div class="flex-1 min-w-0">
                         <p class="text-sm font-medium leading-5 break-words">
-                            {{ n.message }}
-                            <span v-if="n.occurrences > 1"
-                                class="ml-2 inline-flex items-center rounded-full bg-black/20 px-2 py-0.5 text-[11px] font-semibold">
+                            {{ n.title }}
+                            <span v-if="n.occurrences > 1" class="ml-2 text-[11px] font-semibold">
                                 ×{{ n.occurrences }}
                             </span>
                         </p>
-                        <p v-if="n.details" class="mt-1 text-xs opacity-90 break-words">
+                        <p v-if="n.message" class="mt-1 text-sm leading-5 opacity-90">
+                            {{ n.message }}
+                        </p>
+                        <p v-if="n.details" class="mt-2 text-xs opacity-90 break-words whitespace-pre-line">
                             {{ n.details }}
                         </p>
                         <div v-if="n.actions?.length" class="mt-2 flex flex-wrap gap-2">
-                            <Button
-                                v-for="(a, i) in n.actions"
-                                :key="i"
-                                variant="outline-gray"
-                                :label="a.label"
-                                :title="a.title || a.label"
+                            <Button v-for="(a, i) in n.actions" :key="i" variant="outline-gray" :label="a.label" :title="a.title || a.label"
                                 class="!bg-white/10 !text-white hover:!bg-white/20 focus:!ring-2 focus:!ring-offset-2 focus:!ring-white/60 text-xs"
                                 @click="a.onClick()"
                             />
                         </div>
                     </div>
 
-                    <Button
-                        variant="outline-gray"
-                        :label="null"
-                        :aria-label="t('components.notifications.ariaClose')"
-                        :title="t('components.notifications.close')"
-                        icon-class="icofont-close text-white/90"
-                        @click="remove(n.id)"
+                    <Button variant="outline-gray" :label="null" :aria-label="t('components.notifications.ariaClose')" 
+                        :title="t('components.notifications.close')" icon-class="icofont-close text-white/90" @click="remove(n.id)"
                     />
                 </div>
             </div>
