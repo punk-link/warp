@@ -38,7 +38,6 @@
 
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useNotifications } from '../composables/useNotifications'
 import { NotifyLevel } from '../types/notify-level'

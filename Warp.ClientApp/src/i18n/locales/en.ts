@@ -121,7 +121,9 @@ export default {
         },
         notifications: {
             close: 'Close',
-            ariaClose: 'Close notification'
+            ariaClose: 'Close notification',
+            copyDetails: 'Copy details',
+            copyDiagnostics: 'Copy diagnostic identifiers'
         }
     },
 

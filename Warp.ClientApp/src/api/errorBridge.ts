@@ -1,6 +1,6 @@
 import type { Router } from 'vue-router'
 import { registerErrorBridge } from './fetchHelper'
-import { buildDedupeKey, defaultNotifyLevel, shouldRedirect, isValidation } from './errorPolicy'
+import { buildDedupeKey, defaultNotifyLevel, isValidation } from './errorPolicy'
 import type { ApiError } from '../types/api-error'
 import type { AppRequestInit } from '../types/app-request-init'
 import { useNotifications } from '../composables/useNotifications'
@@ -30,6 +30,23 @@ function copyDiagnostics(error: ApiError): void {
 }
 
 
+function statusToKey(status?: number | null): string {
+    if (status == null || status === 0)
+        return 'api.error.network'
+
+    switch (status) {
+        case 400: return 'api.error._400'
+        case 401: return 'api.error._401'
+        case 403: return 'api.error._403'
+        case 404: return 'api.error._404'
+        case 409: return 'api.error._409'
+        case 422: return 'api.error._422'
+        case 429: return 'api.error._429'
+        default: return 'api.error.generic'
+    }
+}
+
+
 function pushNotification(error: ApiError, req: AppRequestInit, dedupeKey: string): void {
     const { push } = useNotifications()
 
@@ -38,57 +55,33 @@ function pushNotification(error: ApiError, req: AppRequestInit, dedupeKey: strin
 
     const actions = [
         {
-            label: 'Copy details',
-            title: 'Copy diagnostic identifiers',
+            label: tOr('components.notifications.copyDetails', 'Copy details'),
+            title: tOr('components.notifications.copyDiagnostics', 'Copy diagnostic identifiers'),
             onClick: () => copyDiagnostics(error)
         }
     ]
 
-    const briefMessage = isValidation(error.status) && error.problem?.title ? error.problem.title : serverMessage
+    const briefMessage = isValidation(error.status) && error.problem?.title 
+        ? error.problem.title 
+        : serverMessage
 
-    const key = (() => {
-        if (!error.status || error.status === 0)
-            return 'api.error.network'
-
-        if (error.status === 422)
-            return 'api.error._422'
-
-        if (error.status === 429)
-            return 'api.error._429'
-
-        if (error.status === 401)
-            return 'api.error._401'
-
-        if (error.status === 403)
-            return 'api.error._403'
-
-        if (error.status === 404)
-            return 'api.error._404'
-
-        if (error.status === 409)
-            return 'api.error._409'
-
-        if (error.status === 400)
-            return 'api.error._400'
-
-        return 'api.error.generic'
-    })()
-
-    let title = tOr(key, briefMessage)
+    let title = tOr(statusToKey(error.status), briefMessage)
     let message: string | undefined
-
     let details: string | undefined
+    
     if (error.problem) {
         const p = error.problem
 
-        if (p.status)
+        if (p.status != null && p.title)
+            title = `${p.status}: ${p.title}`
+        else if (p.status != null)
             title = `${p.status}: ${title}`
 
         message = p.detail || undefined
 
         if (p.detail) {
             const lines: string[] = []
-            if (p.eventId)
+            if (p.eventId != null)
                 lines.push(`Event ID: ${p.eventId}`)
 
             if (p.traceId)
@@ -112,22 +105,26 @@ function pushNotification(error: ApiError, req: AppRequestInit, dedupeKey: strin
 }
 
 
-function handleRedirect(router: Router, status: number | undefined | null): void {
+function handleRedirect(router: Router, status: number | undefined | null): boolean {
     if (status == null)
-        return
+        return false
 
     const current = router.currentRoute.value
     if (status === 404) {
         if (current.name !== 'NotFound')
             router.replace({ name: 'NotFound' })
-        
-        return
+
+        return true
     }
 
     if (status >= 500 && status <= 599) {
         if (current.name !== 'Error')
             router.replace({ name: 'Error' })
+
+        return true
     }
+
+    return false
 }
 
 
@@ -152,11 +149,8 @@ export function setupDefaultErrorBridge(router: Router): void {
             notifyLevel: req.notifyLevel ?? defaultNotifyLevel(error.status)
         })
 
-        if (shouldRedirect(error.status)) {
-            handleRedirect(router, error.status)
-            return
-        }
-
-        pushNotification(error, req, dedupeKey)
+        const redirected = handleRedirect(router, error.status)
+        if (!redirected)
+            pushNotification(error, req, dedupeKey)
     })
 }
