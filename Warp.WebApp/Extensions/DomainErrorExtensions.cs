@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Polly;
+using System.Diagnostics;
 using Warp.WebApp.Constants;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Models.Errors;
@@ -30,6 +32,10 @@ public static class DomainErrorExtensions
     public static ProblemDetails ToProblemDetails(this DomainError error)
     {
         var httpStatusCode = error.Code.ToHttpStatusCode();
+        
+        var traceId = Activity.Current?.Id;
+        error.AddTraceId(traceId);
+
         var problemDetails = ProblemDetailsHelper.Create(httpStatusCode, error.Detail);
         problemDetails.Extensions[ErrorExtensionKeys.EventId] = (int)error.Code;
 

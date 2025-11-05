@@ -39,12 +39,12 @@
                     <template v-if="!saved">
                         <div></div>
                         <div class="bg-white rounded-sm">
-                            <Button variant="primary" :disabled="saving" @click="onSave" :label="t('preview.actions.save')" />
+                            <Button variant="primary" :disabled="saving" :pending="saving" @click="onSave" :label="t('preview.actions.save')" />
                         </div>
                     </template>
                     <template v-else>
                         <div class="bg-white rounded-sm">
-                            <Button variant="outline-gray" :title="t('preview.actions.delete')" :disabled="deleting" @click="onDelete" icon-class="icofont-bin text-xl" />
+                            <Button variant="outline-gray" :title="t('preview.actions.delete')" :disabled="deleting" :pending="deleting" @click="onDelete" icon-class="icofont-bin text-xl" />
                         </div>
                         <div class="bg-white rounded-sm">
                             <Button variant="outline-gray" :title="t('preview.actions.cloneEdit')" :disabled="deleting" @click="onCloneEdit" icon-class="icofont-loop text-xl" />

@@ -1,6 +1,13 @@
 @import "tailwindcss";
 
 
+@layer base {
+    html.app-pending,
+    body.app-pending {
+        cursor: wait !important;
+    }
+}
+
 @layer utilities {
     @keyframes catchy-fade-in {
         0% {

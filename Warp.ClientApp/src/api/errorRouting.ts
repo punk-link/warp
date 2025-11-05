@@ -1,4 +1,4 @@
-import type { ApiError } from './fetchHelper'
+import type { ApiError } from '../types/api-error'
 import { type ApiResult, type ApiFatalResult, type ApiNotFoundResult, type ApiValidationResult, ApiResultKind } from './apiResult'
 import router from '../router'
 
@@ -20,7 +20,7 @@ function buildErrorQuery(err: ApiError): Record<string, string> {
         if (problem.errors && problem.status >= 500) {
             const parts: string[] = []
             for (const [code, arr] of Object.entries(problem.errors)) {
-                for (const msg of arr) 
+                for (const msg of arr as string[]) 
                     parts.push(`${encodeURIComponent(code)}:${encodeURIComponent(msg)}`)
             }
 
@@ -44,16 +44,22 @@ function buildErrorQuery(err: ApiError): Record<string, string> {
 
 export function routeApiError(err: unknown) {
     const apiErr = err as Partial<ApiError>
-    if (typeof apiErr?.status !== 'number') {
-        // Unknown shape: just generic fallback
-        router.replace({ name: 'Error' })
+    const status = typeof apiErr?.status === 'number' ? apiErr.status : undefined
+
+    if (status == null)
+        return
+
+    if (status === 404) {
+        router.replace({ name: 'NotFound' })
         return
     }
 
-    router.replace({ 
-        name: 'Error', 
-        query: buildErrorQuery(apiErr as ApiError) 
-    })
+    if (status >= 500 && status <= 599) {
+        router.replace({ name: 'Error', query: buildErrorQuery(apiErr as ApiError) })
+        return
+    }
+
+    // For all other statuses, do not redirect. Global error bridge will show in-place notification.
 }
 
 
@@ -77,6 +83,7 @@ export function routeApiResult<T>(result: ApiResult<T>): boolean {
         return false
     
     const apiResult = result as ApiFatalResult | ApiNotFoundResult
+    const status = apiResult.status
     const query: Record<string, string> = {
         status: String(apiResult.status)
     }
@@ -94,7 +101,7 @@ export function routeApiResult<T>(result: ApiResult<T>): boolean {
         if (apiResult.kind === ApiResultKind.Fatal && apiResult.problem.errors && apiResult.problem.status >= 500) {
             const parts: string[] = []
             for (const [code, arr] of Object.entries(apiResult.problem.errors)) {
-                for (const msg of arr) 
+                for (const msg of arr as string[]) 
                     parts.push(`${encodeURIComponent(code)}:${encodeURIComponent(msg)}`)
             }
 
@@ -106,6 +113,15 @@ export function routeApiResult<T>(result: ApiResult<T>): boolean {
             query.detail = apiResult.message
     }
     
-    router.replace({ name: 'Error', query })
-    return true
+    if (status === 404) {
+        router.replace({ name: 'NotFound' })
+        return true
+    }
+
+    if (status >= 500 && status <= 599) {
+        router.replace({ name: 'Error', query })
+        return true
+    }
+
+    return false
 }
