@@ -4,9 +4,9 @@ import type { NotificationItem } from '../types/notification-item'
 import type { NotificationOptions } from '../types/notification-options'
 
 
-const DEFAULT_TTL_INFO_MS = 3_5000
-const DEFAULT_TTL_WARN_MS = 6_0000
-const DEFAULT_TTL_ERROR_MS = 8_0000
+const DEFAULT_TTL_INFO_MS = 3_500
+const DEFAULT_TTL_WARN_MS = 6_000
+const DEFAULT_TTL_ERROR_MS = 8_000
 
 
 interface RateLimitConfig {
@@ -73,8 +73,8 @@ function ensure(): NonNullable<typeof singleton> {
 		const defaultTtl = options.sticky ? 0 : (
 			options.ttlMs != null ? options.ttlMs : (
 				options.level === NotifyLevel.Info ? DEFAULT_TTL_INFO_MS :
-				options.level === NotifyLevel.Warn ? DEFAULT_TTL_WARN_MS :
-				DEFAULT_TTL_ERROR_MS
+					options.level === NotifyLevel.Warn ? DEFAULT_TTL_WARN_MS :
+						DEFAULT_TTL_ERROR_MS
 			)
 		)
 
@@ -107,7 +107,7 @@ function ensure(): NonNullable<typeof singleton> {
 	function recordPush() {
 		const now = Date.now()
 
-        while (recentPushes.length && !withinWindow(recentPushes[0], state.rateLimit.windowMs))
+		while (recentPushes.length && !withinWindow(recentPushes[0], state.rateLimit.windowMs))
 			recentPushes.shift()
 
 		recentPushes.push(now)
@@ -116,7 +116,7 @@ function ensure(): NonNullable<typeof singleton> {
 	function isRateLimited(): boolean {
 		const now = Date.now()
 
-        while (recentPushes.length && now - recentPushes[0] > state.rateLimit.windowMs)
+		while (recentPushes.length && now - recentPushes[0] > state.rateLimit.windowMs)
 			recentPushes.shift()
 
 		return recentPushes.length >= state.rateLimit.maxPerWindow
@@ -192,8 +192,8 @@ function ensure(): NonNullable<typeof singleton> {
 	function clear() {
 		for (const id of Array.from(removeTimers.keys())) {
 			const handle = removeTimers.get(id)
-			if (handle) 
-                window.clearTimeout(handle)
+			if (handle)
+				window.clearTimeout(handle)
 		}
 
 		removeTimers.clear()
