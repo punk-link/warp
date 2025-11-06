@@ -15,14 +15,9 @@
                     <p class="text-gray-600 text-base">
                         {{ t('dataRequest.description') }}
                     </p>
-                    <div class="bg-gray-100 p-4 rounded">
-                        <p class="text-gray-700 text-base font-medium mb-2">
-                            {{ t('dataRequest.instructions') }}
-                        </p>
-                        <a href="mailto:privacy@synonym.fans" class="text-blue-600 hover:underline text-lg font-semibold">
-                            privacy@synonym.fans
-                        </a>
-                    </div>
+                    <p>
+                        {{ t('dataRequest.instructions') }} <a href="mailto:privacy@synonym.fans" class="text-blue-600 hover:underline text-lg font-semibold">privacy@synonym.fans</a>
+                    </p>
                     <p class="text-gray-500 text-sm">
                         {{ t('dataRequest.note') }}
                     </p>
@@ -35,17 +30,14 @@
                 </div>
             </div>
         </section>
-
-        <Footer />
     </div>
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router';
+import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import Logo from '../components/Logo.vue'
 import Button from '../components/Button.vue'
-import Footer from '../components/Footer.vue'
-import { useI18n } from 'vue-i18n'
 
 
 const router = useRouter();
