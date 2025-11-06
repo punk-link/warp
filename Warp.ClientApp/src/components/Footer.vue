@@ -23,6 +23,8 @@
             <span class="mx-2">|</span>
             <router-link to="/privacy" class="hover:underline">{{ t('components.footer.links.privacy') }}</router-link>
             <span class="mx-2">|</span>
+            <router-link to="/data-request" class="hover:underline">{{ t('components.footer.links.dataRequest') }}</router-link>
+            <span class="mx-2">|</span>
             <a href="https://github.com/punk-link/warp" target="_blank" rel="noopener" class="hover:underline">{{ t('components.footer.links.sources') }}</a>
         </nav>
         <p class="text-gray-300 text-sm mt-3">

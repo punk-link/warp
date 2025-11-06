@@ -83,6 +83,14 @@ export default {
         notAvailableContent: 'Content not available.'
     },
 
+    dataRequest: {
+        title: 'Data Request',
+        description: 'You have the right to request a copy of your personal data that we process. To request your data, please contact us via email.',
+        instructions: 'Send your data request to:',
+        note: 'Please include your account details or any relevant information that can help us identify your data in your email.',
+        goHome: 'Go to main'
+    },
+
     components: {
         expirationSelect: {
             label: 'Expires in',
@@ -112,6 +120,7 @@ export default {
             links: {
                 index: 'Index',
                 privacy: 'Privacy',
+                dataRequest: 'Data Request',
                 sources: 'Sources'
             },
             copyright: 'all rights reserved'
