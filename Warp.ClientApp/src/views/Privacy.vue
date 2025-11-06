@@ -20,6 +20,7 @@ onMounted(async () => {
         if (res.ok) {
             html.value = await res.text();
         } else {
+            console.error('Failed to load privacy policy:', res.statusText);
             html.value = '<h1>Privacy Policy</h1><p>Content not available.</p>';
         }
     } catch {
