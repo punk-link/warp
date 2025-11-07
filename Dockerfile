@@ -4,6 +4,7 @@ WORKDIR /src/Warp.ClientApp
 COPY ["Warp.ClientApp/package.json", "Warp.ClientApp/yarn.lock", "./"]
 RUN --mount=type=cache,target=/root/.yarn-cache yarn install --frozen-lockfile
 COPY ["Warp.ClientApp/", "./"]
+RUN yarn vitest --run
 RUN yarn build
 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base

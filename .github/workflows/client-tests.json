@@ -13,7 +13,7 @@
         { "name": "Install deps", "run": "corepack enable && cd Warp.ClientApp && yarn install --immutable" },
         { "name": "Typecheck", "run": "cd Warp.ClientApp && yarn typecheck" },
         { "name": "Lint", "run": "cd Warp.ClientApp && yarn lint" },
-        { "name": "Unit tests", "run": "cd Warp.ClientApp && yarn test" }
+        { "name": "Vitest", "run": "cd Warp.ClientApp && yarn vitest --run" }
       ]
     }
   }
