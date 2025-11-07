@@ -7,17 +7,18 @@ describe('i18n bootstrap & switching', () => {
         const i18n = await createI18nInstance()
         const t = (i18n.global as unknown as Composer).t
         const title = t('app.title')
-        expect(title).toBe('Warp')
+        
+        expect(title).toBe('Warplyn')
     })
 
     it('switches locale at runtime', async () => {
         await createI18nInstance()
         await setLocale('es')
         expect(currentLocale()).toBe('es')
-        // Ensure a translated key changes
-        // (Key exists in both locales but with different value)
+
         const comp = (await createI18nInstance()).global as unknown as Composer
-        const taglineEs = comp.t('app.tagline')
-        expect(taglineEs.toLowerCase()).toContain('efímero')
+        const taglineEs = comp.t('components.footer.tagline')
+
+        expect(taglineEs.toLowerCase()).toContain('desaparecerán')
     })
 })
