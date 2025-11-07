@@ -187,3 +187,8 @@ The project uses these [icofont](https://icofont.com) glyphs:
 - plus
 - simple-left
 - worried
+
+
+## Tracing
+
+Refer to [docs/tracing.md](docs/tracing.md) for details on the end-to-end tracing pipeline, header propagation rules, and troubleshooting tips.
