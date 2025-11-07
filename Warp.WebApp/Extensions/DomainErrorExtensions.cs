@@ -33,7 +33,7 @@ public static class DomainErrorExtensions
     {
         var httpStatusCode = error.Code.ToHttpStatusCode();
         
-        var traceId = Activity.Current?.Id;
+        var traceId = Activity.Current?.TraceId.ToString();
         error.AddTraceId(traceId);
 
         var problemDetails = ProblemDetailsHelper.Create(httpStatusCode, error.Detail);

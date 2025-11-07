@@ -15,7 +15,7 @@ public static class ApplicationBuilderHelper
                 return;
 
             var error = DomainErrors.ServerErrorWithMessage(exceptionHandlerPathFeature.Error.Message)
-                .AddTraceId(Activity.Current?.Id);
+                .AddTraceId(Activity.Current?.TraceId.ToString());
 
             var details = error.ToProblemDetails();
             details.Instance = exceptionHandlerPathFeature.Endpoint?.ToString();

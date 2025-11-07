@@ -1,4 +1,5 @@
-import { ref } from 'vue'
+import { fetchJson } from '../api/fetchHelper'
+import type { ApiError } from '../types/api-error'
 
 const UPLOAD_FINISHED_EVENT = 'uploadFinished'
 
@@ -19,22 +20,21 @@ export async function uploadImages(entryId: string, files: File[]) {
     const form = new FormData()
     valid.forEach(f => form.append('Images', f, f.name))
 
-    const response = await fetch(`/api/images/entry-id/${encodeURIComponent(entryId)}`, {
-        method: 'POST',
-        body: form,
-        credentials: 'include'
-    })
+    try {
+        const json = await fetchJson(`/api/images/entry-id/${encodeURIComponent(entryId)}`, {
+            method: 'POST',
+            body: form
+        })
 
-    if (!response.ok) {
-        const text = await response.text().catch(() => '')
-        const err = new Error(`Image upload failed: ${response.status} ${response.statusText} ${text}`)
-        throw err
+        window.dispatchEvent(new Event(UPLOAD_FINISHED_EVENT))
+
+        return json
+    } catch (err) {
+        const apiError = err as ApiError
+        apiError.message = apiError.problem?.detail || apiError.message || 'Image upload failed'
+        
+        throw apiError
     }
-
-    const json = await response.json()
-    window.dispatchEvent(new Event(UPLOAD_FINISHED_EVENT))
-
-    return json
 }
 
 

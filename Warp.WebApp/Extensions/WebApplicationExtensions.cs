@@ -201,6 +201,7 @@ internal static class WebApplicationExtensions
             app.UseHsts();
         }
 
+        app.UseMiddleware<TraceContextMiddleware>();
         app.UseMiddleware<ApiExceptionHandlerMiddleware>();
         app.UseMiddleware<TraceMethodMiddleware>();
         app.UseMiddleware<CancellationExceptionHandlerMiddleware>();
