@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics;
 using Warp.WebApp.Telemetry.Logging;
-using Warp.WebApp.Helpers;
 using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Extensions;
 
@@ -12,7 +11,7 @@ public class CancellationExceptionHandlerMiddleware
     {
         _next = next;
     }
-    
+
 
     public async Task InvokeAsync(HttpContext context)
     {
@@ -22,7 +21,7 @@ public class CancellationExceptionHandlerMiddleware
         }
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {
-            var traceId = Activity.Current?.Id ?? context.TraceIdentifier;
+            var traceId = Activity.Current?.TraceId.ToString() ?? context.TraceIdentifier;
             var error = DomainErrors.ServiceUnavailable(traceId, ex.Message)
                 .AddTraceId(traceId);
 

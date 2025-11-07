@@ -1,4 +1,5 @@
-﻿using Warp.WebApp.Telemetry.Logging;
+﻿using System.Diagnostics;
+using Warp.WebApp.Telemetry.Logging;
 using Warp.WebApp.Helpers;
 using Warp.WebApp.Helpers.Configuration;
 using Warp.WebApp.Models.Errors;
@@ -26,6 +27,11 @@ public class ApiExceptionHandlerMiddleware
         {
             var sentryId = SentrySdk.CaptureException(ex);
             var traceId = context.TraceIdentifier;
+            if (string.IsNullOrWhiteSpace(traceId))
+            {
+                traceId = Activity.Current?.TraceId.ToString() ?? Guid.NewGuid().ToString("N");
+                context.TraceIdentifier = traceId;
+            }
 
             _logger.LogServerErrorWithMessage(traceId, ex.Message);
             var error = DomainErrors.ServerErrorWithMessage(ex.Message)
