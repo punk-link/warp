@@ -2,6 +2,7 @@ import { toProblemDetails, ProblemDetailsParseError, ProblemDetails } from '../t
 import type { ApiError } from '../types/api-error'
 import type { AppRequestInit } from '../types/app-request-init'
 import { ErrorHandlingMode } from '../types/error-handling-mode'
+import { buildTraceHeaders, extractTraceIdFromHeaders } from '../telemetry/traceContext'
 
 
 function buildApiError(params: { message: string; status: number; requestId?: string | null; traceId?: string | null; eventId?: number; sentryId?: string | null; retryAfter?: number; method?: string; endpoint?: string; problem?: ProblemDetails; rawBody?: unknown; cause?: unknown }): ApiError {
@@ -58,16 +59,35 @@ function maybeHandleGlobally(error: ApiError, req: AppRequestInit): void {
 
 
 export async function fetchJson<T = any>(url: string, opts: AppRequestInit = {}): Promise<T> {
+    const method = (opts.method || 'GET').toString()
+    const { headers, context: traceContext } = buildTraceHeaders({
+        headers: opts.headers,
+        traceContext: opts.traceContext,
+        ensureJsonAccept: true
+    })
+
+    const fetchOptions: RequestInit = {
+        ...opts,
+        credentials: 'include',
+        headers
+    }
+
+    delete (fetchOptions as any).traceContext
+    delete (fetchOptions as any).errorHandling
+    delete (fetchOptions as any).notifyLevel
+    delete (fetchOptions as any).dedupeKey
+    delete (fetchOptions as any).context
+
     let response: Response
     try {
-        response = await fetch(url, { credentials: 'include', headers: { 'Accept': 'application/json', ...(opts.headers || {}) }, ...opts })
+        response = await fetch(url, fetchOptions)
     } catch (e: any) {
         const err = buildApiError({
             message: e?.message || 'Network error',
             status: 0,
             requestId: null,
-            traceId: null,
-            method: (opts.method || 'GET').toString(),
+            traceId: traceContext.traceId,
+            method,
             endpoint: url,
             rawBody: undefined,
             cause: e
@@ -79,6 +99,7 @@ export async function fetchJson<T = any>(url: string, opts: AppRequestInit = {})
 
     const contentType = response.headers.get('content-type') || ''
     const requestId = response.headers.get('x-request-id')
+    const traceId = extractTraceIdFromHeaders(response.headers) ?? traceContext.traceId
 
     let parsedBody: any = undefined
     let isJson = /json/i.test(contentType)
@@ -90,15 +111,15 @@ export async function fetchJson<T = any>(url: string, opts: AppRequestInit = {})
             parsedBody = await response.text()
     } catch (e) {
         if (!response.ok) {
-            const err = buildApiError({ 
-                message: `Request failed: ${response.status}`, 
-                status: response.status, 
-                requestId, 
-                traceId: requestId, 
-                method: (opts.method || 'GET').toString(), 
-                endpoint: url, 
-                rawBody: parsedBody, 
-                cause: e 
+            const err = buildApiError({
+                message: `Request failed: ${response.status}`,
+                status: response.status,
+                requestId,
+                traceId,
+                method,
+                endpoint: url,
+                rawBody: parsedBody,
+                cause: e
             })
             maybeHandleGlobally(err, opts)
             throw err
@@ -118,11 +139,11 @@ export async function fetchJson<T = any>(url: string, opts: AppRequestInit = {})
                     message: problem.title || `Request failed: ${response.status}`,
                     status: response.status,
                     requestId: requestId,
-                    traceId: requestId || problem.traceId,
+                    traceId: traceId ?? problem.traceId,
                     eventId: problem.eventId,
                     sentryId: problem.sentryId,
                     retryAfter,
-                    method: (opts.method || 'GET').toString(),
+                    method,
                     endpoint: url,
                     problem,
                     rawBody: parsedBody
@@ -136,8 +157,8 @@ export async function fetchJson<T = any>(url: string, opts: AppRequestInit = {})
                         message: parsedBody?.message || `Request failed: ${response.status}`,
                         status: response.status,
                         requestId,
-                        traceId: requestId,
-                        method: (opts.method || 'GET').toString(),
+                        traceId,
+                        method,
                         endpoint: url,
                         rawBody: parsedBody,
                         cause: err
@@ -152,7 +173,16 @@ export async function fetchJson<T = any>(url: string, opts: AppRequestInit = {})
         }
 
         const msg = typeof parsedBody === 'string' && parsedBody.trim() ? parsedBody.substring(0, 300) : `Request failed: ${response.status}`
-        const err = buildApiError({ message: msg, status: response.status, requestId, traceId: requestId, method: (opts.method || 'GET').toString(), endpoint: url, rawBody: parsedBody })
+        const err = buildApiError({
+            message: msg,
+            status: response.status,
+            requestId,
+            traceId,
+            method,
+            endpoint: url,
+            rawBody: parsedBody
+        })
+
         maybeHandleGlobally(err, opts)
 
         throw err
