@@ -1,4 +1,5 @@
-﻿using Sentry.Protocol;
+﻿using System.Collections.Generic;
+using System.Globalization;
 using System.Text.Json;
 using Warp.WebApp.Helpers.Configuration;
 using Warp.WebApp.Models.Options;
@@ -112,12 +113,20 @@ internal static class SpaExtensions
     { 
         app.MapGet("/config.js", async (HttpContext ctx, IConfiguration configuration, IWebHostEnvironment env) =>
         {
-            var config = new
+            var config = new Dictionary<string, object?>
             {
-                apiBaseUrl = "/api",
-                environment = env.EnvironmentName,
-                sentryDsn = configuration["Sentry:FrontendDsn"]
+                ["apiBaseUrl"] = "/api",
+                ["environment"] = env.EnvironmentName,
+                ["sentryDsn"] = configuration["Sentry:FrontendDsn"]
             };
+
+            var tracesSampleRate = ParseSampleRate(configuration, "Sentry:FrontendTracesSampleRate");
+            if (tracesSampleRate.HasValue)
+                config["sentryTracesSampleRate"] = tracesSampleRate.Value;
+
+            var profilesSampleRate = ParseSampleRate(configuration, "Sentry:FrontendProfilesSampleRate");
+            if (profilesSampleRate.HasValue)
+                config["sentryProfilesSampleRate"] = profilesSampleRate.Value;
 
             var js = $"window.appConfig = {JsonSerializer.Serialize(config)};";
 
@@ -127,6 +136,19 @@ internal static class SpaExtensions
         });
 
         return app;
+    
+    
+        static double? ParseSampleRate(IConfiguration configuration, string key)
+        {
+            var value = configuration[key];
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+
+            if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed))
+                return null;
+
+            return Math.Clamp(parsed, 0d, 1d);
+        }
     }
 
 
@@ -152,8 +174,8 @@ internal static class SpaExtensions
 
         return app;
     }
-    
-    
+
+
     private const string GoogleGTagScript = """
         (function() {
             const script = document.createElement('script');

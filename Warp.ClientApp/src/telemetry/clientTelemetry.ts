@@ -1,20 +1,8 @@
-import { ErrorHandlingMode } from '../types/error-handling-mode'
-import { NotifyLevel } from '../types/notify-level'
+import { reportApiErrorToSentry } from './sentry'
+import type { ApiErrorTelemetry } from './types'
 
 
-export interface ApiErrorTelemetry {
-    category: 'api-error'
-    method?: string
-    endpoint?: string
-    status?: number
-    handledBy: ErrorHandlingMode
-    requestId?: string | null
-    traceId?: string | null
-    eventId?: number
-    sentryId?: string | null
-    dedupeKey?: string
-    notifyLevel?: NotifyLevel
-}
+export type { ApiErrorTelemetry } from './types'
 
 
 function sanitizeEndpoint(url: string | undefined): string | undefined {
@@ -36,6 +24,8 @@ export function emitApiErrorTelemetry(payload: Omit<ApiErrorTelemetry, 'category
         ...payload,
         endpoint: sanitizeEndpoint(payload.endpoint)
     }
+
+    reportApiErrorToSentry(data)
 
     try {
         window.dispatchEvent(new CustomEvent('telemetry', { detail: data }))
