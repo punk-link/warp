@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text.Json;
 using Warp.WebApp.Helpers.Configuration;
 using Warp.WebApp.Models.Options;
@@ -87,9 +86,10 @@ internal static class SpaExtensions
         }
     }
 
+
     internal static WebApplication MapSpaAnalytics(this WebApplication app)
-    { 
-        app.MapGet("/analytics.js", async (HttpContext ctx, IConfiguration configuration, IWebHostEnvironment env) => 
+    {
+        app.MapGet("/analytics.js", async (HttpContext ctx, IConfiguration configuration, IWebHostEnvironment env) =>
         {
             var analyticsOptions = configuration.GetSection(nameof(AnalyticsOptions)).Get<AnalyticsOptions>() ?? new AnalyticsOptions();
 
@@ -206,7 +206,6 @@ internal static class SpaExtensions
             accurateTrackBounce:true
         });
         """;
-
 
     private static readonly string _assetsPathSegment = $"{Path.DirectorySeparatorChar}assets{Path.DirectorySeparatorChar}";
     private static readonly HashSet<string> _passthroughPrefixes = ["/api", "/health", "/config.js", "/analytics.js", "/robots.txt"];
