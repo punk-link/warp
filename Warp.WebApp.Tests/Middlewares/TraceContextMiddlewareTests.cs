@@ -32,13 +32,6 @@ public class TraceContextMiddlewareTests
             activity.Stop();
             Activity.Current = original;
         }
-
-        
-        static async Task Next(HttpContext ctx)
-        {
-            await ctx.Response.StartAsync();
-            await ctx.Response.WriteAsync("ok");
-        }
     }
 
 
@@ -64,12 +57,12 @@ public class TraceContextMiddlewareTests
         {
             Activity.Current = original;
         }
+    }
 
         
-        static async Task Next(HttpContext ctx)
-        {
-            await ctx.Response.StartAsync();
-            await ctx.Response.WriteAsync("ok");
-        }
+    private static async Task Next(HttpContext ctx)
+    {
+        await ctx.Response.StartAsync();
+        await ctx.Response.WriteAsync("ok");
     }
 }

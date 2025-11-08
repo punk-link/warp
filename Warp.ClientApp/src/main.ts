@@ -8,6 +8,7 @@ import './styles/tailwind.css'
 import { createI18nInstance } from './i18n'
 import { setupDefaultErrorBridge } from './api/errorBridge'
 import { buildTraceHeaders } from './telemetry/traceContext'
+import { setupSentry } from './telemetry/sentry'
 
 
 async function ensureCsrf() {
@@ -24,20 +25,26 @@ async function ensureCsrf() {
 }
 
 
-;(async () => {
+async function bootstrap(): Promise<void> {
     await ensureCsrf()
 
     const i18n = await createI18nInstance()
+    const app = createApp(App)
 
     setupDefaultErrorBridge(router)
 
-    createApp(App)
-        .use(router)
-        .use(i18n)
-        .mount('#app')
-})()
+    app.use(router)
+    app.use(i18n)
 
-    
+    setupSentry(app, router)
+
+    app.mount('#app')
+}
+
+
+void bootstrap()
+
+
 declare global {
     interface Window { Fancybox?: typeof Fancybox }
 }

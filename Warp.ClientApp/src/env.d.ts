@@ -13,6 +13,8 @@ declare global {
       apiBaseUrl?: string
       environment?: string
       sentryDsn?: string
+      sentryProfilesSampleRate?: number | null
+      sentryTracesSampleRate?: number | null
     }
   }
 }

@@ -8,6 +8,9 @@ export default defineConfig(({ mode }) => {
     return {
         plugins: [vue()],
         base: '/',
+        define: {
+            'import.meta.env.VITE_APP_VERSION': JSON.stringify(process.env.npm_package_version ?? '0.0.0')
+        },
         server: {
             port: 5173,
             strictPort: true,
