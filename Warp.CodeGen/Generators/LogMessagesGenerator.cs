@@ -42,13 +42,23 @@ public partial class LogMessagesGenerator : BaseGenerator
                     
                 var methodName = $"Log{logEvent.Name}";
                 var parameters = ExtractParameters(logEvent.Description);
-                
+                var methodParameters = new List<string>();
+                if (logEvent.IncludeException)
+                    methodParameters.Add("Exception exception");
+
+                if (!string.IsNullOrEmpty(parameters))
+                    methodParameters.Add(parameters);
+
+                var signature = methodParameters.Count > 0
+                    ? string.Join(", ", methodParameters)
+                    : string.Empty;
+
                 sb.AppendLine($"    [LoggerMessage((int)LogEvents.{logEvent.Name}, LogLevel.{logEvent.LogLevel}, \"{logEvent.Description}\")]");
                 if (logEvent.Obsolete)
                     sb.AppendLine($"    [Obsolete(\"This log message is obsolete. Do not use it.\")]");
 
-                if (parameters.Length > 0)
-                    sb.AppendLine($"    public static partial void {methodName}(this ILogger logger, {parameters});");
+                if (!string.IsNullOrEmpty(signature))
+                    sb.AppendLine($"    public static partial void {methodName}(this ILogger logger, {signature});");
                 else
                     sb.AppendLine($"    public static partial void {methodName}(this ILogger logger);");
                 

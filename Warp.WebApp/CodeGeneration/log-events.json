@@ -177,6 +177,34 @@
           "httpCode": 500
         },
         {
+          "id": 12211,
+          "name": "EntryImageCleanupFailure",
+          "description": "Failed to remove image '{ImageId:Guid}' for entry '{EntryId:Guid}'. Details: '{ErrorMessage:string?}'.",
+          "logLevel": "Warning",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
+          "id": 12212,
+          "name": "EntryImageCleanupBatchError",
+          "description": "Unexpected error while processing entry image cleanup batch. Details: '{ErrorMessage:string?}'.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "includeException": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
+          "id": 12213,
+          "name": "EntryImageCleanupAbandoned",
+          "description": "Giving up on cleaning entry '{EntryId:Guid}' after {FailureCount:int} attempts.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
           "id": 12301,
           "name": "FileUploadException",
           "description": "An error occurred while uploading the file. Details: '{ErrorMessage:string}'.",

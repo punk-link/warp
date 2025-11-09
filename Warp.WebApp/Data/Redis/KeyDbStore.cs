@@ -1,17 +1,13 @@
 ﻿using StackExchange.Redis;
 using System.Text.Json;
-using Warp.WebApp.Models;
-using Warp.WebApp.Models.Entries;
-using Warp.WebApp.Models.Images;
 using Warp.WebApp.Services.Encryption;
 
 namespace Warp.WebApp.Data.Redis;
 
-public sealed class KeyDbStorage : IDistributedStorage
+public sealed class KeyDbStore : RedisStoreBase, IDistributedStore
 {
-    public KeyDbStorage(IConnectionMultiplexer multiplexer, IEncryptionService encryptionService)
+    public KeyDbStore(IConnectionMultiplexer multiplexer, IEncryptionService encryptionService) : base(multiplexer)
     {
-        _multiplexer = multiplexer;
         _encryptionService = encryptionService;
     }
 
@@ -126,36 +122,5 @@ public sealed class KeyDbStorage : IDistributedStorage
     }
 
 
-    private IDatabase GetDatabase<T>()
-    {
-        var dbIndex = ToDatabaseIndex(typeof(T));
-        return _multiplexer.GetDatabase(dbIndex);
-    }
-
-
-    private static async Task<T?> ExecuteOrCancel<T>(Task<T?> task, CancellationToken cancellationToken)
-    {
-        var completedTask = await Task.WhenAny(task, Task.Delay(Timeout.Infinite, cancellationToken));
-        if (completedTask == task)
-            return await task;
-
-        cancellationToken.ThrowIfCancellationRequested();
-        return default;
-    }
-
-
-    private static int ToDatabaseIndex<T>(T type)
-        => type switch
-        {
-            EntryInfo => 1,
-            ImageInfo => 2,
-            Report => 3,
-            string => 4,
-            Guid => 5,
-            _ => 0
-        };
-
-
-    private readonly IConnectionMultiplexer _multiplexer;
     private readonly IEncryptionService _encryptionService;
 }
