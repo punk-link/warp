@@ -1,7 +1,6 @@
-﻿
-namespace Warp.WebApp.Data.Redis;
+﻿namespace Warp.WebApp.Data.Redis;
 
-public interface IDistributedStorage
+public interface IDistributedStore
 {
     public Task<long> AddAndGetCounter(string key, CancellationToken cancellationToken);
     public Task AddToSet<T>(string key, T value, TimeSpan expiresIn, CancellationToken cancellationToken);

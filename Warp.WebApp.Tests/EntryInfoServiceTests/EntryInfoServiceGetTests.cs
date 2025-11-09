@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Warp.WebApp.Data;
@@ -23,12 +25,16 @@ public class EntryInfoServiceGetTests
             _dataStorageSubstitute,
             _entryServiceSubstitute,
             _imageServiceSubstitute,
+            _entryImageLifecycleServiceSubstitute,
             _loggerFactorySubstitute,
             _openGraphServiceSubstitute,
             _reportServiceSubstitute,
             _viewCountServiceSubstitute
         );
         _creator = new Creator(Guid.NewGuid());
+
+        _entryImageLifecycleServiceSubstitute.Track(Arg.Any<Guid>(), Arg.Any<DateTime>(), Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
     }
 
 
@@ -189,4 +195,5 @@ public class EntryInfoServiceGetTests
     private readonly IImageService _imageServiceSubstitute = Substitute.For<IImageService>();
     private readonly IEntryService _entryServiceSubstitute = Substitute.For<IEntryService>();
     private readonly ICreatorService _creatorServiceSubstitute = Substitute.For<ICreatorService>();
+    private readonly IEntryImageLifecycleService _entryImageLifecycleServiceSubstitute = Substitute.For<IEntryImageLifecycleService>();
 }

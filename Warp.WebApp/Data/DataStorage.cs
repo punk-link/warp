@@ -8,7 +8,7 @@ namespace Warp.WebApp.Data;
 
 public sealed class DataStorage : IDataStorage
 {
-    public DataStorage(ILoggerFactory loggerFactory, IMemoryCache memoryCache, IDistributedStorage distributedStorage)
+    public DataStorage(ILoggerFactory loggerFactory, IMemoryCache memoryCache, IDistributedStore distributedStorage)
     {
         _logger = loggerFactory.CreateLogger<DataStorage>();
         _memoryCache = memoryCache;
@@ -114,5 +114,5 @@ public sealed class DataStorage : IDataStorage
 
     private readonly ILogger<DataStorage> _logger;
     private readonly IMemoryCache _memoryCache;
-    private readonly IDistributedStorage _distributedStorage;
+    private readonly IDistributedStore _distributedStorage;
 }

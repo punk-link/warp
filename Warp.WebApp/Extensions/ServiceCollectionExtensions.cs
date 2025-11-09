@@ -31,8 +31,9 @@ internal static class ServiceCollectionExtensions
 
         services.AddTransient(_ => VaultHelper.GetVaultClient(configuration));
     
-        services.AddTransient<IDistributedStorage, KeyDbStorage>();
+        services.AddTransient<IDistributedStore, KeyDbStore>();
         services.AddTransient<IS3FileStorage, S3FileStorage>();
+        services.AddSingleton<IEntryLifecycleIndexStore, EntryLifecycleIndexStore>();
 
         if (configuration["EncryptionOptions:Type"] == "AesEncryptionService")
             services.AddTransient<IEncryptionService, AesEncryptionService>();
@@ -44,6 +45,7 @@ internal static class ServiceCollectionExtensions
 
         services.AddTransient<IUnauthorizedImageService, ImageService>();
         services.AddTransient<IImageService, ImageService>();
+        services.AddScoped<IEntryImageLifecycleService, EntryImageLifecycleService>();
         services.AddTransient<IDataStorage, DataStorage>();
         services.AddTransient<IAmazonS3Factory, AmazonS3Factory>();
         services.AddTransient<IReportService, ReportService>();
@@ -61,6 +63,8 @@ internal static class ServiceCollectionExtensions
         services.AddScoped<ValidateIdFilter>();
 
         services.AddHostedService<WarmupService>();
+        services.AddHostedService<EntryImageCleanupService>();
+        services.AddHostedService<OrphanImageCleanupService>();
 
         return services;
     }
@@ -105,6 +109,16 @@ internal static class ServiceCollectionExtensions
                     options.MaxFileSize = builder.Configuration.GetValue<long>("ImageUploadOptions:MaxFileSize");
                     options.RequestBoundaryLengthLimit = builder.Configuration.GetValue<int>("ImageUploadOptions:RequestBoundaryLengthLimit");
                 })
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+
+            services.AddOptions<EntryCleanupOptions>()
+                .BindConfiguration(nameof(EntryCleanupOptions))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+
+            services.AddOptions<OrphanImageCleanupOptions>()
+                .BindConfiguration(nameof(OrphanImageCleanupOptions))
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 

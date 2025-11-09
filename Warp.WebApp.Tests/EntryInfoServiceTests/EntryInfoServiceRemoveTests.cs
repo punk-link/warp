@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Warp.WebApp.Data;
 using Warp.WebApp.Models.Creators;
@@ -23,12 +25,20 @@ public class EntryInfoServiceRemoveTests
             _dataStorageSubstitute,
             _entryServiceSubstitute,
             _imageServiceSubstitute,
+            _entryImageLifecycleServiceSubstitute,
             _loggerFactorySubstitute,
             _openGraphServiceSubstitute,
             _reportServiceSubstitute,
             _viewCountServiceSubstitute
         );
         _creator = new Creator(Guid.NewGuid());
+
+        _entryImageLifecycleServiceSubstitute.Remove(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+        _entryImageLifecycleServiceSubstitute.Track(Arg.Any<Guid>(), Arg.Any<DateTime>(), Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+        _entryImageLifecycleServiceSubstitute.RemoveImage(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
     }
 
 
@@ -141,4 +151,5 @@ public class EntryInfoServiceRemoveTests
     private readonly IImageService _imageServiceSubstitute = Substitute.For<IImageService>();
     private readonly IEntryService _entryServiceSubstitute = Substitute.For<IEntryService>();
     private readonly ICreatorService _creatorServiceSubstitute = Substitute.For<ICreatorService>();
+    private readonly IEntryImageLifecycleService _entryImageLifecycleServiceSubstitute = Substitute.For<IEntryImageLifecycleService>();
 }

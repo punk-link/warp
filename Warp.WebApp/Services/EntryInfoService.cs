@@ -1,5 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
 using CSharpFunctionalExtensions.ValueTasks;
+using System.Linq;
 using Warp.WebApp.Attributes;
 using Warp.WebApp.Data;
 using Warp.WebApp.Models.Creators;
@@ -28,6 +29,7 @@ public class EntryInfoService : IEntryInfoService
     /// <param name="dataStorage">The data storage service for persisting entry information.</param>
     /// <param name="entryService">The service for managing entry content.</param>
     /// <param name="imageService">The service for managing images.</param>
+    /// <param name="entryImageLifecycleService">The service for tracking entry image lifecycle metadata.</param>
     /// <param name="loggerFactory">The factory for creating loggers.</param>
     /// <param name="openGraphService">The service for generating OpenGraph descriptions.</param>
     /// <param name="reportService">The service for handling entry reports.</param>
@@ -36,6 +38,7 @@ public class EntryInfoService : IEntryInfoService
         IDataStorage dataStorage,
         IEntryService entryService,
         IImageService imageService,
+        IEntryImageLifecycleService entryImageLifecycleService,
         ILoggerFactory loggerFactory,
         IOpenGraphService openGraphService,
         IReportService reportService,
@@ -45,6 +48,7 @@ public class EntryInfoService : IEntryInfoService
 
         _creatorService = creatorService;
         _dataStorage = dataStorage;
+        _entryImageLifecycleService = entryImageLifecycleService;
         _entryService = entryService;
         _imageService = imageService;
         _openGraphService = openGraphService;
@@ -66,7 +70,8 @@ public class EntryInfoService : IEntryInfoService
             .Bind(BuildEntryInfo)
             .Bind(Validate)
             .Bind(AttachToCreator)
-            .Tap(CacheEntryInfo);
+            .Tap(CacheEntryInfo)
+            .Tap(TrackEntryLifecycle);
 
 
         Task<Result<Entry, DomainError>> AddEntry()
@@ -133,6 +138,13 @@ public class EntryInfoService : IEntryInfoService
         {
             var cacheKey = CacheKeyBuilder.BuildEntryInfoCacheKey(entryInfo.Id);
             return _dataStorage.Set(cacheKey, entryInfo, entryRequest.ExpiresIn, cancellationToken);
+        }
+
+
+        Task TrackEntryLifecycle(EntryInfo entryInfo)
+        {
+            var imageIds = entryInfo.ImageInfos.Select(imageInfo => imageInfo.Id);
+            return _entryImageLifecycleService.Track(entryInfo.Id, entryInfo.ExpiresAt, imageIds, cancellationToken);
         }
     }
 
@@ -256,7 +268,24 @@ public class EntryInfoService : IEntryInfoService
     {
         return await GetEntryInfo(entryId, cancellationToken)
             .Ensure(entryInfo => IsBelongsToCreator(entryInfo, creator), DomainErrors.NoPermissionError())
+            .Tap(RemoveImages)
+            .Tap(RemoveLifecycle)
             .Tap(RemoveEntryInfo);
+
+
+        async Task RemoveImages(EntryInfo entryInfo)
+        {
+            foreach (var imageInfo in entryInfo.ImageInfos)
+            {
+                var removeResult = await _imageService.Remove(entryId, imageInfo.Id, cancellationToken);
+                if (removeResult.IsFailure)
+                    _logger.LogEntryImageCleanupFailure(imageInfo.Id, entryId, removeResult.Error.Detail);
+            }
+        }
+
+
+        Task RemoveLifecycle(EntryInfo _)
+            => _entryImageLifecycleService.Remove(entryId, cancellationToken);
 
 
         Task RemoveEntryInfo()
@@ -329,7 +358,6 @@ public class EntryInfoService : IEntryInfoService
             .Ensure(entryInfo => IsBelongsToCreator(entryInfo, creator), DomainErrors.NoPermissionError())
             .Bind(UpdateEntryInfo)
             .TapError(LogDomainError)
-            .Tap(CacheEntryInfo)
             .Bind(RemoveImage);
 
 
@@ -344,25 +372,42 @@ public class EntryInfoService : IEntryInfoService
             => _logger.LogImageRemovalDomainError(imageId, error.Detail!);
 
 
-        async Task CacheEntryInfo(EntryInfo entryInfo)
+        async Task<UnitResult<DomainError>> RemoveImage(EntryInfo entry)
+        {
+            var removalResult = await _imageService.Remove(entryId, imageId, cancellationToken);
+            if (removalResult.IsFailure)
+                return removalResult;
+
+            await PersistEntryInfo(entry);
+            return removalResult;
+        }
+
+
+        async Task PersistEntryInfo(EntryInfo entryInfo)
         {
             var expiresAt = entryInfo.ExpiresAt - DateTime.UtcNow;
             var cacheKey = CacheKeyBuilder.BuildEntryInfoCacheKey(entryInfo.Id);
             await _dataStorage.Set(cacheKey, entryInfo, expiresAt, cancellationToken);
+
+            var imageIds = entryInfo.ImageInfos.Select(info => info.Id);
+            await _entryImageLifecycleService.Track(entryInfo.Id, entryInfo.ExpiresAt, imageIds, cancellationToken);
         }
-
-
-        Task<UnitResult<DomainError>> RemoveImage(EntryInfo entry)
-            => _imageService.Remove(entryId, imageId, cancellationToken);
     }
 
 
-    private Task<UnitResult<DomainError>> RemoveUnattachedImageInternally(Guid entryId, Guid imageId, CancellationToken cancellationToken) 
-        => _imageService.Remove(entryId, imageId, cancellationToken);
+    private async Task<UnitResult<DomainError>> RemoveUnattachedImageInternally(Guid entryId, Guid imageId, CancellationToken cancellationToken)
+    {
+        var result = await _imageService.Remove(entryId, imageId, cancellationToken);
+        if (result.IsSuccess)
+            await _entryImageLifecycleService.RemoveImage(entryId, imageId, cancellationToken);
+
+        return result;
+    }
 
 
     private readonly ICreatorService _creatorService;
     private readonly IDataStorage _dataStorage;
+    private readonly IEntryImageLifecycleService _entryImageLifecycleService;
     private readonly IEntryService _entryService;
     private readonly IImageService _imageService;
     private readonly ILogger<EntryInfoService> _logger;
