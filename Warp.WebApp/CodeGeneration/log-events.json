@@ -205,6 +205,34 @@
           "httpCode": 500
         },
         {
+          "id": 12214,
+          "name": "OrphanImageCleanupStarted",
+          "description": "Orphan image cleanup run started.",
+          "logLevel": "Information",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 200
+        },
+        {
+          "id": 12215,
+          "name": "OrphanImageCleanupCompleted",
+          "description": "Orphan image cleanup run completed. Deleted {DeletedCount:int} images across {ScannedCount:int} scanned objects in {ElapsedSeconds:double} seconds.",
+          "logLevel": "Information",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 200
+        },
+        {
+          "id": 12216,
+          "name": "OrphanImageCleanupFailed",
+          "description": "Orphan image cleanup run failed. Details: '{ErrorMessage:string?}'.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "includeException": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
           "id": 12301,
           "name": "FileUploadException",
           "description": "An error occurred while uploading the file. Details: '{ErrorMessage:string}'.",

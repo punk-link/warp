@@ -64,6 +64,7 @@ internal static class ServiceCollectionExtensions
 
         services.AddHostedService<WarmupService>();
         services.AddHostedService<EntryImageCleanupService>();
+        services.AddHostedService<OrphanImageCleanupService>();
 
         return services;
     }
@@ -113,6 +114,11 @@ internal static class ServiceCollectionExtensions
 
             services.AddOptions<EntryCleanupOptions>()
                 .BindConfiguration(nameof(EntryCleanupOptions))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+
+            services.AddOptions<OrphanImageCleanupOptions>()
+                .BindConfiguration(nameof(OrphanImageCleanupOptions))
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 
