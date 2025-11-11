@@ -33,7 +33,7 @@ public class EntryInfoServiceGetTests
         );
         _creator = new Creator(Guid.NewGuid());
 
-        _entryImageLifecycleServiceSubstitute.Track(Arg.Any<Guid>(), Arg.Any<DateTime>(), Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>())
+        _entryImageLifecycleServiceSubstitute.Track(Arg.Any<Guid>(), Arg.Any<DateTimeOffset>(), Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
     }
 
@@ -49,8 +49,8 @@ public class EntryInfoServiceGetTests
         var entryInfo = new EntryInfo(
             id: entryId, 
             creatorId: creatorId, 
-            createdAt: DateTime.UtcNow, 
-            expiresAt: DateTime.UtcNow.AddDays(1), 
+            createdAt: DateTimeOffset.UtcNow, 
+            expiresAt: DateTimeOffset.UtcNow.AddDays(1), 
             editMode: EditMode.Simple,
             entry: new Entry("Test content"), 
             imageInfos: [], 
@@ -84,8 +84,8 @@ public class EntryInfoServiceGetTests
         var entryInfo = new EntryInfo(
             id: entryId, 
             creatorId: _creator.Id, 
-            createdAt: DateTime.UtcNow, 
-            expiresAt: DateTime.UtcNow.AddDays(1), 
+            createdAt: DateTimeOffset.UtcNow, 
+            expiresAt: DateTimeOffset.UtcNow.AddDays(1), 
             editMode: EditMode.Simple, 
             entry: new Entry("Test content"), 
             imageInfos: [], 
@@ -155,8 +155,8 @@ public class EntryInfoServiceGetTests
         var entryInfo = new EntryInfo(
             id: entryId, 
             creatorId: _creator.Id, 
-            createdAt: DateTime.UtcNow, 
-            expiresAt: DateTime.UtcNow.AddDays(1), 
+            createdAt: DateTimeOffset.UtcNow, 
+            expiresAt: DateTimeOffset.UtcNow.AddDays(1), 
             editMode: EditMode.Advanced,
             entry: new Entry(content), 
             imageInfos: [], 

@@ -8,7 +8,7 @@ namespace Warp.WebApp.Models.Images;
 public sealed record EntryImageLifecycle
 {
     [JsonConstructor]
-    public EntryImageLifecycle(Guid entryId, DateTime expiresAt, IReadOnlyList<Guid> imageIds, int failureCount)
+    public EntryImageLifecycle(Guid entryId, DateTimeOffset expiresAt, IReadOnlyList<Guid> imageIds, int failureCount)
     {
         EntryId = entryId;
         ExpiresAt = expiresAt;
@@ -20,7 +20,7 @@ public sealed record EntryImageLifecycle
     public Guid EntryId { get; init; }
 
 
-    public DateTime ExpiresAt { get; init; }
+    public DateTimeOffset ExpiresAt { get; init; }
 
 
     public IReadOnlyList<Guid> ImageIds { get; init; }
@@ -29,18 +29,18 @@ public sealed record EntryImageLifecycle
     public int FailureCount { get; init; }
 
 
-    public static EntryImageLifecycle Create(Guid entryId, DateTime expiresAt, IEnumerable<Guid> imageIds)
+    public static EntryImageLifecycle Create(Guid entryId, DateTimeOffset expiresAt, IEnumerable<Guid> imageIds)
     {
         var images = imageIds?.ToArray() ?? [];
         return new EntryImageLifecycle(entryId, expiresAt, images, 0);
     }
 
 
-    public EntryImageLifecycle IncrementFailure(DateTime nextAttempt)
+    public EntryImageLifecycle IncrementFailure(DateTimeOffset nextAttempt)
         => this with { FailureCount = FailureCount + 1, ExpiresAt = nextAttempt };
 
 
-    public EntryImageLifecycle WithImages(IEnumerable<Guid> imageIds, DateTime expiresAt)
+    public EntryImageLifecycle WithImages(IEnumerable<Guid> imageIds, DateTimeOffset expiresAt)
     {
         var images = imageIds?.ToArray() ?? [];
         return this with { ImageIds = images, ExpiresAt = expiresAt, FailureCount = 0 };

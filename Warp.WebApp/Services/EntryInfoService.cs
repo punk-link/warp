@@ -62,7 +62,7 @@ public class EntryInfoService : IEntryInfoService
     public Task<Result<EntryInfo, DomainError>> Add(Creator creator, EntryRequest entryRequest, CancellationToken cancellationToken)
     {
         var entryInfoId = entryRequest.Id;
-        var now = DateTime.UtcNow;
+        var now = DateTimeOffset.UtcNow;
 
         return AddEntry()
             .Bind(GetImageInfos)
@@ -385,7 +385,7 @@ public class EntryInfoService : IEntryInfoService
 
         async Task PersistEntryInfo(EntryInfo entryInfo)
         {
-            var expiresAt = entryInfo.ExpiresAt - DateTime.UtcNow;
+            var expiresAt = entryInfo.ExpiresAt - DateTimeOffset.UtcNow;
             var cacheKey = CacheKeyBuilder.BuildEntryInfoCacheKey(entryInfo.Id);
             await _dataStorage.Set(cacheKey, entryInfo, expiresAt, cancellationToken);
 

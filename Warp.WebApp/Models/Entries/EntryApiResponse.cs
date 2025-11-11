@@ -6,7 +6,7 @@ namespace Warp.WebApp.Models.Entries;
 
 public readonly record struct EntryApiResponse
 {
-    public EntryApiResponse(string id, EditMode editMode, ExpirationPeriod expirationPeriod, DateTime expiresAt, List<ImageInfo> images, string textContent, long viewCount)
+    public EntryApiResponse(string id, EditMode editMode, ExpirationPeriod expirationPeriod, DateTimeOffset expiresAt, List<ImageInfo> images, string textContent, long viewCount)
     {
         Id = id;
         EditMode = editMode;
@@ -26,13 +26,13 @@ public readonly record struct EntryApiResponse
 
 
     public static EntryApiResponse Empty(string id) 
-        => new (id, EditMode.Unset, ExpirationPeriod.FiveMinutes, DateTime.MinValue, [], string.Empty, 0);
+        => new (id, EditMode.Unset, ExpirationPeriod.FiveMinutes, DateTimeOffset.MinValue, [], string.Empty, 0);
 
 
     public string Id { get; }
     public EditMode EditMode { get; } = EditMode.Unset;
     public ExpirationPeriod ExpirationPeriod { get; } = ExpirationPeriod.FiveMinutes;
-    public DateTime ExpiresAt { get; }
+    public DateTimeOffset ExpiresAt { get; }
     public List<ImageInfoResponse> Images { get; } = [];
     public string TextContent { get; } = string.Empty;
     public long ViewCount { get; }

@@ -36,7 +36,7 @@ public class EntryInfoServiceUpdateTests
         );
         _creator = new Creator(Guid.NewGuid());
 
-        _entryImageLifecycleServiceSubstitute.Track(Arg.Any<Guid>(), Arg.Any<DateTime>(), Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>())
+        _entryImageLifecycleServiceSubstitute.Track(Arg.Any<Guid>(), Arg.Any<DateTimeOffset>(), Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
     }
 
@@ -66,8 +66,8 @@ public class EntryInfoServiceUpdateTests
         var existingEntryInfo = new EntryInfo(
             id: entryId, 
             creatorId: _creator.Id, 
-            createdAt: DateTime.UtcNow, 
-            expiresAt: DateTime.UtcNow.AddDays(1), 
+            createdAt: DateTimeOffset.UtcNow, 
+            expiresAt: DateTimeOffset.UtcNow.AddDays(1), 
             editMode: EditMode.Advanced, 
             entry: existingEntry, 
             imageInfos: new List<ImageInfo>(), 
@@ -76,8 +76,8 @@ public class EntryInfoServiceUpdateTests
         var updatedEntryInfo = new EntryInfo(
             id: entryId, 
             creatorId: _creator.Id, 
-            createdAt: DateTime.UtcNow, 
-            expiresAt: DateTime.UtcNow.AddDays(1), 
+            createdAt: DateTimeOffset.UtcNow, 
+            expiresAt: DateTimeOffset.UtcNow.AddDays(1), 
             editMode: EditMode.Advanced, 
             entry: updatedEntry, 
             imageInfos: imageInfos, 
@@ -130,8 +130,8 @@ public class EntryInfoServiceUpdateTests
         var existingEntryInfo = new EntryInfo(
             id: entryId, 
             creatorId: differentCreatorId, 
-            createdAt: DateTime.UtcNow, 
-            expiresAt: DateTime.UtcNow.AddDays(1), 
+            createdAt: DateTimeOffset.UtcNow, 
+            expiresAt: DateTimeOffset.UtcNow.AddDays(1), 
             editMode: EditMode.Simple, 
             entry: new Entry("Original content"), 
             imageInfos: new List<ImageInfo>(), 
@@ -166,8 +166,8 @@ public class EntryInfoServiceUpdateTests
         var existingEntryInfo = new EntryInfo(
             id: entryId, 
             creatorId: _creator.Id, 
-            createdAt: DateTime.UtcNow, 
-            expiresAt: DateTime.UtcNow.AddDays(1), 
+            createdAt: DateTimeOffset.UtcNow, 
+            expiresAt: DateTimeOffset.UtcNow.AddDays(1), 
             editMode: EditMode.Simple, 
             entry: new Entry("Original content"), 
             imageInfos: new List<ImageInfo>(), 
@@ -232,8 +232,8 @@ public class EntryInfoServiceUpdateTests
         var existingEntryInfo = new EntryInfo(
             id: entryId, 
             creatorId: _creator.Id, 
-            createdAt: DateTime.UtcNow, 
-            expiresAt: DateTime.UtcNow.AddDays(1), 
+            createdAt: DateTimeOffset.UtcNow, 
+            expiresAt: DateTimeOffset.UtcNow.AddDays(1), 
             editMode: EditMode.Simple, 
             entry: new Entry("Original content"), 
             imageInfos: new List<ImageInfo>(), 

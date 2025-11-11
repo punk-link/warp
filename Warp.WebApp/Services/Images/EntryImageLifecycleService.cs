@@ -67,7 +67,7 @@ public sealed class EntryImageLifecycleService : IEntryImageLifecycleService
 
 
     /// <inheritdoc />
-    public async Task Reschedule(EntryImageLifecycle lifecycle, DateTime resumeAt, CancellationToken cancellationToken)
+    public async Task Reschedule(EntryImageLifecycle lifecycle, DateTimeOffset resumeAt, CancellationToken cancellationToken)
     {
         var updated = lifecycle.IncrementFailure(resumeAt);
         await PersistLifecycle(updated, cancellationToken);
@@ -75,7 +75,7 @@ public sealed class EntryImageLifecycleService : IEntryImageLifecycleService
 
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<EntryImageLifecycle>> TakeExpired(DateTime utcNow, int take, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<EntryImageLifecycle>> TakeExpired(DateTimeOffset utcNow, int take, CancellationToken cancellationToken)
     {
         if (take <= 0)
             return [];
@@ -118,7 +118,7 @@ public sealed class EntryImageLifecycleService : IEntryImageLifecycleService
 
 
     /// <inheritdoc />
-    public async Task Track(Guid entryId, DateTime expiresAt, IEnumerable<Guid> imageIds, CancellationToken cancellationToken)
+    public async Task Track(Guid entryId, DateTimeOffset expiresAt, IEnumerable<Guid> imageIds, CancellationToken cancellationToken)
     {
         var normalizedImages = imageIds?.Where(id => id != Guid.Empty).ToArray() ?? Array.Empty<Guid>();
         if (normalizedImages.Length == 0)
@@ -132,10 +132,10 @@ public sealed class EntryImageLifecycleService : IEntryImageLifecycleService
     }
 
 
-    private TimeSpan CalculateMetadataTtl(DateTime expiresAt)
+    private TimeSpan CalculateMetadataTtl(DateTimeOffset expiresAt)
     {
         var buffer = TimeSpan.FromMinutes(Math.Max(1, _options.MetadataRetentionBufferMinutes));
-        var ttl = expiresAt - DateTime.UtcNow + buffer;
+        var ttl = expiresAt - DateTimeOffset.UtcNow + buffer;
         return ttl > buffer ? ttl : buffer;
     }
 

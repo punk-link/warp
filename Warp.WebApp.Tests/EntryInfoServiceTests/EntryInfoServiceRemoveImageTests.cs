@@ -37,7 +37,7 @@ public class EntryInfoServiceRemoveImageTests
         );
         _creator = new Creator(Guid.NewGuid());
 
-        _entryImageLifecycleServiceSubstitute.Track(Arg.Any<Guid>(), Arg.Any<DateTime>(), Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>())
+        _entryImageLifecycleServiceSubstitute.Track(Arg.Any<Guid>(), Arg.Any<DateTimeOffset>(), Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
         _entryImageLifecycleServiceSubstitute.RemoveImage(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
@@ -62,8 +62,8 @@ public class EntryInfoServiceRemoveImageTests
         var entryInfo = new EntryInfo(
             id: entryId, 
             creatorId: _creator.Id, 
-            createdAt: DateTime.UtcNow, 
-            expiresAt: DateTime.UtcNow.AddDays(1), 
+            createdAt: DateTimeOffset.UtcNow, 
+            expiresAt: DateTimeOffset.UtcNow.AddDays(1), 
             editMode: EditMode.Advanced,
             entry: new Entry("Test content"), 
             imageInfos: imageInfos, 
@@ -125,8 +125,8 @@ public class EntryInfoServiceRemoveImageTests
         var entryInfo = new EntryInfo(
             id: entryId, 
             creatorId: differentCreatorId, 
-            createdAt: DateTime.UtcNow, 
-            expiresAt: DateTime.UtcNow.AddDays(1), 
+            createdAt: DateTimeOffset.UtcNow, 
+            expiresAt: DateTimeOffset.UtcNow.AddDays(1), 
             editMode: EditMode.Advanced,
             entry: new Entry("Test content"), 
             imageInfos: imageInfos, 
@@ -158,8 +158,8 @@ public class EntryInfoServiceRemoveImageTests
         var entryInfo = new EntryInfo(
             id: entryId, 
             creatorId: _creator.Id, 
-            createdAt: DateTime.UtcNow, 
-            expiresAt: DateTime.UtcNow.AddDays(1), 
+            createdAt: DateTimeOffset.UtcNow, 
+            expiresAt: DateTimeOffset.UtcNow.AddDays(1), 
             editMode: EditMode.Advanced,
             entry: new Entry("Test content"), 
             imageInfos: imageInfos, 

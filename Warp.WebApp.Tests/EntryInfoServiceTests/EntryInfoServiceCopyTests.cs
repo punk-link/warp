@@ -36,7 +36,7 @@ public class EntryInfoServiceCopyTests
         );
         _creator = new Creator(Guid.NewGuid());
 
-        _entryImageLifecycleServiceSubstitute.Track(Arg.Any<Guid>(), Arg.Any<DateTime>(), Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>())
+        _entryImageLifecycleServiceSubstitute.Track(Arg.Any<Guid>(), Arg.Any<DateTimeOffset>(), Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
         _entryImageLifecycleServiceSubstitute.Remove(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
@@ -58,8 +58,8 @@ public class EntryInfoServiceCopyTests
         var originalEntryInfo = new EntryInfo(
             id: originalEntryId, 
             creatorId: _creator.Id, 
-            createdAt: DateTime.UtcNow.AddDays(-1), 
-            expiresAt: DateTime.UtcNow.AddDays(2), 
+            createdAt: DateTimeOffset.UtcNow.AddDays(-1), 
+            expiresAt: DateTimeOffset.UtcNow.AddDays(2), 
             editMode: EditMode.Advanced,
             entry: new Entry("Original content"), 
             imageInfos: imageInfos, 
@@ -147,8 +147,8 @@ public class EntryInfoServiceCopyTests
         var entryInfo = new EntryInfo(
             id: entryId, 
             creatorId: differentCreatorId, 
-            createdAt: DateTime.UtcNow, 
-            expiresAt: DateTime.UtcNow.AddDays(1), 
+            createdAt: DateTimeOffset.UtcNow, 
+            expiresAt: DateTimeOffset.UtcNow.AddDays(1), 
             editMode: EditMode.Simple,
             entry: new Entry("Test content"), 
             imageInfos: [], 
@@ -181,8 +181,8 @@ public class EntryInfoServiceCopyTests
         var originalEntryInfo = new EntryInfo(
             id: originalEntryId, 
             creatorId: _creator.Id, 
-            createdAt: DateTime.UtcNow, 
-            expiresAt: DateTime.UtcNow.AddDays(1), 
+            createdAt: DateTimeOffset.UtcNow, 
+            expiresAt: DateTimeOffset.UtcNow.AddDays(1), 
             editMode: EditMode.Advanced,
             entry: new Entry("Original content"), 
             imageInfos: imageInfos, 
@@ -216,8 +216,8 @@ public class EntryInfoServiceCopyTests
         var originalEntryInfo = new EntryInfo(
             id: originalEntryId, 
             creatorId: _creator.Id, 
-            createdAt: DateTime.UtcNow, 
-            expiresAt: DateTime.UtcNow.AddDays(1), 
+            createdAt: DateTimeOffset.UtcNow, 
+            expiresAt: DateTimeOffset.UtcNow.AddDays(1), 
             editMode: EditMode.Simple,
             entry: new Entry("Original content"), 
             imageInfos: [], 
