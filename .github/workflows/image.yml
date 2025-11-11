@@ -1,78 +1,96 @@
-name: Server CI workflow
+name: Build → GHCR → Helm
 
 on:
   push:
     branches: [ master ]
+    tags: [ 'v*.*.*' ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
-  docker-test:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    
+    env:
+      IMAGE: ghcr.io/punk-link/warp
+
     steps:
-      - name: Checkout 
-        uses: actions/checkout@v2      
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+      # ── Docker Buildx ──
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # ── Login GHCR ──
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-          
+
+      # ── Теги ──
+      - name: Metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=edge,enable={{is_default_branch}}
+            type=sha,format=short,prefix=sha-
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      # ── Сборка и пуш в GHCR ──
       - name: Build & Push
         uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ github.run_id }}
-          labels: ${{ github.run_id }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
-          cache-to: type=gha,mode=max          
+          cache-to: type=gha,mode=max
 
-      - name: Push image to private registry
-        uses: docker/build-push-action@v2
-        env:
-          DOCKER_REGISTRY_URL: 46.62.248.6:5000        
-        with:
-          context: .
-          file: ./Dockerfile
-          builder: ${{ steps.buildx.outputs.name }}
-          push: true
-          tags: '${{ env.DOCKER_REGISTRY_URL }}/warp-webapp:${{ github.run_id }}'
-          cache-from: 'type=registry,ref=${{ env.DOCKER_REGISTRY_URL }}/warp-webapp:buildcache'
-          cache-to: 'type=registry,ref=${{ env.DOCKER_REGISTRY_URL }}/warp-webapp:buildcache,mode=max'
+      # ── Получаем короткий SHA для Helm ──
+      - name: Get short SHA
+        id: short
+        run: |
+          echo "sha=$(echo ${{ github.sha }} | cut -c1-9)" >> $GITHUB_OUTPUT
 
-      - name: Set up Helm
+      # ── Helm деплой ──
+      - name: Setup Helm
         uses: azure/setup-helm@v4
-        with:
-          version: v3.14.0  
 
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v4
-        with:
-          version: v1.28.0  
-
-      - name: Configure kubeconfig
+      - name: Kubernetes config
         run: |
           mkdir -p ~/.kube
-          echo '${{ secrets.KUBECONFIG }}' | base64 -d > ~/.kube/config
-          chmod 600 ~/.kube/config
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > ~/.kube/config
 
-      - name: Deploy Helm Chart
-        id: helm_deploy
+      - name: Helm deploy
         run: |
+          echo "${{ secrets.GHCR_PAT }}" | helm registry login ghcr.io \
+            --username punk-link --password-stdin
+
           helm upgrade --install warp-webapp ./Helm \
             --namespace dev \
-            --values ./Helm/values_dev.yaml \
-            --set image.repository=ghcr.io/punk-link/warp \
-            --set image.tag=${{ github.run_id }} \
-            --atomic \
-            --timeout 600s
+            --create-namespace \
+            --wait --atomic --timeout 8m \
+            --set image.repository=${{ env.IMAGE }} \
+            --set image.tag=sha-${{ steps.short.outputs.sha }} \
+            --set image.pullPolicy=IfNotPresent \
+            --values ./Helm/values_dev.yaml
 
+        env:
+          HELM_EXPERIMENTAL_OCI: 1
       - name: Send message to Telegram
         if: success()
         uses: appleboy/telegram-action@master
