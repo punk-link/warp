@@ -39,7 +39,7 @@ public interface IEntryImageLifecycleService
     /// <param name="resumeAt"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public Task Reschedule(EntryImageLifecycle lifecycle, DateTime resumeAt, CancellationToken cancellationToken);
+    public Task Reschedule(EntryImageLifecycle lifecycle, DateTimeOffset resumeAt, CancellationToken cancellationToken);
 
     /// <summary>
     /// Takes expired entry image lifecycles up to the specified count.
@@ -48,7 +48,7 @@ public interface IEntryImageLifecycleService
     /// <param name="take"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public Task<IReadOnlyList<EntryImageLifecycle>> TakeExpired(DateTime utcNow, int take, CancellationToken cancellationToken);
+    public Task<IReadOnlyList<EntryImageLifecycle>> TakeExpired(DateTimeOffset utcNow, int take, CancellationToken cancellationToken);
 
     /// <summary>
     /// Attempts to acquire a processing lock for the specified entry ID.
@@ -74,5 +74,5 @@ public interface IEntryImageLifecycleService
     /// <param name="imageIds"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public Task Track(Guid entryId, DateTime expiresAt, IEnumerable<Guid> imageIds, CancellationToken cancellationToken);
+    public Task Track(Guid entryId, DateTimeOffset expiresAt, IEnumerable<Guid> imageIds, CancellationToken cancellationToken);
 }

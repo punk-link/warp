@@ -36,7 +36,7 @@ public class EntryInfoServiceAddTests
         );
         _creator = new Creator(Guid.NewGuid());
 
-        _entryImageLifecycleServiceSubstitute.Track(Arg.Any<Guid>(), Arg.Any<DateTime>(), Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>())
+        _entryImageLifecycleServiceSubstitute.Track(Arg.Any<Guid>(), Arg.Any<DateTimeOffset>(), Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
     }
 
@@ -59,7 +59,7 @@ public class EntryInfoServiceAddTests
         {
             new(id: Guid.NewGuid(), entryId: entryRequest.Id, url: new Uri("http://example.com/image.jpg"))
         };
-        var entryInfo = new EntryInfo(entryRequest.Id, _creator.Id, DateTime.UtcNow, DateTime.UtcNow + entryRequest.ExpiresIn, 
+        var entryInfo = new EntryInfo(entryRequest.Id, _creator.Id, DateTimeOffset.UtcNow, DateTimeOffset.UtcNow + entryRequest.ExpiresIn, 
             EditMode.Advanced, entry, imageInfos, 0);
 
         _entryServiceSubstitute.Add(entryRequest, cancellationToken)

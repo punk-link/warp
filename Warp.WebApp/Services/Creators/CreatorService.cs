@@ -51,13 +51,13 @@ public class CreatorService : ICreatorService
             .Bind(AttachEntryToCreator);
 
 
-        async Task<DateTime> GetMaxExpirationDateTime()
+        async Task<DateTimeOffset> GetMaxExpirationDateTime()
         {
             var entryInfoIds = await _dataStorage.TryGetSet<Guid>(userIdCacheKey, cancellationToken);
             if (entryInfoIds.Count == 0)
-                return DateTime.MinValue;
+                return DateTimeOffset.MinValue;
 
-            var expirationDates = new List<DateTime>(entryInfoIds.Count);
+            var expirationDates = new List<DateTimeOffset>(entryInfoIds.Count);
             foreach (var entryInfoId in entryInfoIds)
             {
                 var entryIdCacheKey = CacheKeyBuilder.BuildEntryInfoCacheKey(entryInfoId);
@@ -71,7 +71,7 @@ public class CreatorService : ICreatorService
         }
 
 
-        Result<TimeSpan, DomainError> GetExpirationSpan(DateTime maxExpirationDateTime) 
+        Result<TimeSpan, DomainError> GetExpirationSpan(DateTimeOffset maxExpirationDateTime) 
             => maxExpirationDateTime > entryInfo.ExpiresAt
                 ? maxExpirationDateTime - entryInfo.ExpiresAt
                 : entryInfo.ExpiresAt - maxExpirationDateTime;

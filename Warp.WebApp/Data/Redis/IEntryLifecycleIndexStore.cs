@@ -11,7 +11,7 @@ public interface IEntryLifecycleIndexStore
     /// <param name="entryId">The identifier of the entry.</param>
     /// <param name="executeAtUtc">The UTC timestamp when the entry should be processed.</param>
     /// <param name="cancellationToken">Token used to observe cancellation requests.</param>
-    public Task Schedule(Guid entryId, DateTime executeAtUtc, CancellationToken cancellationToken);
+    public Task Schedule(Guid entryId, DateTimeOffset executeAtUtc, CancellationToken cancellationToken);
 
     /// <summary>
     /// Removes the specified entry from the lifecycle index.
@@ -34,7 +34,7 @@ public interface IEntryLifecycleIndexStore
     /// <param name="take">The maximum number of members to return.</param>
     /// <param name="cancellationToken">Token used to observe cancellation requests.</param>
     /// <returns>A read-only list of lifecycle members.</returns>
-    public Task<IReadOnlyList<string>> TakeDue(DateTime maxScoreUtc, int take, CancellationToken cancellationToken);
+    public Task<IReadOnlyList<string>> TakeDue(DateTimeOffset maxScoreUtc, int take, CancellationToken cancellationToken);
 
     /// <summary>
     /// Attempts to acquire a processing lock for the specified entry.

@@ -50,7 +50,7 @@ public sealed class EntryImageCleanupService : BackgroundService
         var lifecycleService = scope.ServiceProvider.GetRequiredService<IEntryImageLifecycleService>();
         var imageService = scope.ServiceProvider.GetRequiredService<IImageService>();
 
-        var expired = await lifecycleService.TakeExpired(DateTime.UtcNow, _options.BatchSize, cancellationToken);
+        var expired = await lifecycleService.TakeExpired(DateTimeOffset.UtcNow, _options.BatchSize, cancellationToken);
         if (expired.Count == 0)
             return false;
 
@@ -98,7 +98,7 @@ public sealed class EntryImageCleanupService : BackgroundService
                 return;
             }
 
-            var retryAt = DateTime.UtcNow.AddSeconds(Math.Max(1, _options.FailureBackoffSeconds));
+            var retryAt = DateTimeOffset.UtcNow.AddSeconds(Math.Max(1, _options.FailureBackoffSeconds));
             await lifecycleService.Reschedule(lifecycle, retryAt, cancellationToken);
         }
         finally

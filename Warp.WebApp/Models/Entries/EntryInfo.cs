@@ -9,8 +9,8 @@ public readonly record struct EntryInfo
     [JsonConstructor]
     public EntryInfo(Guid id, 
         Guid creatorId, 
-        DateTime createdAt,
-        DateTime expiresAt, 
+        DateTimeOffset createdAt,
+        DateTimeOffset expiresAt, 
         EditMode editMode,
         Entry entry, 
         List<ImageInfo> imageInfos,
@@ -28,11 +28,11 @@ public readonly record struct EntryInfo
 
         
     public Guid Id { get; }
-    public DateTime CreatedAt { get; }
+    public DateTimeOffset CreatedAt { get; }
     public Guid CreatorId { get; }
     public EditMode EditMode { get; } = EditMode.Unset;
     public Entry Entry { get; }
-    public DateTime ExpiresAt { get; }
+    public DateTimeOffset ExpiresAt { get; }
     public List<ImageInfo> ImageInfos { get; init; }
     public long ViewCount { get; init; }
 }

@@ -35,7 +35,7 @@ public class EntryInfoServiceRemoveTests
 
         _entryImageLifecycleServiceSubstitute.Remove(Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
-        _entryImageLifecycleServiceSubstitute.Track(Arg.Any<Guid>(), Arg.Any<DateTime>(), Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>())
+        _entryImageLifecycleServiceSubstitute.Track(Arg.Any<Guid>(), Arg.Any<DateTimeOffset>(), Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
         _entryImageLifecycleServiceSubstitute.RemoveImage(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
@@ -51,8 +51,8 @@ public class EntryInfoServiceRemoveTests
         var entryInfo = new EntryInfo(
             id: Guid.NewGuid(), 
             creatorId: _creator.Id, 
-            createdAt: DateTime.UtcNow, 
-            expiresAt: DateTime.UtcNow.AddDays(1), 
+            createdAt: DateTimeOffset.UtcNow, 
+            expiresAt: DateTimeOffset.UtcNow.AddDays(1), 
             editMode: EditMode.Simple,
             entry: new Entry("Some content"), 
             imageInfos: [], 
@@ -78,8 +78,8 @@ public class EntryInfoServiceRemoveTests
         var entryInfo = new EntryInfo(
             id: Guid.NewGuid(), 
             creatorId: differentCreatorId, 
-            createdAt: DateTime.UtcNow, 
-            expiresAt: DateTime.UtcNow.AddDays(1), 
+            createdAt: DateTimeOffset.UtcNow, 
+            expiresAt: DateTimeOffset.UtcNow.AddDays(1), 
             editMode: EditMode.Simple,
             entry: new Entry("Some content"), 
             imageInfos: [], 
@@ -120,8 +120,8 @@ public class EntryInfoServiceRemoveTests
         var entryInfo = new EntryInfo(
             id: Guid.NewGuid(), 
             creatorId: _creator.Id, 
-            createdAt: DateTime.UtcNow, 
-            expiresAt: DateTime.UtcNow.AddDays(1), 
+            createdAt: DateTimeOffset.UtcNow, 
+            expiresAt: DateTimeOffset.UtcNow.AddDays(1), 
             editMode: EditMode.Simple,
             entry: new Entry("Some content"), 
             imageInfos: [], 

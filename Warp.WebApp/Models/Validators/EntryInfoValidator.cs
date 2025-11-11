@@ -11,7 +11,7 @@ public class EntryInfoValidator : AbstractValidator<EntryInfo>
     public EntryInfoValidator()
     {
         var error = DomainErrors.WarpExpirationPeriodEmpty();
-        RuleFor(x => x.ExpiresAt).GreaterThan(default(DateTime))
+        RuleFor(x => x.ExpiresAt).GreaterThan(default(DateTimeOffset))
             .WithErrorCode(error.Code.ToHttpStatusCodeInt().ToString())
             .WithMessage(error.Detail);
 

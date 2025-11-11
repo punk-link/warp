@@ -18,7 +18,7 @@ public sealed class EntryLifecycleIndexStore : RedisStoreBase, IEntryLifecycleIn
 
 
     /// <inheritdoc />
-    public async Task Schedule(Guid entryId, DateTime executeAtUtc, CancellationToken cancellationToken)
+    public async Task Schedule(Guid entryId, DateTimeOffset executeAtUtc, CancellationToken cancellationToken)
     {
         var member = NormalizeMember(entryId);
         var score = ToScore(executeAtUtc);
@@ -50,7 +50,7 @@ public sealed class EntryLifecycleIndexStore : RedisStoreBase, IEntryLifecycleIn
 
 
     /// <inheritdoc />
-    public async Task<IReadOnlyList<string>> TakeDue(DateTime maxScoreUtc, int take, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<string>> TakeDue(DateTimeOffset maxScoreUtc, int take, CancellationToken cancellationToken)
     {
         if (take <= 0)
             return [];
@@ -108,8 +108,8 @@ public sealed class EntryLifecycleIndexStore : RedisStoreBase, IEntryLifecycleIn
     }
 
 
-    private static double ToScore(DateTime timestampUtc)
-        => new DateTimeOffset(timestampUtc, TimeSpan.Zero).ToUnixTimeMilliseconds();
+    private static double ToScore(DateTimeOffset timestampUtc)
+        => timestampUtc.ToUnixTimeMilliseconds();
 
 
     private const string IndexKey = nameof(EntryImageLifecycle);
