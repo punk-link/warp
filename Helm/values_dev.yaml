@@ -12,10 +12,10 @@ image:
   tag: "latest"
 
 imagePullSecrets:
-  - name: punk-link-registry
+  - name: ghcr-secret
 nameOverride: ""
 imagePullSecrets:
-  - name: punk-link-registry
+  - name: ghcr-secret
 fullnameOverride: ""
 
 serviceAccount:
