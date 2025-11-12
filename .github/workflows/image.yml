@@ -85,7 +85,7 @@ jobs:
             --create-namespace \
             --wait --atomic --timeout 8m \
             --set image.repository=${{ env.IMAGE }} \
-            --set image.tag=sha-${{ steps.short.outputs.sha }} \
+            --set image.tag=${{ env.GITHUB_OUTPUT }} \
             --set image.pullPolicy=IfNotPresent \
             --values ./Helm/values_dev.yaml
 
