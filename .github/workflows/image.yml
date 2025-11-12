@@ -42,6 +42,7 @@ jobs:
         with:
           images: ${{ env.IMAGE }}
           tags: |
+            type=raw,value=${{ github.run_id }} ,enable={{is_default_branch}}
             type=raw,value=latest,enable={{is_default_branch}}
             type=raw,value=edge,enable={{is_default_branch}}
             type=sha,format=short,prefix=sha-
@@ -55,7 +56,7 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ${{ github.run_id }} 
+          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
