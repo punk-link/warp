@@ -14,7 +14,8 @@ public static class MetricsExtensions
                 .AddHttpClientInstrumentation()
                 .AddAspNetCoreInstrumentation()
                 .AddMeter("Microsoft.AspNetCore.Hosting")
-                .AddMeter("Microsoft.AspNetCore.Server.Kestrel");
+                .AddMeter("Microsoft.AspNetCore.Server.Kestrel")
+                .AddMeter(ApplicationMetrics.Meter.Name);
         });
 
         return builder;

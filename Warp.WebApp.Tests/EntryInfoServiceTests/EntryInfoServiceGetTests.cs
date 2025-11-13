@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Warp.WebApp.Data;
@@ -11,6 +9,7 @@ using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
 using Warp.WebApp.Services.OpenGraph;
+using Warp.WebApp.Telemetry.Metrics;
 
 namespace Warp.WebApp.Tests.EntryInfoServiceTests;
 
@@ -29,7 +28,8 @@ public class EntryInfoServiceGetTests
             _loggerFactorySubstitute,
             _openGraphServiceSubstitute,
             _reportServiceSubstitute,
-            _viewCountServiceSubstitute
+            _viewCountServiceSubstitute,
+            _entryInfoMetricsSubstitute
         );
         _creator = new Creator(Guid.NewGuid());
 
@@ -196,4 +196,5 @@ public class EntryInfoServiceGetTests
     private readonly IEntryService _entryServiceSubstitute = Substitute.For<IEntryService>();
     private readonly ICreatorService _creatorServiceSubstitute = Substitute.For<ICreatorService>();
     private readonly IEntryImageLifecycleService _entryImageLifecycleServiceSubstitute = Substitute.For<IEntryImageLifecycleService>();
+    private readonly IEntryInfoMetrics _entryInfoMetricsSubstitute = Substitute.For<IEntryInfoMetrics>();
 }
