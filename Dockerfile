@@ -28,6 +28,9 @@ COPY ["Warp.WebApp.Tests/Warp.WebApp.Tests.csproj", "Warp.WebApp.Tests/"]
 COPY ["Warp.WebApp.Tests/packages.lock.json", "Warp.WebApp.Tests/"]
 RUN --mount=type=cache,target=/root/.nuget/packages \
     --mount=type=cache,target=/root/.local/share/NuGet/Cache \
+    dotnet restore "./Warp.WebApp/Warp.WebApp.csproj" --runtime linux-x64 --locked-mode
+RUN --mount=type=cache,target=/root/.nuget/packages \
+    --mount=type=cache,target=/root/.local/share/NuGet/Cache \
     dotnet restore "./Warp.WebApp.Tests/Warp.WebApp.Tests.csproj" --runtime linux-x64 --locked-mode
 COPY . .
 WORKDIR "/src/Warp.WebApp"
