@@ -20,6 +20,7 @@ using Warp.WebApp.Services.Images;
 using Warp.WebApp.Services.Infrastructure;
 using Warp.WebApp.Services.OpenGraph;
 using Warp.WebApp.Telemetry.Logging;
+using Warp.WebApp.Telemetry.Metrics;
 
 namespace Warp.WebApp.Extensions;
 
@@ -54,6 +55,7 @@ internal static class ServiceCollectionExtensions
         services.AddTransient<IEntryService, EntryService>();
         services.AddTransient<ICreatorService, CreatorService>();
         services.AddTransient<ICookieService, CookieService>();
+        services.AddSingleton<IEntryInfoMetrics, EntryInfoMetrics>();
     
         services.AddSingleton<IRouteWarmer, RouteWarmerService>();
         services.AddSingleton<IServiceWarmer, ServiceWarmerService>();

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using Warp.WebApp.Constants.Logging;
 using Warp.WebApp.Data;
 using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Models.Entries;
@@ -14,6 +15,7 @@ using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
 using Warp.WebApp.Services.OpenGraph;
+using Warp.WebApp.Telemetry.Metrics;
 
 namespace Warp.WebApp.Tests.EntryInfoServiceTests;
 
@@ -32,7 +34,8 @@ public class EntryInfoServiceAddTests
             _loggerFactorySubstitute,
             _openGraphServiceSubstitute,
             _reportServiceSubstitute,
-            _viewCountServiceSubstitute
+            _viewCountServiceSubstitute,
+            _entryInfoMetricsSubstitute
         );
         _creator = new Creator(Guid.NewGuid());
 
@@ -44,6 +47,8 @@ public class EntryInfoServiceAddTests
     [Fact]
     public async Task Add_ShouldReturnEntryInfo_EntryIsAddedSuccessfully()
     {
+        _entryInfoMetricsSubstitute.ClearReceivedCalls();
+
         var entryRequest = new EntryRequest
         {
             Id = Guid.NewGuid(),
@@ -92,12 +97,21 @@ public class EntryInfoServiceAddTests
 
         await _openGraphServiceSubstitute.Received(1)
             .Add(entryRequest.Id, entry.Content, imageInfos[0].Url, entryRequest.ExpiresIn, cancellationToken);
+
+        _entryInfoMetricsSubstitute.Received(1)
+            .TrackActionCompleted(
+                EntryInfoMetricActions.Add,
+                EntryInfoMetricOutcomes.Success,
+                Arg.Any<TimeSpan>(),
+                Arg.Is<LogEvents?>(reason => reason == null));
     }
 
 
     [Fact]
     public async Task Add_ShouldReturnDomainError_EntryServiceFails()
     {
+        _entryInfoMetricsSubstitute.ClearReceivedCalls();
+
         var entryRequest = new EntryRequest { Id = Guid.NewGuid(), ExpiresIn = TimeSpan.FromDays(1) };
         var cancellationToken = CancellationToken.None;
 
@@ -111,12 +125,21 @@ public class EntryInfoServiceAddTests
         Assert.True(result.IsFailure);
         Assert.Equal(domainError.Code, result.Error.Code);
         Assert.Equal(domainError.Detail, result.Error.Detail);
+
+        _entryInfoMetricsSubstitute.Received(1)
+            .TrackActionCompleted(
+                EntryInfoMetricActions.Add,
+                EntryInfoMetricOutcomes.Failure,
+                Arg.Any<TimeSpan>(),
+                Arg.Is<LogEvents?>(reason => reason == domainError.Code));
     }
 
 
     [Fact]
     public async Task Add_ShouldReturnDomainError_GetImageInfosFails()
     {
+        _entryInfoMetricsSubstitute.ClearReceivedCalls();
+
         var entryRequest = new EntryRequest
         {
             Id = Guid.NewGuid(),
@@ -145,6 +168,8 @@ public class EntryInfoServiceAddTests
     [Fact]
     public async Task Add_ShouldReturnDomainError_AttachToCreatorFails()
     {
+        _entryInfoMetricsSubstitute.ClearReceivedCalls();
+
         var entryRequest = new EntryRequest
         {
             Id = Guid.NewGuid(),
@@ -190,4 +215,5 @@ public class EntryInfoServiceAddTests
     private readonly IEntryService _entryServiceSubstitute = Substitute.For<IEntryService>();
     private readonly ICreatorService _creatorServiceSubstitute = Substitute.For<ICreatorService>();
     private readonly IEntryImageLifecycleService _entryImageLifecycleServiceSubstitute = Substitute.For<IEntryImageLifecycleService>();
+    private readonly IEntryInfoMetrics _entryInfoMetricsSubstitute = Substitute.For<IEntryInfoMetrics>();
 }

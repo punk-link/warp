@@ -1,6 +1,6 @@
 ﻿using CSharpFunctionalExtensions;
 using CSharpFunctionalExtensions.ValueTasks;
-using System.Linq;
+using System.Diagnostics;
 using Warp.WebApp.Attributes;
 using Warp.WebApp.Data;
 using Warp.WebApp.Models.Creators;
@@ -13,6 +13,7 @@ using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
 using Warp.WebApp.Services.OpenGraph;
 using Warp.WebApp.Telemetry.Logging;
+using Warp.WebApp.Telemetry.Metrics;
 
 namespace Warp.WebApp.Services;
 
@@ -34,6 +35,7 @@ public class EntryInfoService : IEntryInfoService
     /// <param name="openGraphService">The service for generating OpenGraph descriptions.</param>
     /// <param name="reportService">The service for handling entry reports.</param>
     /// <param name="viewCountService">The service for tracking entry view counts.</param>
+    /// <param name="entryInfoMetrics">The metrics recorder for entry info actions.</param>
     public EntryInfoService(ICreatorService creatorService, 
         IDataStorage dataStorage,
         IEntryService entryService,
@@ -42,7 +44,8 @@ public class EntryInfoService : IEntryInfoService
         ILoggerFactory loggerFactory,
         IOpenGraphService openGraphService,
         IReportService reportService,
-        IViewCountService viewCountService)
+        IViewCountService viewCountService,
+        IEntryInfoMetrics entryInfoMetrics)
     {
         _logger = loggerFactory.CreateLogger<EntryInfoService>();
 
@@ -54,24 +57,31 @@ public class EntryInfoService : IEntryInfoService
         _openGraphService = openGraphService;
         _reportService = reportService;
         _viewCountService = viewCountService;
+        _entryInfoMetrics = entryInfoMetrics;
     }
 
 
     /// <inheritdoc/>
     [TraceMethod]
-    public Task<Result<EntryInfo, DomainError>> Add(Creator creator, EntryRequest entryRequest, CancellationToken cancellationToken)
+    public async Task<Result<EntryInfo, DomainError>> Add(Creator creator, EntryRequest entryRequest, CancellationToken cancellationToken)
     {
         var entryInfoId = entryRequest.Id;
         var now = DateTimeOffset.UtcNow;
+        var stopwatch = Stopwatch.StartNew();
 
-        return AddEntry()
+        return await AddEntry()
             .Bind(GetImageInfos)
             .Bind(AddOpenGraphDescription)
             .Bind(BuildEntryInfo)
             .Bind(Validate)
             .Bind(AttachToCreator)
             .Tap(CacheEntryInfo)
-            .Tap(TrackEntryLifecycle);
+            .Tap(TrackEntryLifecycle)
+            .Finally(result =>
+            {
+                TrackResult(EntryInfoMetricActions.Add, stopwatch, result);
+                return Task.FromResult(result);
+            });
 
 
         Task<Result<Entry, DomainError>> AddEntry()
@@ -151,16 +161,22 @@ public class EntryInfoService : IEntryInfoService
 
     /// <inheritdoc/>
     [TraceMethod]
-    public Task<Result<EntryInfo, DomainError>> Copy(Creator creator, Guid entryId, CancellationToken cancellationToken)
+    public async Task<Result<EntryInfo, DomainError>> Copy(Creator creator, Guid entryId, CancellationToken cancellationToken)
     {
         var newEntryId = Guid.CreateVersion7();
+        var stopwatch = Stopwatch.StartNew();
 
-        return GetEntryInfo(entryId, cancellationToken)
+        return await GetEntryInfo(entryId, cancellationToken)
             .Ensure(entryInfo => IsBelongsToCreator(entryInfo, creator), DomainErrors.NoPermissionError())
             .Bind(CopyOpenGraphDescription)
             .Bind(CopyImages)
             .Bind(BuildEntryRequest)
-            .Bind(AddEntryInfo);
+            .Bind(AddEntryInfo)
+            .Finally(result => 
+            { 
+                TrackResult(EntryInfoMetricActions.Copy, stopwatch, result);
+                return Task.FromResult(result);
+            });
 
 
         async Task<Result<EntryInfo, DomainError>> CopyOpenGraphDescription(EntryInfo entryInfo)
@@ -211,11 +227,18 @@ public class EntryInfoService : IEntryInfoService
 
     /// <inheritdoc/>
     [TraceMethod]
-    public Task<Result<EntryInfo, DomainError>> Get(Creator creator, Guid entryId, CancellationToken cancellationToken)
+    public async Task<Result<EntryInfo, DomainError>> Get(Creator creator, Guid entryId, CancellationToken cancellationToken)
     {
-        return EnsureNotReported(entryId, cancellationToken)
+        var stopwatch = Stopwatch.StartNew();
+
+        return await EnsureNotReported(entryId, cancellationToken)
             .Bind(() => GetEntryInfo(entryId, cancellationToken))
-            .Bind(GetOrAddViews);
+            .Bind(GetOrAddViews)
+            .Finally(result => 
+            {
+                TrackResult(EntryInfoMetricActions.Get, stopwatch, result);
+                return Task.FromResult(result);
+            });
 
 
         async Task<Result<EntryInfo, DomainError>> GetOrAddViews(EntryInfo entryInfo)
@@ -229,12 +252,19 @@ public class EntryInfoService : IEntryInfoService
     }
 
 
-    /// <inheritdoc/>
+    /// <inheritdoc?>
     [TraceMethod]
-    public Task<Result<EntryOpenGraphDescription, DomainError>> GetOpenGraphDescription(Guid entryId, CancellationToken cancellationToken)
+    public async Task<Result<EntryOpenGraphDescription, DomainError>> GetOpenGraphDescription(Guid entryId, CancellationToken cancellationToken)
     { 
-        return EnsureNotReported(entryId, cancellationToken)
-            .Bind(GetDescription);
+        var stopwatch = Stopwatch.StartNew();
+
+        return await EnsureNotReported(entryId, cancellationToken)
+            .Bind(GetDescription)
+            .Finally(result => 
+            {
+                TrackResult(EntryInfoMetricActions.GetOpenGraphDescription, stopwatch, result);
+                return Task.FromResult(result);
+            });
 
 
         async Task<Result<EntryOpenGraphDescription, DomainError>> GetDescription() 
@@ -246,19 +276,32 @@ public class EntryInfoService : IEntryInfoService
     [TraceMethod]
     public async Task<UnitResult<DomainError>> IsEditable(Creator creator, Guid entryId, CancellationToken cancellationToken)
     {
-        var entryInfoResult = await GetEntryInfo(entryId, cancellationToken);
-        if (entryInfoResult.IsFailure)
-            return entryInfoResult.Error;
+        var stopwatch = Stopwatch.StartNew();
 
-        var entryInfo = entryInfoResult.Value;
-        if (!IsBelongsToCreator(entryInfo, creator))
-            return DomainErrors.NoPermissionError();
+        return await Evaluate()
+            .Finally(result =>
+            {
+                TrackResult(EntryInfoMetricActions.IsEditable, stopwatch, result);
+                return Task.FromResult(result);
+            });
 
-        var viewCount = await _viewCountService.Get(entryId, cancellationToken);
-        if (viewCount != 0)
-            return DomainErrors.EntryCannotBeEditedAfterViewed();
 
-        return UnitResult.Success<DomainError>();
+        async Task<UnitResult<DomainError>> Evaluate()
+        {
+            var entryInfoResult = await GetEntryInfo(entryId, cancellationToken);
+            if (entryInfoResult.IsFailure)
+                return entryInfoResult.Error;
+
+            var entryInfo = entryInfoResult.Value;
+            if (!IsBelongsToCreator(entryInfo, creator))
+                return DomainErrors.NoPermissionError();
+
+            var viewCount = await _viewCountService.Get(entryId, cancellationToken);
+            if (viewCount != 0)
+                return DomainErrors.EntryCannotBeEditedAfterViewed();
+
+            return UnitResult.Success<DomainError>();
+        }
     }
 
 
@@ -266,11 +309,18 @@ public class EntryInfoService : IEntryInfoService
     [TraceMethod]
     public async Task<UnitResult<DomainError>> Remove(Creator creator, Guid entryId, CancellationToken cancellationToken)
     {
+        var stopwatch = Stopwatch.StartNew();
+
         return await GetEntryInfo(entryId, cancellationToken)
             .Ensure(entryInfo => IsBelongsToCreator(entryInfo, creator), DomainErrors.NoPermissionError())
             .Tap(RemoveImages)
             .Tap(RemoveLifecycle)
-            .Tap(RemoveEntryInfo);
+            .Tap(RemoveEntryInfo)
+            .Finally(result => 
+            { 
+                TrackResult(EntryInfoMetricActions.Remove, stopwatch, result);
+                return Task.FromResult(result);
+            });
 
 
         async Task RemoveImages(EntryInfo entryInfo)
@@ -298,27 +348,39 @@ public class EntryInfoService : IEntryInfoService
 
     /// <inheritdoc/>
     [TraceMethod]
-    public Task<UnitResult<DomainError>> RemoveImage(Creator creator, Guid entryId, Guid imageId, CancellationToken cancellationToken) 
-        => GetEntryInfo(entryId, cancellationToken)
+    public async Task<UnitResult<DomainError>> RemoveImage(Creator creator, Guid entryId, Guid imageId, CancellationToken cancellationToken) 
+    {
+        var stopwatch = Stopwatch.StartNew();
+
+        return await GetEntryInfo(entryId, cancellationToken)
             .Finally(result =>
             {
-                if (result.IsFailure)
-                    return RemoveUnattachedImageInternally(entryId, imageId, cancellationToken);
+                TrackResult(EntryInfoMetricActions.RemoveImage, stopwatch, result);
 
-                return RemoveAttachedImageInternally(result, creator, entryId, imageId, cancellationToken);
+                return result.IsFailure
+                    ? RemoveUnattachedImageInternally(entryId, imageId, cancellationToken)
+                    : RemoveAttachedImageInternally(result, creator, entryId, imageId, cancellationToken);
             });
+    }
 
 
     /// <inheritdoc/>
     [TraceMethod]
-    public Task<Result<EntryInfo, DomainError>> Update(Creator creator, EntryRequest entryRequest, CancellationToken cancellationToken)
+    public async Task<Result<EntryInfo, DomainError>> Update(Creator creator, EntryRequest entryRequest, CancellationToken cancellationToken)
     {
-        return GetEntryInfo(entryRequest.Id, cancellationToken)
+        var stopwatch = Stopwatch.StartNew();
+
+        return await GetEntryInfo(entryRequest.Id, cancellationToken)
             .Ensure(entryInfo => IsBelongsToCreator(entryInfo, creator), DomainErrors.NoPermissionError())
             .Ensure(entryInfo => entryInfo.EditMode == entryRequest.EditMode, DomainErrors.EntryEditModeMismatch())
             .Bind(GetViews)
             .Ensure(entryInfo => entryInfo.ViewCount == 0, DomainErrors.EntryCannotBeEditedAfterViewed())
-            .Bind(_ => Add(creator, entryRequest, cancellationToken));
+            .Bind(_ => Add(creator, entryRequest, cancellationToken))
+            .Finally(result => 
+            {
+                TrackResult(EntryInfoMetricActions.Update, stopwatch, result);
+                return Task.FromResult(result);
+            });
 
 
         async Task<Result<EntryInfo, DomainError>> GetViews(EntryInfo entryInfo)
@@ -327,6 +389,39 @@ public class EntryInfoService : IEntryInfoService
             return entryInfo with { ViewCount = viewCount };
         }
     }
+
+
+    private void TrackResult(string action, Stopwatch stopwatch, UnitResult<DomainError> result)
+    {
+        if (stopwatch.IsRunning)
+            stopwatch.Stop();
+
+        if (result.IsSuccess)
+            TrackSuccess(action, stopwatch.Elapsed);
+        else
+            TrackFailure(action, stopwatch.Elapsed, result.Error);
+    }
+
+
+    private void TrackResult<T>(string action, Stopwatch stopwatch, Result<T, DomainError> result)
+    {
+        if (stopwatch.IsRunning)
+            stopwatch.Stop();
+
+        if (result.IsSuccess)
+            TrackSuccess(action, stopwatch.Elapsed);
+        else
+            TrackFailure(action, stopwatch.Elapsed, result.Error);
+    }
+
+
+    private void TrackSuccess(string action, in TimeSpan elapsed) 
+        => _entryInfoMetrics.TrackActionCompleted(action, EntryInfoMetricOutcomes.Success, elapsed, null);
+
+
+    private void TrackFailure(string action, in TimeSpan elapsed, in DomainError error) 
+        => _entryInfoMetrics.TrackActionCompleted(action, EntryInfoMetricOutcomes.Failure, elapsed, error.Code);
+
 
     private async Task<UnitResult<DomainError>> EnsureNotReported(Guid entryId, CancellationToken cancellationToken)
     {
@@ -410,6 +505,7 @@ public class EntryInfoService : IEntryInfoService
     private readonly IEntryImageLifecycleService _entryImageLifecycleService;
     private readonly IEntryService _entryService;
     private readonly IImageService _imageService;
+    private readonly IEntryInfoMetrics _entryInfoMetrics;
     private readonly ILogger<EntryInfoService> _logger;
     private readonly IOpenGraphService _openGraphService;
     private readonly IReportService _reportService;
