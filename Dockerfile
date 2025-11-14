@@ -1,5 +1,4 @@
 FROM node:22-alpine AS frontend-deps
-ENV NODE_ENV=production
 WORKDIR /src/Warp.ClientApp
 COPY ["Warp.ClientApp/package.json", "Warp.ClientApp/yarn.lock", "./"]
 RUN --mount=type=cache,target=/root/.yarn-cache yarn install --frozen-lockfile --non-interactive
