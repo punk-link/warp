@@ -10,7 +10,7 @@ COPY --from=frontend-deps /src/Warp.ClientApp/node_modules ./node_modules
 RUN yarn vitest --run
 RUN --mount=type=cache,target=/tmp/vite-cache yarn build
 
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS base
 USER app
 WORKDIR /app
 EXPOSE 8080
