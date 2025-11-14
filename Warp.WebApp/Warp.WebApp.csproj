@@ -6,7 +6,7 @@
     <EnableDefaultStaticWebAssets>true</EnableDefaultStaticWebAssets>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RuntimeIdentifiers>linux-x64;win-x64</RuntimeIdentifiers>
+    <RuntimeIdentifiers>linux-x64</RuntimeIdentifiers>
     <UserSecretsId>283dab27-87b6-46e4-8250-f2fd17e5f08d</UserSecretsId>
   </PropertyGroup>
 
@@ -44,7 +44,7 @@
     <PackageReference Include="Consul" Version="1.7.14.8" />
     <PackageReference Include="CSharpFunctionalExtensions" Version="3.6.0" />
     <PackageReference Include="FluentValidation" Version="12.0.0" />
-    <PackageReference Include="AWSSDK.S3" Version="4.0.6.3" />
+    <PackageReference Include="AWSSDK.S3" Version="4.0.11.3" />
     <PackageReference Include="HashiCorp.Vault" Version="0.3.0" />
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" Version="9.0.8" />
     <PackageReference Include="Microsoft.FeatureManagement.AspNetCore" Version="4.2.1" />
