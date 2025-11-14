@@ -12,8 +12,6 @@ RUN yarn vitest --run
 RUN --mount=type=cache,target=/src/Warp.ClientApp/node_modules/.vite yarn build
 
 FROM mcr.microsoft.com/dotnet/aspnet:9.0-alpine AS base
-RUN id app 2>/dev/null || (addgroup -S app && adduser -S -G app -u 65000 app)
-RUN apk add --no-cache curl
 USER app
 WORKDIR /app
 EXPOSE 8080
