@@ -37,7 +37,7 @@ RUN --mount=type=cache,target=/root/.nuget/packages \
     --mount=type=cache,target=/root/.local/share/NuGet/Cache \
     --mount=type=cache,target=/root/.dotnet \
     dotnet build "./Warp.WebApp.csproj" -c $BUILD_CONFIGURATION \
-    -o /app/build --runtime linux-x64 --no-restore
+    -o /app/build --runtime linux-x64
 
 FROM build AS test
 ARG BUILD_CONFIGURATION=Release
