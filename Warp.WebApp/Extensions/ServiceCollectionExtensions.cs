@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.ResponseCompression;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -17,7 +16,6 @@ using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Encryption;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
-using Warp.WebApp.Services.Infrastructure;
 using Warp.WebApp.Services.OpenGraph;
 using Warp.WebApp.Telemetry.Logging;
 using Warp.WebApp.Telemetry.Metrics;
@@ -41,7 +39,6 @@ internal static class ServiceCollectionExtensions
         else
             services.AddSingleton<IEncryptionService, TransitEncryptionService>();
 
-        services.AddTransient<IUrlService, UrlService>();
         services.AddTransient<IOpenGraphService, OpenGraphService>();
 
         services.AddTransient<IUnauthorizedImageService, ImageService>();
@@ -59,7 +56,6 @@ internal static class ServiceCollectionExtensions
     
         services.AddSingleton<IRouteWarmer, RouteWarmerService>();
         services.AddSingleton<IServiceWarmer, ServiceWarmerService>();
-        services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
 
         services.AddScoped<RequireCreatorCookieFilter>();
         services.AddScoped<ValidateIdFilter>();
