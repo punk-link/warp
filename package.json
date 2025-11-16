@@ -2,7 +2,8 @@
   "scripts": {
     "lint:client": "cd Warp.ClientApp && yarn install && yarn lint",
     "format:client": "cd Warp.ClientApp && yarn install && yarn format",
-    "typecheck:client": "cd Warp.ClientApp && yarn install && yarn typecheck"
+    "typecheck:client": "cd Warp.ClientApp && yarn install && yarn typecheck",
+    "e2e:client": "cd Warp.ClientApp && yarn install && yarn e2e"
   },
   "dependencies": {}
 }

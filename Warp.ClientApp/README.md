@@ -82,6 +82,9 @@ yarn typecheck
 - `lint` / `format` — ESLint & Prettier
 - `test` — run Vitest once
 - `test:watch` — run Vitest in watch mode
+- `e2e` — run Playwright against the Vite dev server (auto-started)
+- `e2e:headed` — run the Playwright suite in headed Chromium for debugging
+- `e2e:install` — download/refresh the Playwright browser binaries
 
 These scripts are defined in `package.json` in this folder.
 
@@ -104,19 +107,34 @@ yarn test:watch
 
 End-to-end tests
 - A Playwright configuration is included (`playwright.config.ts`) and quick e2e tests live under `e2e/`.
-- If Playwright is not installed globally, run via `npx` or install it as a dev dependency.
+- The suite now runs via package scripts; the config auto-starts the Vite dev server (`yarn dev --host 127.0.0.1 --port 5173`).
+- Override defaults with `E2E_DEV_SERVER_PORT` or `E2E_DEV_SERVER_COMMAND` (e.g., point to a pre-built server or tunnel).
 
-Run Playwright tests (example):
-
-```powershell
-npx playwright test
-```
-
-Install browser dependencies when running Playwright for the first time:
+Run the Playwright suite (from `Warp.ClientApp`):
 
 ```powershell
-npx playwright install --with-deps
+yarn e2e
 ```
+
+Headed Chromium run:
+
+```powershell
+yarn e2e:headed
+```
+
+Install/refresh browser binaries (first-time setup or CI cache misses):
+
+```powershell
+yarn e2e:install
+```
+
+From the repo root you can also run:
+
+```powershell
+yarn e2e:client
+```
+
+The root command mirrors other client scripts and ensures dependencies are installed before kicking off the E2E run.
 
 ## Internationalization (i18n)
 
