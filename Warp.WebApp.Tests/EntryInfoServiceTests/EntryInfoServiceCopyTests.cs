@@ -135,7 +135,7 @@ public class EntryInfoServiceCopyTests
         Assert.Equal(Constants.Logging.LogEvents.EntryNotFound, result.Error.Code);
 
         await _openGraphServiceSubstitute.DidNotReceiveWithAnyArgs()
-            .Add(default, default(EntryOpenGraphDescription), default, default);
+            .Add(default, default, default, TestContext.Current.CancellationToken);
     }
 
 
@@ -165,7 +165,7 @@ public class EntryInfoServiceCopyTests
         Assert.Equal(Constants.Logging.LogEvents.NoPermissionError, result.Error.Code);
 
         await _openGraphServiceSubstitute.DidNotReceiveWithAnyArgs()
-            .Add(default, default(EntryOpenGraphDescription), default, default);
+            .Add(default, default, default, TestContext.Current.CancellationToken);
     }
 
 
