@@ -8,7 +8,7 @@ using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Models.Options;
 using Warp.WebApp.Services.OpenGraph;
 
-namespace Warp.WebApp.Tests;
+namespace Warp.WebApp.Tests.UnitTests;
 
 public class OpenGraphServiceTests
 {

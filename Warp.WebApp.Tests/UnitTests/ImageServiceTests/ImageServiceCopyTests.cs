@@ -10,7 +10,7 @@ using Warp.WebApp.Models.Files;
 using Warp.WebApp.Models.Images;
 using Warp.WebApp.Services.Images;
 
-namespace Warp.WebApp.Tests.ImageServiceTests;
+namespace Warp.WebApp.Tests.UnitTests.ImageServiceTests;
 
 public class ImageServiceCopyTests
 {

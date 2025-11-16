@@ -11,7 +11,7 @@ using Warp.WebApp.Models.Options;
 using Warp.WebApp.Services.Encryption;
 using Warp.WebApp.Tests.Infrastructure;
 
-namespace Warp.WebApp.Tests.EncryptionServiceTests;
+namespace Warp.WebApp.Tests.UnitTests.EncryptionServiceTests;
 
 public class TransitEncryptionServiceDecryptTests
 {

@@ -2,7 +2,7 @@
 using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Services.Entries;
 
-namespace Warp.WebApp.Tests;
+namespace Warp.WebApp.Tests.UnitTests;
 
 public class EntryServiceTests
 {

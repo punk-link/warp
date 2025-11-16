@@ -11,7 +11,7 @@ using Warp.WebApp.Services.Images;
 using Warp.WebApp.Services.OpenGraph;
 using Warp.WebApp.Telemetry.Metrics;
 
-namespace Warp.WebApp.Tests.EntryInfoServiceTests;
+namespace Warp.WebApp.Tests.UnitTests.EntryInfoServiceTests;
 
 public class EntryInfoServiceRemoveTests
 {

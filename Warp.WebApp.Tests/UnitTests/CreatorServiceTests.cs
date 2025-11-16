@@ -9,7 +9,7 @@ using Warp.WebApp.Models.Images;
 using Warp.WebApp.Services;
 using Warp.WebApp.Services.Creators;
 
-namespace Warp.WebApp.Tests;
+namespace Warp.WebApp.Tests.UnitTests;
 
 public class CreatorServiceTests
 {
