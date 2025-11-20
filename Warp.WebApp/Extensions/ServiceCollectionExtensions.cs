@@ -120,7 +120,7 @@ internal static class ServiceCollectionExtensions
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 
-            if (builder.Environment.IsLocal())
+            if (builder.Environment.IsLocal() || builder.Environment.IsEndToEndTests())
             {
                 services.AddOptions<EncryptionOptions>()
                     .Configure(options =>

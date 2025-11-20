@@ -9,10 +9,17 @@ internal static class WebApplicationBuilderExtensions
 {
     internal static async Task<WebApplicationBuilder> AddConfiguration(this WebApplicationBuilder builder, ILogger<Program> logger)
     {
+        var environmentName = builder.Environment.EnvironmentName;
+
         if (builder.Environment.IsLocal())
         {
             logger.LogLocalConfigurationIsInUse();
-            builder.Configuration.AddJsonFile($"appsettings.{builder.Configuration["ASPNETCORE_ENVIRONMENT"]}.json", optional: true, reloadOnChange: true);
+            builder.Configuration.AddJsonFile($"appsettings.{environmentName}.json", optional: true, reloadOnChange: true);
+        }
+        else if (builder.Environment.IsEndToEndTests())
+        {
+            logger.LogInformation("End-to-end tests configuration is in use.");
+            builder.Configuration.AddJsonFile($"appsettings.{environmentName}.json", optional: true, reloadOnChange: true);
         }
         else
         {

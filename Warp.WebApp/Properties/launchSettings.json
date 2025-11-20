@@ -9,6 +9,15 @@
       "dotnetRunMessages": true,
       "applicationUrl": "https://localhost:8001;http://localhost:8000"
     },
+    "end-to-end-tests": {
+      "commandName": "Project",
+      "launchBrowser": false,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "EndToEndTests"
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "https://localhost:8001;http://localhost:8000"
+    },
     "kirillta": {
       "commandName": "Project",
       "launchBrowser": false,

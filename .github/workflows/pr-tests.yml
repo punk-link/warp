@@ -13,7 +13,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up Node.js
       uses: actions/setup-node@v4
@@ -33,3 +33,47 @@ jobs:
       
     - name: Build and run tests
       run: docker build --target test .
+
+  client-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: yarn
+        cache-dependency-path: Warp.ClientApp/yarn.lock
+
+    - name: Install client dependencies
+      run: corepack enable && cd Warp.ClientApp && yarn install --immutable
+
+    - name: Install Playwright browsers
+      run: cd Warp.ClientApp && npx playwright install --with-deps
+
+    - name: Playwright smoke suite
+      env:
+        CI: "true"
+      run: cd Warp.ClientApp && yarn e2e
+
+    - name: Upload Playwright report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-report
+        path: Warp.ClientApp/playwright-report
+        if-no-files-found: ignore
+        retention-days: 7
+
+    - name: Upload Playwright traces
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-traces
+        path: Warp.ClientApp/test-results
+        if-no-files-found: ignore
+        retention-days: 7

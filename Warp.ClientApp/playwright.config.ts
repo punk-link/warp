@@ -14,7 +14,8 @@ export default defineConfig({
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL: resolvedBaseUrl,
-    trace: 'on-first-retry'
+    trace: 'on-first-retry',
+    ignoreHTTPSErrors: true
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
@@ -25,6 +26,7 @@ export default defineConfig({
     command: devServerCommand,
     url: resolvedBaseUrl,
     reuseExistingServer: !process.env.CI,
-    stdout: 'pipe'
+    stdout: 'pipe',
+    ignoreHTTPSErrors: true
   }
 })
