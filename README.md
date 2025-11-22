@@ -25,7 +25,8 @@ Run the compose file inside the root directory. It sets up external dependencies
 The compose stack now ships with a HashiCorp Vault dev server that mirrors the production contract (`secrets/warp`). Start the supporting containers before running the web app:
 
 ```powershell
-docker compose up -d keydb vault aspire-dashboard vault-init
+# Run the base compose and the e2e override so Vault containers are available for local e2e work
+docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d keydb vault aspire-dashboard vault-init
 ```
 
 During boot the Vault container enables a KV v2 engine at `secrets/` and seeds `consul-address`, `consul-token`, and `s3-secret-access-key` placeholders under `secrets/warp`. Override them at any time:
@@ -57,10 +58,14 @@ docker compose exec vault vault kv get secrets/warp
 
 ### End-to-End Tests Configuration
 
-1. Boot the supporting services:
+1. Boot the supporting services (use the e2e override to start Vault):
 
   ```powershell
-  docker compose up -d keydb vault aspire-dashboard vault-init
+  # recommended - uses the e2e override so vault and vault-init only start when you include the file
+  docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d keydb vault aspire-dashboard vault-init
+
+  # Or use the convenience npm script from the repo root
+  npm run compose:e2e:up
   ```
 
 2. Point the backend at the End-to-End configuration and local Vault instance (bash/zsh users can swap `$env:` with `export`):
