@@ -45,6 +45,8 @@ $env:ASPNETCORE_ENVIRONMENT = 'EndToEndTests'
 $env:BASE_URL = 'https://localhost:8001'
 ```
 
+> The End-to-End profile automatically reads `.vault/warp-e2e.token` (via `PNKL_VAULT_TOKEN_FILE`), so exporting `PNKL_VAULT_TOKEN` is only necessary if you relocate or override the file.
+
 You can inspect the seeded data with:
 
 ```powershell
@@ -69,6 +71,8 @@ docker compose exec vault vault kv get secrets/warp
   $env:ASPNETCORE_ENVIRONMENT = 'EndToEndTests'
   $env:BASE_URL = 'https://localhost:8001'
   ```
+
+  > You can skip `PNKL_VAULT_TOKEN` here as well if you keep the generated token at `.vault/warp-e2e.token`.
 
 3. Run the web app on the port expected by the Playwright suite (and the warmup job):
 

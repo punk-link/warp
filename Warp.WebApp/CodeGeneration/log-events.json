@@ -82,9 +82,36 @@
           "httpCode": 500
         },
         {
+          "id": 11103,
+          "name": "VaultTokenFileNotFound",
+          "description": "Vault token file '{TokenFile:string}' was not found; set PNKL_VAULT_TOKEN manually.",
+          "logLevel": "Warning",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
+          "id": 11104,
+          "name": "VaultTokenFileIsEmpty",
+          "description": "Vault token file '{TokenFile:string}' is empty; set PNKL_VAULT_TOKEN manually.",
+          "logLevel": "Warning",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
           "id": 11201,
           "name": "LocalConfigurationIsInUse",
           "description": "Local configuration is in use.",
+          "logLevel": "Information",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
+          "id": 11202,
+          "name": "EndToEndTestsConfigurationIsInUse",
+          "description": "End-to-end tests configuration is in use.",
           "logLevel": "Information",
           "generateLogMessage": true,
           "obsolete": false,

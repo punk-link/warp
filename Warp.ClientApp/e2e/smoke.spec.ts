@@ -415,6 +415,7 @@ test('i18n translations reflect locale changes', async ({ page }) => {
     await page.context().addInitScript(() => {
         try { window.localStorage.setItem('warp.locale', 'es') } catch { /* noop */ }
     })
+    await setupEntryCreationMocks(page, { entryTextProvider: () => '' })
     await page.goto('/')
     // Wait for the document to reflect the Spanish language selection
     await page.waitForFunction(() => document.documentElement.lang === 'es', { timeout: 10000 })
@@ -483,6 +484,7 @@ test('network error (401) triggers error routing', async ({ page }) => {
 // Steps:
 // 1. Navigate to /privacy and /data-request and verify static content loads.
 test('privacy and data-request static pages load', async ({ page }) => {
+    await setupEntryCreationMocks(page, { entryTextProvider: () => '' })
     await page.goto('/privacy')
     // The privacy file is fetched and inserted into the document asynchronously.
     // Allow the privacy HTML fetch more time in CI / parallel runs.
