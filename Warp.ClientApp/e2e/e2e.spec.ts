@@ -13,34 +13,6 @@ declare global {
 }
 
 
-interface MockEntryImage {
-    id: string
-    entryId: string
-    url: string
-}
-
-
-interface MockEntryState {
-    id: string
-    editMode: string
-    expirationPeriod: string
-    textContent: string
-    images: MockEntryImage[]
-    viewCount: number
-    expiresAt: string
-}
-
-
-interface EntryMockConfig {
-    entryTextProvider: () => string
-    editModeProvider?: () => string
-    expirationProvider?: () => string
-    remoteImageUrlsProvider?: () => string[]
-    entryId?: string
-    sharedState?: MockEntryState
-}
-
-
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const fixturesDir = path.resolve(__dirname, 'fixtures')
@@ -80,135 +52,22 @@ async function setTextMode(page: Page, mode: 'Simple' | 'Advanced'): Promise<Loc
 }
 
 
-let entrySequence = 0
+async function getViewCount(page: Page): Promise<number> {
+    const viewCountSpan = page
+        .locator('.icofont-eye')
+        .locator('xpath=following-sibling::span[1]')
+        .first()
 
+    await expect(viewCountSpan).toBeVisible()
 
-// Helper: setupEntryCreationMocks
-// Steps:
-// 1. Stub `config.js` so `API_BASE` resolves to `/api`.
-// 2. Stub `analytics.js` to avoid external calls.
-// 3. Stub metadata endpoints: expiration periods and edit modes.
-// 4. Stub `GET /api/creators` and `GET /api/entries` to return predictable data.
-// 5. On `POST /api/entries/{id}` return a preview URL and optionally populate image URLs.
-// 6. On `DELETE /api/entries/{id}` return success.
-// async function setupEntryCreationMocks(page: Page, config: EntryMockConfig): Promise<void> {
-//     const entryState: MockEntryState = config.sharedState ?? {
-//         id: config.entryId ?? `entry-e2e-${++entrySequence}`,
-//         editMode: 'Simple',
-//         expirationPeriod: 'FiveMinutes',
-//         textContent: '',
-//         images: [],
-//         viewCount: 1,
-//         expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString()
-//     }
+    const text = (await viewCountSpan.innerText()).trim()
+    const value = Number.parseInt(text, 10)
 
-//     const jsonResponse = (body: unknown) => ({
-//         status: 200,
-//         contentType: 'application/json',
-//         body: JSON.stringify(body)
-//     })
+    if (Number.isNaN(value))
+        throw new Error(`Could not parse view count from: ${text}`)
 
-//     await page.route('**/config.js', (route) => route.fulfill({
-//         status: 200,
-//         contentType: 'application/javascript',
-//         body: "window.appConfig = Object.assign(window.appConfig || {}, { apiBaseUrl: '/api' });"
-//     }))
-
-//     await page.route('**/analytics.js', (route) => route.fulfill({ status: 204, body: '' }))
-
-//     await page.route('**/api/**', async (route) => {
-//         const url = new URL(route.request().url())
-//         const { pathname } = url
-//         const method = route.request().method()
-
-//         if (pathname === '/api/security/csrf' && method === 'GET') {
-//             await route.fulfill({ status: 200, headers: { 'set-cookie': 'XSRF-TOKEN=fake; Path=/; HttpOnly' }, body: '' })
-//             return
-//         }
-
-//         if (pathname === '/api/metadata/enums/expiration-periods' && method === 'GET') {
-//             await route.fulfill(jsonResponse(['FiveMinutes', 'ThirtyMinutes', 'OneHour']))
-//             return
-//         }
-
-//         if (pathname === '/api/metadata/enums/edit-modes' && method === 'GET') {
-//             await route.fulfill(jsonResponse(['Simple', 'Advanced']))
-//             return
-//         }
-
-//         if (pathname === '/api/creators' && method === 'GET') {
-//             await route.fulfill(jsonResponse({ id: 'creator-e2e' }))
-//             return
-//         }
-
-//         if (pathname === '/api/entries' && method === 'GET') {
-//             await route.fulfill(jsonResponse(entryState))
-//             return
-//         }
-
-//         const entryMatch = pathname.match(/^\/api\/entries\/([^\/]+)$/)
-//         if (entryMatch && method === 'GET') {
-//             // Return current viewCount then increment for subsequent calls (simulate server increment on view)
-//             const response = { ...entryState, id: entryMatch[1] }
-//             await route.fulfill(jsonResponse(response))
-//             // increment after sending response to mimic server side view counting
-//             entryState.viewCount = (entryState.viewCount ?? 0) + 1
-//             return
-//         }
-
-//         if (entryMatch && method === 'POST') {
-//             entryState.id = entryMatch[1]
-//             entryState.textContent = config.entryTextProvider()
-//             entryState.expirationPeriod = config.expirationProvider?.() ?? 'ThirtyMinutes'
-//             entryState.editMode = config.editModeProvider?.() ?? 'Simple'
-//             entryState.expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString()
-//             const remoteImages = config.remoteImageUrlsProvider?.() ?? []
-//             entryState.images = remoteImages.map((url, index) => ({
-//                 entryId: entryState.id,
-//                 id: `img-${index + 1}`,
-//                 url
-//             }))
-
-//             await route.fulfill(jsonResponse({ id: entryState.id, previewUrl: `/preview/${entryState.id}` }))
-//             return
-//         }
-
-//         // Handle image uploads (simulate a server that returns uploaded image metadata)
-//         const imageMatch = pathname.match(/^\/api\/images\/entry-id\/([^\/]+)$/)
-//         if (imageMatch && method === 'POST') {
-//             // Return a set of uploaded images for the entry
-//             const uploaded = [{ id: `img-${Date.now()}`, entryId: entryState.id, url: `/api/images/entry-id/${entryState.id}/image-id/1` }]
-//             await route.fulfill(jsonResponse(uploaded))
-//             return
-//         }
-
-//         // Support copy/clone endpoint for entries
-//         const copyMatch = pathname.match(/^\/api\/entries\/([^\/]+)\/copy$/)
-//         if (copyMatch && method === 'POST') {
-//             // Generate a new id for the clone
-//             const cloneId = `clone-${Date.now()}`
-//             await route.fulfill(jsonResponse({ id: cloneId }))
-//             return
-//         }
-
-//         // Support reporting entries
-//         // POST /api/entries/{id}/report -> returns 200
-//         const reportMatch = pathname.match(/^\/api\/entries\/([^\/]+)\/report$/)
-//         if (reportMatch && method === 'POST') {
-//             // Simulate successful report
-//             await route.fulfill({ status: 200, body: '' })
-//             return
-//         }
-
-//         if (entryMatch && method === 'DELETE') {
-//             // Pretend the entry was deleted successfully
-//             await route.fulfill({ status: 200, body: '' })
-//             return
-//         }
-
-//         await route.continue()
-//     })
-// }
+    return value
+}
 
 
 // Helper: setupClipboardSpy
@@ -271,8 +130,7 @@ async function getCopiedLink(page: Page): Promise<string> {
 // 2. Visit `/`.
 // 3. Verify the home hero heading renders correctly.
 test('home renders', async ({ page }) => {
-    await page.goto('/')
-    await page.waitForLoadState('networkidle');
+    await page.goto('/', { waitUntil: 'networkidle' })
 
     const heroHeading = page.getByRole('main').getByRole('heading', { level: 1 })
 
@@ -305,9 +163,7 @@ test('i18n translations reflect locale changes', async ({ page }) => {
 // 5. Save the entry and click Copy Link; assert copied link and entry page content.
 test('user can create, save, copy, and view a simple entry', async ({ page }) => {
     await setupClipboardSpy(page)
-
-    await page.goto('/')
-    await page.waitForLoadState('networkidle');
+    await page.goto('/', { waitUntil: 'networkidle' })
 
     await setTextMode(page, 'Simple')
     const entryText = `Confidential message ${Date.now()}`
@@ -336,7 +192,6 @@ test('user can create, save, copy, and view a simple entry', async ({ page }) =>
 })
 
 
-// TODO
 // Scenario: Advanced entry with image uploads, edit and verify copy equality
 // Steps:
 // 1. Set clipboard spy and prepare remote image URLs via the mocks.
@@ -345,279 +200,227 @@ test('user can create, save, copy, and view a simple entry', async ({ page }) =>
 // 4. Click Edit to go back to Home with draft hydrated (confirm text + gallery).
 // 5. Add a second image, preview again, save and copy link from Preview.
 // 6. Visit entry page and copy the link again; assert both copied links are identical.
-// test('user can edit an advanced entry with images', async ({ page }) => {
-//     await setupClipboardSpy(page)
+test('user can edit an advanced entry with images', async ({ page }) => {
+    await setupClipboardSpy(page)
+    await page.goto('/', { waitUntil: 'networkidle' })
 
-//     const entryText = `Gallery entry ${Date.now()}`
-//     const previewImageOne = resolveFixturePath('sample-image-1.png')
-//     const previewImageTwo = resolveFixturePath('sample-image-2.png')
-//     const remoteImageUrls = [
-//         'https://static.warp/e2e/image-1.png',
-//         'https://static.warp/e2e/image-2.png'
-//     ]
+    await setTextMode(page, 'Advanced')
 
-//     // Mock endpoints: metadata, creators, POST /api/entries/{id} and {@link GET /api/entries/{id} returns images}
-//     // Key selectors: ModeSwitch (mode-advanced), input[file] (accept=image/*), .gallery images
-//     await setupEntryCreationMocks(page, {
-//         entryTextProvider: () => entryText,
-//         editModeProvider: () => 'Advanced',
-//         expirationProvider: () => 'ThirtyMinutes',
-//         remoteImageUrlsProvider: () => remoteImageUrls
-//     })
+    const textArea = page.getByLabel('Text')
+    const entryText = `Gallery entry ${Date.now()}`
+    await textArea.fill(entryText)
 
-//     await page.goto('/')
+    const previewImageOne = resolveFixturePath('sample-image-1.png')
+    const fileInput = page.locator('input[type="file"][accept="image/*"]')
+    await fileInput.setInputFiles(previewImageOne)
 
-//     await setTextMode(page, 'Advanced')
+    const editorGalleryImages = page.locator('.gallery img')
+    await expect(editorGalleryImages).toHaveCount(1)
 
-//     const textArea = page.getByLabel('Text')
-//     await textArea.fill(entryText)
+    const expirationSelect = page.getByLabel('Expires in')
+    await expirationSelect.selectOption('ThirtyMinutes')
 
-//     const fileInput = page.locator('input[type="file"][accept="image/*"]')
-//     await fileInput.setInputFiles(previewImageOne)
+    await clickElement(page.getByRole('button', { name: /preview/i }))
+    await page.waitForURL(/\/preview/i)
 
-//     const editorGalleryImages = page.locator('.gallery img')
-//     await expect(editorGalleryImages).toHaveCount(1)
+    const previewGalleryImages = page.locator('article .gallery img')
+    await expect(previewGalleryImages).toHaveCount(1)
+    await expect(page.locator('article')).toContainText(entryText)
 
-//     const expirationSelect = page.getByLabel('Expires in')
-//     await expirationSelect.selectOption('ThirtyMinutes')
+    await clickElement(page.getByRole('button', { name: /edit/i }))
+    await page.waitForURL(/\?id=/)
 
-//     await clickElement(page.getByRole('button', { name: /preview/i }))
-//     await page.waitForURL(/\/preview/i)
+    await expect(textArea).toHaveValue(entryText)
+    await expect(editorGalleryImages).toHaveCount(1)
 
-//     const previewGalleryImages = page.locator('article .gallery img')
-//     await expect(previewGalleryImages).toHaveCount(1)
-//     await expect(page.locator('article')).toContainText(entryText)
+    const previewImageTwo = resolveFixturePath('sample-image-2.png')
+    await fileInput.setInputFiles(previewImageTwo)
+    await expect(editorGalleryImages).toHaveCount(2)
 
-//     await clickElement(page.getByRole('button', { name: /edit/i }))
-//     await page.waitForURL(/\?id=/)
+    await clickElement(page.getByRole('button', { name: /preview/i }))
+    await page.waitForURL(/\/preview/i)
+    await expect(previewGalleryImages).toHaveCount(2)
 
-//     await expect(textArea).toHaveValue(entryText)
-//     await expect(editorGalleryImages).toHaveCount(1)
+    await clickElement(page.getByRole('button', { name: /^Save$/i }))
+    await clickElement(page.getByRole('button', { name: /copy link/i }))
+    await expect(page.getByText(/link copied/i)).toBeVisible()
+    const previewLink = await getCopiedLink(page)
+    expect(previewLink).toMatch(/\/entry\//)
 
-//     await fileInput.setInputFiles(previewImageTwo)
-//     await expect(editorGalleryImages).toHaveCount(2)
+    await page.goto(previewLink)
+    await expect(page.locator('[data-fancybox="entry"] img')).toHaveCount(2)
+    await expect(page.locator('article')).toContainText(entryText)
 
-//     await clickElement(page.getByRole('button', { name: /preview/i }))
-//     await page.waitForURL(/\/preview/i)
-//     await expect(previewGalleryImages).toHaveCount(2)
-
-//     await clickElement(page.getByRole('button', { name: /^Save$/i }))
-//     await clickElement(page.getByRole('button', { name: /copy link/i }))
-//     await expect(page.getByText(/link copied/i)).toBeVisible()
-//     const previewLink = await getCopiedLink(page)
-//     expect(previewLink).toMatch(/\/entry\//)
-
-//     await page.goto(previewLink)
-//     await expect(page.locator('[data-fancybox="entry"] img')).toHaveCount(2)
-//     await expect(page.locator('article')).toContainText(entryText)
-
-//     await clickElement(page.getByRole('button', { name: /copy link/i }))
-//     await expect(page.getByText(/link copied/i)).toBeVisible()
-//     const entryLink = await getCopiedLink(page)
-//     expect(entryLink).toBe(previewLink)
-// })
+    await clickElement(page.getByRole('button', { name: /copy link/i }))
+    await expect(page.getByText(/link copied/i)).toBeVisible()
+    const entryLink = await getCopiedLink(page)
+    expect(entryLink).toBe(previewLink)
+})
 
 
-// TODO
 // Scenario: Fancybox lightbox opens and can be closed
 // Steps:
 // 1. Create and save an entry with 2 images (POST returns images). 
 // 2. Open entry page and click any image anchor.
 // 3. Assert Fancybox overlay opens; optionally test next/prev functionality.
-// test('fancybox opens when clicking gallery image on entry page', async ({ page }) => {
-//     // Ensure clipboard spy is present so getCopiedLink returns the saved entry URL
-//     // (this mirrors other tests that expect the clipboard to be used).
-//     await setupClipboardSpy(page)
-//     const text = `Lightbox ${Date.now()}`
-//     const remoteImages = [ '/api/images/entry-id/1/image-id/1', '/api/images/entry-id/1/image-id/2' ]
-//     await setupEntryCreationMocks(page, { entryTextProvider: () => text, remoteImageUrlsProvider: () => remoteImages })
+test('fancybox opens when clicking gallery image on entry page', async ({ page }) => {
+    await setupClipboardSpy(page)
+    await page.goto('/', { waitUntil: 'networkidle' })
 
-//     // Save flow
-//     await page.goto('/')
+    await setTextMode(page, 'Advanced')
 
-//     await setTextMode(page, 'Simple')
+    const text = `Lightbox ${Date.now()}`
+    await page.getByLabel('Text').fill(text)
 
-//     await page.getByLabel('Text').fill(text)
-//     await expect(page.getByRole('button', { name: /preview/i })).toBeEnabled({ timeout: 15000 })
-//     await clickElement(page.getByRole('button', { name: /preview/i }))
-//     await page.waitForURL(/\/preview/i)
-//     await clickElement(page.getByRole('button', { name: /^Save$/i }))
+    const previewImageOne = resolveFixturePath('sample-image-1.png')
+    const fileInput = page.locator('input[type="file"][accept="image/*"]')
+    await fileInput.setInputFiles(previewImageOne)
+    
+    await clickElement(page.getByRole('button', { name: /preview/i }))
+    
+    await page.waitForURL(/\/preview/i)
+    await clickElement(page.getByRole('button', { name: /^Save$/i }))
 
-//     // Click copy link in the preview so we get a deterministic entry URL
-//     await clickElement(page.getByRole('button', { name: /copy link/i }))
-//     const copied = await getCopiedLink(page)
-//     await page.goto(copied)
-//     await page.waitForURL(/\/entry\//)
+    await clickElement(page.getByRole('button', { name: /copy link/i }))
+    const copied = await getCopiedLink(page)
+    await page.goto(copied)
+    await page.waitForURL(/\/entry\//)
 
-//     // Click the first image — anchor elements sometimes are not clickable in headless
-//     // environments, while the image itself triggers the same Fancybox behavior.
-//     await page.waitForSelector('.gallery', { state: 'visible', timeout: 5000 })
-//     await page.waitForSelector('[data-fancybox="entry"] img', { state: 'visible', timeout: 5000 })
-//     // Ensure Fancybox is bound before clicking (guard against import/bind races).
-//     await page.waitForFunction(() => !!(window as any).Fancybox)
-//     await page.click('[data-fancybox="entry"] img')
+    await page.waitForSelector('.gallery', { state: 'visible', timeout: 5000 })
+    await page.waitForSelector('[data-fancybox="entry"] img', { state: 'visible', timeout: 5000 })
+    await page.waitForFunction(() => !!(window as any).Fancybox)
+    await page.click('[data-fancybox="entry"] img')
 
-//     // Wait for fancybox container to be visible
-//     await page.waitForSelector('.fancybox__container, .fancybox-bg, .fancybox__stage', { timeout: 5000 })
-//     await expect(page.locator('.fancybox__container, .fancybox-bg, .fancybox__stage').first()).toBeVisible()
+    await page.waitForSelector('.fancybox__container, .fancybox-bg, .fancybox__stage', { timeout: 5000 })
+    await expect(page.locator('.fancybox__container, .fancybox-bg, .fancybox__stage').first()).toBeVisible()
 
-//     // Close via Escape key
-//     await page.keyboard.press('Escape')
-//     await page.waitForSelector('.fancybox__container, .fancybox-bg, .fancybox__stage', { state: 'detached' })
-// })
+    await page.keyboard.press('Escape')
+    await page.waitForSelector('.fancybox__container, .fancybox-bg, .fancybox__stage', { state: 'detached' })
+})
 
 
-// TODO
 // Scenario: View count increments when viewed by a second, distinct user
 // Steps:
 // 1. Save an entry (text only) that will be viewed by two different browser contexts.
 // 2. Use a shared `entryState` object so both contexts see the same server side counter.
 // 3. Open first page in Context A and verify `viewCount` equals initial value.
 // 4. Open a second Page in Context B (new context) and verify `viewCount` increments by 1.
-// test('entry view count increases with second distinct viewer', async ({ browser }) => {
-//     const entryText = `Views test ${Date.now()}`
+test('entry view count increases with second distinct viewer', async ({ browser }) => {
+    const pageA = await browser.newPage()
+    await setupClipboardSpy(pageA)
+    await pageA.goto('/', { waitUntil: 'networkidle' })
 
-//     const shared: MockEntryState = {
-//         id: `entry-e2e-${++entrySequence}`,
-//         editMode: 'Simple',
-//         expirationPeriod: 'FiveMinutes',
-//         textContent: '',
-//         images: [],
-//         viewCount: 0,
-//         expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString()
-//     }
+    await setTextMode(pageA, 'Simple')
 
-//     const pageA = await browser.newPage()
+    const entryText = `Views test ${Date.now()}`
+    await pageA.getByLabel('Text').fill(entryText)
+    await clickElement(pageA.getByRole('button', { name: /preview/i }))
+    await pageA.waitForURL(/\/preview/i)
+    await clickElement(pageA.getByRole('button', { name: /^Save$/i }))
 
-//     await pageA.goto('/')
-//     await pageA.waitForLoadState('networkidle');
+    await clickElement(pageA.getByRole('button', { name: /copy link/i }))
+    const entryLink = await getCopiedLink(pageA)
+    await pageA.goto(entryLink)
+    await pageA.waitForURL(/\/entry\//)
+    await pageA.waitForSelector('article')
+    const countA = await getViewCount(pageA)
 
-//     await setTextMode(pageA, 'Simple')
+    const contextB = await browser.newContext()
+    const pageB = await contextB.newPage()
+    await pageB.goto(entryLink, { waitUntil: 'networkidle' })
+    await pageB.waitForURL(/\/entry\//)
+    await pageB.waitForSelector('article')
+    const countB = await getViewCount(pageB)
 
-//     await pageA.getByLabel('Text').fill(entryText)
-//     await clickElement(pageA.getByRole('button', { name: /preview/i }))
-//     await pageA.waitForURL(/\/preview/i)
-//     await clickElement(pageA.getByRole('button', { name: /^Save$/i }))
+    expect(countB).toBe(countA + 1)
 
-//     // Use the Preview copy link button so that the clipboard spy is set with the entry link
-//     await clickElement(pageA.getByRole('button', { name: /copy link/i }))
-//     // Derive the entry URL instead of requiring clipboard copy in this test.
-//     const entryLink = `/entry/${shared.id}`
-//     await pageA.goto(entryLink)
-//     await pageA.waitForURL(/\/entry\//)
-
-//     // First viewer sees a numeric view count; the server-side mock increments
-//     // the counter on each GET, so assert the second viewer has one more view
-//     await pageA.waitForSelector('article')
-//     // The shared state is incremented inside the mock for each GET request. Use
-//     // the server-side `shared` object to reliably observe increments, avoiding
-//     // client-side animation/race conditions.
-//     const countA = shared.viewCount
-
-//     // Open second context (new independent session) and register the same mocks referencing the same shared state
-//     const contextB = await browser.newContext()
-//     const pageB = await contextB.newPage()
-//     await setupEntryCreationMocks(pageB, { entryTextProvider: () => entryText, sharedState: shared })
-//     await pageB.goto(entryLink)
-//     await pageB.waitForURL(/\/entry\//)
-
-//     // Second viewer should see the incremented view count (countA + 1)
-//     await pageB.waitForSelector('article')
-//     // Wait for the server-side state to reflect the second GET
-//     await pageB.waitForFunction((s) => (s as any).viewCount >= 0, shared, { timeout: 10000 })
-//     const countB = shared.viewCount
-//     expect(countB).toBe(countA + 1)
-
-//     await pageA.close()
-//     await pageB.close()
-// })
+    await pageA.close()
+    await pageB.close()
+})
 
 
-// TODO
 // Scenario: Clone & Edit flow creates a new entry id and navigates to Home for editing
 // Steps:
 // 1. Save an entry, go to Preview. 
 // 2. Click Clone & Edit which calls POST /api/entries/{id}/copy.
 // 3. Server returns clone id; verify router pushes user to Home with new id in query and that Home fetches it.
-// test('clone & edit creates a new id and navigates to Home', async ({ page }) => {
-//     const text = `Clone test ${Date.now()}`
-//     await setupClipboardSpy(page)
-//     await setupEntryCreationMocks(page, { entryTextProvider: () => text })
+test('clone & edit creates a new id and navigates to Home', async ({ page }) => {
+    await setupClipboardSpy(page)
+    await page.goto('/', { waitUntil: 'networkidle' })
 
-//     await page.goto('/')
+    await setTextMode(page, 'Simple')
 
-//     await setTextMode(page, 'Simple')
-
-//     await page.getByLabel('Text').fill(text)
-//     await clickElement(page.getByRole('button', { name: /preview/i }))
+    const text = `Clone test ${Date.now()}`
+    await page.getByLabel('Text').fill(text)
+    await clickElement(page.getByRole('button', { name: /preview/i }))
     
-//     await page.waitForURL(/\/preview/i)
+    await page.waitForURL(/\/preview/i)
 
-//     await clickElement(page.getByRole('button', { name: /^Save$/i }))
-//     await clickElement(page.getByRole('button', { name: /clone edit|clone & edit/i }))
-//     await page.waitForURL(/\?id=/)
-//     await expect(page.getByLabel('Text')).toHaveValue(text)
-// })
+    await clickElement(page.getByRole('button', { name: /^Save$/i }))
+    await clickElement(page.getByRole('button', { name: /clone edit|clone & edit/i }))
+    await page.waitForURL(/\?id=/)
+
+    const textInput = page.getByLabel('Text')
+    await expect.poll(async () => {
+        const value = await textInput.inputValue()
+        return value.trim()
+    }, { timeout: 10000 }).toBe(text)
+
+    const escaped = text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const textValuePattern = new RegExp(`^${escaped}\\s*$`)
+    await expect(textInput).toHaveValue(textValuePattern, { timeout: 10000 })
+})
 
 
-// TODO
 // Scenario: Network errors (401 with ProblemDetails) route to Error
 // Steps:
 // 1. Create a draft to get an entry id; then when saving override POST endpoint to return 401 with ProblemDetails. 
 // 2. Click Save, verify the app routes to the `/error` page and includes status query.
-// test('network error (401) triggers error routing', async ({ page }) => {
-//     const text = `Failing ${Date.now()}`
-//     await setupEntryCreationMocks(page, { entryTextProvider: () => text })
+test('network error (401) triggers error routing', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'networkidle' })
+    await setTextMode(page, 'Simple')
 
-//     await page.goto('/')
-//     await setTextMode(page, 'Simple')
+    const text = `Failing ${Date.now()}`
+    await page.getByLabel('Text').fill(text)
+    await clickElement(page.getByRole('button', { name: /preview/i }))
+    await page.waitForURL(/\/preview/i)
 
-//     await page.getByLabel('Text').fill(text)
-//     await clickElement(page.getByRole('button', { name: /preview/i }))
-//     await page.waitForURL(/\/preview/i)
+    await page.route('**/api/entries/*', async (route) => {
+        const req = route.request()
+        if (req.method() === 'POST') {
+            await route.fulfill({
+                status: 401,
+                contentType: 'application/json',
+                body: JSON.stringify({ type: 'https://example.net/probs/unauth', title: 'Unauthorized', status: 401, detail: 'invalid token', traceId: 'tid-1' })
+            })
+            return
+        }
 
-//     // Override the POST /api/entries/{id} to return 401 ProblemDetails
-//     await page.route('**/api/entries/*', async (route) => {
-//         const req = route.request()
-//         if (req.method() === 'POST') {
-//             await route.fulfill({
-//                 status: 401,
-//                 contentType: 'application/json',
-//                 body: JSON.stringify({ type: 'https://example.net/probs/unauth', title: 'Unauthorized', status: 401, detail: 'invalid token', traceId: 'tid-1' })
-//             })
-//             return
-//         }
+        await route.continue()
+    })
 
-//         await route.continue()
-//     })
+    const response = page.waitForResponse(r => r.request().method() === 'POST' && /\/api\/entries\//.test(r.url()))
+    await Promise.all([
+        page.getByRole('button', { name: /^Save$/i }).click(),
+        response
+    ])
 
-//     // Wait for the POST request and stub will respond 401
-//     const pr = page.waitForResponse(r => r.request().method() === 'POST' && /\/api\/entries\//.test(r.url()))
-//     await Promise.all([
-//         page.getByRole('button', { name: /^Save$/i }).click(),
-//         pr
-//     ])
+    const resp = await response
+    expect(resp.status()).toBe(401)
 
-//     const resp = await pr
-//     expect(resp.status()).toBe(401)
-
-//     // For 401 the default error bridge shows a notification rather than route
-//     // to the Error page; assert an alert appears with the API message.
-//     // Notifications may use 'status' (warning) role for 4xx errors; check both.
-//     await expect(page.getByRole('status')).toBeVisible({ timeout: 10000 })
-// })
+    await expect(page.getByRole('status')).toBeVisible({ timeout: 10000 })
+})
 
 
 // Scenario: Privacy & Data Request pages
 // Steps:
 // 1. Navigate to /privacy and /data-request and verify static content loads.
 test('privacy and data-request static pages load', async ({ page }) => {
-    await page.goto('/privacy')
-    await page.waitForLoadState('networkidle');
+    await page.goto('/privacy', { waitUntil: 'networkidle' })
 
     // The privacy file is fetched and inserted into the document asynchronously.
     // Allow the privacy HTML fetch more time in CI / parallel runs.
-    await page.waitForSelector('.privacy-content h1', { timeout: 20000 })
+    await page.waitForSelector('.privacy-content h1', { timeout: 10000 })
     await expect(page.getByRole('heading', { name: /privacy policy|privacy policy|PRIVACY POLICY/i })).toBeVisible()
 
     await page.goto('/data-request')
@@ -626,47 +429,41 @@ test('privacy and data-request static pages load', async ({ page }) => {
 })
 
 
-// TODO
 // Scenario: Add images using drag & drop and paste
 // Steps:
 // 1. Go to Home Page in Advanced mode.
 // 2. Upload one image using the hidden file input (simulates drag/drop).
 // 3. Dispatch a paste event with image content and assert a second image appears in gallery.
-// test('user can add images via drag/drop and paste', async ({ page }) => {
-//     const entryText = `Add images ${Date.now()}`
-//     const fixture = resolveFixturePath('sample-image-1.png')
+test('user can add images via drag/drop and paste', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'networkidle' })
 
-//     await setupEntryCreationMocks(page, { entryTextProvider: () => entryText })
+    await setTextMode(page, 'Advanced')
 
-//     await page.goto('/')
+    const fileInput = page.locator('input[type="file"][accept="image/*"]')
+    const fixture = resolveFixturePath('sample-image-1.png')
 
-//     await setTextMode(page, 'Advanced')
+    await fileInput.setInputFiles(fixture)
+    await expect(page.locator('.gallery img')).toHaveCount(1)
 
-//     // Add an image via hidden input (simulate drag/drop)
-//     const fileInput = page.locator('input[type="file"][accept="image/*"]')
-//     await fileInput.setInputFiles(fixture)
-//     await expect(page.locator('.gallery img')).toHaveCount(1)
+    await page.evaluate(() => {
+        (window as any).__uploadFinished = false
+        window.addEventListener('uploadFinished', () => { 
+            (window as any).__uploadFinished = true 
+        })
+    })
 
-//     // Add an image via paste event (simulate CTRL+V)
-//     // Step A: prepare an event handler so we can observe whether uploadFinished occurs
-//     await page.evaluate(() => {
-//         ;(window as any).__uploadFinished = false
-//         window.addEventListener('uploadFinished', () => { (window as any).__uploadFinished = true })
-//     })
+    const bytes = Array.from(fs.readFileSync(fixture))
+    await page.evaluate(async (arr) => {
+        const bytes = new Uint8Array(arr)
+        const file = new File([bytes], 'sample-image-1.png', { type: 'image/png' })
+        const dt = new DataTransfer()
+        dt.items.add(file)
+        const evt = new ClipboardEvent('paste', { clipboardData: dt, bubbles: true })
+        window.dispatchEvent(evt)
+    }, bytes)
 
-//     const bytes = Array.from(fs.readFileSync(fixture))
-//     await page.evaluate(async (arr) => {
-//         const bytes = new Uint8Array(arr)
-//         const file = new File([bytes], 'sample-image-1.png', { type: 'image/png' })
-//         const dt = new DataTransfer()
-//         dt.items.add(file)
-//         const evt = new ClipboardEvent('paste', { clipboardData: dt, bubbles: true })
-//         window.dispatchEvent(evt)
-//     }, bytes)
-
-//     // Wait for upload finished event to occur, which is what `handlePaste` triggers after upload
-//     await page.waitForFunction(() => (window as any).__uploadFinished === true)
-// })
+    await page.waitForFunction(() => (window as any).__uploadFinished === true)
+})
 
 
 // Scenario: Delete a saved entry and redirect to Deleted view
@@ -675,8 +472,7 @@ test('privacy and data-request static pages load', async ({ page }) => {
 // 2. Save the entry and then press Delete on the Preview screen.
 // 3. Confirm server returns success; verify user navigates to Deleted page.
 test('user can delete a saved entry and be redirected', async ({ page }) => {
-    await page.goto('/')
-    await page.waitForLoadState('networkidle');
+    await page.goto('/', { waitUntil: 'networkidle' })
 
     await setTextMode(page, 'Simple')
     
@@ -698,83 +494,79 @@ test('user can delete a saved entry and be redirected', async ({ page }) => {
 // 1. Create an entry (text-only), preview and save the entry.
 // 2. Visit entry page and click Report. Confirm the modal then click confirm.
 // 3. Verify server returns success and router navigates to `Home`.
-// test('user can report a saved entry and be redirected', async ({ page }) => {
-//     await setupClipboardSpy(page)
-//     await page.goto('/')
+test('user can report a saved entry and be redirected', async ({ page }) => {
+    await setupClipboardSpy(page)
+    await page.goto('/', { waitUntil: 'networkidle' })
 
-//     await setTextMode(page, 'Simple')
+    await setTextMode(page, 'Simple')
     
-//     const text = `Report ${Date.now()}`
-//     await page.getByLabel('Text').fill(text)
-//     await clickElement(page.getByRole('button', { name: /preview/i }), 30000)
-//     await page.waitForURL(/\/preview/i)
+    const text = `Report ${Date.now()}`
+    await page.getByLabel('Text').fill(text)
+    await clickElement(page.getByRole('button', { name: /preview/i }))
+    await page.waitForURL(/\/preview/i)
 
-//     await clickElement(page.getByRole('button', { name: /^Save$/i }))
-//     await clickElement(page.getByRole('button', { name: /copy link/i }))
-//     const copied = await getCopiedLink(page)
-//     await page.goto(copied)
-//     await page.waitForURL(/\/entry\//)
+    await clickElement(page.getByRole('button', { name: /^Save$/i }))
+    await clickElement(page.getByRole('button', { name: /copy link/i }))
 
-//     await clickElement(page.getByRole('button', { name: /report/i }))
-//     const confirmBtn = page.locator('.bg-white.rounded-lg').getByRole('button', { name: /report|reportar|reportar contenido/i })
-//     await expect(confirmBtn).toBeVisible({ timeout: 5000 })
+    const copied = await getCopiedLink(page)
+    await page.goto(copied)
+    await page.waitForURL(/\/entry\//)
 
-//     await clickElement(confirmBtn)
-//     await page.waitForURL(/\//)
-//     await expect(page.getByRole('main').getByRole('heading', { level: 1 }).first()).toBeVisible()
-// })
+    await clickElement(page.getByRole('button', { name: /report/i }))
+    const confirmBtn = page.locator('.bg-white.rounded-lg').getByRole('button', { name: /report|reportar|reportar contenido/i })
+    await expect(confirmBtn).toBeVisible({ timeout: 5000 })
+
+    await clickElement(confirmBtn)
+    await page.waitForURL(/\//)
+    await expect(page.getByRole('main').getByRole('heading', { level: 1 }).first()).toBeVisible()
+})
 
 
-// TODO
 // Scenario: Draft persistence across Preview and returning to Home
 // Steps:
 // 1. Add text + image on Home, preview and then click Edit on Preview.
 // 2. Verify the Home screen rehydrates the draft (text+image present).
-// test('draft persists when previewing and editing back', async ({ page }) => {
-//     const entryText = `Draft persistence ${Date.now()}`
-//     const fixture = resolveFixturePath('sample-image-1.png')
+test('draft persists when previewing and editing back', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'networkidle' })
 
-//     await setupEntryCreationMocks(page, { entryTextProvider: () => entryText })
-
-//     await page.goto('/')
-
-//     await setTextMode(page, 'Advanced')
+    await setTextMode(page, 'Advanced')
     
-//     await page.getByLabel('Text').fill(entryText)
+    const entryText = `Draft persistence ${Date.now()}`
+    await page.getByLabel('Text').fill(entryText)
 
-//     const fileInput = page.locator('input[type="file"][accept="image/*"]')
-//     await fileInput.setInputFiles(fixture)
+    const fileInput = page.locator('input[type="file"][accept="image/*"]')
+    const fixture = resolveFixturePath('sample-image-1.png')
+    await fileInput.setInputFiles(fixture)
 
-//     await clickElement(page.getByRole('button', { name: /preview/i }))
-//     await page.waitForURL(/\/preview/i)
+    await clickElement(page.getByRole('button', { name: /preview/i }))
+    await page.waitForURL(/\/preview/i)
 
-//     // Click Edit to navigate back to Home with draft persisted
-//     await clickElement(page.getByRole('button', { name: /edit/i }))
-//     await page.waitForURL(/\?id=/)
+    await clickElement(page.getByRole('button', { name: /edit/i }))
+    await page.waitForURL(/\?id=/)
 
-//     await expect(page.getByLabel('Text')).toHaveValue(entryText)
-//     await expect(page.locator('.gallery img')).toHaveCount(1)
-// })
+    await expect(page.getByLabel('Text')).toHaveValue(entryText)
+    await expect(page.locator('.gallery img')).toHaveCount(1)
+})
 
 
 // Scenario: Edit mode persists across reload and between tabs
 // Steps:
 // 1. Toggle advanced mode; reload and open another tab in the same context to verify advanced is still selected.
-// test('editMode persists across reload and tabs', async ({ page }) => {
-//     await page.goto('/')
+test('editMode persists across reload and tabs', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'networkidle' })
 
-//     const advancedModeToggle = page.getByTestId('mode-advanced')
-//     await advancedModeToggle.click()
-//     await expect(advancedModeToggle).toBeDisabled()
+    const advancedModeToggle = page.getByTestId('mode-advanced')
+    await advancedModeToggle.click()
+    await expect(advancedModeToggle).toHaveClass(/active/)
 
-//     await page.reload()
-//     await expect(page.getByTestId('mode-advanced')).toBeDisabled()
+    await page.reload()
+    await expect(page.getByTestId('mode-advanced')).toHaveClass(/active/)
 
-//     const newTab = await page.context().newPage()
-//     await newTab.goto('/')
-//     await expect(newTab.getByTestId('mode-advanced')).toBeDisabled()
-//     await newTab.close()
-// })
+    const newTab = await page.context().newPage()
+    await newTab.goto('/')
+    await expect(newTab.getByTestId('mode-advanced')).toHaveClass(/active/)
+    await newTab.close()
+})
 
 
 // Scenario: Preview disabled when invalid
@@ -783,7 +575,7 @@ test('user can delete a saved entry and be redirected', async ({ page }) => {
 // 2. Fill text and check preview is enabled, then clear and ensure disabled again.
 test('preview button disabled when no content', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('networkidle')
 
     const previewButton = page.getByRole('button', { name: /preview/i })
     await expect(previewButton).toBeDisabled()
