@@ -4,6 +4,24 @@ import { test, expect, Page, Locator } from '@playwright/test'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import fs from 'fs'
+import {
+    getAdvancedModeToggle,
+    getCopyLinkButton,
+    getDeleteButton,
+    getEditButton,
+    getEntryArticle,
+    getExpirationSelect,
+    getImageFileInput,
+    getMainHeading,
+    getPreviewButton,
+    getPreviewGalleryImages,
+    getReportButton,
+    getSaveButton,
+    getSimpleModeToggle,
+    getEditorGalleryImages,
+    getTextArea
+} from './locators'
+import { clickElement, expectOnDeleted, expectOnEntry, expectOnHome, expectOnPreview, getCopiedLink, setupClipboardSpy } from './utils'
 
 
 declare global {
@@ -23,22 +41,14 @@ function resolveFixturePath(name: string): string {
 }
 
 
-async function clickElement(locator: Locator, timeout = 15000): Promise<void> {
-    await expect(locator).toBeVisible({ timeout })
-    await expect(locator).toBeEnabled({ timeout })
-    
-    await locator.click()
-}
-
-
 async function isToggleActive(toggle: Locator): Promise<boolean> {
     return toggle.evaluate((btn) => btn.classList.contains('active'))
 }
 
 
 async function setTextMode(page: Page, mode: 'Simple' | 'Advanced'): Promise<Locator> {
-    const simpleModeToggle = page.getByTestId('mode-simple')
-    const advancedModeToggle = page.getByTestId('mode-advanced')
+    const simpleModeToggle = getSimpleModeToggle(page)
+    const advancedModeToggle = getAdvancedModeToggle(page)
 
     const target = mode === 'Simple' ? simpleModeToggle : advancedModeToggle
     const standby = mode === 'Simple' ? advancedModeToggle : simpleModeToggle
@@ -67,33 +77,6 @@ async function getViewCount(page: Page): Promise<number> {
         throw new Error(`Could not parse view count from: ${text}`)
 
     return value
-}
-
-
-// Helper: setupClipboardSpy
-// Steps:
-// 1. Overwrite `navigator.clipboard.writeText` to capture copied text in `window.__copiedLink`.
-// 2. This avoids interacting with system clipboard and makes assertions deterministic.
-async function setupClipboardSpy(page: Page): Promise<void> {
-    await page.context().addInitScript(() => {
-        window.__copiedLink = ''
-
-        if (navigator.clipboard) {
-            const clipboard = navigator.clipboard
-            clipboard.writeText = async (text: string) => {
-                window.__copiedLink = text
-                return Promise.resolve()
-            }
-        }
-    })
-}
-
-
-// Helper: getCopiedLink
-// Steps:
-// 1. Read `window.__copiedLink` from the browser context, which is set by the clipboard spy.
-async function getCopiedLink(page: Page): Promise<string> {
-    return page.evaluate(() => window.__copiedLink || '')
 }
 
 
@@ -129,12 +112,12 @@ async function getCopiedLink(page: Page): Promise<string> {
 // 1. Mock app config and the minimal metadata endpoints.
 // 2. Visit `/`.
 // 3. Verify the home hero heading renders correctly.
-test('home renders', async ({ page }) => {
+test('@smoke home renders', async ({ page }) => {
     await page.goto('/', { waitUntil: 'networkidle' })
 
-    const heroHeading = page.getByRole('main').getByRole('heading', { level: 1 })
+    const heroHeading = getMainHeading(page)
 
-    await expect(heroHeading.first()).toContainText(/warp/i)
+    await expect(heroHeading).toContainText(/warp/i)
 })
 
 
@@ -142,7 +125,7 @@ test('home renders', async ({ page }) => {
 // Steps:
 // 1. Set locale to Spanish via localStorage (persisted key) or setLocale and reload.
 // 2. Verify some UI strings are translated (e.g., 'Preview' -> 'Vista previa').
-test('i18n translations reflect locale changes', async ({ page }) => {
+test('@smoke i18n translations reflect locale changes', async ({ page }) => {
     await page.context().addInitScript(() => {
         window.localStorage.setItem('warp.locale', 'es')
     })
@@ -161,34 +144,37 @@ test('i18n translations reflect locale changes', async ({ page }) => {
 // 3. Select simple mode, fill the text, choose 30 minutes expiration.
 // 4. Click Preview, verify preview content.
 // 5. Save the entry and click Copy Link; assert copied link and entry page content.
-test('user can create, save, copy, and view a simple entry', async ({ page }) => {
+test('@smoke user can create, save, copy, and view a simple entry', async ({ page }) => {
     await setupClipboardSpy(page)
     await page.goto('/', { waitUntil: 'networkidle' })
 
     await setTextMode(page, 'Simple')
     const entryText = `Confidential message ${Date.now()}`
-    await page.getByLabel('Text').fill(entryText)
+    await getTextArea(page).fill(entryText)
 
-    const expirationSelect = page.getByLabel('Expires in')
+    const expirationSelect = getExpirationSelect(page)
     await expirationSelect.selectOption('ThirtyMinutes')
     await expect(expirationSelect).toHaveValue('ThirtyMinutes')
 
-    const previewButton = page.getByRole('button', { name: /preview/i })
+    const previewButton = getPreviewButton(page)
     await clickElement(previewButton)
-    await page.waitForURL(/\/preview/i)
-    await expect(page.locator('article')).toContainText(entryText)
+    await expectOnPreview(page)
+    await expect(getEntryArticle(page)).toContainText(entryText)
 
-    await clickElement(page.getByRole('button', { name: /^Save$/i }))
-    await clickElement(page.getByRole('button', { name: /copy link/i }))
+    await clickElement(getSaveButton(page))
+
+    const copyLinkButton = getCopyLinkButton(page)
+    await expect(copyLinkButton).toBeVisible({ timeout: 30000 })
+    await expect(copyLinkButton).toBeEnabled({ timeout: 30000 })
+    await clickElement(copyLinkButton)
 
     await expect(page.getByText(/link copied/i)).toBeVisible()
     const copiedLink = await getCopiedLink(page)
     expect(copiedLink).toMatch(/\/entry\//)
 
     await page.goto(copiedLink)
-    
-    await expect(page).toHaveURL(/\/entry\//)
-    await expect(page.locator('article')).toContainText(entryText)
+    await expectOnEntry(page)
+    await expect(getEntryArticle(page)).toContainText(entryText)
 })
 
 
@@ -200,34 +186,34 @@ test('user can create, save, copy, and view a simple entry', async ({ page }) =>
 // 4. Click Edit to go back to Home with draft hydrated (confirm text + gallery).
 // 5. Add a second image, preview again, save and copy link from Preview.
 // 6. Visit entry page and copy the link again; assert both copied links are identical.
-test('user can edit an advanced entry with images', async ({ page }) => {
+test('@smoke user can edit an advanced entry with images', async ({ page }) => {
     await setupClipboardSpy(page)
     await page.goto('/', { waitUntil: 'networkidle' })
 
     await setTextMode(page, 'Advanced')
 
-    const textArea = page.getByLabel('Text')
+    const textArea = getTextArea(page)
     const entryText = `Gallery entry ${Date.now()}`
     await textArea.fill(entryText)
 
     const previewImageOne = resolveFixturePath('sample-image-1.png')
-    const fileInput = page.locator('input[type="file"][accept="image/*"]')
+    const fileInput = getImageFileInput(page)
     await fileInput.setInputFiles(previewImageOne)
 
-    const editorGalleryImages = page.locator('.gallery img')
+    const editorGalleryImages = getEditorGalleryImages(page)
     await expect(editorGalleryImages).toHaveCount(1)
 
-    const expirationSelect = page.getByLabel('Expires in')
+    const expirationSelect = getExpirationSelect(page)
     await expirationSelect.selectOption('ThirtyMinutes')
 
-    await clickElement(page.getByRole('button', { name: /preview/i }))
-    await page.waitForURL(/\/preview/i)
+    await clickElement(getPreviewButton(page))
+    await expectOnPreview(page)
 
-    const previewGalleryImages = page.locator('article .gallery img')
+    const previewGalleryImages = getPreviewGalleryImages(page)
     await expect(previewGalleryImages).toHaveCount(1)
-    await expect(page.locator('article')).toContainText(entryText)
+    await expect(getEntryArticle(page)).toContainText(entryText)
 
-    await clickElement(page.getByRole('button', { name: /edit/i }))
+    await clickElement(getEditButton(page))
     await page.waitForURL(/\?id=/)
 
     await expect(textArea).toHaveValue(entryText)
@@ -237,21 +223,22 @@ test('user can edit an advanced entry with images', async ({ page }) => {
     await fileInput.setInputFiles(previewImageTwo)
     await expect(editorGalleryImages).toHaveCount(2)
 
-    await clickElement(page.getByRole('button', { name: /preview/i }))
-    await page.waitForURL(/\/preview/i)
+    await clickElement(getPreviewButton(page))
+    await expectOnPreview(page)
     await expect(previewGalleryImages).toHaveCount(2)
 
-    await clickElement(page.getByRole('button', { name: /^Save$/i }))
-    await clickElement(page.getByRole('button', { name: /copy link/i }))
+    await clickElement(getSaveButton(page))
+    await clickElement(getCopyLinkButton(page))
     await expect(page.getByText(/link copied/i)).toBeVisible()
     const previewLink = await getCopiedLink(page)
     expect(previewLink).toMatch(/\/entry\//)
 
     await page.goto(previewLink)
+    await expectOnEntry(page)
     await expect(page.locator('[data-fancybox="entry"] img')).toHaveCount(2)
-    await expect(page.locator('article')).toContainText(entryText)
+    await expect(getEntryArticle(page)).toContainText(entryText)
 
-    await clickElement(page.getByRole('button', { name: /copy link/i }))
+    await clickElement(getCopyLinkButton(page))
     await expect(page.getByText(/link copied/i)).toBeVisible()
     const entryLink = await getCopiedLink(page)
     expect(entryLink).toBe(previewLink)
@@ -263,28 +250,27 @@ test('user can edit an advanced entry with images', async ({ page }) => {
 // 1. Create and save an entry with 2 images (POST returns images). 
 // 2. Open entry page and click any image anchor.
 // 3. Assert Fancybox overlay opens; optionally test next/prev functionality.
-test('fancybox opens when clicking gallery image on entry page', async ({ page }) => {
+test('@smoke fancybox opens when clicking gallery image on entry page', async ({ page }) => {
     await setupClipboardSpy(page)
     await page.goto('/', { waitUntil: 'networkidle' })
 
     await setTextMode(page, 'Advanced')
 
     const text = `Lightbox ${Date.now()}`
-    await page.getByLabel('Text').fill(text)
+    await getTextArea(page).fill(text)
 
     const previewImageOne = resolveFixturePath('sample-image-1.png')
-    const fileInput = page.locator('input[type="file"][accept="image/*"]')
+    const fileInput = getImageFileInput(page)
     await fileInput.setInputFiles(previewImageOne)
     
-    await clickElement(page.getByRole('button', { name: /preview/i }))
-    
-    await page.waitForURL(/\/preview/i)
-    await clickElement(page.getByRole('button', { name: /^Save$/i }))
+    await clickElement(getPreviewButton(page))
+    await expectOnPreview(page)
+    await clickElement(getSaveButton(page))
 
-    await clickElement(page.getByRole('button', { name: /copy link/i }))
+    await clickElement(getCopyLinkButton(page))
     const copied = await getCopiedLink(page)
     await page.goto(copied)
-    await page.waitForURL(/\/entry\//)
+    await expectOnEntry(page)
 
     await page.waitForSelector('.gallery', { state: 'visible', timeout: 5000 })
     await page.waitForSelector('[data-fancybox="entry"] img', { state: 'visible', timeout: 5000 })
@@ -305,7 +291,7 @@ test('fancybox opens when clicking gallery image on entry page', async ({ page }
 // 2. Use a shared `entryState` object so both contexts see the same server side counter.
 // 3. Open first page in Context A and verify `viewCount` equals initial value.
 // 4. Open a second Page in Context B (new context) and verify `viewCount` increments by 1.
-test('entry view count increases with second distinct viewer', async ({ browser }) => {
+test('@smoke entry view count increases with second distinct viewer', async ({ browser }) => {
     const pageA = await browser.newPage()
     await setupClipboardSpy(pageA)
     await pageA.goto('/', { waitUntil: 'networkidle' })
@@ -313,22 +299,22 @@ test('entry view count increases with second distinct viewer', async ({ browser 
     await setTextMode(pageA, 'Simple')
 
     const entryText = `Views test ${Date.now()}`
-    await pageA.getByLabel('Text').fill(entryText)
-    await clickElement(pageA.getByRole('button', { name: /preview/i }))
-    await pageA.waitForURL(/\/preview/i)
-    await clickElement(pageA.getByRole('button', { name: /^Save$/i }))
+    await getTextArea(pageA).fill(entryText)
+    await clickElement(getPreviewButton(pageA))
+    await expectOnPreview(pageA)
+    await clickElement(getSaveButton(pageA))
 
-    await clickElement(pageA.getByRole('button', { name: /copy link/i }))
+    await clickElement(getCopyLinkButton(pageA))
     const entryLink = await getCopiedLink(pageA)
     await pageA.goto(entryLink)
-    await pageA.waitForURL(/\/entry\//)
+    await expectOnEntry(pageA)
     await pageA.waitForSelector('article')
     const countA = await getViewCount(pageA)
 
     const contextB = await browser.newContext()
     const pageB = await contextB.newPage()
     await pageB.goto(entryLink, { waitUntil: 'networkidle' })
-    await pageB.waitForURL(/\/entry\//)
+    await expectOnEntry(pageB)
     await pageB.waitForSelector('article')
     const countB = await getViewCount(pageB)
 
@@ -344,23 +330,23 @@ test('entry view count increases with second distinct viewer', async ({ browser 
 // 1. Save an entry, go to Preview. 
 // 2. Click Clone & Edit which calls POST /api/entries/{id}/copy.
 // 3. Server returns clone id; verify router pushes user to Home with new id in query and that Home fetches it.
-test('clone & edit creates a new id and navigates to Home', async ({ page }) => {
+test('@smoke clone & edit creates a new id and navigates to Home', async ({ page }) => {
     await setupClipboardSpy(page)
     await page.goto('/', { waitUntil: 'networkidle' })
 
     await setTextMode(page, 'Simple')
 
     const text = `Clone test ${Date.now()}`
-    await page.getByLabel('Text').fill(text)
-    await clickElement(page.getByRole('button', { name: /preview/i }))
+    await getTextArea(page).fill(text)
+    await clickElement(getPreviewButton(page))
     
-    await page.waitForURL(/\/preview/i)
+    await expectOnPreview(page)
 
-    await clickElement(page.getByRole('button', { name: /^Save$/i }))
+    await clickElement(getSaveButton(page))
     await clickElement(page.getByRole('button', { name: /clone edit|clone & edit/i }))
     await page.waitForURL(/\?id=/)
 
-    const textInput = page.getByLabel('Text')
+    const textInput = getTextArea(page)
     await expect.poll(async () => {
         const value = await textInput.inputValue()
         return value.trim()
@@ -376,14 +362,14 @@ test('clone & edit creates a new id and navigates to Home', async ({ page }) => 
 // Steps:
 // 1. Create a draft to get an entry id; then when saving override POST endpoint to return 401 with ProblemDetails. 
 // 2. Click Save, verify the app routes to the `/error` page and includes status query.
-test('network error (401) triggers error routing', async ({ page }) => {
+test('@smoke network error (401) triggers error routing', async ({ page }) => {
     await page.goto('/', { waitUntil: 'networkidle' })
     await setTextMode(page, 'Simple')
 
     const text = `Failing ${Date.now()}`
-    await page.getByLabel('Text').fill(text)
-    await clickElement(page.getByRole('button', { name: /preview/i }))
-    await page.waitForURL(/\/preview/i)
+    await getTextArea(page).fill(text)
+    await clickElement(getPreviewButton(page))
+    await expectOnPreview(page)
 
     await page.route('**/api/entries/*', async (route) => {
         const req = route.request()
@@ -401,7 +387,7 @@ test('network error (401) triggers error routing', async ({ page }) => {
 
     const response = page.waitForResponse(r => r.request().method() === 'POST' && /\/api\/entries\//.test(r.url()))
     await Promise.all([
-        page.getByRole('button', { name: /^Save$/i }).click(),
+        getSaveButton(page).click(),
         response
     ])
 
@@ -415,7 +401,7 @@ test('network error (401) triggers error routing', async ({ page }) => {
 // Scenario: Privacy & Data Request pages
 // Steps:
 // 1. Navigate to /privacy and /data-request and verify static content loads.
-test('privacy and data-request static pages load', async ({ page }) => {
+test('@smoke privacy and data-request static pages load', async ({ page }) => {
     await page.goto('/privacy', { waitUntil: 'networkidle' })
 
     // The privacy file is fetched and inserted into the document asynchronously.
@@ -434,16 +420,16 @@ test('privacy and data-request static pages load', async ({ page }) => {
 // 1. Go to Home Page in Advanced mode.
 // 2. Upload one image using the hidden file input (simulates drag/drop).
 // 3. Dispatch a paste event with image content and assert a second image appears in gallery.
-test('user can add images via drag/drop and paste', async ({ page }) => {
+test('@smoke user can add images via drag/drop and paste', async ({ page }) => {
     await page.goto('/', { waitUntil: 'networkidle' })
 
     await setTextMode(page, 'Advanced')
 
-    const fileInput = page.locator('input[type="file"][accept="image/*"]')
+    const fileInput = getImageFileInput(page)
     const fixture = resolveFixturePath('sample-image-1.png')
 
     await fileInput.setInputFiles(fixture)
-    await expect(page.locator('.gallery img')).toHaveCount(1)
+    await expect(getEditorGalleryImages(page)).toHaveCount(1)
 
     await page.evaluate(() => {
         (window as any).__uploadFinished = false
@@ -471,21 +457,19 @@ test('user can add images via drag/drop and paste', async ({ page }) => {
 // 1. Create a simple entry (text-only) and go to Preview.
 // 2. Save the entry and then press Delete on the Preview screen.
 // 3. Confirm server returns success; verify user navigates to Deleted page.
-test('user can delete a saved entry and be redirected', async ({ page }) => {
+test('@smoke user can delete a saved entry and be redirected', async ({ page }) => {
     await page.goto('/', { waitUntil: 'networkidle' })
 
     await setTextMode(page, 'Simple')
     
     const text = `Deletion test ${Date.now()}`
-    await page.getByLabel('Text').fill(text)
-    await clickElement(page.getByRole('button', { name: /preview/i }))
-    await page.waitForURL(/\/preview/i)
+    await getTextArea(page).fill(text)
+    await clickElement(getPreviewButton(page))
+    await expectOnPreview(page)
 
-    await clickElement(page.getByRole('button', { name: /^Save$/i }))
-    await clickElement(page.getByRole('button', { name: /delete/i }))
-    await page.waitForURL(/\/deleted/i)
-
-    await expect(page.getByText(/the entry was deleted/i)).toBeVisible()
+    await clickElement(getSaveButton(page))
+    await clickElement(getDeleteButton(page))
+    await expectOnDeleted(page)
 })
 
 
@@ -494,31 +478,30 @@ test('user can delete a saved entry and be redirected', async ({ page }) => {
 // 1. Create an entry (text-only), preview and save the entry.
 // 2. Visit entry page and click Report. Confirm the modal then click confirm.
 // 3. Verify server returns success and router navigates to `Home`.
-test('user can report a saved entry and be redirected', async ({ page }) => {
+test('@smoke user can report a saved entry and be redirected', async ({ page }) => {
     await setupClipboardSpy(page)
     await page.goto('/', { waitUntil: 'networkidle' })
 
     await setTextMode(page, 'Simple')
     
     const text = `Report ${Date.now()}`
-    await page.getByLabel('Text').fill(text)
-    await clickElement(page.getByRole('button', { name: /preview/i }))
-    await page.waitForURL(/\/preview/i)
+    await getTextArea(page).fill(text)
+    await clickElement(getPreviewButton(page))
+    await expectOnPreview(page)
 
-    await clickElement(page.getByRole('button', { name: /^Save$/i }))
-    await clickElement(page.getByRole('button', { name: /copy link/i }))
+    await clickElement(getSaveButton(page))
+    await clickElement(getCopyLinkButton(page))
 
     const copied = await getCopiedLink(page)
     await page.goto(copied)
-    await page.waitForURL(/\/entry\//)
+    await expectOnEntry(page)
 
-    await clickElement(page.getByRole('button', { name: /report/i }))
+    await clickElement(getReportButton(page))
     const confirmBtn = page.locator('.bg-white.rounded-lg').getByRole('button', { name: /report|reportar|reportar contenido/i })
     await expect(confirmBtn).toBeVisible({ timeout: 5000 })
 
     await clickElement(confirmBtn)
-    await page.waitForURL(/\//)
-    await expect(page.getByRole('main').getByRole('heading', { level: 1 }).first()).toBeVisible()
+    await expectOnHome(page)
 })
 
 
@@ -526,45 +509,45 @@ test('user can report a saved entry and be redirected', async ({ page }) => {
 // Steps:
 // 1. Add text + image on Home, preview and then click Edit on Preview.
 // 2. Verify the Home screen rehydrates the draft (text+image present).
-test('draft persists when previewing and editing back', async ({ page }) => {
+test('@smoke draft persists when previewing and editing back', async ({ page }) => {
     await page.goto('/', { waitUntil: 'networkidle' })
 
     await setTextMode(page, 'Advanced')
     
     const entryText = `Draft persistence ${Date.now()}`
-    await page.getByLabel('Text').fill(entryText)
+    await getTextArea(page).fill(entryText)
 
-    const fileInput = page.locator('input[type="file"][accept="image/*"]')
+    const fileInput = getImageFileInput(page)
     const fixture = resolveFixturePath('sample-image-1.png')
     await fileInput.setInputFiles(fixture)
 
-    await clickElement(page.getByRole('button', { name: /preview/i }))
-    await page.waitForURL(/\/preview/i)
+    await clickElement(getPreviewButton(page))
+    await expectOnPreview(page)
 
-    await clickElement(page.getByRole('button', { name: /edit/i }))
+    await clickElement(getEditButton(page))
     await page.waitForURL(/\?id=/)
 
-    await expect(page.getByLabel('Text')).toHaveValue(entryText)
-    await expect(page.locator('.gallery img')).toHaveCount(1)
+    await expect(getTextArea(page)).toHaveValue(entryText)
+    await expect(getEditorGalleryImages(page)).toHaveCount(1)
 })
 
 
 // Scenario: Edit mode persists across reload and between tabs
 // Steps:
 // 1. Toggle advanced mode; reload and open another tab in the same context to verify advanced is still selected.
-test('editMode persists across reload and tabs', async ({ page }) => {
+test('@smoke editMode persists across reload and tabs', async ({ page }) => {
     await page.goto('/', { waitUntil: 'networkidle' })
 
-    const advancedModeToggle = page.getByTestId('mode-advanced')
+    const advancedModeToggle = getAdvancedModeToggle(page)
     await advancedModeToggle.click()
     await expect(advancedModeToggle).toHaveClass(/active/)
 
-    await page.reload()
-    await expect(page.getByTestId('mode-advanced')).toHaveClass(/active/)
+    await page.reload({ waitUntil: 'load' })
+    await expect(getAdvancedModeToggle(page)).toHaveClass(/active/)
 
     const newTab = await page.context().newPage()
     await newTab.goto('/')
-    await expect(newTab.getByTestId('mode-advanced')).toHaveClass(/active/)
+    await expect(getAdvancedModeToggle(newTab)).toHaveClass(/active/)
     await newTab.close()
 })
 
@@ -573,16 +556,15 @@ test('editMode persists across reload and tabs', async ({ page }) => {
 // Steps:
 // 1. Ensure the preview button is disabled for empty text and no images.
 // 2. Fill text and check preview is enabled, then clear and ensure disabled again.
-test('preview button disabled when no content', async ({ page }) => {
-    await page.goto('/')
-    await page.waitForLoadState('networkidle')
+test('@smoke preview button disabled when no content', async ({ page }) => {
+    await page.goto('/', { waitUntil: 'networkidle' })
 
-    const previewButton = page.getByRole('button', { name: /preview/i })
+    const previewButton = getPreviewButton(page)
     await expect(previewButton).toBeDisabled()
 
-    await page.getByLabel('Text').fill('Hello')
+    await getTextArea(page).fill('Hello')
     await expect(previewButton).toBeEnabled()
 
-    await page.getByLabel('Text').fill('')
+    await getTextArea(page).fill('')
     await expect(previewButton).toBeDisabled()
 })
