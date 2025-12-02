@@ -113,18 +113,31 @@ export function initDropAreaHandlers(dropArea: HTMLElement, fileInput: HTMLInput
 }
 
 
-export async function handlePaste(event: ClipboardEvent, getEntryId: () => string | undefined) {
+type ClipboardEventWithDetail = ClipboardEvent & { detail?: { files?: File[] } }
+
+
+export async function handlePaste(
+    event: ClipboardEvent,
+    getEntryId: () => string | undefined,
+    addLocalFiles?: (files: File[]) => void
+) {
     try {
-        if (!event?.clipboardData)
+        if (!event)
             return false
 
-        const files = Array.from(event.clipboardData.files || [])
+        const typedEvent = event as ClipboardEventWithDetail
+        const clipboardFiles = Array.from(event.clipboardData?.files || [])
+        const detailFiles = typedEvent.detail?.files ?? []
+        const files = clipboardFiles.length > 0 ? clipboardFiles : detailFiles
         if (files.length === 0)
             return false
 
         const entryId = getEntryId()
         if (!entryId)
             return false
+
+        if (addLocalFiles)
+            addLocalFiles(files)
 
         await uploadImages(entryId, files)
         return true

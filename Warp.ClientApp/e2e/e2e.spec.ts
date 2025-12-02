@@ -62,6 +62,30 @@ async function setTextMode(page: Page, mode: 'Simple' | 'Advanced'): Promise<Loc
 }
 
 
+type PasteFilePayload = {
+    bytes: number[]
+    mimeType: string
+    name: string
+}
+
+
+async function dispatchPasteWithFiles(page: Page, files: PasteFilePayload[]): Promise<void> {
+    await page.evaluate((payloads) => {
+        const files = payloads.map((payload) => {
+            const data = new Uint8Array(payload.bytes)
+            return new File([data], payload.name, { type: payload.mimeType })
+        })
+
+        const event = new CustomEvent('paste', {
+            bubbles: true,
+            detail: { files }
+        })
+
+        window.dispatchEvent(event)
+    }, files)
+}
+
+
 async function getViewCount(page: Page): Promise<number> {
     const viewCountSpan = page
         .locator('.icofont-eye')
@@ -478,24 +502,14 @@ test.describe.serial('stateful entry flows', () => {
         await fileInput.setInputFiles(fixture)
         await expect(getEditorGalleryImages(page)).toHaveCount(1)
 
-        await page.evaluate(() => {
-            (window as any).__uploadFinished = false
-            window.addEventListener('uploadFinished', () => { 
-                (window as any).__uploadFinished = true 
-            })
-        })
-
         const bytes = Array.from(fs.readFileSync(fixture))
-        await page.evaluate(async (arr) => {
-            const bytes = new Uint8Array(arr)
-            const file = new File([bytes], 'sample-image-1.png', { type: 'image/png' })
-            const dt = new DataTransfer()
-            dt.items.add(file)
-            const evt = new ClipboardEvent('paste', { clipboardData: dt, bubbles: true })
-            window.dispatchEvent(evt)
-        }, bytes)
+        await dispatchPasteWithFiles(page, [{
+            bytes,
+            mimeType: 'image/png',
+            name: 'sample-image-1.png'
+        }])
 
-        await page.waitForFunction(() => (window as any).__uploadFinished === true)
+        await expect(getEditorGalleryImages(page)).toHaveCount(2)
     })
 
 
