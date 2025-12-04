@@ -3,8 +3,9 @@ import { defineConfig, devices } from '@playwright/test'
 
 
 const devServerPort = Number(process.env.E2E_DEV_SERVER_PORT ?? '5173')
-const resolvedBaseUrl = process.env.BASE_URL ?? `http://127.0.0.1:${devServerPort}/`
-const devServerCommand = process.env.E2E_DEV_SERVER_COMMAND ?? `yarn dev --host 127.0.0.1 --port ${devServerPort}`
+const devServerHost = process.env.E2E_DEV_SERVER_HOST ?? 'localhost'
+const resolvedBaseUrl = process.env.BASE_URL ?? `http://${devServerHost}:${devServerPort}/`
+const devServerCommand = process.env.E2E_DEV_SERVER_COMMAND ?? `yarn dev --host ${devServerHost} --port ${devServerPort}`
 
 
 export default defineConfig({

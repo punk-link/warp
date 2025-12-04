@@ -2,9 +2,15 @@ import { expect } from '@playwright/test'
 import type { Locator, Page } from '@playwright/test'
 
 
+async function waitForSpaUrl(page: Page, matcher: RegExp | string, timeout = 30000): Promise<void> {
+    await page.waitForURL(matcher, { waitUntil: 'commit', timeout })
+}
+
+
 export async function clickElement(locator: Locator, timeout = 15000): Promise<void> {
     await locator.waitFor({ state: 'visible', timeout })
     await locator.waitFor({ state: 'attached', timeout })
+    await expect(locator).toBeEnabled({ timeout })
 
     await locator.click()
 }
@@ -31,24 +37,24 @@ export async function getCopiedLink(page: Page): Promise<string> {
 
 
 export async function expectOnHome(page: Page): Promise<void> {
-    await page.waitForURL(/\/?(\?|$)/i)
+    await waitForSpaUrl(page, /\/?(\?|$)/i)
     await expect(page.getByRole('main').getByRole('heading', { level: 1 }).first()).toBeVisible()
 }
 
 
 export async function expectOnPreview(page: Page): Promise<void> {
-    await page.waitForURL(/\/preview(\?|$)/i)
+    await waitForSpaUrl(page, /\/preview(\?|$)/i)
     await expect(page.locator('article').first()).toBeVisible()
 }
 
 
 export async function expectOnEntry(page: Page): Promise<void> {
-    await page.waitForURL(/\/entry\//i)
+    await waitForSpaUrl(page, /\/entry\//i)
     await expect(page.locator('article').first()).toBeVisible()
 }
 
 
 export async function expectOnDeleted(page: Page): Promise<void> {
-    await page.waitForURL(/\/deleted(\?|$)/i)
+    await waitForSpaUrl(page, /\/deleted(\?|$)/i)
     await expect(page.getByText(/the entry was deleted/i)).toBeVisible()
 }

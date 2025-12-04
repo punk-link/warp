@@ -107,7 +107,7 @@ yarn test:watch
 
 End-to-end tests
 - A Playwright configuration is included (`playwright.config.ts`) and quick e2e tests live under `e2e/`.
-- The suite now runs via package scripts; the config auto-starts the Vite dev server (`yarn dev --host 127.0.0.1 --port 5173`).
+- The suite now runs via package scripts; the config auto-starts the Vite dev server (`yarn dev --host localhost --port 5173`).
 - Override defaults with `E2E_DEV_SERVER_PORT` or `E2E_DEV_SERVER_COMMAND` (e.g., point to a pre-built server or tunnel).
 
 Run the Playwright suite (from `Warp.ClientApp`):
