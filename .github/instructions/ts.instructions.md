@@ -126,6 +126,7 @@ These rules supplement (do not override) any automatic formatter; adjust formatt
   - Use Testing Library queries (`findByRole`, etc.)—see existing smoke test [Warp.ClientApp/src/__tests__/App.spec.ts](Warp.ClientApp/src/__tests__/App.spec.ts).
 - E2E:
   - Keep selectors semantic; prefer roles / text. Avoid brittle `[data-...]` unless necessary.
+  - Do not use mocks for e2e tests; test against real API.
 
 ## Performance & Cleanup
 
