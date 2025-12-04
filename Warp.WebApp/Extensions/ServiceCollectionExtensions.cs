@@ -217,10 +217,13 @@ internal static class ServiceCollectionExtensions
         services.AddResponseCaching();
         services.AddOutputCache();
 
+        var allowInsecureCookies = InsecureCookiesHelper.IsAllowed(builder.Environment);
+        var securePolicy = allowInsecureCookies ? CookieSecurePolicy.None : CookieSecurePolicy.Always;
+
         services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
             .AddCookie(options =>
             {
-                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                options.Cookie.SecurePolicy = securePolicy;
                 options.Cookie.SameSite = SameSiteMode.Strict;
                 options.Cookie.Name = "Warp.Auth";
                 options.Cookie.HttpOnly = true;
@@ -235,7 +238,7 @@ internal static class ServiceCollectionExtensions
             options.FormFieldName = "__RequestVerificationToken";
             options.Cookie.Name = "Warp.AntiForgery";
             options.Cookie.SameSite = SameSiteMode.Strict;
-            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            options.Cookie.SecurePolicy = securePolicy;
             options.Cookie.HttpOnly = true;
         });
 
