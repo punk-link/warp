@@ -12,4 +12,9 @@ public class S3Options
 
     [Required]
     public required string BucketName { get; set; }
+    
+    [Url]
+    public string? ServiceUrl { get; set; }
+    
+    public bool ForcePathStyle { get; set; }
 }

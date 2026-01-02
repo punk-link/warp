@@ -83,7 +83,9 @@ internal static class ServiceCollectionExtensions
                 {
                     options.AccessKey = builder.Configuration["S3Options:AccessKey"]!;
                     options.BucketName = builder.Configuration["S3Options:BucketName"]!;
+                    options.ForcePathStyle = builder.Configuration.GetValue<bool>("S3Options:ForcePathStyle");
                     options.SecretAccessKey = builder.Configuration["S3Options:SecretAccessKey"]!;
+                    options.ServiceUrl = builder.Configuration["S3Options:ServiceUrl"];
                 })
                 .ValidateDataAnnotations()
                 .ValidateOnStart();

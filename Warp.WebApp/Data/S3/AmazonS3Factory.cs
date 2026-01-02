@@ -22,11 +22,21 @@ public class AmazonS3Factory : IAmazonS3Factory
         => _options.Value.BucketName;
 
 
-    private static AmazonS3Config GetConfig() 
-        => new()
+    private AmazonS3Config GetConfig()
+    {
+        if (!string.IsNullOrWhiteSpace(_options.Value.ServiceUrl))
+            return new AmazonS3Config
+            {
+                ForcePathStyle = _options.Value.ForcePathStyle,
+                ServiceURL = _options.Value.ServiceUrl
+            };
+
+        return new AmazonS3Config
         {
+            ForcePathStyle = _options.Value.ForcePathStyle,
             RegionEndpoint = Amazon.RegionEndpoint.EUCentral1
         };
+    }
 
 
     private readonly IOptions<S3Options> _options;

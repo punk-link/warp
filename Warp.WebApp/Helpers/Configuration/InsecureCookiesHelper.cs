@@ -12,5 +12,5 @@ public static class InsecureCookiesHelper
     /// Webkit based browsers block cookies with Secure flag for end-to-end tests on localhost.
     /// </remarks>
     public static bool IsAllowed(IWebHostEnvironment environment)
-        => environment.IsEndToEndTests();
+        => environment.IsEndToEndTests() || environment.IsLocal();
 }

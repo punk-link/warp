@@ -63,3 +63,10 @@ services:
         mkdir -p /vault/bootstrap
         vault token create -policy=warp-e2e -display-name=warp-e2e -orphan -ttl=720h -field token | tee /vault/bootstrap/warp-e2e.token >/dev/null
         echo "Generated warp-e2e token written to /vault/bootstrap/warp-e2e.token"
+
+  s3mock:
+    image: adobe/s3mock:latest
+    ports:
+      - 9090:9090
+    environment:
+      - initialBuckets=warp-e2e
