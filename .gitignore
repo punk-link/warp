@@ -361,10 +361,10 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Custom ignores for this project
 /Warp.WebApp/appsettings.Local.json
 /data
 /Warp.WebApp/wwwroot/**
 .vault/
-Warp.ClientApp/playwright-report/
-Warp.ClientApp/playwright-report/index.html
-Warp.ClientApp/playwright-report/index.html
+/Warp.ClientApp/playwright-report/
