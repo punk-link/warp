@@ -5,8 +5,8 @@ public static class InsecureCookiesHelper
     /// <summary>
     /// Indicates whether insecure cookies are allowed based on the environment.
     /// </summary>
-    /// <param name="environment"></param>
-    /// <returns></returns>
+    /// <param name="environment">The web host environment to check.</param>
+    /// <returns>True if insecure cookies are allowed; otherwise, false.</returns>
     /// <remarks>
     /// For end-to-end-tests environment we need to allow insecure cookies
     /// Webkit based browsers block cookies with Secure flag for end-to-end tests on localhost.
