@@ -51,7 +51,6 @@ async function setTextMode(page: Page, mode: 'Simple' | 'Advanced'): Promise<Loc
     const advancedModeToggle = getAdvancedModeToggle(page)
 
     const target = mode === 'Simple' ? simpleModeToggle : advancedModeToggle
-    const standby = mode === 'Simple' ? advancedModeToggle : simpleModeToggle
 
     if (await isToggleActive(target))
         return target
