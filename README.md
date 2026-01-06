@@ -41,7 +41,7 @@ The bootstrap container also mints a scoped token with permissions for `secrets/
 
 ```powershell
 $env:PNKL_VAULT_ADDR = 'http://localhost:8200'
-$env:PNKL_VAULT_TOKEN = (Get-Content -Path .vault/warp-e2e.token -Raw).Trim() // 'dev-root'
+$env:PNKL_VAULT_TOKEN = (Get-Content -Path .vault/warp-e2e.token -Raw).Trim() # 'dev-root'
 $env:ASPNETCORE_ENVIRONMENT = 'EndToEndTests'
 $env:BASE_URL = 'https://localhost:8001'
 ```
