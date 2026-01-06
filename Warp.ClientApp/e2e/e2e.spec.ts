@@ -110,30 +110,21 @@ async function getViewCount(page: Page): Promise<number> {
  *   the Warp SPA. Each test is commented with steps + techniques for stability.
  *
  * Implementation hints repeated across scenarios:
- * - Use `setupEntryCreationMocks(page, config)` to stub '/api/*' endpoints.
- * - Key mocked endpoints (used throughout):
- *   - GET /api/metadata/enums/expiration-periods -> [FiveMinutes, ThirtyMinutes...]
- *   - GET /api/metadata/enums/edit-modes -> [Simple, Advanced]
- *   - GET /api/creators -> { id: 'creator-e2e' }
- *   - GET /api/entries -> returns a shell entry or the entry state
- *   - GET /api/entries/{id} -> returns entry details (used by `EntryView`)
- *   - POST /api/entries/{id} -> returns { id, previewUrl }
- *   - POST /api/entries/{id}/copy -> returns { id: cloneId }
- *   - POST /api/entries/{id}/report -> returns 200
- *   - POST /api/images/entry-id/{id} -> returns uploaded image metadata
- *   - DELETE /api/entries/{id} -> returns success
+ * - E2E tests exercise the real backend API; do not stub or mock '/api/*' endpoints here.
+ * - Ensure the test environment has a reachable Warp API and any required seed data.
+ * - Clear cookies and relevant storage before navigation to avoid cross-test leakage.
  *
  * Stability notes & patterns:
  * - Use `setupClipboardSpy(page)` to avoid picking the system clipboard.
  * - Prefer direct element `expect(locator).toHaveCount()` / `toHaveText()`.
  * - Wait for key navigation with `page.waitForURL(/preview|/entry/)`.
- * - Use `page.context().addInitScript` when you need to alter `localStorage` before page load (i18n).
+ * - Use `page.context().addInitScript` when you need to alter `localStorage` before page load (i18n, edit mode, etc.).
  */
 
 
 // Scenario: Home renders
 // Steps:
-// 1. Mock app config and the minimal metadata endpoints.
+// 1. Reset cookies and local storage to a clean state.
 // 2. Visit `/`.
 // 3. Verify the home hero heading renders correctly.
 test('@smoke home renders', async ({ page }) => {
