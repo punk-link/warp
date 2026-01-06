@@ -168,6 +168,8 @@ jobs:
       run: |
         docker run -d --name warp-webapp --network warp-e2e -p 8080:8080 \
           -e ASPNETCORE_ENVIRONMENT=EndToEndTests \
+          -e ASPNETCORE_URLS=http://0.0.0.0:8080 \
+          -e ASPNETCORE_HTTP_PORTS=8080 \
           -e PNKL_VAULT_ADDR=http://warp-vault:8200 \
           -e PNKL_VAULT_TOKEN_FILE=/app/.vault/warp-e2e.token \
           -e Redis__Host=warp-keydb \
@@ -182,6 +184,11 @@ jobs:
         for i in {1..90}; do
           if curl -fsS http://localhost:8080/health >/dev/null; then
             exit 0
+          fi
+          if ! docker ps --filter "name=warp-webapp" --filter "status=running" --format '{{.Names}}' | grep -q warp-webapp; then
+            echo "Backend container is not running" >&2
+            docker logs warp-webapp || true
+            exit 1
           fi
           sleep 2
         done
