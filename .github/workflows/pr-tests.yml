@@ -99,6 +99,18 @@ jobs:
     - name: Start S3 mock
       run: docker run -d --name warp-s3mock --network warp-e2e -p 9090:9090 -e initialBuckets=warp-e2e adobe/s3mock:latest
 
+    - name: Wait for KeyDB readiness
+      run: |
+        for i in {1..60}; do
+          if docker exec warp-keydb keydb-cli ping 2>/dev/null | grep -q PONG; then
+            exit 0
+          fi
+          sleep 2
+        done
+        echo "KeyDB did not become ready" >&2
+        docker logs warp-keydb || true
+        exit 1
+
     - name: Wait for Vault readiness
       run: |
         for i in {1..60}; do
