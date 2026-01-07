@@ -103,6 +103,8 @@ jobs:
       run: |
         for i in {1..60}; do
           if docker exec warp-keydb keydb-cli ping 2>/dev/null | grep -q PONG; then
+            echo "KeyDB is ready, waiting 3 seconds for full stability..."
+            sleep 3
             exit 0
           fi
           sleep 2
@@ -189,6 +191,9 @@ jobs:
           -e PNKL_VAULT_TOKEN_FILE=/app/.vault/warp-e2e.token \
           -e Redis__Host=warp-keydb \
           -e Redis__Port=6379 \
+          -e Redis__AbortOnConnectFail=false \
+          -e Redis__ConnectRetry=10 \
+          -e Redis__ConnectTimeout=10000 \
           -e S3Options__ServiceUrl=http://warp-s3mock:9090 \
           -e S3Options__BucketName=warp-e2e \
           -v "${{ github.workspace }}/.vault:/app/.vault:ro" \
