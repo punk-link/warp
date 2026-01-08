@@ -188,7 +188,7 @@ jobs:
           -e LANG=en_US.UTF-8 \
           -e LC_ALL=en_US.UTF-8 \
           -e PNKL_VAULT_ADDR=http://warp-vault:8200 \
-          -e PNKL_VAULT_TOKEN_FILE=/app/.vault/warp-e2e.token \
+          -e PNKL_VAULT_TOKEN_FILE=.vault/warp-e2e.token \
           -e Redis__Host=warp-keydb \
           -e Redis__Port=6379 \
           -e Redis__AbortOnConnectFail=false \
