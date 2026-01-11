@@ -222,6 +222,7 @@ jobs:
         BASE_URL: http://localhost:5173/
         E2E_DEV_SERVER_HOST: localhost
         E2E_DEV_SERVER_PORT: 5173
+        ENV_ORIGIN: http://localhost:8080
       run: cd Warp.ClientApp && yarn e2e
 
     - name: Collect service logs
