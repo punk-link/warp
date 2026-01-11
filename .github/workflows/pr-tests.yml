@@ -181,7 +181,7 @@ jobs:
     - name: Start backend
       run: |
         docker run -d --name warp-webapp --network warp-e2e -p 8080:8080 \
-          -e ASPNETCORE_ENVIRONMENT=EndToEndTests \
+          -e ASPNETCORE_ENVIRONMENT=E2E \
           -e ASPNETCORE_URLS=http://0.0.0.0:8080 \
           -e ASPNETCORE_HTTP_PORTS=8080 \
           -e DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false \
