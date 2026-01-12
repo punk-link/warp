@@ -177,6 +177,7 @@ test('@smoke user can create, save, copy, and view a simple entry', async ({ pag
 
     await setupClipboardSpy(page)
     await page.goto('/', { waitUntil: 'networkidle' })
+    await expectOnHome(page)
 
     await setTextMode(page, 'Simple')
     const entryText = `Confidential message ${Date.now()}`
