@@ -21,7 +21,7 @@ import {
     getEditorGalleryImages,
     getTextArea
 } from './locators'
-import { clickElement, expectOnDeleted, expectOnEntry, expectOnHome, expectOnPreview, getCopiedLink, setupClipboardSpy } from './utils'
+import { clickElement, expectOnDeleted, expectOnEntry, expectOnHome, expectOnPreview, getCopiedLink, gotoHome, setupClipboardSpy } from './utils'
 
 
 declare global {
@@ -42,6 +42,7 @@ function resolveFixturePath(name: string): string {
 
 
 async function isToggleActive(toggle: Locator): Promise<boolean> {
+    await toggle.waitFor({ state: 'visible', timeout: 10000 })
     return toggle.evaluate((btn) => btn.classList.contains('active'))
 }
 
@@ -52,12 +53,25 @@ async function setTextMode(page: Page, mode: 'Simple' | 'Advanced'): Promise<Loc
 
     const target = mode === 'Simple' ? simpleModeToggle : advancedModeToggle
 
-    if (await isToggleActive(target))
+    if (await isToggleActive(target)) {
+        await expect(getTextArea(page)).toBeVisible({ timeout: 10000 })
         return target
+    }
 
     await clickElement(target)
+    await expect(getTextArea(page)).toBeVisible({ timeout: 10000 })
 
     return target
+}
+
+
+async function fillTextAndVerify(page: Page, text: string): Promise<void> {
+    const textArea = getTextArea(page)
+    await expect(textArea).toBeVisible({ timeout: 10000 })
+    await textArea.click()
+    await textArea.fill(text)
+    await expect(textArea).toHaveValue(text, { timeout: 5000 })
+    await expect(getPreviewButton(page)).toBeEnabled({ timeout: 10000 })
 }
 
 
@@ -133,7 +147,7 @@ test('@smoke home renders', async ({ page }) => {
         window.localStorage.removeItem('warp.editMode')
     })
 
-    await page.goto('/', { waitUntil: 'networkidle' })
+    await gotoHome(page)
 
     const heroHeading = getMainHeading(page)
 
@@ -173,11 +187,11 @@ test('@smoke user can create, save, copy, and view a simple entry', async ({ pag
     })
 
     await setupClipboardSpy(page)
-    await page.goto('/', { waitUntil: 'networkidle' })
+    await gotoHome(page)
 
     await setTextMode(page, 'Simple')
     const entryText = `Confidential message ${Date.now()}`
-    await getTextArea(page).fill(entryText)
+    await fillTextAndVerify(page, entryText)
 
     const expirationSelect = getExpirationSelect(page)
     await expirationSelect.selectOption('ThirtyMinutes')
@@ -191,8 +205,8 @@ test('@smoke user can create, save, copy, and view a simple entry', async ({ pag
     await clickElement(getSaveButton(page))
 
     const copyLinkButton = getCopyLinkButton(page)
-    await expect(copyLinkButton).toBeVisible({ timeout: 30000 })
-    await expect(copyLinkButton).toBeEnabled({ timeout: 30000 })
+    await expect(copyLinkButton).toBeVisible({ timeout: 10000 })
+    await expect(copyLinkButton).toBeEnabled({ timeout: 10000 })
     await clickElement(copyLinkButton)
 
     await expect(page.getByText(/link copied/i)).toBeVisible()
@@ -222,7 +236,7 @@ test.describe.serial('stateful entry flows', () => {
         })
 
         await setupClipboardSpy(page)
-        await page.goto('/', { waitUntil: 'networkidle' })
+        await gotoHome(page)
 
         await setTextMode(page, 'Advanced')
 
@@ -292,7 +306,7 @@ test.describe.serial('stateful entry flows', () => {
         })
 
         await setupClipboardSpy(page)
-        await page.goto('/', { waitUntil: 'networkidle' })
+        await gotoHome(page)
 
         await setTextMode(page, 'Advanced')
 
@@ -312,16 +326,19 @@ test.describe.serial('stateful entry flows', () => {
         await page.goto(copied)
         await expectOnEntry(page)
 
-        await page.waitForSelector('.gallery', { state: 'visible', timeout: 5000 })
-        await page.waitForSelector('[data-fancybox="entry"] img', { state: 'visible', timeout: 5000 })
-        await page.waitForFunction(() => !!(window as any).Fancybox)
-        await page.click('[data-fancybox="entry"] img')
+        await page.waitForSelector('.gallery', { state: 'visible', timeout: 10000 })
+        await page.waitForSelector('[data-fancybox="entry"] img', { state: 'visible', timeout: 10000 })
+        await page.waitForFunction(() => !!(window as any).Fancybox, { timeout: 10000 })
 
-        await page.waitForSelector('.fancybox__container, .fancybox-bg, .fancybox__stage', { timeout: 5000 })
+        const fancyboxImage = page.locator('[data-fancybox="entry"] img').first()
+        await fancyboxImage.waitFor({ state: 'visible', timeout: 10000 })
+        await fancyboxImage.click()
+
+        await page.waitForSelector('.fancybox__container, .fancybox-bg, .fancybox__stage', { timeout: 10000 })
         await expect(page.locator('.fancybox__container, .fancybox-bg, .fancybox__stage').first()).toBeVisible()
 
         await page.keyboard.press('Escape')
-        await page.waitForSelector('.fancybox__container, .fancybox-bg, .fancybox__stage', { state: 'detached' })
+        await page.waitForSelector('.fancybox__container, .fancybox-bg, .fancybox__stage', { state: 'detached', timeout: 10000 })
     })
 
 
@@ -334,13 +351,20 @@ test.describe.serial('stateful entry flows', () => {
     test('@smoke entry view count increases with second distinct viewer', async ({ browser }) => {
         const contextA = await browser.newContext()
         const pageA = await contextA.newPage()
+
+        await pageA.context().addInitScript(() => {
+            window.localStorage.removeItem('warp.locale')
+            window.localStorage.removeItem('warp.editMode')
+        })
+
         await setupClipboardSpy(pageA)
-        await pageA.goto('/', { waitUntil: 'networkidle' })
+        await gotoHome(pageA)
 
         await setTextMode(pageA, 'Simple')
 
         const entryText = `Views test ${Date.now()}`
-        await getTextArea(pageA).fill(entryText)
+        await fillTextAndVerify(pageA, entryText)
+
         await clickElement(getPreviewButton(pageA))
         await expectOnPreview(pageA)
         await clickElement(getSaveButton(pageA))
@@ -381,7 +405,7 @@ test.describe.serial('stateful entry flows', () => {
         })
 
         await setupClipboardSpy(page)
-        await page.goto('/', { waitUntil: 'networkidle' })
+        await gotoHome(page)
 
         await setTextMode(page, 'Simple')
 
@@ -418,7 +442,7 @@ test.describe.serial('stateful entry flows', () => {
             window.localStorage.removeItem('warp.editMode')
         })
 
-        await page.goto('/', { waitUntil: 'networkidle' })
+        await gotoHome(page)
         await setTextMode(page, 'Simple')
 
         const text = `Failing ${Date.now()}`
@@ -465,7 +489,7 @@ test.describe.serial('stateful entry flows', () => {
         await expect(page.getByRole('heading', { name: /privacy policy|privacy policy|PRIVACY POLICY/i })).toBeVisible()
 
         await page.goto('/data-request')
-        await page.waitForSelector('h1, h2, h3', { timeout: 20000 })
+        await page.waitForSelector('h1, h2, h3', { timeout: 10000 })
         await expect(page.getByRole('heading', { name: /data request|solicitud de datos/i })).toBeVisible()
     })
 
@@ -482,7 +506,7 @@ test.describe.serial('stateful entry flows', () => {
             window.localStorage.removeItem('warp.editMode')
         })
 
-        await page.goto('/', { waitUntil: 'networkidle' })
+        await gotoHome(page)
 
         await setTextMode(page, 'Advanced')
 
@@ -515,16 +539,21 @@ test.describe.serial('stateful entry flows', () => {
             window.localStorage.removeItem('warp.editMode')
         })
 
-        await page.goto('/', { waitUntil: 'networkidle' })
+        await gotoHome(page)
 
         await setTextMode(page, 'Simple')
         
         const text = `Deletion test ${Date.now()}`
-        await getTextArea(page).fill(text)
+        const textArea = getTextArea(page)
+        await expect(textArea).toBeVisible({ timeout: 10000 })
+        await textArea.fill(text)
+
         await clickElement(getPreviewButton(page))
         await expectOnPreview(page)
 
         await clickElement(getSaveButton(page))
+        await expect(getCopyLinkButton(page)).toBeVisible({ timeout: 10000 })
+
         await clickElement(getDeleteButton(page))
         await expectOnDeleted(page)
     })
@@ -543,12 +572,15 @@ test.describe.serial('stateful entry flows', () => {
         })
 
         await setupClipboardSpy(page)
-        await page.goto('/', { waitUntil: 'networkidle' })
+        await gotoHome(page)
 
         await setTextMode(page, 'Simple')
         
         const text = `Report ${Date.now()}`
-        await getTextArea(page).fill(text)
+        const textArea = getTextArea(page)
+        await expect(textArea).toBeVisible({ timeout: 10000 })
+        await textArea.fill(text)
+
         await clickElement(getPreviewButton(page))
         await expectOnPreview(page)
 
@@ -579,7 +611,7 @@ test.describe.serial('stateful entry flows', () => {
             window.localStorage.removeItem('warp.editMode')
         })
 
-        await page.goto('/', { waitUntil: 'networkidle' })
+        await gotoHome(page)
 
         await setTextMode(page, 'Advanced')
         
@@ -607,7 +639,7 @@ test.describe.serial('stateful entry flows', () => {
     test('@smoke editMode persists across reload and tabs', async ({ page }) => {
         await page.context().clearCookies()
 
-        await page.goto('/', { waitUntil: 'networkidle' })
+        await gotoHome(page)
 
         const advancedModeToggle = getAdvancedModeToggle(page)
         await advancedModeToggle.click()
@@ -634,7 +666,7 @@ test.describe.serial('stateful entry flows', () => {
             window.localStorage.removeItem('warp.editMode')
         })
 
-        await page.goto('/', { waitUntil: 'networkidle' })
+        await gotoHome(page)
 
         const previewButton = getPreviewButton(page)
         await expect(previewButton).toBeDisabled()
