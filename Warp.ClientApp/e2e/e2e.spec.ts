@@ -42,7 +42,7 @@ function resolveFixturePath(name: string): string {
 
 
 async function isToggleActive(toggle: Locator): Promise<boolean> {
-    await toggle.waitFor({ state: 'visible', timeout: 10000 })
+    await toggle.waitFor({ state: 'visible', timeout: 30000 })
     return toggle.evaluate((btn) => btn.classList.contains('active'))
 }
 

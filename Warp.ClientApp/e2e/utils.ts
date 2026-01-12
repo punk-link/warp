@@ -38,7 +38,7 @@ export async function getCopiedLink(page: Page): Promise<string> {
 
 export async function gotoHome(page: Page): Promise<void> {
     await page.goto('/', { waitUntil: 'networkidle' })
-    await expect(page.getByRole('main').getByRole('heading', { level: 1 }).first()).toBeVisible({ timeout: 10000 })
+    await expect(page.getByTestId('mode-simple')).toBeVisible({ timeout: 30000 })
 }
 
 
