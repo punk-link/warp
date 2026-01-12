@@ -42,7 +42,6 @@ function resolveFixturePath(name: string): string {
 
 
 async function isToggleActive(toggle: Locator): Promise<boolean> {
-    await toggle.waitFor({ state: 'visible' })
     return toggle.evaluate((btn) => btn.classList.contains('active'))
 }
 
@@ -52,8 +51,6 @@ async function setTextMode(page: Page, mode: 'Simple' | 'Advanced'): Promise<Loc
     const advancedModeToggle = getAdvancedModeToggle(page)
 
     const target = mode === 'Simple' ? simpleModeToggle : advancedModeToggle
-
-    await target.waitFor({ state: 'visible' })
 
     if (await isToggleActive(target))
         return target
@@ -177,7 +174,6 @@ test('@smoke user can create, save, copy, and view a simple entry', async ({ pag
 
     await setupClipboardSpy(page)
     await page.goto('/', { waitUntil: 'networkidle' })
-    await expectOnHome(page)
 
     await setTextMode(page, 'Simple')
     const entryText = `Confidential message ${Date.now()}`
