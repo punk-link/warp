@@ -37,12 +37,12 @@ export async function getCopiedLink(page: Page): Promise<string> {
 
 
 export async function gotoHome(page: Page): Promise<void> {
-    // Retry navigation up to 3 times for cold start scenarios
+    // Retry navigation up to 5 times for cold start scenarios (CI needs more time)
     let lastError: Error | null = null
 
-    for (let attempt = 1; attempt <= 3; attempt++) {
+    for (let attempt = 1; attempt <= 5; attempt++) {
         try {
-            await page.goto('/', { waitUntil: 'domcontentloaded' })
+            await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30000 })
 
             // Wait for Vue app to mount - check for #app having content
             await page.waitForFunction(
@@ -50,18 +50,25 @@ export async function gotoHome(page: Page): Promise<void> {
                     const app = document.querySelector('#app')
                     return app && app.children.length > 0
                 },
-                { timeout: 15000 }
+                { timeout: 20000 }
             )
 
+            // Wait for Vue router to be ready
+            await page.waitForFunction(
+                () => (window as any).__vue_app_ready !== false,
+                { timeout: 5000 }
+            ).catch(() => {}) // Ignore if __vue_app_ready isn't set
+
             // Now wait for the mode toggle
-            await expect(page.getByTestId('mode-simple')).toBeVisible({ timeout: 15000 })
+            await expect(page.getByTestId('mode-simple')).toBeVisible({ timeout: 20000 })
 
             return // Success
         } catch (error) {
             lastError = error as Error
 
-            if (attempt < 3) {
-                await page.waitForTimeout(1000)
+            if (attempt < 5) {
+                // Exponential backoff: 1s, 2s, 3s, 4s
+                await page.waitForTimeout(attempt * 1000)
             }
         }
     }
