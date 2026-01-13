@@ -37,8 +37,36 @@ export async function getCopiedLink(page: Page): Promise<string> {
 
 
 export async function gotoHome(page: Page): Promise<void> {
-    await page.goto('/', { waitUntil: 'networkidle' })
-    await expect(page.getByTestId('mode-simple')).toBeVisible({ timeout: 30000 })
+    // Retry navigation up to 3 times for cold start scenarios
+    let lastError: Error | null = null
+
+    for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+            await page.goto('/', { waitUntil: 'domcontentloaded' })
+
+            // Wait for Vue app to mount - check for #app having content
+            await page.waitForFunction(
+                () => {
+                    const app = document.querySelector('#app')
+                    return app && app.children.length > 0
+                },
+                { timeout: 15000 }
+            )
+
+            // Now wait for the mode toggle
+            await expect(page.getByTestId('mode-simple')).toBeVisible({ timeout: 15000 })
+
+            return // Success
+        } catch (error) {
+            lastError = error as Error
+
+            if (attempt < 3) {
+                await page.waitForTimeout(1000)
+            }
+        }
+    }
+
+    throw lastError
 }
 
 

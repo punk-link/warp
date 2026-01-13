@@ -68,10 +68,23 @@ async function setTextMode(page: Page, mode: 'Simple' | 'Advanced'): Promise<Loc
 async function fillTextAndVerify(page: Page, text: string): Promise<void> {
     const textArea = getTextArea(page)
     await expect(textArea).toBeVisible({ timeout: 10000 })
+
+    // Wait for component to finish loading (button should show "Preview" text, not spinner)
+    const previewButton = getPreviewButton(page)
+    await expect(previewButton).toHaveAttribute('aria-busy', 'false', { timeout: 15000 })
+
+    // Click to focus and ensure element is ready
     await textArea.click()
-    await textArea.fill(text)
-    await expect(textArea).toHaveValue(text, { timeout: 5000 })
-    await expect(getPreviewButton(page)).toBeEnabled({ timeout: 10000 })
+
+    // Clear and type - most reliable way to trigger Vue's v-model
+    await textArea.fill('')
+    await textArea.pressSequentially(text, { delay: 0 })
+
+    // Verify the value was set
+    await expect(textArea).toHaveValue(text, { timeout: 10000 })
+
+    // Now expect the preview button to be enabled
+    await expect(previewButton).toBeEnabled({ timeout: 15000 })
 }
 
 
@@ -172,53 +185,6 @@ test('@smoke i18n translations reflect locale changes', async ({ page }) => {
 })
 
 
-// Scenario: Simple entry creation and copy link
-// Steps:
-// 1. Prepare clipboard spy to capture copied link.
-// 2. Stub metadata + entry APIs so the flow is deterministic.
-// 3. Select simple mode, fill the text, choose 30 minutes expiration.
-// 4. Click Preview, verify preview content.
-// 5. Save the entry and click Copy Link; assert copied link and entry page content.
-test('@smoke user can create, save, copy, and view a simple entry', async ({ page }) => {
-    await page.context().clearCookies()
-    await page.context().addInitScript(() => {
-        window.localStorage.removeItem('warp.locale')
-        window.localStorage.removeItem('warp.editMode')
-    })
-
-    await setupClipboardSpy(page)
-    await gotoHome(page)
-
-    await setTextMode(page, 'Simple')
-    const entryText = `Confidential message ${Date.now()}`
-    await fillTextAndVerify(page, entryText)
-
-    const expirationSelect = getExpirationSelect(page)
-    await expirationSelect.selectOption('ThirtyMinutes')
-    await expect(expirationSelect).toHaveValue('ThirtyMinutes')
-
-    const previewButton = getPreviewButton(page)
-    await clickElement(previewButton)
-    await expectOnPreview(page)
-    await expect(getEntryArticle(page)).toContainText(entryText)
-
-    await clickElement(getSaveButton(page))
-
-    const copyLinkButton = getCopyLinkButton(page)
-    await expect(copyLinkButton).toBeVisible({ timeout: 10000 })
-    await expect(copyLinkButton).toBeEnabled({ timeout: 10000 })
-    await clickElement(copyLinkButton)
-
-    await expect(page.getByText(/link copied/i)).toBeVisible()
-    const copiedLink = await getCopiedLink(page)
-    expect(copiedLink).toMatch(/\/entry\//)
-
-    await page.goto(copiedLink)
-    await expectOnEntry(page)
-    await expect(getEntryArticle(page)).toContainText(entryText)
-})
-
-
 // Scenario: Advanced entry with image uploads, edit and verify copy equality
 // Steps:
 // 1. Set clipboard spy and prepare remote image URLs via the mocks.
@@ -228,6 +194,53 @@ test('@smoke user can create, save, copy, and view a simple entry', async ({ pag
 // 5. Add a second image, preview again, save and copy link from Preview.
 // 6. Visit entry page and copy the link again; assert both copied links are identical.
 test.describe.serial('stateful entry flows', () => {
+    // Scenario: Simple entry creation and copy link
+    // Steps:
+    // 1. Prepare clipboard spy to capture copied link.
+    // 2. Stub metadata + entry APIs so the flow is deterministic.
+    // 3. Select simple mode, fill the text, choose 30 minutes expiration.
+    // 4. Click Preview, verify preview content.
+    // 5. Save the entry and click Copy Link; assert copied link and entry page content.
+    test('@smoke user can create, save, copy, and view a simple entry', async ({ page }) => {
+        await page.context().clearCookies()
+        await page.context().addInitScript(() => {
+            window.localStorage.removeItem('warp.locale')
+            window.localStorage.removeItem('warp.editMode')
+        })
+
+        await setupClipboardSpy(page)
+        await gotoHome(page)
+
+        await setTextMode(page, 'Simple')
+        const entryText = `Confidential message ${Date.now()}`
+        await fillTextAndVerify(page, entryText)
+
+        const expirationSelect = getExpirationSelect(page)
+        await expirationSelect.selectOption('ThirtyMinutes')
+        await expect(expirationSelect).toHaveValue('ThirtyMinutes')
+
+        const previewButton = getPreviewButton(page)
+        await clickElement(previewButton)
+        await expectOnPreview(page)
+        await expect(getEntryArticle(page)).toContainText(entryText)
+
+        await clickElement(getSaveButton(page))
+
+        const copyLinkButton = getCopyLinkButton(page)
+        await expect(copyLinkButton).toBeVisible({ timeout: 10000 })
+        await expect(copyLinkButton).toBeEnabled({ timeout: 10000 })
+        await clickElement(copyLinkButton)
+
+        await expect(page.getByText(/link copied/i)).toBeVisible()
+        const copiedLink = await getCopiedLink(page)
+        expect(copiedLink).toMatch(/\/entry\//)
+
+        await page.goto(copiedLink)
+        await expectOnEntry(page)
+        await expect(getEntryArticle(page)).toContainText(entryText)
+    })
+
+
     test('@smoke user can edit an advanced entry with images', async ({ page }) => {
         await page.context().clearCookies()
         await page.context().addInitScript(() => {
