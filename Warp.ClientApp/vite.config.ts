@@ -3,7 +3,7 @@ import vue from '@vitejs/plugin-vue'
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), '')
-    const origin = (env.ENV_ORIGIN || 'https://localhost:8001').replace(/\/$/, '')
+    const origin = (process.env.ENV_ORIGIN || env.ENV_ORIGIN || 'https://localhost:8001').replace(/\/$/, '')
 
     return {
         plugins: [vue()],
