@@ -37,44 +37,41 @@ export async function getCopiedLink(page: Page): Promise<string> {
 
 
 export async function gotoHome(page: Page): Promise<void> {
-    // Retry navigation up to 5 times for cold start scenarios (CI needs more time)
+    // Global setup ensures the app is ready, so we only need minimal retry logic here
+    // for cases where the page context is reset between tests
     let lastError: Error | null = null
 
-    for (let attempt = 1; attempt <= 5; attempt++) {
+    for (let attempt = 1; attempt <= 3; attempt++) {
+        if (page.isClosed()) {
+            throw new Error('Page was closed before navigation could complete')
+        }
+
         try {
             await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30000 })
 
-            // Wait for Vue app to mount - check for #app having content
+            // Wait for Vue app to mount
             await page.waitForFunction(
                 () => {
                     const app = document.querySelector('#app')
                     return app && app.children.length > 0
                 },
-                { timeout: 20000 }
+                { timeout: 15000 }
             )
 
-            // Wait for Vue router to be ready
-            await page.waitForFunction(
-                () => (window as any).__vue_app_ready !== false,
-                { timeout: 5000 }
-            ).catch(() => {}) // Ignore if __vue_app_ready isn't set
+            // Wait for the mode toggle to be visible
+            await expect(page.getByTestId('mode-simple')).toBeVisible({ timeout: 15000 })
 
-            // Now wait for the mode toggle
-            await expect(page.getByTestId('mode-simple')).toBeVisible({ timeout: 20000 })
-
-            return // Success
+            return
         } catch (error) {
             lastError = error as Error
 
-            // Don't retry if the page/browser was closed (test timeout or abort)
             const errorMessage = lastError.message.toLowerCase()
             if (errorMessage.includes('closed') || errorMessage.includes('target page')) {
                 throw lastError
             }
 
-            if (attempt < 5 && !page.isClosed()) {
-                // Exponential backoff: 1s, 2s, 3s, 4s
-                await page.waitForTimeout(attempt * 1000)
+            if (attempt < 3 && !page.isClosed()) {
+                await page.waitForTimeout(2000)
             }
         }
     }
