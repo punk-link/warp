@@ -41,13 +41,19 @@ async function waitForDevServer(baseURL: string, maxWaitTime: number, startTime:
 
 async function verifyAppInitialization(baseURL: string, maxWaitTime: number, startTime: number): Promise<void> {
     const browser = await chromium.launch()
-    const context = await browser.newContext()
+    const context = await browser.newContext({
+        ignoreHTTPSErrors: true
+    })
     const page = await context.newPage()
 
     try {
         while (Date.now() - startTime < maxWaitTime) {
             try {
-                await page.goto(baseURL, { waitUntil: 'domcontentloaded', timeout: 30000 })
+                // Clear any existing state to match what tests do
+                await context.clearCookies()
+
+                const response = await page.goto(baseURL, { waitUntil: 'domcontentloaded', timeout: 30000 })
+                console.log(`[global-setup] Page loaded with status: ${response?.status()}`)
 
                 // Wait for Vue app to mount
                 await page.waitForFunction(
@@ -58,14 +64,35 @@ async function verifyAppInitialization(baseURL: string, maxWaitTime: number, sta
                     { timeout: 20000 }
                 )
 
-                // Verify the mode toggle is visible (indicates app is fully initialized)
+                // Check current URL to see if we were redirected to an error page
+                const currentUrl = page.url()
+                console.log(`[global-setup] Current URL after load: ${currentUrl}`)
+
+                if (currentUrl.includes('/error')) {
+                    // Capture the error details
+                    const errorText = await page.locator('body').textContent()
+                    console.log(`[global-setup] Redirected to error page. Content: ${errorText?.substring(0, 500)}`)
+                    throw new Error(`App redirected to error page: ${currentUrl}`)
+                }
+
+                // Verify the mode toggle is visible (indicates app is fully initialized on Home)
                 const modeToggle = page.getByTestId('mode-simple')
                 await modeToggle.waitFor({ state: 'visible', timeout: 20000 })
 
                 console.log(`[global-setup] Vue app initialized successfully`)
                 return
             } catch (error) {
-                console.log(`[global-setup] App not ready yet, retrying... (${error instanceof Error ? error.message : error})`)
+                const errorMsg = error instanceof Error ? error.message : String(error)
+                console.log(`[global-setup] App not ready yet: ${errorMsg}`)
+
+                // Capture page content for debugging
+                try {
+                    const bodyText = await page.locator('body').textContent()
+                    console.log(`[global-setup] Page content: ${bodyText?.substring(0, 300)}...`)
+                } catch {
+                    // Ignore if we can't get content
+                }
+
                 await sleep(2000)
             }
         }
