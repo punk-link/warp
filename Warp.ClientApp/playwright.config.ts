@@ -31,6 +31,11 @@ export default defineConfig({
         url: resolvedBaseUrl,
         reuseExistingServer: !process.env.CI,
         stdout: 'pipe',
-        ignoreHTTPSErrors: true
+        ignoreHTTPSErrors: true,
+        timeout: 120_000,
+        env: {
+            ...process.env,
+            ENV_ORIGIN: process.env.ENV_ORIGIN || 'https://localhost:8001'
+        }
     }
 })
