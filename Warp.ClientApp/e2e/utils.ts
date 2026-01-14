@@ -66,7 +66,13 @@ export async function gotoHome(page: Page): Promise<void> {
         } catch (error) {
             lastError = error as Error
 
-            if (attempt < 5) {
+            // Don't retry if the page/browser was closed (test timeout or abort)
+            const errorMessage = lastError.message.toLowerCase()
+            if (errorMessage.includes('closed') || errorMessage.includes('target page')) {
+                throw lastError
+            }
+
+            if (attempt < 5 && !page.isClosed()) {
                 // Exponential backoff: 1s, 2s, 3s, 4s
                 await page.waitForTimeout(attempt * 1000)
             }
