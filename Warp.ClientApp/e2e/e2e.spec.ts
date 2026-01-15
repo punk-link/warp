@@ -146,7 +146,7 @@ async function getViewCount(page: Page): Promise<number> {
  * - Wait for key navigation with `page.waitForURL(/preview|/entry/)`.
  * - Use `page.context().addInitScript` when you need to alter `localStorage` before page load (i18n, edit mode, etc.).
  */
-mode-simple
+
 
 // Scenario: Home renders
 // Steps:
