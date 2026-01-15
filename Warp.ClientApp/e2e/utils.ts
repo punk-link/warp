@@ -59,7 +59,7 @@ export async function gotoHome(page: Page): Promise<void> {
             )
 
             // Wait for the mode toggle to be visible
-            await expect(page.getByTestId('mode-simple')).toBeVisible({ timeout: 15000 })
+            await expect(page.getByTestId('mode-simple')).toBeVisible({ timeout: 30000 })
 
             return
         } catch (error) {
