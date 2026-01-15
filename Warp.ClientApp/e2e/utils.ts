@@ -43,7 +43,8 @@ export async function gotoHome(page: Page): Promise<void> {
         throw new Error('Page was closed before navigation could complete')
     }
 
-    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60000 })
+    const response = await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60000 })
+    console.log(`[gotoHome] Navigation response status: ${response?.status()}`)
 
     // Wait for Vue app to mount
     await page.waitForFunction(
@@ -54,8 +55,25 @@ export async function gotoHome(page: Page): Promise<void> {
         { timeout: 30000 }
     )
 
+    // Log current URL and check for error redirect
+    const currentUrl = page.url()
+    console.log(`[gotoHome] Current URL after Vue mount: ${currentUrl}`)
+
+    if (currentUrl.includes('/error')) {
+        const bodyText = await page.locator('body').textContent()
+        throw new Error(`App redirected to error page: ${currentUrl}\nContent: ${bodyText?.substring(0, 500)}`)
+    }
+
     // Wait for the mode toggle to be visible
-    await expect(page.getByTestId('mode-simple')).toBeVisible({ timeout: 30000 })
+    try {
+        await expect(page.getByTestId('mode-simple')).toBeVisible({ timeout: 30000 })
+    } catch (error) {
+        // Capture page state for debugging
+        const bodyText = await page.locator('body').textContent()
+        console.log(`[gotoHome] mode-simple not found. URL: ${currentUrl}`)
+        console.log(`[gotoHome] Page content: ${bodyText?.substring(0, 500)}`)
+        throw error
+    }
 }
 
 
