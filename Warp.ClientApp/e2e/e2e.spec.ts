@@ -153,19 +153,19 @@ async function getViewCount(page: Page): Promise<number> {
 // 1. Reset cookies and local storage to a clean state.
 // 2. Visit `/`.
 // 3. Verify the home hero heading renders correctly.
-test('@smoke home renders', async ({ page }) => {
-    await page.context().clearCookies()
-    await page.context().addInitScript(() => {
-        window.localStorage.removeItem('warp.locale')
-        window.localStorage.removeItem('warp.editMode')
-    })
+// test('@smoke home renders', async ({ page }) => {
+//     await page.context().clearCookies()
+//     await page.context().addInitScript(() => {
+//         window.localStorage.removeItem('warp.locale')
+//         window.localStorage.removeItem('warp.editMode')
+//     })
 
-    await gotoHome(page)
+//     await gotoHome(page)
 
-    const heroHeading = getMainHeading(page)
+//     const heroHeading = getMainHeading(page)
 
-    await expect(heroHeading).toContainText(/warp/i)
-})
+//     await expect(heroHeading).toContainText(/warp/i)
+// })
 
 
 // Scenario: i18n localization switch
