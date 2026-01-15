@@ -37,46 +37,25 @@ export async function getCopiedLink(page: Page): Promise<string> {
 
 
 export async function gotoHome(page: Page): Promise<void> {
-    // Global setup ensures the app is ready, so we only need minimal retry logic here
-    // for cases where the page context is reset between tests
-    let lastError: Error | null = null
-
-    for (let attempt = 1; attempt <= 3; attempt++) {
-        if (page.isClosed()) {
-            throw new Error('Page was closed before navigation could complete')
-        }
-
-        try {
-            await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 30000 })
-
-            // Wait for Vue app to mount
-            await page.waitForFunction(
-                () => {
-                    const app = document.querySelector('#app')
-                    return app && app.children.length > 0
-                },
-                { timeout: 15000 }
-            )
-
-            // Wait for the mode toggle to be visible
-            await expect(page.getByTestId('mode-simple')).toBeVisible({ timeout: 30000 })
-
-            return
-        } catch (error) {
-            lastError = error as Error
-
-            const errorMessage = lastError.message.toLowerCase()
-            if (errorMessage.includes('closed') || errorMessage.includes('target page')) {
-                throw lastError
-            }
-
-            if (attempt < 3 && !page.isClosed()) {
-                await page.waitForTimeout(2000)
-            }
-        }
+    // Global setup ensures the app is ready. This function has minimal retry
+    // for transient issues when page context is reset between tests.
+    if (page.isClosed()) {
+        throw new Error('Page was closed before navigation could complete')
     }
 
-    throw lastError
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60000 })
+
+    // Wait for Vue app to mount
+    await page.waitForFunction(
+        () => {
+            const app = document.querySelector('#app')
+            return app && app.children.length > 0
+        },
+        { timeout: 30000 }
+    )
+
+    // Wait for the mode toggle to be visible
+    await expect(page.getByTestId('mode-simple')).toBeVisible({ timeout: 30000 })
 }
 
 

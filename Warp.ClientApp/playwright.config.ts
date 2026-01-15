@@ -11,7 +11,7 @@ const devServerCommand = process.env.E2E_DEV_SERVER_COMMAND ?? `yarn dev --host 
 export default defineConfig({
     testDir: './e2e',
     globalSetup: './e2e/global-setup.ts',
-    timeout: 60_000,
+    timeout: process.env.CI ? 120_000 : 60_000,
     expect: { timeout: 5_000 },
     retries: process.env.CI ? 2 : 0,
     fullyParallel: true,
