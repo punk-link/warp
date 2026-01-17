@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
 using Warp.WebApp.Middlewares;
 
-namespace Warp.WebApp.Tests.Middlewares;
+namespace Warp.WebApp.Tests.UnitTests.Middlewares;
 
 public class TraceContextMiddlewareTests
 {

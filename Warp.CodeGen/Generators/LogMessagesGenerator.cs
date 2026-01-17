@@ -18,8 +18,8 @@ public partial class LogMessagesGenerator : BaseGenerator
         sb.AppendLine("// Generated on: " + DateTimeOffset.UtcNow.ToString("yyyy-MM-dd HH:mm:ss UTC"));
         sb.AppendLine("using Warp.WebApp.Constants.Logging;");
         sb.AppendLine();
-        sb.AppendLine("# nullable enable");
-        sb.AppendLine("# pragma warning disable CS0618 // Type or member is obsolete");
+        sb.AppendLine("#nullable enable");
+        sb.AppendLine("#pragma warning disable CS0618 // Type or member is obsolete");
         sb.AppendLine();
         sb.AppendLine("namespace Warp.WebApp.Telemetry.Logging;");
         sb.AppendLine();
@@ -74,8 +74,8 @@ public partial class LogMessagesGenerator : BaseGenerator
         sb.AppendLine("}");
 
         sb.AppendLine();
-        sb.AppendLine("# pragma warning restore CS0618 // Type or member is obsolete");
-        sb.AppendLine("# nullable disable");
+        sb.AppendLine("#pragma warning restore CS0618 // Type or member is obsolete");
+        sb.AppendLine("#nullable disable");
         
         FileUtilities.WriteToFile(outputFilePath, sb.ToString());
     }

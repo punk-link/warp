@@ -15,9 +15,15 @@ public static class DistributedCacheHelper
         if (!int.TryParse(configuration["Redis:Port"]!, NumberStyles.Integer, CultureInfo.InvariantCulture, out var port))
             logger.LogRedisPortIsNotSpecified();
 
+        var abortOnConnectFail = configuration.GetValue("Redis:AbortOnConnectFail", defaultValue: true);
+        var connectRetry = configuration.GetValue("Redis:ConnectRetry", defaultValue: 3);
+        var connectTimeout = configuration.GetValue("Redis:ConnectTimeout", defaultValue: 5000);
+
         var options = new ConfigurationOptions
         {
-            AbortOnConnectFail = true,
+            AbortOnConnectFail = abortOnConnectFail,
+            ConnectRetry = connectRetry,
+            ConnectTimeout = connectTimeout,
             EndPoints =
             {
                 { host, port }

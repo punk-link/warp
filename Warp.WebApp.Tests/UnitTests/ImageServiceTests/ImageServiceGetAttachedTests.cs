@@ -7,7 +7,7 @@ using Warp.WebApp.Data.S3;
 using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Services.Images;
 
-namespace Warp.WebApp.Tests.ImageServiceTests;
+namespace Warp.WebApp.Tests.UnitTests.ImageServiceTests;
 
 public class ImageServiceGetAttachedTests
 {

@@ -83,7 +83,9 @@ internal static class ServiceCollectionExtensions
                 {
                     options.AccessKey = builder.Configuration["S3Options:AccessKey"]!;
                     options.BucketName = builder.Configuration["S3Options:BucketName"]!;
+                    options.ForcePathStyle = builder.Configuration.GetValue<bool>("S3Options:ForcePathStyle");
                     options.SecretAccessKey = builder.Configuration["S3Options:SecretAccessKey"]!;
+                    options.ServiceUrl = builder.Configuration["S3Options:ServiceUrl"];
                 })
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
@@ -120,7 +122,7 @@ internal static class ServiceCollectionExtensions
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 
-            if (builder.Environment.IsLocal())
+            if (builder.Environment.IsLocal() || builder.Environment.IsEndToEndTests())
             {
                 services.AddOptions<EncryptionOptions>()
                     .Configure(options =>
@@ -217,10 +219,13 @@ internal static class ServiceCollectionExtensions
         services.AddResponseCaching();
         services.AddOutputCache();
 
+        var allowInsecureCookies = InsecureCookiesHelper.IsAllowed(builder.Environment);
+        var securePolicy = allowInsecureCookies ? CookieSecurePolicy.None : CookieSecurePolicy.Always;
+
         services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
             .AddCookie(options =>
             {
-                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                options.Cookie.SecurePolicy = securePolicy;
                 options.Cookie.SameSite = SameSiteMode.Strict;
                 options.Cookie.Name = "Warp.Auth";
                 options.Cookie.HttpOnly = true;
@@ -235,7 +240,7 @@ internal static class ServiceCollectionExtensions
             options.FormFieldName = "__RequestVerificationToken";
             options.Cookie.Name = "Warp.AntiForgery";
             options.Cookie.SameSite = SameSiteMode.Strict;
-            options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            options.Cookie.SecurePolicy = securePolicy;
             options.Cookie.HttpOnly = true;
         });
 

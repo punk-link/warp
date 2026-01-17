@@ -1,12 +1,12 @@
 <template>
     <div class="flex items-center gap-2">
         <button type="button" :class="['nav-button', { active: modelValue === EditMode.Simple }]"
-            :disabled="disabled || modelValue === EditMode.Simple" @click="$emit('update:modelValue', EditMode.Simple)"
+            :disabled="disabled" @click="$emit('update:modelValue', EditMode.Simple)"
             data-testid="mode-simple">
             {{ simpleLabel }}
         </button>
         <button type="button" :class="['nav-button', { active: modelValue === EditMode.Advanced }]"
-            :disabled="disabled || modelValue === EditMode.Advanced"
+            :disabled="disabled"
             @click="$emit('update:modelValue', EditMode.Advanced)" data-testid="mode-advanced">
             {{ advancedLabel }}
         </button>

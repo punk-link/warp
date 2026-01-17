@@ -1,4 +1,6 @@
 name: PR Tests
+permissions:
+  contents: read
 
 on:
   pull_request:
@@ -13,7 +15,7 @@ jobs:
     
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Set up Node.js
       uses: actions/setup-node@v4
@@ -22,14 +24,277 @@ jobs:
         cache: yarn
         cache-dependency-path: Warp.ClientApp/yarn.lock
 
+    - name: Cache client node_modules
+      uses: actions/cache@v4
+      with:
+        path: Warp.ClientApp/node_modules
+        key: ${{ runner.os }}-node-20-${{ hashFiles('Warp.ClientApp/yarn.lock') }}
+        restore-keys: ${{ runner.os }}-node-20-
+
     - name: Install client dependencies
       run: corepack enable && cd Warp.ClientApp && yarn install --immutable
-
-    - name: Vitest
-      run: cd Warp.ClientApp && yarn vitest --run
     
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
       
     - name: Build and run tests
-      run: docker build --target test .
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        target: test
+        load: true
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  web-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: yarn
+        cache-dependency-path: Warp.ClientApp/yarn.lock
+
+    - name: Cache client node_modules
+      uses: actions/cache@v4
+      with:
+        path: Warp.ClientApp/node_modules
+        key: ${{ runner.os }}-node-20-${{ hashFiles('Warp.ClientApp/yarn.lock') }}
+        restore-keys: ${{ runner.os }}-node-20-
+
+    - name: Install client dependencies
+      run: corepack enable && cd Warp.ClientApp && yarn install --immutable
+
+    - name: Cache Playwright browsers
+      id: playwright-cache
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/ms-playwright
+        key: ${{ runner.os }}-playwright-${{ hashFiles('Warp.ClientApp/yarn.lock') }}
+
+    - name: Install Playwright browsers
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
+      run: cd Warp.ClientApp && npx playwright install --with-deps
+
+    - name: Install Playwright system dependencies
+      if: steps.playwright-cache.outputs.cache-hit == 'true'
+      run: cd Warp.ClientApp && npx playwright install-deps
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Create e2e network
+      run: docker network create warp-e2e || true
+
+    - name: Ensure vault bootstrap directory
+      run: mkdir -p .vault && chmod 777 .vault
+
+    - name: Start infrastructure services
+      run: |
+        docker run -d --name warp-vault --network warp-e2e -p 8200:8200 --cap-add=IPC_LOCK -e VAULT_DEV_ROOT_TOKEN_ID=dev-root -e VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200 hashicorp/vault:1.15 server -dev -dev-root-token-id=dev-root -dev-listen-address=0.0.0.0:8200
+        docker run -d --name warp-keydb --network warp-e2e -p 6379:6379 eqalpha/keydb
+        docker run -d --name warp-s3mock --network warp-e2e -p 9090:9090 -e initialBuckets=warp-e2e adobe/s3mock:latest
+
+    - name: Wait for KeyDB readiness
+      run: |
+        for i in {1..120}; do
+          if docker exec warp-keydb keydb-cli ping 2>/dev/null | grep -q PONG; then
+            echo "KeyDB is ready, waiting 1 second for full stability..."
+            sleep 1
+            exit 0
+          fi
+          sleep 0.5
+        done
+        echo "KeyDB did not become ready" >&2
+        docker logs warp-keydb || true
+        exit 1
+
+    - name: Wait for Vault readiness
+      run: |
+        for i in {1..120}; do
+          if curl -fsS http://localhost:8200/v1/sys/health >/dev/null; then
+            exit 0
+          fi
+          sleep 0.5
+        done
+        echo "Vault did not become ready" >&2
+        docker logs warp-vault || true
+        exit 1
+
+    - name: Bootstrap Vault
+      run: |
+        docker run --rm --network warp-e2e -v "${{ github.workspace }}/.vault:/vault/bootstrap" -e VAULT_ADDR=http://warp-vault:8200 -e VAULT_TOKEN=dev-root hashicorp/vault:1.15 /bin/sh -c '
+          set -ex
+          
+          echo "Waiting for Vault..."
+          until vault status; do
+            sleep 1
+          done
+          
+          echo "Enabling secrets engines..."
+          vault secrets enable -path=secrets kv-v2 || echo "kv-v2 already enabled"
+          vault secrets enable transit || echo "transit already enabled"
+          
+          echo "Creating transit key..."
+          vault write -f transit/keys/warp-end-to-end || echo "transit key already exists"
+          
+          echo "Writing secrets..."
+          vault kv put secrets/warp consul-address=http://localhost:8500 consul-token=local-dev s3-secret-access-key=local-dev
+          
+          echo "Creating policy..."
+          cat <<EOF >/tmp/warp-e2e-policy.hcl
+          path "secrets/data/warp" {
+            capabilities = ["read"]
+          }
+          path "secrets/metadata/warp" {
+            capabilities = ["read"]
+          }
+          path "transit/encrypt/warp-end-to-end" {
+            capabilities = ["update"]
+          }
+          path "transit/decrypt/warp-end-to-end" {
+            capabilities = ["update"]
+          }
+          path "transit/keys/warp-end-to-end" {
+            capabilities = ["read"]
+          }
+        EOF
+          vault policy write warp-e2e /tmp/warp-e2e-policy.hcl
+          
+          echo "Creating token..."
+          ls -la /vault/bootstrap/
+          TOKEN=$(vault token create -policy=warp-e2e -display-name=warp-e2e -orphan -ttl=720h -field token)
+          echo "Token created: ${TOKEN:0:10}..."
+          echo "$TOKEN" > /vault/bootstrap/warp-e2e.token
+          
+          echo "Verifying token file..."
+          ls -la /vault/bootstrap/warp-e2e.token
+          cat /vault/bootstrap/warp-e2e.token | head -c 20
+          echo ""
+        '
+
+    - name: Verify Vault token
+      run: |
+        echo "Checking .vault directory:"
+        ls -la "${{ github.workspace }}/.vault/" || echo "Directory listing failed"
+        if [ ! -f "${{ github.workspace }}/.vault/warp-e2e.token" ]; then
+          echo "ERROR: Vault token file not found!"
+          exit 1
+        fi
+        TOKEN_SIZE=$(stat -c%s "${{ github.workspace }}/.vault/warp-e2e.token" 2>/dev/null || stat -f%z "${{ github.workspace }}/.vault/warp-e2e.token")
+        if [ "$TOKEN_SIZE" -lt 10 ]; then
+          echo "ERROR: Vault token file is too small (${TOKEN_SIZE} bytes), likely empty or invalid"
+          cat "${{ github.workspace }}/.vault/warp-e2e.token"
+          exit 1
+        fi
+        echo "Vault token file exists and has ${TOKEN_SIZE} bytes"
+
+    - name: Wait for S3 mock readiness
+      run: |
+        for i in {1..120}; do
+          if curl -fsS http://localhost:9090/ >/dev/null; then
+            exit 0
+          fi
+          sleep 0.5
+        done
+        echo "S3 mock did not become ready" >&2
+        docker logs warp-s3mock || true
+        exit 1
+
+    - name: Build backend image
+      run: docker build -t warp-webapp:e2e .
+
+    - name: Start backend
+      run: |
+        docker run -d --name warp-webapp --network warp-e2e -p 8080:8080 \
+          -e ASPNETCORE_ENVIRONMENT=E2E \
+          -e ASPNETCORE_URLS=http://0.0.0.0:8080 \
+          -e ASPNETCORE_HTTP_PORTS=8080 \
+          -e DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false \
+          -e LANG=en_US.UTF-8 \
+          -e LC_ALL=en_US.UTF-8 \
+          -e PNKL_VAULT_ADDR=http://warp-vault:8200 \
+          -e PNKL_VAULT_TOKEN_FILE=/vault/warp-e2e.token \
+          -e Redis__Host=warp-keydb \
+          -e Redis__Port=6379 \
+          -e Redis__AbortOnConnectFail=false \
+          -e Redis__ConnectRetry=10 \
+          -e Redis__ConnectTimeout=10000 \
+          -e S3Options__ServiceUrl=http://warp-s3mock:9090 \
+          -e S3Options__BucketName=warp-e2e \
+          -v "${{ github.workspace }}/.vault:/vault:ro" \
+          warp-webapp:e2e
+
+    - name: Wait for backend readiness
+      run: |
+        for i in {1..180}; do
+          if curl -fsS http://localhost:8080/health >/dev/null; then
+            exit 0
+          fi
+          if ! docker ps --filter "name=warp-webapp" --filter "status=running" --format '{{.Names}}' | grep -q warp-webapp; then
+            echo "Backend container is not running" >&2
+            docker logs warp-webapp || true
+            exit 1
+          fi
+          sleep 0.5
+        done
+        echo "Backend did not become ready" >&2
+        docker logs warp-webapp || true
+        exit 1
+
+    - name: Playwright e2e suite
+      env:
+        CI: "true"
+        BASE_URL: http://localhost:5173/
+        E2E_DEV_SERVER_HOST: localhost
+        E2E_DEV_SERVER_PORT: 5173
+        ENV_ORIGIN: http://localhost:8080
+      run: cd Warp.ClientApp && yarn e2e
+
+    - name: Collect service logs
+      if: failure()
+      run: |
+        mkdir -p artifacts
+        docker logs warp-vault > artifacts/vault.log || true
+        docker logs warp-s3mock > artifacts/s3mock.log || true
+        docker logs warp-webapp > artifacts/webapp.log || true
+        docker logs warp-keydb > artifacts/keydb.log || true
+
+    - name: Upload service logs
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: e2e-services-logs
+        path: artifacts
+        if-no-files-found: ignore
+        retention-days: 7
+
+    - name: Upload Playwright report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-report-e2e
+        path: Warp.ClientApp/playwright-report
+        if-no-files-found: ignore
+        retention-days: 7
+
+    - name: Upload Playwright traces
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: playwright-traces-e2e
+        path: Warp.ClientApp/test-results
+        if-no-files-found: ignore
+        retention-days: 7
+
+    - name: Tear down e2e stack
+      if: always()
+      run: |
+        docker rm -f warp-webapp warp-vault warp-s3mock warp-keydb || true
+        docker network rm warp-e2e || true

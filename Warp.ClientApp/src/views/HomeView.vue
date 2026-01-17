@@ -204,7 +204,7 @@ onMounted(async () => {
                 cleanupFns.push(cleanup)
         }
 
-        const pasteHandler = (e: ClipboardEvent) => void handlePaste(e, () => entryIdRef.value ?? undefined)
+        const pasteHandler = (e: ClipboardEvent) => void handlePaste(e, () => entryIdRef.value ?? undefined, (files) => { addFiles(files) })
         window.addEventListener('paste', pasteHandler as EventListener)
         cleanupFns.push(() => window.removeEventListener('paste', pasteHandler as EventListener))
     } catch (e) {

@@ -8,4 +8,8 @@ public static class WebHostEnvironmentHelper
 
     public static bool IsLocal(this IWebHostEnvironment environment)
         => environment.IsEnvironment("Local");
+
+
+    public static bool IsEndToEndTests(this IWebHostEnvironment environment)
+        => environment.IsEnvironment("E2E") || environment.IsEnvironment("E2ELocal");
 }

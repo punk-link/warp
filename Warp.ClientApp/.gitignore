@@ -19,3 +19,7 @@ yarn-error.log*
 
 # build outputs
 /dist/
+
+# Playwright generated artifacts - report, traces and test-results
+playwright-report/
+test-results/

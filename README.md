@@ -20,6 +20,75 @@ To run the service you have to pass the following environment variables:
 
 Run the compose file inside the root directory. It sets up external dependencies like a database etc.
 
+### Local Vault Emulation
+
+The compose stack now ships with a HashiCorp Vault dev server that mirrors the production contract (`secrets/warp`). Start the supporting containers before running the web app:
+
+```powershell
+# Run the base compose and the e2e override so Vault containers are available for local e2e work
+docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d keydb vault aspire-dashboard vault-init
+```
+
+During boot the Vault container enables a KV v2 engine at `secrets/` and seeds `consul-address`, `consul-token`, and `s3-secret-access-key` placeholders under `secrets/warp`. Override them at any time:
+
+```powershell
+docker compose exec vault vault kv put secrets/warp consul-address=http://localhost:8500 consul-token=local-dev s3-secret-access-key=local-dev
+```
+
+Configure the application to point at the local instance (PowerShell shown, use `export` on bash/zsh). Use the `EndToEndTests` ASP.NET Core environment to pick up the dedicated configuration while exercising the Vault-backed transit encryption path.
+
+The bootstrap container also mints a scoped token with permissions for `secrets/warp` and the `warp-end-to-end` transit key. The token is saved to `.vault/warp-e2e.token` so you don't need to copy it from the container logs.
+
+```powershell
+$env:PNKL_VAULT_ADDR = 'http://localhost:8200'
+$env:PNKL_VAULT_TOKEN = (Get-Content -Path .vault/warp-e2e.token -Raw).Trim() # 'dev-root'
+$env:ASPNETCORE_ENVIRONMENT = 'EndToEndTests'
+$env:BASE_URL = 'https://localhost:8001'
+```
+
+> The End-to-End profile automatically reads `.vault/warp-e2e.token` (via `PNKL_VAULT_TOKEN_FILE`), so exporting `PNKL_VAULT_TOKEN` is only necessary if you relocate or override the file.
+
+You can inspect the seeded data with:
+
+```powershell
+docker compose exec vault vault kv get secrets/warp
+```
+
+> **Note**: the dev server disables authentication and should never be exposed outside your workstation.
+
+### End-to-End Tests Configuration
+
+1. Boot the supporting services (use the e2e override to start Vault):
+
+  ```powershell
+  # recommended - uses the e2e override so vault and vault-init only start when you include the file
+  docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d keydb vault aspire-dashboard vault-init
+
+  # Or use the convenience npm script from the repo root
+  npm run compose:e2e:up
+  ```
+
+2. Point the backend at the End-to-End configuration and local Vault instance (bash/zsh users can swap `$env:` with `export`):
+
+  ```powershell
+  $env:PNKL_VAULT_ADDR = 'http://localhost:8200'
+  $env:PNKL_VAULT_TOKEN = (Get-Content -Path .vault/warp-e2e.token -Raw).Trim()
+  $env:ASPNETCORE_ENVIRONMENT = 'EndToEndTests'
+  $env:BASE_URL = 'https://localhost:8001'
+  ```
+
+  > You can skip `PNKL_VAULT_TOKEN` here as well if you keep the generated token at `.vault/warp-e2e.token`.
+
+3. Run the web app on the port expected by the Playwright suite (and the warmup job):
+
+  ```powershell
+  dotnet run --project Warp.WebApp/Warp.WebApp.csproj --urls http://localhost:8080
+  ```
+
+4. With the server up, execute the SPA end-to-end tests by pointing Playwright at `http://localhost:8080` (`yarn playwright test --config e2e/playwright.config.ts`).
+
+The `appsettings.EndToEndTests.json` profile mirrors production defaults while substituting local dependencies (KeyDB, telemetry, and Vault transit key `warp-end-to-end`).
+
 
 ### Other
 
