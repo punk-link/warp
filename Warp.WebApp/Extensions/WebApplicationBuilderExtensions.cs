@@ -66,5 +66,7 @@ internal static class WebApplicationBuilderExtensions
         [
             new KeyValuePair<string, string?>("PNKL_VAULT_TOKEN", fileToken)
         ]);
+
+        logger.LogVaultTokenLoadedFromFile(tokenFile: rootedPath);
     }
 }

@@ -100,6 +100,15 @@
           "httpCode": 500
         },
         {
+          "id": 11105,
+          "name": "VaultTokenLoadedFromFile",
+          "description": "Vault token successfully loaded from file '{TokenFile:string}'.",
+          "logLevel": "Information",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 200
+        },
+        {
           "id": 11201,
           "name": "LocalConfigurationIsInUse",
           "description": "Local configuration is in use.",
