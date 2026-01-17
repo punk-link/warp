@@ -12,10 +12,7 @@ async function globalSetup(config: FullConfig): Promise<void> {
 
     console.log(`[global-setup] Waiting for app at ${baseURL} to be fully ready...`)
 
-    // First, wait for the dev server to be serving the index page
     await waitForDevServer(baseURL, maxWaitTime, startTime)
-
-    // Then, verify the Vue app can actually initialize by loading it in a real browser
     await verifyAppInitialization(baseURL, maxWaitTime, startTime)
 
     console.log(`[global-setup] App is ready after ${Date.now() - startTime}ms`)
@@ -35,6 +32,7 @@ async function waitForDevServer(baseURL: string, maxWaitTime: number, startTime:
         }
         await sleep(1000)
     }
+
     throw new Error(`Dev server at ${baseURL} did not become ready within ${maxWaitTime}ms`)
 }
 
@@ -49,13 +47,11 @@ async function verifyAppInitialization(baseURL: string, maxWaitTime: number, sta
     try {
         while (Date.now() - startTime < maxWaitTime) {
             try {
-                // Clear any existing state to match what tests do
                 await context.clearCookies()
 
                 const response = await page.goto(baseURL, { waitUntil: 'domcontentloaded', timeout: 30000 })
                 console.log(`[global-setup] Page loaded with status: ${response?.status()}`)
 
-                // Wait for Vue app to mount
                 await page.waitForFunction(
                     () => {
                         const app = document.querySelector('#app')
@@ -64,18 +60,15 @@ async function verifyAppInitialization(baseURL: string, maxWaitTime: number, sta
                     { timeout: 20000 }
                 )
 
-                // Check current URL to see if we were redirected to an error page
                 const currentUrl = page.url()
                 console.log(`[global-setup] Current URL after load: ${currentUrl}`)
 
                 if (currentUrl.includes('/error')) {
-                    // Capture the error details
                     const errorText = await page.locator('body').textContent()
                     console.log(`[global-setup] Redirected to error page. Content: ${errorText?.substring(0, 500)}`)
                     throw new Error(`App redirected to error page: ${currentUrl}`)
                 }
 
-                // Verify the mode toggle is visible (indicates app is fully initialized on Home)
                 const modeToggle = page.getByTestId('mode-simple')
                 await modeToggle.waitFor({ state: 'visible', timeout: 20000 })
 
@@ -85,7 +78,6 @@ async function verifyAppInitialization(baseURL: string, maxWaitTime: number, sta
                 const errorMsg = error instanceof Error ? error.message : String(error)
                 console.log(`[global-setup] App not ready yet: ${errorMsg}`)
 
-                // Capture page content for debugging
                 try {
                     const bodyText = await page.locator('body').textContent()
                     console.log(`[global-setup] Page content: ${bodyText?.substring(0, 300)}...`)

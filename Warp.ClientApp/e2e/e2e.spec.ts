@@ -1,8 +1,6 @@
 /// <reference types="node" />
 
-import { test, expect, Page, Locator } from '@playwright/test'
-import path from 'path'
-import { fileURLToPath } from 'url'
+import { test, expect } from '@playwright/test'
 import fs from 'fs'
 import {
     getAdvancedModeToggle,
@@ -17,121 +15,27 @@ import {
     getPreviewGalleryImages,
     getReportButton,
     getSaveButton,
-    getSimpleModeToggle,
     getEditorGalleryImages,
     getTextArea
 } from './locators'
-import { clickElement, expectOnDeleted, expectOnEntry, expectOnHome, expectOnPreview, getCopiedLink, gotoHome, setupClipboardSpy } from './utils'
-
-
-declare global {
-    interface Window {
-        __copiedLink?: string
-    }
-}
-
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-const fixturesDir = path.resolve(__dirname, 'fixtures')
-
-
-function resolveFixturePath(name: string): string {
-    return path.join(fixturesDir, name)
-}
-
-
-async function isToggleActive(toggle: Locator): Promise<boolean> {
-    await toggle.waitFor({ state: 'visible', timeout: 30000 })
-    return toggle.evaluate((btn) => btn.classList.contains('active'))
-}
-
-
-async function setTextMode(page: Page, mode: 'Simple' | 'Advanced'): Promise<Locator> {
-    const simpleModeToggle = getSimpleModeToggle(page)
-    const advancedModeToggle = getAdvancedModeToggle(page)
-
-    const target = mode === 'Simple' ? simpleModeToggle : advancedModeToggle
-
-    if (await isToggleActive(target)) {
-        await expect(getTextArea(page)).toBeVisible({ timeout: 10000 })
-        return target
-    }
-
-    await clickElement(target)
-    await expect(getTextArea(page)).toBeVisible({ timeout: 10000 })
-
-    return target
-}
-
-
-async function fillTextAndVerify(page: Page, text: string): Promise<void> {
-    const textArea = getTextArea(page)
-    await expect(textArea).toBeVisible({ timeout: 10000 })
-
-    // Wait for component to finish loading (button should show "Preview" text, not spinner)
-    const previewButton = getPreviewButton(page)
-    await expect(previewButton).toHaveAttribute('aria-busy', 'false', { timeout: 15000 })
-
-    // Click to focus and ensure element is ready
-    await textArea.click()
-
-    // Clear and type - most reliable way to trigger Vue's v-model
-    await textArea.fill('')
-    await textArea.pressSequentially(text, { delay: 0 })
-
-    // Verify the value was set
-    await expect(textArea).toHaveValue(text, { timeout: 10000 })
-
-    // Now expect the preview button to be enabled
-    await expect(previewButton).toBeEnabled({ timeout: 15000 })
-}
-
-
-type PasteFilePayload = {
-    bytes: number[]
-    mimeType: string
-    name: string
-}
-
-
-async function dispatchPasteWithFiles(page: Page, files: PasteFilePayload[]): Promise<void> {
-    await page.evaluate((payloads) => {
-        const files = payloads.map((payload) => {
-            const data = new Uint8Array(payload.bytes)
-            return new File([data], payload.name, { type: payload.mimeType })
-        })
-
-        const event = new CustomEvent('paste', {
-            bubbles: true,
-            detail: { files }
-        })
-
-        window.dispatchEvent(event)
-    }, files)
-}
-
-
-async function getViewCount(page: Page): Promise<number> {
-    const viewCountSpan = page
-        .locator('.icofont-eye')
-        .locator('xpath=following-sibling::span[1]')
-        .first()
-
-    await expect(viewCountSpan).toBeVisible()
-
-    const text = (await viewCountSpan.innerText()).trim()
-    const value = Number.parseInt(text, 10)
-
-    if (Number.isNaN(value))
-        throw new Error(`Could not parse view count from: ${text}`)
-
-    return value
-}
+import { 
+    clickElement, 
+    dispatchPasteWithFiles, 
+    expectOnDeleted, 
+    expectOnEntry, 
+    expectOnHome, 
+    expectOnPreview, 
+    fillTextAndVerify, 
+    getCopiedLink, 
+    getViewCount, 
+    gotoHome, 
+    resolveFixturePath, 
+    setTextMode, 
+    setupClipboardSpy 
+} from './utils'
 
 
 /*
- * Comprehensive scenario notes (moved from TEST_SCENARIOS.md):
  * - This file contains a prioritized smoke-suite of end-to-end scenarios for
  *   the Warp SPA. Each test is commented with steps + techniques for stability.
  *
@@ -185,14 +89,6 @@ test('@smoke i18n translations reflect locale changes', async ({ page }) => {
 })
 
 
-// Scenario: Advanced entry with image uploads, edit and verify copy equality
-// Steps:
-// 1. Set clipboard spy and prepare remote image URLs via the mocks.
-// 2. Switch to Advanced, fill text, upload one fixture image.
-// 3. Preview and confirm preview shows the image and text.
-// 4. Click Edit to go back to Home with draft hydrated (confirm text + gallery).
-// 5. Add a second image, preview again, save and copy link from Preview.
-// 6. Visit entry page and copy the link again; assert both copied links are identical.
 test.describe.serial('stateful entry flows', () => {
     // Scenario: Simple entry creation and copy link
     // Steps:
@@ -241,6 +137,14 @@ test.describe.serial('stateful entry flows', () => {
     })
 
 
+    // Scenario: Advanced entry with image uploads, edit and verify copy equality
+    // Steps:
+    // 1. Set clipboard spy and prepare remote image URLs via the mocks.
+    // 2. Switch to Advanced, fill text, upload one fixture image.
+    // 3. Preview and confirm preview shows the image and text.
+    // 4. Click Edit to go back to Home with draft hydrated (confirm text + gallery).
+    // 5. Add a second image, preview again, save and copy link from Preview.
+    // 6. Visit entry page and copy the link again; assert both copied links are identical.
     test('@smoke user can edit an advanced entry with images', async ({ page }) => {
         await page.context().clearCookies()
         await page.context().addInitScript(() => {
