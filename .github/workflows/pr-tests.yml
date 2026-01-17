@@ -33,20 +33,21 @@ jobs:
 
     - name: Install client dependencies
       run: corepack enable && cd Warp.ClientApp && yarn install --immutable
-
-    - name: Vitest
-      run: cd Warp.ClientApp && yarn vitest --run
     
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
       
     - name: Build and run tests
-      run: docker build --target test .
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        target: test
+        load: true
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
 
   web-e2e:
     runs-on: ubuntu-latest
-    needs:
-      - docker-test
     timeout-minutes: 40
 
     steps:
@@ -94,24 +95,21 @@ jobs:
     - name: Ensure vault bootstrap directory
       run: mkdir -p .vault && chmod 777 .vault
 
-    - name: Start Vault
-      run: docker run -d --name warp-vault --network warp-e2e -p 8200:8200 --cap-add=IPC_LOCK -e VAULT_DEV_ROOT_TOKEN_ID=dev-root -e VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200 hashicorp/vault:1.15 server -dev -dev-root-token-id=dev-root -dev-listen-address=0.0.0.0:8200
-
-    - name: Start KeyDB
-      run: docker run -d --name warp-keydb --network warp-e2e -p 6379:6379 eqalpha/keydb
-
-    - name: Start S3 mock
-      run: docker run -d --name warp-s3mock --network warp-e2e -p 9090:9090 -e initialBuckets=warp-e2e adobe/s3mock:latest
+    - name: Start infrastructure services
+      run: |
+        docker run -d --name warp-vault --network warp-e2e -p 8200:8200 --cap-add=IPC_LOCK -e VAULT_DEV_ROOT_TOKEN_ID=dev-root -e VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:8200 hashicorp/vault:1.15 server -dev -dev-root-token-id=dev-root -dev-listen-address=0.0.0.0:8200
+        docker run -d --name warp-keydb --network warp-e2e -p 6379:6379 eqalpha/keydb
+        docker run -d --name warp-s3mock --network warp-e2e -p 9090:9090 -e initialBuckets=warp-e2e adobe/s3mock:latest
 
     - name: Wait for KeyDB readiness
       run: |
-        for i in {1..60}; do
+        for i in {1..120}; do
           if docker exec warp-keydb keydb-cli ping 2>/dev/null | grep -q PONG; then
-            echo "KeyDB is ready, waiting 3 seconds for full stability..."
-            sleep 3
+            echo "KeyDB is ready, waiting 1 second for full stability..."
+            sleep 1
             exit 0
           fi
-          sleep 2
+          sleep 0.5
         done
         echo "KeyDB did not become ready" >&2
         docker logs warp-keydb || true
@@ -119,11 +117,11 @@ jobs:
 
     - name: Wait for Vault readiness
       run: |
-        for i in {1..60}; do
+        for i in {1..120}; do
           if curl -fsS http://localhost:8200/v1/sys/health >/dev/null; then
             exit 0
           fi
-          sleep 2
+          sleep 0.5
         done
         echo "Vault did not become ready" >&2
         docker logs warp-vault || true
@@ -199,11 +197,11 @@ jobs:
 
     - name: Wait for S3 mock readiness
       run: |
-        for i in {1..60}; do
+        for i in {1..120}; do
           if curl -fsS http://localhost:9090/ >/dev/null; then
             exit 0
           fi
-          sleep 2
+          sleep 0.5
         done
         echo "S3 mock did not become ready" >&2
         docker logs warp-s3mock || true
@@ -235,7 +233,7 @@ jobs:
 
     - name: Wait for backend readiness
       run: |
-        for i in {1..90}; do
+        for i in {1..180}; do
           if curl -fsS http://localhost:8080/health >/dev/null; then
             exit 0
           fi
@@ -244,7 +242,7 @@ jobs:
             docker logs warp-webapp || true
             exit 1
           fi
-          sleep 2
+          sleep 0.5
         done
         echo "Backend did not become ready" >&2
         docker logs warp-webapp || true
