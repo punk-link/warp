@@ -6,7 +6,7 @@ import { chromium, FullConfig } from '@playwright/test'
  * This prevents flaky tests in CI where the backend may take longer to become fully responsive.
  */
 async function globalSetup(config: FullConfig): Promise<void> {
-    const baseURL = config.projects[0]?.use?.baseURL || 'http://localhost:5173'
+    const baseURL = config.projects[0]?.use?.baseURL
     const maxWaitTime = 120_000
     const startTime = Date.now()
 
