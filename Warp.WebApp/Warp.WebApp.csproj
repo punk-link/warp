@@ -5,6 +5,7 @@
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <EnableDefaultStaticWebAssets>true</EnableDefaultStaticWebAssets>
     <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>false</InvariantGlobalization>
     <Nullable>enable</Nullable>
     <RuntimeIdentifiers>linux-x64</RuntimeIdentifiers>
     <UserSecretsId>283dab27-87b6-46e4-8250-f2fd17e5f08d</UserSecretsId>

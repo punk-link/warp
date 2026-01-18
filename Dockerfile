@@ -12,6 +12,7 @@ RUN --mount=type=cache,target=/tmp/vite-cache yarn build
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS base
 RUN apk add --no-cache icu-data-full icu-libs
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
 USER app
 WORKDIR /app
 EXPOSE 8080
