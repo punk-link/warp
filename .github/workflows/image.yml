@@ -95,13 +95,16 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
-            🔔 New push to ${{ github.repository }}!
-            Run ID: ${{ github.run_id }}
-            Commit: ${{ github.sha }}
-            Status: Success
-            Details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}         
-            Image name: ${{ env.IMAGE }}/warp-webapp:${{ env.GITHUB_OUTPUT}}
-            Helm release: warp-webapp deployed
+            ✅ **Deployment Successful**
+            
+            Repository: **${{ github.repository }}**
+            Branch: **${{ github.ref_name }}**
+            Actor: **${{ github.actor }}**
+            Commit: `${{ steps.short.outputs.sha }}`
+            Message: **${{ github.event.head_commit.message }}**
+            Image: **${{ env.IMAGE }}:${{ github.run_id }}**
+            
+            🔗 ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
       - name: Send failure message to Telegram
         if: failure()
@@ -110,10 +113,12 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
-            🚨 Deployment failed for ${{ github.repository }}!
-            Run ID: ${{ github.run_id }}
-            Commit: ${{ github.sha }}
-            Status: Failed
-            Details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}         
-            Image name: ${{ env.IMAGE }}/warp-webapp:${{ env.GITHUB_OUTPUT}}
-            Check  deploy steps for errors.            
+            ❌ **Deployment Failed**
+            
+            Repository: **${{ github.repository }}**
+            Branch: **${{ github.ref_name }}**
+            Actor: **${{ github.actor }}**
+            Commit: `${{ steps.short.outputs.sha }}`
+            Message: **${{ github.event.head_commit.message }}**
+            
+            🔍 ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}            
