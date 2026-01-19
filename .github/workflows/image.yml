@@ -65,8 +65,8 @@ jobs:
           MSG=$(git log -1 --pretty=%B)
           FIRST_LINE=$(echo "$MSG" | head -n 1)
           if [[ "$FIRST_LINE" == "Merge pull request"* ]]; then
-            # Get the PR title (second non-empty line) or fallback to last non-merge commit
-            TITLE=$(echo "$MSG" | sed -n '3p' | sed 's/^[[:space:]]*//')
+            # Get the PR title as the first non-empty line after the merge line, or fallback to last non-merge commit
+            TITLE=$(echo "$MSG" | awk 'NR>1 { gsub(/^[[:space:]]+/, "", $0); if (length($0) > 0) { print; exit } }')
             if [ -z "$TITLE" ]; then
               TITLE=$(git log --no-merges -1 --pretty=%s)
             fi
