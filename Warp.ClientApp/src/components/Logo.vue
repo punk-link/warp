@@ -9,8 +9,8 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { useDraftEntry } from '../composables/useDraftEntry'
-import { useGallery } from '../composables/useGallery'
+import { useDraftEntry } from '../composables/use-draft-entry'
+import { useGallery } from '../composables/use-gallery'
 import { useI18n } from 'vue-i18n'
 
 

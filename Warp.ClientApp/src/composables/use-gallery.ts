@@ -1,25 +1,6 @@
 import { ref, readonly, watch, onBeforeUnmount, type Ref, computed } from 'vue'
-
-export interface LocalGalleryItem {
-    kind: 'local'
-    file: File
-    url: string
-    name: string
-    type: string
-    size: number
-    addedAt: number
-}
-
-export interface RemoteGalleryItem {
-    kind: 'remote'
-    url: string
-    name: string
-    type?: string
-    size?: number
-    addedAt: number
-}
-
-export type GalleryItem = LocalGalleryItem | RemoteGalleryItem
+import type { GalleryItem } from '../types/galleries/gallery-item'
+import type { LocalGalleryItem } from '../types/galleries/local-gallery-item'
 
 
 interface InternalStore {
@@ -45,17 +26,20 @@ const DISPOSE_DELAY_MS = 4000
 
 
 function scheduleDispose(id: string) {
-    if (!id) return
-    // Clear any existing timer for id before scheduling a new one
+    if (!id) 
+        return
+
     const existing = disposalTimers.get(id)
     if (existing) {
         clearTimeout(existing)
         disposalTimers.delete(id)
     }
+
     const timer = window.setTimeout(() => {
         const current = stores.get(id)
         if (current && current.refs <= 0)
             disposeStore(id)
+
         disposalTimers.delete(id)
     }, DISPOSE_DELAY_MS)
     disposalTimers.set(id, timer)
@@ -75,7 +59,10 @@ function cancelScheduledDispose(id: string | null | undefined) {
 
 
 function createStore(): InternalStore {
-    return { items: ref<GalleryItem[]>([]), refs: 0 }
+    return { 
+        items: ref<GalleryItem[]>([]), 
+        refs: 0 
+    }
 }
 
 
@@ -132,6 +119,7 @@ export function useGallery(entryIdRef?: Ref<string | null | undefined>, options?
 
     const items = ref<GalleryItem[]>(store ? store.items.value : [])
 
+
     function syncLocalToStore() {
         if (!store) { 
             items.value = []
@@ -141,12 +129,14 @@ export function useGallery(entryIdRef?: Ref<string | null | undefined>, options?
         items.value = store.items.value
     }
 
+
     function withStore<T>(func: () => T): T | undefined {
         if (!store) 
             return undefined
         
         return func()
     }
+
 
     function addFiles(files: FileList | File[] | null | undefined) {
         if (!files) 
@@ -184,6 +174,7 @@ export function useGallery(entryIdRef?: Ref<string | null | undefined>, options?
         return { added, rejected }
     }
 
+
     function remove(index: number) {
         withStore(() => {
             const item = store!.items.value.splice(index, 1)[0]
@@ -193,6 +184,7 @@ export function useGallery(entryIdRef?: Ref<string | null | undefined>, options?
             syncLocalToStore()
         })
     }
+
 
     function clear() {
         withStore(() => {
@@ -205,6 +197,8 @@ export function useGallery(entryIdRef?: Ref<string | null | undefined>, options?
             syncLocalToStore()
         })
     }
+
+
     function setServerImages(urls: string[]) {
         return withStore(() => {
             for (const it of store!.items.value) {
@@ -232,14 +226,15 @@ export function useGallery(entryIdRef?: Ref<string | null | undefined>, options?
         })
     }
 
+
     const count = computed(() => items.value.length)
     const totalBytes = computed(() => items.value.reduce((sum, it) => sum + (it.size ?? 0), 0))
 
-    // React to external ref changes
     if (entryIdRef) {
         watch(entryIdRef, (val, prev) => {
-            if (val === prev) return
-            // decrement old
+            if (val === prev) 
+                return
+            
             if (store) {
                 store.refs--
                 if (store.refs <= 0 && prev) 
@@ -252,10 +247,10 @@ export function useGallery(entryIdRef?: Ref<string | null | undefined>, options?
                 store.refs++
 
             cancelScheduledDispose(val)
-
             syncLocalToStore()
         })
     }
+    
 
     onBeforeUnmount(() => {
         if (store) {

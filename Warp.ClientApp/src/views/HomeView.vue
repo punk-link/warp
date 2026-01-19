@@ -5,7 +5,7 @@
                 <Logo />
             </div>
             <div class="w-full sm:w-1/2 flex justify-end md:justify-center">
-                <ModeSwitch v-model="mode" :disabled="pending" :simple-label="t('home.mode.text')" :advanced-label="t('home.mode.advanced')" />
+                <ModeSwitcher v-model="mode" :disabled="pending" :simple-label="t('home.mode.text')" :advanced-label="t('home.mode.advanced')" />
             </div>
         </div>
 
@@ -51,22 +51,22 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { EditMode, parseEditMode } from '../types/edit-modes'
-import { useGallery } from '../composables/useGallery'
-import { initDropAreaHandlers, handlePaste } from '../composables/useImageUpload'
+import { useGallery } from '../composables/use-gallery'
+import { initDropAreaHandlers, handlePaste } from '../composables/use-image-upload'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { entryApi } from '../api/entryApi'
 import { creatorApi } from '../api/creatorApi'
-import { useMetadata } from '../composables/useMetadata'
+import { useMetadata } from '../composables/use-metadata'
 import Logo from '../components/Logo.vue'
-import ModeSwitch from '../components/ModeSwitch.vue'
+import ModeSwitcher from '../components/ModeSwitcher.vue'
 import SimpleEditor from '../components/SimpleEditor.vue'
 import DynamicTextArea from '../components/DynamicTextArea.vue'
 import AdvancedEditor from '../components/AdvancedEditor.vue'
 import GalleryItem from '../components/GalleryItem.vue'
 import ExpirationSelect from '../components/ExpirationSelect.vue'
 import Button from '../components/Button.vue'
-import { useDraftEntry } from '../composables/useDraftEntry'
+import { useDraftEntry } from '../composables/use-draft-entry'
 import { routeApiError } from '../api/errorRouting'
 import { DraftEntry } from '../types/draft-entry'
 import { ExpirationPeriod } from '../types/expiration-periods'

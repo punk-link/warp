@@ -51,6 +51,7 @@ function ensure(): NonNullable<typeof singleton> {
 		dedupeWindowMs: 4_000
 	}
 
+
 	function scheduleRemoval(item: NotificationItem) {
 		if (item.sticky || item.expiresAt == null)
 			return
@@ -66,6 +67,7 @@ function ensure(): NonNullable<typeof singleton> {
 
 		removeTimers.set(item.id, handle)
 	}
+
 
 	function normalize(options: NotificationOptions): NotificationItem {
 		const now = Date.now()
@@ -86,7 +88,7 @@ function ensure(): NonNullable<typeof singleton> {
 			id: `${now}-${Math.random().toString(36).slice(2, 8)}`,
 			level: options.level,
 			title: options.title,
-			message: options.message,
+			message: options.message ?? '',
 			details: options.details,
 			actions: options.actions,
 			dedupeKey: options.dedupeKey,
@@ -100,9 +102,11 @@ function ensure(): NonNullable<typeof singleton> {
 		return item
 	}
 
+
 	function withinWindow(ts: number, windowMs: number): boolean {
 		return Date.now() - ts <= windowMs
 	}
+
 
 	function recordPush() {
 		const now = Date.now()
@@ -177,6 +181,7 @@ function ensure(): NonNullable<typeof singleton> {
 		return item.id
 	}
 
+
 	function remove(id: string) {
 		const i = items.value.findIndex(n => n.id === id)
 		if (i >= 0)
@@ -189,6 +194,7 @@ function ensure(): NonNullable<typeof singleton> {
 		removeTimers.delete(id)
 	}
 
+
 	function clear() {
 		for (const id of Array.from(removeTimers.keys())) {
 			const handle = removeTimers.get(id)
@@ -200,17 +206,21 @@ function ensure(): NonNullable<typeof singleton> {
 		items.value = []
 	}
 
+
 	function setMaxStack(n: number) {
 		state.maxStack = Math.max(0, Math.floor(n))
 	}
+
 
 	function setRateLimit(cfg: RateLimitConfig) {
 		state.rateLimit = { maxPerWindow: Math.max(1, Math.floor(cfg.maxPerWindow)), windowMs: Math.max(500, Math.floor(cfg.windowMs)) }
 	}
 
+
 	function setDedupeWindowMs(ms: number) {
 		state.dedupeWindowMs = Math.max(0, Math.floor(ms))
 	}
+
 
 	singleton = {
 		state,

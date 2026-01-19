@@ -7,7 +7,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue'
-import { useEntryCountdown } from '../composables/useEntryCountdown'
+import { useEntryCountdown } from '../composables/use-entry-countdown'
 
 
 interface Props {
@@ -16,11 +16,13 @@ interface Props {
     startDelayMs?: number;
 }
 
+
 const props = withDefaults(defineProps<Props>(), {
     target: null,
     label: undefined,
     startDelayMs: 100
 })
+
 
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()

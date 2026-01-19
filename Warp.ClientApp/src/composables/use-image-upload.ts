@@ -106,9 +106,8 @@ export function initDropAreaHandlers(dropArea: HTMLElement, fileInput: HTMLInput
     add(fileInput, 'change', (e: Event) => { onChange(e) })
 
     return () => {
-        for (const listener of listeners) {
+        for (const listener of listeners) 
             listener.target.removeEventListener(listener.type, listener.handler as EventListener)
-        }
     }
 }
 

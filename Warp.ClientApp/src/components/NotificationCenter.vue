@@ -39,7 +39,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-import { useNotifications } from '../composables/useNotifications'
+import { useNotifications } from '../composables/use-notifications'
 import { NotifyLevel } from '../types/notify-level'
 import Button from './Button.vue'
 
