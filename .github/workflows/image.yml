@@ -63,6 +63,12 @@ jobs:
         run: |
           echo "sha=$(echo ${{ github.sha }} | cut -c1-9)" >> $GITHUB_OUTPUT
 
+      # ── Получаем первую строку commit message ──
+      - name: Get commit title
+        id: commit
+        run: |
+          echo "title=$(echo '${{ github.event.head_commit.message }}' | head -n 1)" >> $GITHUB_OUTPUT
+
       # ── Helm деплой ──
       - name: Setup Helm
         uses: azure/setup-helm@v4
@@ -101,7 +107,7 @@ jobs:
             Branch: **${{ github.ref_name }}**
             Actor: **${{ github.actor }}**
             Commit: `${{ steps.short.outputs.sha }}`
-            Message: **${{ github.event.head_commit.message }}**
+            Message: **${{ steps.commit.outputs.title }}**
             Image: **${{ env.IMAGE }}:${{ github.run_id }}**
             
             🔗 ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -119,6 +125,6 @@ jobs:
             Branch: **${{ github.ref_name }}**
             Actor: **${{ github.actor }}**
             Commit: `${{ steps.short.outputs.sha }}`
-            Message: **${{ github.event.head_commit.message }}**
+            Message: **${{ steps.commit.outputs.title }}**
             
-            🔍 ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}            
+            🔍 ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
