@@ -67,7 +67,13 @@ jobs:
       - name: Get commit title
         id: commit
         run: |
-          echo "title=$(echo '${{ github.event.head_commit.message }}' | head -n 1)" >> $GITHUB_OUTPUT
+          MSG=$(git log -1 --pretty=%B)
+          if [[ "$MSG" == "Merge pull request"* ]]; then
+            TITLE=$(git log --no-merges -1 --pretty=%s)
+          else
+            TITLE=$(echo "$MSG" | head -n 1)
+          fi
+          echo "title=$TITLE" >> $GITHUB_OUTPUT
 
       # ── Helm деплой ──
       - name: Setup Helm
