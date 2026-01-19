@@ -63,6 +63,12 @@ jobs:
         run: |
           echo "sha=$(echo ${{ github.sha }} | cut -c1-9)" >> $GITHUB_OUTPUT
 
+      # ── Получаем первую строку commit message ──
+      - name: Get commit title
+        id: commit
+        run: |
+          echo "title=$(echo '${{ github.event.head_commit.message }}' | head -n 1)" >> $GITHUB_OUTPUT
+
       # ── Helm деплой ──
       - name: Setup Helm
         uses: azure/setup-helm@v4
@@ -95,13 +101,16 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
-            🔔 New push to ${{ github.repository }}!
-            Run ID: ${{ github.run_id }}
-            Commit: ${{ github.sha }}
-            Status: Success
-            Details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}         
-            Image name: ${{ env.IMAGE }}/warp-webapp:${{ env.GITHUB_OUTPUT}}
-            Helm release: warp-webapp deployed
+            ✅ **Deployment Successful**
+            
+            Repository: **${{ github.repository }}**
+            Branch: **${{ github.ref_name }}**
+            Actor: **${{ github.actor }}**
+            Commit: `${{ steps.short.outputs.sha }}`
+            Message: **${{ steps.commit.outputs.title }}**
+            Image: **${{ env.IMAGE }}:${{ github.run_id }}**
+            
+            🔗 ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
       - name: Send failure message to Telegram
         if: failure()
@@ -110,10 +119,12 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
-            🚨 Deployment failed for ${{ github.repository }}!
-            Run ID: ${{ github.run_id }}
-            Commit: ${{ github.sha }}
-            Status: Failed
-            Details: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}         
-            Image name: ${{ env.IMAGE }}/warp-webapp:${{ env.GITHUB_OUTPUT}}
-            Check  deploy steps for errors.            
+            ❌ **Deployment Failed**
+            
+            Repository: **${{ github.repository }}**
+            Branch: **${{ github.ref_name }}**
+            Actor: **${{ github.actor }}**
+            Commit: `${{ steps.short.outputs.sha }}`
+            Message: **${{ steps.commit.outputs.title }}**
+            
+            🔍 ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
