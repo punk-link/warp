@@ -35,7 +35,6 @@ export function defaultNotifyLevel(status: number | undefined | null): NotifyLev
     if (status == null)
         return NotifyLevel.Error
 
-    // explicitly treat 404 and 5xx as errors
     if (status === 404 || (status >= 500 && status <= 599))
         return NotifyLevel.Error
 

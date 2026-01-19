@@ -1,5 +1,8 @@
 import type { ApiError } from '../types/api-error'
-import { type ApiResult, type ApiFatalResult, type ApiNotFoundResult, type ApiValidationResult, ApiResultKind } from './apiResult'
+import type { ApiFatalResult } from "../types/apis/api-fatal-result";
+import type { ApiNotFoundResult } from "../types/apis/api-not-found-result";
+import type { ApiValidationResult } from "../types/apis/api-validation-result";
+import type { ApiResultKind } from '../types/apis/enums/api-result-kind'
 import router from '../router'
 
 
@@ -60,6 +63,7 @@ export function routeApiError(err: unknown) {
     }
 
     // For all other statuses, do not redirect. Global error bridge will show in-place notification.
+    return
 }
 
 
