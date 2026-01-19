@@ -101,14 +101,14 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
-            ✅ **Deployment Successful**
+            ✅ Deployment Successful
             
-            Repository: **${{ github.repository }}**
-            Branch: **${{ github.ref_name }}**
-            Actor: **${{ github.actor }}**
-            Commit: `${{ steps.short.outputs.sha }}`
-            Message: **${{ steps.commit.outputs.title }}**
-            Image: **${{ env.IMAGE }}:${{ github.run_id }}**
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
+            Actor: ${{ github.actor }}
+            Commit: ${{ steps.short.outputs.sha }}
+            Message: ${{ steps.commit.outputs.title }}
+            Image: ${{ env.IMAGE }}:${{ github.run_id }}
             
             🔗 ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
@@ -119,12 +119,12 @@ jobs:
           to: ${{ secrets.TELEGRAM_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
-            ❌ **Deployment Failed**
+            ❌ Deployment Failed
             
-            Repository: **${{ github.repository }}**
-            Branch: **${{ github.ref_name }}**
-            Actor: **${{ github.actor }}**
-            Commit: `${{ steps.short.outputs.sha }}`
-            Message: **${{ steps.commit.outputs.title }}**
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
+            Actor: ${{ github.actor }}
+            Commit: ${{ steps.short.outputs.sha }}
+            Message: ${{ steps.commit.outputs.title }}
             
             🔍 ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
