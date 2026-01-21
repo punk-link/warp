@@ -8,6 +8,7 @@ import Privacy from '../views/Privacy.vue'
 import DataRequest from '../views/DataRequestView.vue'
 import { ViewNames } from './view-names'
 
+
 const router = createRouter({
     history: createWebHistory('/'),
     routes: [
@@ -21,5 +22,6 @@ const router = createRouter({
         { path: '/:pathMatch(.*)*', name: ViewNames.NotFound, component: ErrorPage, meta: { pageBg: 'bg-gray-300' } }
     ]
 })
+
 
 export default router

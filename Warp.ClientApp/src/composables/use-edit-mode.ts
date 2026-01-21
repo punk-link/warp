@@ -9,9 +9,11 @@ export function useEditMode() {
     const stored = typeof localStorage !== 'undefined' 
         ? localStorage.getItem(STORAGE_KEY) 
         : null
+
     const initial = stored 
         ? parseEditMode(stored) 
         : EditMode.Simple
+        
     const mode = ref<EditMode>(initial === EditMode.Unset ? EditMode.Simple : initial)
 
     watch(mode, (v) => {
