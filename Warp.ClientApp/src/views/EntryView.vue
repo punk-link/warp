@@ -80,13 +80,15 @@ import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { entryApi } from '../api/entryApi'
 import { routeApiError } from '../api/errorRouting'
-import type { Entry } from '../types/entry'
+import type { Entry } from '../types/entries/entry'
 import CountdownTimer from '../components/CountdownTimer.vue'
 import GalleryItem from '../components/GalleryItem.vue'
 import Logo from '../components/Logo.vue'
 import Button from '../components/Button.vue'
 import { ViewNames } from '../router/view-names'
-import { V } from 'vitest/dist/chunks/reporters.nr4dxCkA.js'
+
+
+interface EntryImage { entryId: string; id: string; url: string }
 
 const route = useRoute()
 const router = useRouter()
@@ -101,10 +103,8 @@ const copied = ref(false)
 const reported = ref(false)
 const reporting = ref(false)
 const showReportModal = ref(false)
-interface EntryImage { entryId: string; id: string; url: string }
 const images = ref<EntryImage[]>([])
 const textContentEl = ref<HTMLElement | null>(null)
-const galleryElement = ref<HTMLElement | null>(null)
 const animatedViewCount = ref(0)
 const countdownTarget = ref<Date | string | null>(null)
 let expirationTimer: number | null = null
