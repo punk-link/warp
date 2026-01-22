@@ -2,41 +2,13 @@ import { createI18n } from 'vue-i18n';
 import type { I18n, Composer } from 'vue-i18n';
 import { detectInitialLocale, LOCALE_STORAGE_KEY, supportedLocales, type SupportedLocale } from './detect';
 
+
 // Type schema derived from base (en) without eagerly importing runtime data
 // (Only used for type inference; messages loaded lazily.)
 export type MessageSchema = typeof import('./locales/en').default;
 
-let i18nSingleton: I18n | null = null;
-let creatingPromise: Promise<I18n> | null = null;
-const loaded = new Set<string>();
 
-
-async function loadMessages(locale: SupportedLocale): Promise<Record<string, unknown>> {
-    switch (locale) {
-        case 'en': {
-            const mod = await import('./locales/en');
-            return mod.default as Record<string, unknown>;
-        }
-        case 'es': {
-            const mod = await import('./locales/es');
-            return mod.default as Record<string, unknown>;
-        }
-        default:
-            return {};
-    }
-}
-
-
-async function ensureMessages(locale: SupportedLocale, i18n: I18n) {
-    if (loaded.has(locale))
-        return;
-
-    const messages = await loadMessages(locale);
-    (i18n.global as unknown as Composer).setLocaleMessage(locale, messages);
-    loaded.add(locale);
-}
-
-
+/** Creates the i18n instance for the application. */
 export async function createI18nInstance(): Promise<I18n> {
     if (i18nSingleton)
         return i18nSingleton;
@@ -67,7 +39,8 @@ export async function createI18nInstance(): Promise<I18n> {
 }
 
 
-export function currentLocale(): SupportedLocale {
+/** Gets the current application locale. */
+export function getCurrentLocale(): SupportedLocale {
     if (!i18nSingleton)
         return detectInitialLocale();
 
@@ -76,6 +49,7 @@ export function currentLocale(): SupportedLocale {
 }
 
 
+/** Sets the application locale. */
 export async function setLocale(next: SupportedLocale): Promise<void> {
     if (!supportedLocales.includes(next))
         return;
@@ -99,9 +73,7 @@ export async function setLocale(next: SupportedLocale): Promise<void> {
 }
 
 
-export { supportedLocales };
-
-
+/** Translates a key or returns the fallback if not found. */
 export function tOr(key: string, fallback: string, params?: Record<string, unknown>): string {
     if (!i18nSingleton)
         return fallback
@@ -115,5 +87,39 @@ export function tOr(key: string, fallback: string, params?: Record<string, unkno
         return translated || fallback
     } catch {
         return fallback
+    }
+}
+
+
+export { supportedLocales };
+
+
+let i18nSingleton: I18n | null = null;
+let creatingPromise: Promise<I18n> | null = null;
+const loaded = new Set<string>();
+
+
+async function ensureMessages(locale: SupportedLocale, i18n: I18n) {
+    if (loaded.has(locale))
+        return;
+
+    const messages = await loadMessages(locale);
+    (i18n.global as unknown as Composer).setLocaleMessage(locale, messages);
+    loaded.add(locale);
+}
+
+
+async function loadMessages(locale: SupportedLocale): Promise<Record<string, unknown>> {
+    switch (locale) {
+        case 'en': {
+            const mod = await import('./locales/en');
+            return mod.default as Record<string, unknown>;
+        }
+        case 'es': {
+            const mod = await import('./locales/es');
+            return mod.default as Record<string, unknown>;
+        }
+        default:
+            return {};
     }
 }

@@ -1,6 +1,6 @@
 import { toProblemDetails, ProblemDetailsParseError, ProblemDetails } from '../types/problem-details'
-import type { ApiError } from '../types/api-error'
-import type { AppRequestInit } from '../types/app-request-init'
+import type { ApiError } from '../types/apis/api-error'
+import type { AppRequestInit } from '../types/apis/app-request-init'
 import { ErrorHandlingMode } from '../types/error-handling-mode'
 import { buildTraceHeaders, extractTraceIdFromHeaders } from '../telemetry/traceContext'
 

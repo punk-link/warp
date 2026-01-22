@@ -1,4 +1,4 @@
-import type { ApiError } from '../types/api-error'
+import type { ApiError } from '../types/apis/api-error'
 import type { ApiFatalResult } from "../types/apis/api-fatal-result";
 import type { ApiNotFoundResult } from "../types/apis/api-not-found-result";
 import type { ApiValidationResult } from "../types/apis/api-validation-result";

@@ -3,7 +3,7 @@ import '@sentry/tracing'
 import type { SeverityLevel } from '@sentry/types'
 import type { App } from 'vue'
 import type { Router } from 'vue-router'
-import type { ApiErrorTelemetry } from './types'
+import type { ApiErrorTelemetry } from '../types/telemetry/api-error-telemetry'
 import { ErrorHandlingMode } from '../types/error-handling-mode'
 import { NotifyLevel } from '../types/notify-level'
 

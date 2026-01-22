@@ -2,9 +2,6 @@ import { TraceContext } from "../types/telemetry/trace-context"
 import { TraceContextInit } from "../types/telemetry/trace-context-init"
 import { BuildTraceHeadersParams } from "../types/telemetry/build-trace-headers-params"
 
-const TRACE_VERSION = '00'
-const DEFAULT_TRACE_FLAGS = '01'
-
 
 /** Trace identifier response header. */
 export const TRACE_ID_HEADER = 'x-trace-id'
@@ -69,7 +66,9 @@ export function extractTraceIdFromHeaders(headers: Headers): string | null {
 }
 
 
+const DEFAULT_TRACE_FLAGS = '01'
 const HEX_LOOKUP: string[] = Array.from({ length: 256 }, (_, index) => index.toString(16).padStart(2, '0'))
+const TRACE_VERSION = '00'
 
 
 function generateRandomBytes(length: number): Uint8Array {

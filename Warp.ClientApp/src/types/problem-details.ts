@@ -44,53 +44,7 @@ export function isProblemDetails(value: unknown): value is ProblemDetails {
 }
 
 
-function asString(v: unknown): string | undefined {
-    if (v == null) 
-        return undefined
-
-    if (typeof v === 'string') 
-        return v
-
-    if (typeof v === 'number' || typeof v === 'boolean') 
-        return String(v)
-
-    return undefined
-}
-
-
-function asNumber(v: unknown): number | undefined {
-    if (typeof v === 'number' && Number.isFinite(v)) 
-        return v
-
-    if (typeof v === 'string' && v.trim() !== '') {
-        const n = Number(v)
-        return Number.isFinite(n) ? n : undefined
-    }
-
-    return undefined
-}
-
-
-function normalizeErrors(raw: any): Record<string, string[]> | undefined {
-    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) 
-        return undefined
-
-    const result: Record<string, string[]> = {}
-    for (const [k, v] of Object.entries(raw)) {
-        if (Array.isArray(v)) {
-            const arr = v.map(asString).filter((s): s is string => !!s)
-            if (arr.length) 
-                result[k] = arr
-        } else {
-            const s = asString(v)
-            if (s) result[k] = [s]
-        }
-    }
-
-    return Object.keys(result).length ? result : undefined
-}
-
-
+/** Error thrown when parsing ProblemDetails fails. */
 export class ProblemDetailsParseError extends Error {
     raw: unknown
     constructor(message: string, raw: unknown) {
@@ -101,6 +55,7 @@ export class ProblemDetailsParseError extends Error {
 }
 
 
+/** Parses a raw object into a ProblemDetails instance, throwing ProblemDetailsParseError on failure. */
 export function toProblemDetails(raw: any): ProblemDetails {
     if (!raw || typeof raw !== 'object') 
         throw new ProblemDetailsParseError('Problem details payload is not an object', raw)
@@ -150,4 +105,51 @@ export function toProblemDetails(raw: any): ProblemDetails {
 
 
     return base
+}
+
+
+function asString(v: unknown): string | undefined {
+    if (v == null) 
+        return undefined
+
+    if (typeof v === 'string') 
+        return v
+
+    if (typeof v === 'number' || typeof v === 'boolean') 
+        return String(v)
+
+    return undefined
+}
+
+
+function asNumber(v: unknown): number | undefined {
+    if (typeof v === 'number' && Number.isFinite(v)) 
+        return v
+
+    if (typeof v === 'string' && v.trim() !== '') {
+        const n = Number(v)
+        return Number.isFinite(n) ? n : undefined
+    }
+
+    return undefined
+}
+
+
+function normalizeErrors(raw: any): Record<string, string[]> | undefined {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) 
+        return undefined
+
+    const result: Record<string, string[]> = {}
+    for (const [k, v] of Object.entries(raw)) {
+        if (Array.isArray(v)) {
+            const arr = v.map(asString).filter((s): s is string => !!s)
+            if (arr.length) 
+                result[k] = arr
+        } else {
+            const s = asString(v)
+            if (s) result[k] = [s]
+        }
+    }
+
+    return Object.keys(result).length ? result : undefined
 }

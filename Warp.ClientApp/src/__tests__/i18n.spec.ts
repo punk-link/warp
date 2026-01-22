@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { createI18nInstance, setLocale, currentLocale } from '../i18n'
+import { createI18nInstance, setLocale, getCurrentLocale } from '../i18n'
 import type { Composer } from 'vue-i18n'
 
 describe('i18n bootstrap & switching', () => {
@@ -14,7 +14,7 @@ describe('i18n bootstrap & switching', () => {
     it('switches locale at runtime', async () => {
         await createI18nInstance()
         await setLocale('es')
-        expect(currentLocale()).toBe('es')
+        expect(getCurrentLocale()).toBe('es')
 
         const comp = (await createI18nInstance()).global as unknown as Composer
         const taglineEs = comp.t('components.footer.tagline')

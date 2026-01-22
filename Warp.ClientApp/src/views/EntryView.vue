@@ -85,6 +85,8 @@ import CountdownTimer from '../components/CountdownTimer.vue'
 import GalleryItem from '../components/GalleryItem.vue'
 import Logo from '../components/Logo.vue'
 import Button from '../components/Button.vue'
+import { ViewNames } from '../router/view-names'
+import { V } from 'vitest/dist/chunks/reporters.nr4dxCkA.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -128,7 +130,7 @@ async function load() {
 
     if (!currentId) {
         error.value = true;
-        router.replace({ name: 'Error' })
+        router.replace({ name: ViewNames.Error });
         return
     }
 
@@ -192,7 +194,7 @@ async function onCopyLink() {
 
 
 function onClose() {
-    router.replace({ name: 'Home' })
+    router.replace({ name: ViewNames.Home })
 }
 
 
@@ -209,7 +211,7 @@ async function onReport() {
         reported.value = true
         showReportModal.value = false
 
-        setTimeout(() => router.replace({ name: 'Home' }), 1200)
+        setTimeout(() => router.replace({ name: ViewNames.Home }), 1200)
     } catch (e) {
         console.error('report failed', e)
     } finally {
@@ -231,12 +233,12 @@ function scheduleExpirationRedirect() {
     const now = Date.now()
     const delay = targetTs - now
     if (delay <= 0) {
-        router.replace({ name: 'Error' })
+        router.replace({ name: ViewNames.Error })
         return
     }
 
     expirationTimer = window.setTimeout(() => {
-        router.replace({ name: 'Home' })
+        router.replace({ name: ViewNames.Home })
     }, delay)
 }
 

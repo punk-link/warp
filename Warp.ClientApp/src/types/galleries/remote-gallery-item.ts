@@ -1,3 +1,4 @@
+/** Represents a remote gallery item (image file). */
 export interface RemoteGalleryItem {
     kind: 'remote'
     url: string

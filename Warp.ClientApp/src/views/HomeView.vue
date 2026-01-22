@@ -70,6 +70,7 @@ import { useDraftEntry } from '../composables/use-draft-entry'
 import { routeApiError } from '../api/errorRouting'
 import { DraftEntry } from '../types/draft-entry'
 import { ExpirationPeriod } from '../types/expiration-periods'
+import { ViewNames } from '../router/view-names'
 
 const EDIT_MODE_STORAGE_KEY = 'warp.editMode'
 const mode = ref<EditMode>(EditMode.Simple)
@@ -180,7 +181,7 @@ function onPreview() {
     })
 
     router.push({ 
-        name: 'Preview', 
+        name: ViewNames.Preview, 
         query: { id: entryIdRef.value }
     })
 }

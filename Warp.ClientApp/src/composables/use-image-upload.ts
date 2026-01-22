@@ -1,43 +1,41 @@
 import { fetchJson } from '../api/fetchHelper'
-import type { ApiError } from '../types/api-error'
-
-const UPLOAD_FINISHED_EVENT = 'uploadFinished'
+import type { ApiError } from '../types/apis/api-error'
 
 
-function isValidImageFile(file: File | null | undefined) {
-    return !!file && !!file.type && file.type.startsWith('image/')
-}
-
-
-export async function uploadImages(entryId: string, files: File[]) {
-    if (!entryId)
-        throw new Error('entryId is required')
-
-    const valid = files.filter(isValidImageFile)
-    if (valid.length === 0)
-        return null
-
-    const form = new FormData()
-    valid.forEach(f => form.append('Images', f, f.name))
-
+/** Handles paste events for image uploads. */
+export async function handlePaste(
+    event: ClipboardEvent,
+    getEntryId: () => string | undefined,
+    addLocalFiles?: (files: File[]) => void
+) {
     try {
-        const json = await fetchJson(`/api/images/entry-id/${encodeURIComponent(entryId)}`, {
-            method: 'POST',
-            body: form
-        })
+        if (!event)
+            return false
 
-        window.dispatchEvent(new Event(UPLOAD_FINISHED_EVENT))
+        const typedEvent = event as ClipboardEventWithDetail
+        const clipboardFiles = Array.from(event.clipboardData?.files || [])
+        const detailFiles = typedEvent.detail?.files ?? []
+        const files = clipboardFiles.length > 0 ? clipboardFiles : detailFiles
+        if (files.length === 0)
+            return false
 
-        return json
+        const entryId = getEntryId()
+        if (!entryId)
+            return false
+
+        if (addLocalFiles)
+            addLocalFiles(files)
+
+        await uploadImages(entryId, files)
+        return true
     } catch (err) {
-        const apiError = err as ApiError
-        apiError.message = apiError.problem?.detail || apiError.message || 'Image upload failed'
-        
-        throw apiError
+        console.error(err)
+        return false
     }
 }
 
 
+/** Initializes drag-and-drop and file input handlers for image uploads. */
 export function initDropAreaHandlers(dropArea: HTMLElement, fileInput: HTMLInputElement, getEntryId: () => string | undefined) {
     if (!dropArea || !fileInput)
         return
@@ -112,38 +110,45 @@ export function initDropAreaHandlers(dropArea: HTMLElement, fileInput: HTMLInput
 }
 
 
-type ClipboardEventWithDetail = ClipboardEvent & { detail?: { files?: File[] } }
+/** Uploads image files for a given entry ID. */
+export async function uploadImages(entryId: string, files: File[]) {
+    if (!entryId)
+        throw new Error('entryId is required')
 
+    const valid = files.filter(isValidImageFile)
+    if (valid.length === 0)
+        return null
 
-export async function handlePaste(
-    event: ClipboardEvent,
-    getEntryId: () => string | undefined,
-    addLocalFiles?: (files: File[]) => void
-) {
+    const form = new FormData()
+    valid.forEach(f => form.append('Images', f, f.name))
+
     try {
-        if (!event)
-            return false
+        const json = await fetchJson(`/api/images/entry-id/${encodeURIComponent(entryId)}`, {
+            method: 'POST',
+            body: form
+        })
 
-        const typedEvent = event as ClipboardEventWithDetail
-        const clipboardFiles = Array.from(event.clipboardData?.files || [])
-        const detailFiles = typedEvent.detail?.files ?? []
-        const files = clipboardFiles.length > 0 ? clipboardFiles : detailFiles
-        if (files.length === 0)
-            return false
+        window.dispatchEvent(new Event(UPLOAD_FINISHED_EVENT))
 
-        const entryId = getEntryId()
-        if (!entryId)
-            return false
-
-        if (addLocalFiles)
-            addLocalFiles(files)
-
-        await uploadImages(entryId, files)
-        return true
+        return json
     } catch (err) {
-        console.error(err)
-        return false
+        const apiError = err as ApiError
+        apiError.message = apiError.problem?.detail || apiError.message || 'Image upload failed'
+        
+        throw apiError
     }
 }
 
+
+type ClipboardEventWithDetail = ClipboardEvent & { detail?: { files?: File[] } }
+
+
+/** Event name emitted when an image upload has finished. */
 export { UPLOAD_FINISHED_EVENT }
+
+const UPLOAD_FINISHED_EVENT = 'uploadFinished'
+
+
+function isValidImageFile(file: File | null | undefined) {
+    return !!file && !!file.type && file.type.startsWith('image/')
+}

@@ -70,6 +70,7 @@ import { useGallery } from '../composables/use-gallery'
 import type { DraftEntry } from '../types/draft-entry'
 import Button from '../components/Button.vue'
 import GalleryItem from '../components/GalleryItem.vue'
+import { ViewNames } from '../router/view-names'
 
 const route = useRoute()
 const router = useRouter()
@@ -110,7 +111,7 @@ async function onCloneEdit() {
 
     const clone = await entryApi.copyEntry(entryIdRef.value)
     setTimeout(() => {
-        router.push({ name: 'Home', query: { id: clone.id } })
+        router.push({ name: ViewNames.Home, query: { id: clone.id } })
     })
 }
 
@@ -135,7 +136,7 @@ async function onDelete() {
         deleting.value = true
 
         await entryApi.deleteEntry(entryIdRef.value)
-        router.replace({ name: 'Deleted' })
+        router.replace({ name: ViewNames.Deleted })
     } catch (e) {
         console.error(e)
     } finally {
@@ -148,7 +149,7 @@ function onEdit() {
     preserveGalleryOnUnmount.value = true
 
     router.push({
-        name: 'Home',
+        name: ViewNames.Home,
         query: draft.value?.id ? { id: draft.value.id } : {}
     })
 }
@@ -203,7 +204,7 @@ onBeforeUnmount(() => {
 
 
 onBeforeRouteLeave((to) => {
-    if (to.name === 'Home')
+    if (to.name === ViewNames.Home)
         preserveGalleryOnUnmount.value = true
 })
 
@@ -211,7 +212,7 @@ onBeforeRouteLeave((to) => {
 onMounted(() => {
     const entryId = loadDraft()
     if (!entryId) {
-        router.replace({ name: 'Home' })
+        router.replace({ name: ViewNames.Home })
         return
     }
 

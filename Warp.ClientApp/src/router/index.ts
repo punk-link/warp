@@ -24,4 +24,5 @@ const router = createRouter({
 })
 
 
+/** The router instance for the application. */
 export default router

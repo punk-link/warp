@@ -1,6 +1,37 @@
+/** Detects the initial locale for the application. */
+export function detectInitialLocale(): SupportedLocale {
+    try {
+        if (typeof window === 'undefined')
+            return 'en';
+
+        const persisted = getPersistedLocale();
+        if (persisted)
+            return persisted;
+
+        const browserLanguages = getBrowserLanguages();
+        
+        const exactMatch = findExactMatch(browserLanguages);
+        if (exactMatch)
+            return exactMatch;
+        
+        const primaryMatch = findPrimaryMatch(browserLanguages);
+        if (primaryMatch)
+            return primaryMatch;
+    } catch {
+        // Non-fatal: fall through to default
+    }
+
+    return 'en';
+}
+
+
+/** Key used to persist the selected locale in local storage. */
 export const LOCALE_STORAGE_KEY = 'warp.locale';
 
+/** Supported application locales. */
 export const supportedLocales = ['en', 'es'] as const;
+
+/** Supported application locale type. */
 export type SupportedLocale = typeof supportedLocales[number];
 
 
@@ -58,30 +89,4 @@ function findPrimaryMatch(candidates: string[]): SupportedLocale | null {
     }
     
     return null;
-}
-
-
-export function detectInitialLocale(): SupportedLocale {
-    try {
-        if (typeof window === 'undefined')
-            return 'en';
-
-        const persisted = getPersistedLocale();
-        if (persisted)
-            return persisted;
-
-        const browserLanguages = getBrowserLanguages();
-        
-        const exactMatch = findExactMatch(browserLanguages);
-        if (exactMatch)
-            return exactMatch;
-        
-        const primaryMatch = findPrimaryMatch(browserLanguages);
-        if (primaryMatch)
-            return primaryMatch;
-    } catch {
-        // Non-fatal: fall through to default
-    }
-
-    return 'en';
 }

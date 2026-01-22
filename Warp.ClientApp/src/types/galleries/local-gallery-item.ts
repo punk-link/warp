@@ -1,3 +1,4 @@
+/** Represents a local gallery item (image file). */
 export interface LocalGalleryItem {
     kind: 'local'
     file: File

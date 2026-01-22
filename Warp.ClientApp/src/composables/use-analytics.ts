@@ -1,3 +1,4 @@
+/** Composable providing analytics tracking functionality. */
 export function useAnalytics() {
     function track(eventName: string, payload?: Record<string, any>) {
         try {

@@ -2,9 +2,7 @@ import { ref, watch } from 'vue'
 import { EditMode, parseEditMode } from '../types/edit-modes'
 
 
-const STORAGE_KEY = 'warp.editMode'
-
-
+/** Composable for restoring and persisting the user's selected edit mode. */
 export function useEditMode() {
     const stored = typeof localStorage !== 'undefined' 
         ? localStorage.getItem(STORAGE_KEY) 
@@ -22,3 +20,6 @@ export function useEditMode() {
 
     return { mode }
 }
+
+
+const STORAGE_KEY = 'warp.editMode'

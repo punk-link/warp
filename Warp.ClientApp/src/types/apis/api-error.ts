@@ -1,6 +1,7 @@
-import type { ProblemDetails } from './problem-details'
+import type { ProblemDetails } from '../problem-details'
 
 
+/** Represents an error that occurs during an API call. */
 export interface ApiError extends Error {
     status: number
     requestId?: string | null

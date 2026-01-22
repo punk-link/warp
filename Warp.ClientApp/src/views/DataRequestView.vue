@@ -38,6 +38,7 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import Logo from '../components/Logo.vue'
 import Button from '../components/Button.vue'
+import { ViewNames } from '../router/view-names'
 
 
 const router = useRouter();
@@ -45,6 +46,6 @@ const { t } = useI18n()
 
 
 function goHome() {
-    router.push({ name: 'Home' });
+    router.push({ name: ViewNames.Home });
 }
 </script>
