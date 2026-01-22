@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import { EditMode } from '../types/edit-modes';
+import { EditMode } from '../types/entries/enums/edit-modes';
 
 
 interface Props {

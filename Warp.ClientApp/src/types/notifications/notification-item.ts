@@ -1,8 +1,9 @@
 import type { NotificationAction } from './notification-action'
-import { NotifyLevel } from './notify-level'
+import { NotificationLevel } from './enums/notification-level'
 
 
-export interface NotificationItem extends Required<Pick<{ level: NotifyLevel; message: string }, 'level' | 'message'>> {
+/** Represents a notification item with its properties. */
+export interface NotificationItem extends Required<Pick<{ level: NotificationLevel; message: string }, 'level' | 'message'>> {
     id: string
     title?: string
     details?: string

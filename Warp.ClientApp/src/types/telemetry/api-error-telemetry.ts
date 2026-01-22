@@ -1,5 +1,5 @@
-import { ErrorHandlingMode } from '../error-handling-mode'
-import { NotifyLevel } from '../notify-level'
+import { ErrorHandlingMode } from '../apis/enums/error-handling-mode'
+import { NotificationLevel } from '../notifications/enums/notification-level'
 
 
 /** Telemetry event emitted when an API error occurs. */
@@ -14,5 +14,5 @@ export interface ApiErrorTelemetry {
     eventId?: number
     sentryId?: string | null
     dedupeKey?: string
-    notifyLevel?: NotifyLevel
+    notifyLevel?: NotificationLevel
 }

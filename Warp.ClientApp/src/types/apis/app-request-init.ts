@@ -1,6 +1,6 @@
-import type { TraceContextInit } from '../../telemetry/traceContext'
-import { NotifyLevel } from '../notify-level'
-import { ErrorHandlingMode } from '../error-handling-mode'
+import { NotificationLevel } from '../notifications/enums/notification-level'
+import { ErrorHandlingMode } from './enums/error-handling-mode'
+import { TraceContextInit } from '../telemetry/trace-context-init'
 
 
 /**
@@ -9,7 +9,7 @@ import { ErrorHandlingMode } from '../error-handling-mode'
  */
 export interface AppRequestInit extends RequestInit {
     errorHandling?: ErrorHandlingMode
-    notifyLevel?: NotifyLevel
+    notifyLevel?: NotificationLevel
     dedupeKey?: string
     context?: { feature?: string; i18nKey?: string; data?: Record<string, unknown> }
     traceContext?: TraceContextInit

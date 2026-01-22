@@ -4,8 +4,8 @@ import { buildDedupeKey, defaultNotifyLevel, isValidation } from './errorPolicy'
 import type { ApiError } from '../types/apis/api-error'
 import type { AppRequestInit } from '../types/apis/app-request-init'
 import { useNotifications } from '../composables/use-notifications'
-import { ErrorHandlingMode } from '../types/error-handling-mode'
-import { NotifyLevel } from '../types/notify-level'
+import { ErrorHandlingMode } from '../types/apis/enums/error-handling-mode'
+import { NotificationLevel } from '../types/notifications/enums/notification-level'
 import { emitApiErrorTelemetry } from '../telemetry/clientTelemetry'
 import { tOr } from '../i18n'
 
@@ -100,7 +100,7 @@ function pushNotification(error: ApiError, req: AppRequestInit, dedupeKey: strin
         title: title,
         details: details || undefined,
         dedupeKey,
-        actions: level >= NotifyLevel.Warn ? actions : undefined
+        actions: level >= NotificationLevel.Warn ? actions : undefined
     })
 }
 

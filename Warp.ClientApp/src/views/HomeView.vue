@@ -50,7 +50,8 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
-import { EditMode, parseEditMode } from '../types/edit-modes'
+import { EditMode } from '../types/entries/enums/edit-modes'
+import { parseEditMode } from '../helpers/edit-mode-helper'
 import { useGallery } from '../composables/use-gallery'
 import { initDropAreaHandlers, handlePaste } from '../composables/use-image-upload'
 import { useRoute, useRouter } from 'vue-router'
@@ -68,8 +69,8 @@ import ExpirationSelect from '../components/ExpirationSelect.vue'
 import Button from '../components/Button.vue'
 import { useDraftEntry } from '../composables/use-draft-entry'
 import { routeApiError } from '../api/errorRouting'
-import { DraftEntry } from '../types/draft-entry'
-import { ExpirationPeriod } from '../types/expiration-periods'
+import { DraftEntry } from '../types/entries/draft-entry'
+import { ExpirationPeriod } from '../types/entries/enums/expiration-periods'
 import { ViewNames } from '../router/view-names'
 
 const EDIT_MODE_STORAGE_KEY = 'warp.editMode'

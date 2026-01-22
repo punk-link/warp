@@ -1,5 +1,5 @@
 import { fetchJson, ApiError } from './fetchHelper'
-import type { ProblemDetails } from '../types/problem-details'
+import type { ProblemDetails } from '../types/apis/problem-details/problem-details'
 import { ApiResultKind } from '../types/apis/enums/api-result-kind'
 import type { ApiResult } from '../types/apis/api-result'
 import type { ApiSuccessResult } from '../types/apis/api-success-result'

@@ -4,8 +4,8 @@
  * Defines which statuses should redirect to an error page vs surface a frontend notification,
  * and provides defaults for notification severity and deduplication.
  */
-import { NotifyLevel } from '../types/notify-level'
-import { ErrorClassification } from '../types/error-classification'
+import { NotificationLevel } from '../types/notifications/enums/notification-level'
+import { RedirectAction } from '../types/apis/enums/redirect-action'
 
 
 export function shouldRedirect(status: number | undefined | null): boolean {
@@ -24,24 +24,24 @@ export function isValidation(status: number | undefined | null): boolean {
 }
 
 
-export function classify(status: number | undefined | null): ErrorClassification {
+export function classify(status: number | undefined | null): RedirectAction {
     return shouldRedirect(status)
-        ? ErrorClassification.Redirect 
-        : ErrorClassification.Notify
+        ? RedirectAction.Redirect 
+        : RedirectAction.Notify
 }
 
 
-export function defaultNotifyLevel(status: number | undefined | null): NotifyLevel {
+export function defaultNotifyLevel(status: number | undefined | null): NotificationLevel {
     if (status == null)
-        return NotifyLevel.Error
+        return NotificationLevel.Error
 
     if (status === 404 || (status >= 500 && status <= 599))
-        return NotifyLevel.Error
+        return NotificationLevel.Error
 
     if (status >= 400 && status <= 499)
-        return NotifyLevel.Warn
+        return NotificationLevel.Warn
 
-    return NotifyLevel.Error
+    return NotificationLevel.Error
 }
 
 

@@ -1,5 +1,5 @@
 /** Error handling outcome classification for API failures. */
-export enum ErrorClassification {
-  Redirect = 0,
-  Notify = 1
+export enum RedirectAction {
+    Redirect = 0,
+    Notify = 1
 }

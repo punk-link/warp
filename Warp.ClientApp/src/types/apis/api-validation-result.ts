@@ -1,4 +1,4 @@
-import { ProblemDetails } from "../problem-details"
+import { ProblemDetails } from "./problem-details/problem-details"
 import { ApiResultKind } from "./enums/api-result-kind"
 
 

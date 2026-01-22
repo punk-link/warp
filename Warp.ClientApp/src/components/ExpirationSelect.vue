@@ -12,7 +12,8 @@
 </template>
 
 <script setup lang="ts">
-import { ExpirationPeriod, parseExpirationPeriod } from '../types/expiration-periods'
+import { ExpirationPeriod } from '../types/entries/enums/expiration-periods'
+import { parseExpirationPeriod } from '../helpers/expiration-period-helper'
 import { useI18n } from 'vue-i18n'
 
 

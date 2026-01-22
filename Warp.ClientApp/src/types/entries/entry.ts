@@ -1,7 +1,8 @@
-import { EditMode } from "./edit-modes";
-import { ExpirationPeriod } from './expiration-periods'
+import { EditMode } from "./enums/edit-modes";
+import { ExpirationPeriod } from "./enums/expiration-periods";
 
 
+/** Represents a finalized entry with its properties. */
 export interface Entry { 
     id: string;
     editMode: EditMode;

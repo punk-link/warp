@@ -40,7 +40,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { useNotifications } from '../composables/use-notifications'
-import { NotifyLevel } from '../types/notify-level'
+import { NotificationLevel } from '../types/notifications/enums/notification-level'
 import Button from './Button.vue'
 
 
@@ -48,23 +48,23 @@ const { items, remove } = useNotifications()
 const { t } = useI18n()
 
 
-function containerClass(level: NotifyLevel): string {
-    if (level === NotifyLevel.Error)
+function containerClass(level: NotificationLevel): string {
+    if (level === NotificationLevel.Error)
         return 'bg-red-600/95 text-white'
 
-    if (level === NotifyLevel.Warn)
+    if (level === NotificationLevel.Warn)
         return 'bg-secondary/90 text-white'
 
     return 'bg-primary/90 text-white'
 }
 
 
-function ariaRole(level: NotifyLevel): 'alert' | 'status' {
-    return level === NotifyLevel.Error ? 'alert' : 'status'
+function ariaRole(level: NotificationLevel): 'alert' | 'status' {
+    return level === NotificationLevel.Error ? 'alert' : 'status'
 }
 
 
-function ariaLive(level: NotifyLevel): 'assertive' | 'polite' {
-    return level === NotifyLevel.Error ? 'assertive' : 'polite'
+function ariaLive(level: NotificationLevel): 'assertive' | 'polite' {
+    return level === NotificationLevel.Error ? 'assertive' : 'polite'
 }
 </script>

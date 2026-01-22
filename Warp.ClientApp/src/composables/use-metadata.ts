@@ -1,7 +1,9 @@
 import { ref } from 'vue'
 import { fetchJson } from '../api/fetchHelper'
-import { EditMode, parseEditMode } from '../types/edit-modes'
-import { ExpirationPeriod, parseExpirationPeriod } from '../types/expiration-periods'
+import { EditMode } from '../types/entries/enums/edit-modes'
+import { parseEditMode } from '../helpers/edit-mode-helper'
+import { ExpirationPeriod } from '../types/entries/enums/expiration-periods'
+import { parseExpirationPeriod } from '../helpers/expiration-period-helper'
 
 
 /** Composable for loading metadata such as enum values from the API. */

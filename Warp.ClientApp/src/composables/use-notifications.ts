@@ -1,7 +1,7 @@
 import { ref, readonly } from 'vue'
-import { NotifyLevel } from '../types/notify-level'
-import type { NotificationItem } from '../types/notification-item'
-import type { NotificationOptions } from '../types/notification-options'
+import { NotificationLevel } from '../types/notifications/enums/notification-level'
+import type { NotificationItem } from '../types/notifications/notification-item'
+import type { NotificationOptions } from '../types/notifications/notification-options'
 
 
 /** Composable for managing application notifications. */
@@ -87,8 +87,8 @@ function normalize(options: NotificationOptions): NotificationItem {
 
 	const defaultTtl = options.sticky ? 0 : (
 		options.ttlMs != null ? options.ttlMs : (
-			options.level === NotifyLevel.Info ? DEFAULT_TTL_INFO_MS :
-				options.level === NotifyLevel.Warn ? DEFAULT_TTL_WARN_MS :
+			options.level === NotificationLevel.Info ? DEFAULT_TTL_INFO_MS :
+				options.level === NotificationLevel.Warn ? DEFAULT_TTL_WARN_MS :
 					DEFAULT_TTL_ERROR_MS
 		)
 	)

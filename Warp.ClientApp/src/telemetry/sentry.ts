@@ -4,8 +4,8 @@ import type { SeverityLevel } from '@sentry/types'
 import type { App } from 'vue'
 import type { Router } from 'vue-router'
 import type { ApiErrorTelemetry } from '../types/telemetry/api-error-telemetry'
-import { ErrorHandlingMode } from '../types/error-handling-mode'
-import { NotifyLevel } from '../types/notify-level'
+import { ErrorHandlingMode } from '../types/apis/enums/error-handling-mode'
+import { NotificationLevel } from '../types/notifications/enums/notification-level'
 
 
 /** Reports an API error telemetry event to Sentry. */
@@ -148,10 +148,10 @@ function coerceSampleRate(value: unknown): number | undefined {
 
 function mapSeverity(payload: ApiErrorTelemetry): SeverityLevel {
     const notifyLevel = payload.notifyLevel
-    if (notifyLevel === NotifyLevel.Error)
+    if (notifyLevel === NotificationLevel.Error)
         return 'error'
 
-    if (notifyLevel === NotifyLevel.Warn)
+    if (notifyLevel === NotificationLevel.Warn)
         return 'warning'
 
     if (payload.status != null && payload.status >= 500)
@@ -211,13 +211,13 @@ function resolveSampleRates(): { tracesSampleRate?: number; profilesSampleRate?:
 
 
 function shouldCaptureEvent(payload: ApiErrorTelemetry): boolean {
-    if (payload.notifyLevel === NotifyLevel.Info)
+    if (payload.notifyLevel === NotificationLevel.Info)
         return false
 
-    if (payload.notifyLevel === NotifyLevel.Warn)
+    if (payload.notifyLevel === NotificationLevel.Warn)
         return payload.status != null && payload.status >= 500
 
-    if (payload.notifyLevel === NotifyLevel.Error)
+    if (payload.notifyLevel === NotificationLevel.Error)
         return true
 
     if (payload.status != null)

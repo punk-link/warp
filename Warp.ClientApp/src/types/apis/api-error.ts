@@ -1,4 +1,4 @@
-import type { ProblemDetails } from '../problem-details'
+import type { ProblemDetails } from './problem-details/problem-details'
 
 
 /** Represents an error that occurs during an API call. */
