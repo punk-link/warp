@@ -1,7 +1,8 @@
-import { ErrorHandlingMode } from '../types/error-handling-mode'
-import { NotifyLevel } from '../types/notify-level'
+import { ErrorHandlingMode } from '../error-handling-mode'
+import { NotifyLevel } from '../notify-level'
 
 
+/** Telemetry event emitted when an API error occurs. */
 export interface ApiErrorTelemetry {
     category: 'api-error'
     method?: string

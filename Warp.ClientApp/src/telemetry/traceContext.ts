@@ -1,3 +1,7 @@
+import { TraceContext } from "../types/telemetry/trace-context"
+import { TraceContextInit } from "../types/telemetry/trace-context-init"
+import { BuildTraceHeadersParams } from "../types/telemetry/build-trace-headers-params"
+
 const TRACE_VERSION = '00'
 const DEFAULT_TRACE_FLAGS = '01'
 
@@ -12,28 +16,63 @@ export const TRACEPARENT_HEADER = 'traceparent'
 export const TRACESTATE_HEADER = 'tracestate'
 
 
-/** Represents a fully materialized trace context for an outgoing request. */
-export interface TraceContext {
-    traceId: string
-    spanId: string
-    traceParent: string
-    traceState?: string
+/** Applies trace headers to the provided headers instance. */
+export function applyTraceHeaders(target: Headers, context: TraceContext): void {
+    target.set(TRACEPARENT_HEADER, context.traceParent)
+    target.set(TRACE_ID_HEADER, context.traceId)
+
+    if (context.traceState)
+        target.set(TRACESTATE_HEADER, context.traceState)
 }
 
 
-/** Describes optional overrides when generating a trace context. */
-export interface TraceContextInit {
-    traceId?: string
-    spanId?: string
-    traceState?: string
-    sampled?: boolean
+/** Builds request headers enriched with trace context and optional defaults. */
+export function buildTraceHeaders(params: BuildTraceHeadersParams = {}): { headers: Headers; context: TraceContext } {
+    const { headers: initHeaders, traceContext, ensureJsonAccept } = params
+    const headers = new Headers(initHeaders ?? undefined)
+
+    if (ensureJsonAccept && !headers.has('Accept'))
+        headers.set('Accept', 'application/json')
+
+    const context = ensureTraceContext(traceContext)
+    applyTraceHeaders(headers, context)
+
+    return { headers, context }
+}
+
+
+/** Ensures a valid trace context exists by reusing the provided identifiers when possible. */
+export function ensureTraceContext(init?: TraceContextInit): TraceContext {
+    const traceId = normalizeTraceId(init?.traceId) ?? generateTraceId()
+    const spanId = normalizeSpanId(init?.spanId) ?? generateSpanId()
+    const sampled = init?.sampled === false ? '00' : DEFAULT_TRACE_FLAGS
+    const traceParent = `${TRACE_VERSION}-${traceId}-${spanId}-${sampled}`
+
+    return {
+        traceId,
+        spanId,
+        traceParent,
+        traceState: init?.traceState?.trim() || undefined
+    }
+}
+
+
+/** Extracts the trace identifier from a response headers collection. */
+export function extractTraceIdFromHeaders(headers: Headers): string | null {
+    const direct = headers.get(TRACE_ID_HEADER) ?? headers.get('trace-id')
+    const normalizedDirect = normalizeTraceId(direct ?? undefined)
+    if (normalizedDirect)
+        return normalizedDirect
+
+    const fromTraceParent = parseTraceParent(headers.get(TRACEPARENT_HEADER))
+    return fromTraceParent
 }
 
 
 const HEX_LOOKUP: string[] = Array.from({ length: 256 }, (_, index) => index.toString(16).padStart(2, '0'))
 
 
-function randomBytes(length: number): Uint8Array {
+function generateRandomBytes(length: number): Uint8Array {
     const bytes = new Uint8Array(length)
     if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
         crypto.getRandomValues(bytes)
@@ -48,7 +87,7 @@ function randomBytes(length: number): Uint8Array {
 }
 
 
-function bytesToHex(bytes: Uint8Array): string {
+function convertBytesToHex(bytes: Uint8Array): string {
     let result = ''
     for (let i = 0; i < bytes.length; i += 1)
         result += HEX_LOOKUP[bytes[i]]
@@ -58,18 +97,18 @@ function bytesToHex(bytes: Uint8Array): string {
 
 
 function generateTraceId(): string {
-    let traceId = bytesToHex(randomBytes(16))
+    let traceId = convertBytesToHex(generateRandomBytes(16))
     if (/^0+$/.test(traceId))
-        traceId = bytesToHex(randomBytes(16))
+        traceId = convertBytesToHex(generateRandomBytes(16))
 
     return traceId
 }
 
 
 function generateSpanId(): string {
-    let spanId = bytesToHex(randomBytes(8))
+    let spanId = convertBytesToHex(generateRandomBytes(8))
     if (/^0+$/.test(spanId))
-        spanId = bytesToHex(randomBytes(8))
+        spanId = convertBytesToHex(generateRandomBytes(8))
 
     return spanId
 }
@@ -103,60 +142,6 @@ function normalizeSpanId(value?: string): string | undefined {
 }
 
 
-/**
- * Ensures a valid trace context exists by reusing the provided identifiers when possible.
- */
-export function ensureTraceContext(init?: TraceContextInit): TraceContext {
-    const traceId = normalizeTraceId(init?.traceId) ?? generateTraceId()
-    const spanId = normalizeSpanId(init?.spanId) ?? generateSpanId()
-    const sampled = init?.sampled === false ? '00' : DEFAULT_TRACE_FLAGS
-    const traceParent = `${TRACE_VERSION}-${traceId}-${spanId}-${sampled}`
-
-    return {
-        traceId,
-        spanId,
-        traceParent,
-        traceState: init?.traceState?.trim() || undefined
-    }
-}
-
-
-/**
- * Applies trace headers to the provided headers instance.
- */
-export function applyTraceHeaders(target: Headers, context: TraceContext): void {
-    target.set(TRACEPARENT_HEADER, context.traceParent)
-    target.set(TRACE_ID_HEADER, context.traceId)
-
-    if (context.traceState)
-        target.set(TRACESTATE_HEADER, context.traceState)
-}
-
-
-interface BuildTraceHeadersParams {
-    headers?: HeadersInit
-    traceContext?: TraceContextInit
-    ensureJsonAccept?: boolean
-}
-
-
-/**
- * Builds request headers enriched with trace context and optional defaults.
- */
-export function buildTraceHeaders(params: BuildTraceHeadersParams = {}): { headers: Headers; context: TraceContext } {
-    const { headers: initHeaders, traceContext, ensureJsonAccept } = params
-    const headers = new Headers(initHeaders ?? undefined)
-
-    if (ensureJsonAccept && !headers.has('Accept'))
-        headers.set('Accept', 'application/json')
-
-    const context = ensureTraceContext(traceContext)
-    applyTraceHeaders(headers, context)
-
-    return { headers, context }
-}
-
-
 function parseTraceParent(value: string | null): string | null {
     if (!value)
         return null
@@ -171,18 +156,4 @@ function parseTraceParent(value: string | null): string | null {
 
     const traceId = segments[1]
     return normalizeTraceId(traceId) ?? null
-}
-
-
-/**
- * Extracts the trace identifier from a response headers collection.
- */
-export function extractTraceIdFromHeaders(headers: Headers): string | null {
-    const direct = headers.get(TRACE_ID_HEADER) ?? headers.get('trace-id')
-    const normalizedDirect = normalizeTraceId(direct ?? undefined)
-    if (normalizedDirect)
-        return normalizedDirect
-
-    const fromTraceParent = parseTraceParent(headers.get(TRACEPARENT_HEADER))
-    return fromTraceParent
 }
