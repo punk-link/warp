@@ -65,7 +65,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import Button from '../components/Button.vue'
 import Logo from '../components/Logo.vue'
-import { ViewNames } from '../router/view-names'
+import { ViewNames } from '../router/enums/view-names'
 
 const route = useRoute()
 const router = useRouter()

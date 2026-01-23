@@ -12,7 +12,7 @@ import { useRouter } from 'vue-router'
 import { useDraftEntry } from '../composables/use-draft-entry'
 import { useGallery } from '../composables/use-gallery'
 import { useI18n } from 'vue-i18n'
-import { ViewNames } from '../router/view-names'
+import { ViewNames } from '../router/enums/view-names'
 
 
 const { clearDraft } = useDraftEntry()

@@ -40,73 +40,16 @@ export function initDropAreaHandlers(dropArea: HTMLElement, fileInput: HTMLInput
     if (!dropArea || !fileInput)
         return
 
-    const preventDefault = (e: Event) => { e.preventDefault(); e.stopPropagation() }
-    const toggleHighlight = (isHighlighted: boolean) => {
-        dropArea.classList.toggle('paste-area--highlighted', isHighlighted)
-    }
+    const eventManager = createEventListenerManager()
+    const highlight = createHighlightController(dropArea)
 
-    const onDrop = async (e: DragEvent) => {
-        preventDefault(e)
-        toggleHighlight(false)
-        const entryId = getEntryId()
-        if (!entryId)
-            return
+    eventManager.add(dropArea, 'dragenter', (e: Event) => { preventDefaultAndStop(e); highlight.show() })
+    eventManager.add(dropArea, 'dragover', (e: Event) => { preventDefaultAndStop(e); highlight.show() })
+    eventManager.add(dropArea, 'dragleave', (e: Event) => { preventDefaultAndStop(e); highlight.hide() })
+    eventManager.add(dropArea, 'drop', (e: Event) => { handleDrop(e as DragEvent, getEntryId, highlight) })
+    eventManager.add(fileInput, 'change', (e: Event) => { handleFileInputChange(e, getEntryId) })
 
-        const dataTransfer = e.dataTransfer
-        if (!dataTransfer)
-            return
-
-        const files = Array.from(dataTransfer.files || [])
-        try {
-            await uploadImages(entryId, files)
-        } catch (err) {
-            console.error(err)
-        }
-    }
-
-    const onChange = async (e: Event) => {
-        const entryId = getEntryId()
-        if (!entryId)
-            return
-
-        const input = e.target as HTMLInputElement
-        if (!input.files)
-            return
-
-        const files = Array.from(input.files)
-        try {
-            await uploadImages(entryId, files)
-        } catch (err) {
-            console.error(err)
-        } finally {
-            input.value = ''
-        }
-    }
-
-    const listeners: Array<{ target: EventTarget; type: string; handler: EventListenerOrEventListenerObject }> = []
-
-    function add(target: EventTarget, type: string, handler: EventListenerOrEventListenerObject) {
-        target.addEventListener(type, handler as EventListener)
-        listeners.push({ target, type, handler })
-    }
-
-    add(dropArea, 'dragenter', preventDefault)
-    add(dropArea, 'dragover', preventDefault)
-    add(dropArea, 'dragleave', preventDefault)
-    add(dropArea, 'drop', preventDefault)
-
-    // Wrap typed handlers into EventListener for DOM API
-    add(dropArea, 'dragenter', (e: Event) => { preventDefault(e); toggleHighlight(true) })
-    add(dropArea, 'dragover', (e: Event) => { preventDefault(e); toggleHighlight(true) })
-    add(dropArea, 'dragleave', (e: Event) => { preventDefault(e); toggleHighlight(false) })
-    add(dropArea, 'drop', (e: Event) => { onDrop(e as DragEvent) })
-
-    add(fileInput, 'change', (e: Event) => { onChange(e) })
-
-    return () => {
-        for (const listener of listeners) 
-            listener.target.removeEventListener(listener.type, listener.handler as EventListener)
-    }
+    return eventManager.removeAll
 }
 
 
@@ -140,15 +83,82 @@ export async function uploadImages(entryId: string, files: File[]) {
 }
 
 
-type ClipboardEventWithDetail = ClipboardEvent & { detail?: { files?: File[] } }
-
-
 /** Event name emitted when an image upload has finished. */
-export { UPLOAD_FINISHED_EVENT }
+export const UPLOAD_FINISHED_EVENT = 'uploadFinished'
 
-const UPLOAD_FINISHED_EVENT = 'uploadFinished'
+
+function createEventListenerManager() {
+    const listeners: Array<{ target: EventTarget; type: string; handler: EventListenerOrEventListenerObject }> = []
+
+    function add(target: EventTarget, type: string, handler: EventListenerOrEventListenerObject) {
+        target.addEventListener(type, handler as EventListener)
+        listeners.push({ target, type, handler })
+    }
+
+    function removeAll() {
+        for (const listener of listeners)
+            listener.target.removeEventListener(listener.type, listener.handler as EventListener)
+    }
+
+    return { add, removeAll }
+}
+
+
+function createHighlightController(dropArea: HTMLElement) {
+    return {
+        show: () => dropArea.classList.add('paste-area--highlighted'),
+        hide: () => dropArea.classList.remove('paste-area--highlighted')
+    }
+}
+
+
+async function handleDrop(e: DragEvent, getEntryId: () => string | undefined, highlight: ReturnType<typeof createHighlightController>) {
+    e.preventDefault()
+    e.stopPropagation()
+    highlight.hide()
+
+    const entryId = getEntryId()
+    if (!entryId || !e.dataTransfer)
+        return
+
+    const files = Array.from(e.dataTransfer.files || [])
+    try {
+        await uploadImages(entryId, files)
+    } catch (err) {
+        console.error(err)
+    }
+}
+
+
+async function handleFileInputChange(e: Event, getEntryId: () => string | undefined) {
+    const entryId = getEntryId()
+    if (!entryId)
+        return
+
+    const input = e.target as HTMLInputElement
+    if (!input.files)
+        return
+
+    const files = Array.from(input.files)
+    try {
+        await uploadImages(entryId, files)
+    } catch (err) {
+        console.error(err)
+    } finally {
+        input.value = ''
+    }
+}
 
 
 function isValidImageFile(file: File | null | undefined) {
     return !!file && !!file.type && file.type.startsWith('image/')
 }
+
+
+function preventDefaultAndStop(e: Event) {
+    e.preventDefault()
+    e.stopPropagation()
+}
+
+
+type ClipboardEventWithDetail = ClipboardEvent & { detail?: { files?: File[] } }

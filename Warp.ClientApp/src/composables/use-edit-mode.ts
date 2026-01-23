@@ -1,5 +1,6 @@
 import { ref, watch } from 'vue'
-import { EditMode, parseEditMode } from '../types/entries/enums/edit-modes'
+import { EditMode } from '../types/entries/enums/edit-modes'
+import { parseEditMode } from '../helpers/edit-mode-helper'
 
 
 /** Composable for restoring and persisting the user's selected edit mode. */

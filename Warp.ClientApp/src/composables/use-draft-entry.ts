@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { DraftEntry } from '../types/draft-entry'
+import { DraftEntry } from '../types/entries/draft-entry'
 
 
 /** Composable for restoring and persisting a draft entry. */

@@ -85,7 +85,7 @@ import CountdownTimer from '../components/CountdownTimer.vue'
 import GalleryItem from '../components/GalleryItem.vue'
 import Logo from '../components/Logo.vue'
 import Button from '../components/Button.vue'
-import { ViewNames } from '../router/view-names'
+import { ViewNames } from '../router/enums/view-names'
 
 
 interface EntryImage { entryId: string; id: string; url: string }

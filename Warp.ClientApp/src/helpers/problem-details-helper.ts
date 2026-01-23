@@ -18,31 +18,74 @@ export function isProblemDetails(value: unknown): value is ProblemDetails {
 
 /** Parses a raw object into a ProblemDetails instance, throwing ProblemDetailsParseError on failure. */
 export function toProblemDetails(raw: any): ProblemDetails {
-    if (!raw || typeof raw !== 'object') 
+    if (!raw || typeof raw !== 'object')
         throw new ProblemDetailsParseError('Problem details payload is not an object', raw)
 
-    const type = asString(raw.type)
-    const title = asString(raw.title)
-    const status = asNumber(raw.status)
-    const detail = asString(raw.detail)
-    const traceId = asString(raw.traceId ?? raw['trace-id'])
+    const required = parseRequiredFields(raw)
+    validateRequiredFields(required, raw)
 
-    if (!type || !title || status == null || !detail || !traceId) {
-        const missing: string[] = []
-        if (!type) missing.push('type')
-        if (!title) missing.push('title')
-        if (status == null) missing.push('status')
-        if (!detail) missing.push('detail')
-        if (!traceId) missing.push('traceId')
-        throw new ProblemDetailsParseError(`Problem details missing required field(s): ${missing.join(', ')}`, raw)
+    const optional = parseOptionalFields(raw)
+    const base = buildBaseProblemDetails(required.type!, required.title!, required.status!, required.detail!, required.traceId!, optional)
+
+    addExtraProperties(base, raw)
+
+    return base
+}
+
+
+function addExtraProperties(base: ProblemDetails, pair: any) {
+    for (const [key, value] of Object.entries(pair)) {
+        if (key in base)
+            continue
+
+        if (RESERVED_PROPERTY_NAMES.includes(key))
+            continue
+
+        (base as any)[key] = value
+    }
+}
+
+
+function asString(value: unknown): string | undefined {
+    if (value == null) 
+        return undefined
+
+    if (typeof value === 'string') 
+        return value
+
+    if (typeof value === 'number' || typeof value === 'boolean') 
+        return String(value)
+
+    return undefined
+}
+
+
+function asNumber(value: unknown): number | undefined {
+    if (typeof value === 'number' && Number.isFinite(value)) 
+        return value
+
+    if (typeof value === 'string' && value.trim() !== '') {
+        const number = Number(value)
+        return Number.isFinite(number) 
+            ? number 
+            : undefined
     }
 
-    const eventId = asNumber(raw.eventId ?? raw['event-id'])
-    const sentryId = asString(raw.sentryId ?? raw['sentry-id'])
-    const stackTrace = asString(raw.stackTrace ?? raw['stack-trace'])
-    const errors = normalizeErrors(raw.errors)
+    return undefined
+}
 
-    const base: ProblemDetails = {
+
+function buildBaseProblemDetails(
+    type: string,
+    title: string,
+    status: number,
+    detail: string,
+    traceId: string,
+    optional: ReturnType<typeof parseOptionalFields>
+): ProblemDetails {
+    const { eventId, sentryId, stackTrace, errors } = optional
+
+    return {
         type,
         title,
         status,
@@ -53,45 +96,33 @@ export function toProblemDetails(raw: any): ProblemDetails {
         ...(stackTrace ? { stackTrace } : {}),
         ...(errors ? { errors } : {})
     }
-
-    for (const [k, v] of Object.entries(raw)) {
-        if (k in base) 
-            continue
-
-        if (['trace-id', 'event-id', 'sentry-id', 'stack-trace', 'traceId', 'eventId', 'sentryId', 'stackTrace', 'errors', 'type', 'title', 'status', 'detail'].includes(k)) 
-            continue
-
-        (base as any)[k] = v
-    }
-
-    return base
 }
 
 
-function asString(v: unknown): string | undefined {
-    if (v == null) 
-        return undefined
+function collectMissingFields(
+    type: string | undefined,
+    title: string | undefined,
+    status: number | undefined,
+    detail: string | undefined,
+    traceId: string | undefined
+): string[] {
+    const missing: string[] = []
+    if (!type)
+        missing.push('type')
 
-    if (typeof v === 'string') 
-        return v
+    if (!title)
+        missing.push('title')
 
-    if (typeof v === 'number' || typeof v === 'boolean') 
-        return String(v)
+    if (status == null)
+        missing.push('status')
 
-    return undefined
-}
+    if (!detail)
+        missing.push('detail')
+    
+    if (!traceId)
+        missing.push('traceId')
 
-
-function asNumber(v: unknown): number | undefined {
-    if (typeof v === 'number' && Number.isFinite(v)) 
-        return v
-
-    if (typeof v === 'string' && v.trim() !== '') {
-        const n = Number(v)
-        return Number.isFinite(n) ? n : undefined
-    }
-
-    return undefined
+    return missing
 }
 
 
@@ -100,16 +131,62 @@ function normalizeErrors(raw: any): Record<string, string[]> | undefined {
         return undefined
 
     const result: Record<string, string[]> = {}
-    for (const [k, v] of Object.entries(raw)) {
-        if (Array.isArray(v)) {
-            const arr = v.map(asString).filter((s): s is string => !!s)
-            if (arr.length) 
-                result[k] = arr
+    for (const [key, value] of Object.entries(raw)) {
+        if (Array.isArray(value)) {
+            const array = value.map(asString).filter((s): s is string => !!s)
+            if (array.length) 
+                result[key] = array
         } else {
-            const s = asString(v)
-            if (s) result[k] = [s]
+            const str = asString(value)
+            if (str) result[key] = [str]
         }
     }
 
     return Object.keys(result).length ? result : undefined
 }
+
+
+function parseOptionalFields(raw: any) {
+    return {
+        eventId: asNumber(raw.eventId ?? raw['event-id']),
+        sentryId: asString(raw.sentryId ?? raw['sentry-id']),
+        stackTrace: asString(raw.stackTrace ?? raw['stack-trace']),
+        errors: normalizeErrors(raw.errors)
+    }
+}
+
+
+function parseRequiredFields(raw: any) {
+    return {
+        type: asString(raw.type),
+        title: asString(raw.title),
+        status: asNumber(raw.status),
+        detail: asString(raw.detail),
+        traceId: asString(raw.traceId ?? raw['trace-id'])
+    }
+}
+
+
+function validateRequiredFields(required: ReturnType<typeof parseRequiredFields>, raw: any): asserts required is Required<ReturnType<typeof parseRequiredFields>> {
+    const missing = collectMissingFields(required.type, required.title, required.status, required.detail, required.traceId)
+
+    if (missing.length > 0)
+        throw new ProblemDetailsParseError(`Problem details missing required field(s): ${missing.join(', ')}`, raw)
+}
+
+
+const RESERVED_PROPERTY_NAMES = [ 
+    'trace-id', 
+    'event-id', 
+    'sentry-id', 
+    'stack-trace', 
+    'traceId', 
+    'eventId', 
+    'sentryId', 
+    'stackTrace', 
+    'errors', 
+    'type', 
+    'title', 
+    'status', 
+    'detail' 
+]

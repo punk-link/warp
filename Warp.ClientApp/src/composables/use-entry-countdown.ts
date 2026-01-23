@@ -6,10 +6,12 @@ export function useEntryCountdown() {
     return { markup, start, stop }
 }
 
+
 function buildCountdownMarkup(timeString: string, significantIndex: number) {
     const digitSpanClass = 'inline-block w-[1ch] text-center leading-none'
     const colonSpanClass = 'inline-block text-center leading-none'
     const chars = timeString.split('')
+
     return chars.map((ch, i) => {
         if (ch === ':') {
             const color = i < significantIndex ? 'text-gray-300' : 'text-secondary'
@@ -34,6 +36,7 @@ function calculateSegments(remaining: number) {
 function findFirstSignificantDigitIndex(timeString: string) {
     const idx = timeString.split('')
         .findIndex(c => c !== '0' && c !== ':')
+        
     return idx === -1 ? 0 : idx
 }
 

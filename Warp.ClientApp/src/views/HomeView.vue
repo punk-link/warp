@@ -71,7 +71,7 @@ import { useDraftEntry } from '../composables/use-draft-entry'
 import { routeApiError } from '../api/errorRouting'
 import { DraftEntry } from '../types/entries/draft-entry'
 import { ExpirationPeriod } from '../types/entries/enums/expiration-periods'
-import { ViewNames } from '../router/view-names'
+import { ViewNames } from '../router/enums/view-names'
 
 const EDIT_MODE_STORAGE_KEY = 'warp.editMode'
 const mode = ref<EditMode>(EditMode.Simple)

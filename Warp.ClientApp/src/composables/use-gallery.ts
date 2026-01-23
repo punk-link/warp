@@ -115,6 +115,7 @@ function connectToStore(entryId: string | null): InternalStore | null {
     const store = getOrCreateStore(entryId)
     store.refs++
     cancelScheduledDispose(entryId)
+    
     return store
 }
 

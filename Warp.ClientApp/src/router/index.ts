@@ -6,7 +6,7 @@ import ErrorPage from '../views/ErrorView.vue'
 import Deleted from '../views/DeletedView.vue'
 import Privacy from '../views/Privacy.vue'
 import DataRequest from '../views/DataRequestView.vue'
-import { ViewNames } from './view-names'
+import { ViewNames } from './enums/view-names'
 
 
 const router = createRouter({

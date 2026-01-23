@@ -70,7 +70,7 @@ import { useGallery } from '../composables/use-gallery'
 import type { DraftEntry } from '../types/entries/draft-entry'
 import Button from '../components/Button.vue'
 import GalleryItem from '../components/GalleryItem.vue'
-import { ViewNames } from '../router/view-names'
+import { ViewNames } from '../router/enums/view-names'
 
 const route = useRoute()
 const router = useRouter()
