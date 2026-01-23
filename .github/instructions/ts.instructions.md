@@ -10,12 +10,12 @@ This document refines general repository standards for `.ts` and `.vue` files un
 
 - SPA mounted at `/app` (router base configured in [Warp.ClientApp/src/router/index.ts](Warp.ClientApp/src/router/index.ts)).
 - API communication via lightweight wrappers (see [`fetchJson`](Warp.ClientApp/src/api/fetchHelper.ts) and entry CRUD helpers in [`createEntry`](Warp.ClientApp/src/api/entryApi.ts), [`getEntry`](Warp.ClientApp/src/api/entryApi.ts), [`updateEntry`](Warp.ClientApp/src/api/entryApi.ts), [`deleteEntry`](Warp.ClientApp/src/api/entryApi.ts)).
-- Stateful logic encapsulated in composables (`use*` patterns), e.g. [`useDraftEntry`](Warp.ClientApp/src/composables/useDraftEntry.ts), [`useMetadata`](Warp.ClientApp/src/composables/useMetadata.ts), [`useIndexForm`](Warp.ClientApp/src/composables/useIndexForm.ts), [`useImageUpload`](Warp.ClientApp/src/composables/useImageUpload.ts), [`useGallery`](Warp.ClientApp/src/composables/useGallery.ts), [`useEditMode`](Warp.ClientApp/src/composables/useEditMode.ts).
+- Stateful logic encapsulated in composables (`use*` patterns), e.g. [`useDraftEntry`](Warp.ClientApp/src/composables/use-draft-entry.ts), [`useMetadata`](Warp.ClientApp/src/composables/use-metadata.ts), [`useImageUpload`](Warp.ClientApp/src/composables/use-image-upload.ts), [`useGallery`](Warp.ClientApp/src/composables/use-gallery.ts), [`useEditMode`](Warp.ClientApp/src/composables/use-edit-mode.ts).
 - Enum‐backed UX (e.g. Expiration + Edit modes) resolved lazily via metadata APIs (see usage in Home + Preview views).
 
 ## File & Component Conventions
 
-1. Prefer `<script setup lang="ts">` in Vue SFCs (as in existing components like [Warp.ClientApp/src/components/ModeSwitch.vue](Warp.ClientApp/src/components/ModeSwitch.vue)).
+1. Prefer `<script setup lang="ts">` in Vue SFCs (as in existing components like [Warp.ClientApp/src/components/ModeSwitcher.vue](Warp.ClientApp/src/components/ModeSwitcher.vue)).
 2. Keep template minimal; move logic to composables when:
    - Reused in ≥2 views OR
    - Exceeds ~60 lines of logic OR
@@ -26,19 +26,42 @@ This document refines general repository standards for `.ts` and `.vue` files un
    - Use `modelValue` + `update:modelValue` for two‑way binding (see [Warp.ClientApp/src/components/ExpirationSelect.vue](Warp.ClientApp/src/components/ExpirationSelect.vue)).
 4. Emitted events must be documented inline via `defineEmits` typing and named in kebab case if used outside (internal only events can stay camel if not exposed).
 5. Avoid deep prop drilling—promote cross‑cutting state (draft, metadata) to composables.
+6. Template indentation: Use 4-space indentation inside `<template>` (consistent with TypeScript), starting from the root element.
 
 ## TypeScript Standards
 
 - `strict` mode is enabled (see [Warp.ClientApp/tsconfig.json](Warp.ClientApp/tsconfig.json)); fix implicit `any`.
 - Always narrow external data:
-  - Use explicit runtime guards or mapping (pattern in [`convertToArray`](Warp.ClientApp/src/composables/useMetadata.ts)).
+  - Use explicit runtime guards or mapping (pattern in [`convertToArray`](Warp.ClientApp/src/composables/use-metadata.ts)).
 - Enumerations:
-  - Use numeric enums for server parity (e.g. `ExpirationPeriod`, `EditMode`).
-  - When persisting to storage, coerce to `string` (see localStorage usage in [`useEditMode`](Warp.ClientApp/src/composables/useEditMode.ts)).
+  - Use string enums for server parity (e.g. `ExpirationPeriod`, `EditMode`, `ApiResultKind`).
+  - Keep enums in dedicated files under `types/<domain>/enums/` directories (e.g. `types/entries/enums/edit-modes.ts`).
+  - When persisting to storage, coerce to `string` (see localStorage usage in [`useEditMode`](Warp.ClientApp/src/composables/use-edit-mode.ts)).
 - Prefer `const` + `ref<T>` pattern; avoid mutable arrays without cloning when emitting or persisting (clone via spread before reassigning as in Home view file handling).
 - Error handling:
-  - Wrap network calls in `try/finally` to clear pending state (pattern in [`useIndexForm`](Warp.ClientApp/src/composables/useIndexForm.ts)).
+  - Wrap network calls in `try/finally` to clear pending state.
   - Log with `console.error` only; user‑facing messaging belongs in the UI, not the composable.
+
+### Type Organization
+
+Types should be organized in a hierarchical folder structure under `src/types/`:
+
+- **Domain-based grouping**: Group related types into domain folders (e.g. `apis/`, `entries/`, `galleries/`, `notifications/`, `telemetry/`).
+- **Enums in subfolder**: Place enums in an `enums/` subfolder within each domain (e.g. `types/apis/enums/api-result-kind.ts`).
+- **One type per file**: Each interface, type alias, or enum should be in its own file, named with kebab-case matching the type name (e.g. `api-success-result.ts` for `ApiSuccessResult`).
+- **Union types**: Create separate files for each constituent type and a union file that imports and re-exports them (e.g. `gallery-item.ts` unions `LocalGalleryItem` and `RemoteGalleryItem`).
+- **JSDoc on all exported types**: Add JSDoc comments to all exported interfaces, types, and enums describing their purpose.
+
+### File & Function Naming
+
+The following naming conventions are enforced:
+
+1. **File names**: Use kebab-case for all TypeScript files (e.g. `use-draft-entry.ts`, `api-result-kind.ts`, `problem-details-helper.ts`).
+2. **Composable files**: Name composables with `use-` prefix in kebab-case (e.g. `use-gallery.ts`, `use-notifications.ts`).
+3. **Helper files**: Name helper/utility files with `-helper` suffix (e.g. `edit-mode-helper.ts`, `expiration-period-helper.ts`).
+4. **Enum files**: Name enum files matching the enum name in kebab-case (e.g. `edit-modes.ts` for `EditMode`, `api-result-kind.ts` for `ApiResultKind`).
+5. **Function names**: Use camelCase; exported public functions should have JSDoc documentation.
+6. **View names**: Use the `ViewNames` enum from `src/router/enums/view-names.ts` for router navigation instead of string literals.
 
 ### Formatting Addendum
 
@@ -49,9 +72,9 @@ The following formatting rules are enforced in addition to repository defaults:
 ```ts
 // ✅ Correct
 return {
-  ok: true,
-  kind: ApiResultKind.Success,
-  data
+    ok: true,
+    kind: ApiResultKind.Success,
+    data
 }
 
 // ❌ Avoid
@@ -63,7 +86,7 @@ return { ok: true, kind: ApiResultKind.Success, data }
 ```ts
 // ✅ Correct (single statement without braces)
 if (kind === ApiResultKind.NotFound)
-  return true
+    return true
 
 // ❌ Avoid (inline single statement)
 if (kind === ApiResultKind.NotFound) return true
@@ -71,24 +94,67 @@ if (kind === ApiResultKind.NotFound) return true
 
 3. Vertical spacing: Use two blank lines between top‑level constructs (imports block vs next declaration, standalone functions, classes, interfaces, type aliases). Within a class or module, one blank line between logically distinct groups (properties, constructors, methods) is acceptable, but preserve two blank lines between separate top‑level exported items.
 
+4. File layout order (for TypeScript files):
+   - Imports (grouped: external packages first, then internal with blank line)
+   - Two blank lines after imports
+   - Exported items (interfaces, types, functions, classes)
+   - Private module-level variables and constants at the end
+   - Private/internal helper functions at the end
+
+```ts
+// ✅ Correct file layout
+import { ref, computed } from 'vue'
+import type { SomeType } from '../types/some-type'
+
+
+/** Public composable or function. */
+export function useExample() {
+    // ...
+}
+
+
+function privateHelper() {
+    // ...
+}
+
+
+const PRIVATE_CONSTANT = 'value'
+```
+
+5. Import statements: Prefer `import type` for type-only imports. Group imports logically:
+   - External package imports first
+   - Internal imports after (blank line between groups)
+   - Relative imports should use consistent path style
+
+```ts
+// ✅ Correct import organization
+import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+import { fetchJson } from '../api/fetchHelper'
+import type { ApiResult } from '../types/apis/api-result'
+import { ApiResultKind } from '../types/apis/enums/api-result-kind'
+```
+
 These rules supplement (do not override) any automatic formatter; adjust formatter configuration if it conflicts.
 
 ## Async & Network
 
-- All API calls must use `credentials: 'include'` (handled centrally in [`fetchJson`](Warp.ClientApp/src/api/fetchHelper.ts); replicate for raw `fetch` when sending `FormData` as in [`uploadImages`](Warp.ClientApp/src/composables/useImageUpload.ts)).
+- All API calls must use `credentials: 'include'` (handled centrally in [`fetchJson`](Warp.ClientApp/src/api/fetchHelper.ts); replicate for raw `fetch` when sending `FormData` as in [`uploadImages`](Warp.ClientApp/src/composables/use-image-upload.ts)).
 - Encode dynamic URL segments via `encodeURIComponent`.
 - For multipart:
-  - Append only non‑empty values (pattern in form building inside [`createEntry`](Warp.ClientApp/src/composables/useIndexForm.ts)).
+  - Append only non‑empty values (pattern in form building).
 - Handle non‑OK responses:
   - Attempt JSON parse if `content-type` is JSON; else fallback to text (already implemented in `fetchJson`).
+- Use the `ApiResult<T>` discriminated union type for API response handling, with explicit checks for `result.ok` and `result.kind`.
 
 ## State & Persistence
 
 - Draft persistence:
-  - Use sessionStorage for transient editable content (see [`useDraftEntry`](Warp.ClientApp/src/composables/useDraftEntry.ts)).
+  - Use sessionStorage for transient editable content (see [`useDraftEntry`](Warp.ClientApp/src/composables/use-draft-entry.ts)).
   - Clear on successful save (`clearDraft()` in Preview workflow).
-- Local preferences (mode) belong in localStorage (see [`useEditMode`](Warp.ClientApp/src/composables/useEditMode.ts)).
-- Reactive collections (files, gallery items) must revoke object URLs on unmount (pattern in Preview view `cleanupObjectUrls` and composable [`useGallery`](Warp.ClientApp/src/composables/useGallery.ts)).
+- Local preferences (mode) belong in localStorage (see [`useEditMode`](Warp.ClientApp/src/composables/use-edit-mode.ts)).
+- Reactive collections (files, gallery items) must revoke object URLs on unmount (pattern in Preview view `cleanupObjectUrls` and composable [`useGallery`](Warp.ClientApp/src/composables/use-gallery.ts)).
 
 ## Forms & Validation
 
@@ -100,14 +166,17 @@ These rules supplement (do not override) any automatic formatter; adjust formatt
 
 ## Images
 
-- Client filters images by MIME `image/*` (see `accept="image/*"` and file filtering in [`isValidImageFile`](Warp.ClientApp/src/composables/useImageUpload.ts)).
+- Client filters images by MIME `image/*` (see `accept="image/*"` and file filtering in [`isValidImageFile`](Warp.ClientApp/src/composables/use-image-upload.ts)).
 - After upload, dispatch global `uploadFinished` event (`UPLOAD_FINISHED_EVENT`) for any future listeners (e.g., gallery refresh hooks).
 
 ## Expiration & Edit Mode Handling
 
-- Load once per session (cached arrays in [`useMetadata`](Warp.ClientApp/src/composables/useMetadata.ts)).
+- Load once per session (cached arrays in [`useMetadata`](Warp.ClientApp/src/composables/use-metadata.ts)).
 - Always coerce legacy or stringified numbers (see `coerceExpiration` in Home).
-- When persisting draft or saving entry, store numeric enum values.
+- When persisting draft or saving entry, store string enum values.
+- Use dedicated helper functions for parsing enum values from external sources:
+  - `parseEditMode()` in `helpers/edit-mode-helper.ts`
+  - `parseExpirationPeriod()` in `helpers/expiration-period-helper.ts`
 
 ## Accessibility & Semantics
 
@@ -136,8 +205,9 @@ These rules supplement (do not override) any automatic formatter; adjust formatt
 
 ## Error Views & Navigation
 
-- On irrecoverable initialization errors in Home (e.g., creator bootstrap failure), route to Error view (`router.replace({ name: 'Error' })` pattern already present).
+- On irrecoverable initialization errors in Home (e.g., creator bootstrap failure), route to Error view (`router.replace({ name: ViewNames.Error })` pattern already present).
 - Keep query `id` synchronized after initial entry creation (see `router.replace({ query: { ...route.query, id } })` patterns in Home and Preview).
+- Use the `ViewNames` enum for all router navigation instead of string literals (import from `src/router/enums/view-names.ts`).
 
 ## New Code Checklist (TS/Vue)
 
@@ -161,26 +231,56 @@ Before submitting:
 Template:
 
 ```ts
-// Example composable skeleton
-import { ref, onBeforeUnmount } from 'vue';
+// Example composable skeleton (file: use-something.ts)
+import { ref, onBeforeUnmount } from 'vue'
 
 
+/** Composable for managing something. */
 export function useSomething() {
-  const value = ref<string | null>(null);
+    const value = ref<string | null>(null)
 
-  async function load() {
-    // network via fetchJson(...)
-  }
+    async function load() {
+        // network via fetchJson(...)
+    }
 
-  onBeforeUnmount(() => {
-    // cleanup if needed
-  });
+    onBeforeUnmount(() => {
+        // cleanup if needed
+    })
 
-  return { value, load };
+    return { value, load }
 }
 ```
 
-Follow patterns from [`useMetadata`](Warp.ClientApp/src/composables/useMetadata.ts) and [`useIndexForm`](Warp.ClientApp/src/composables/useIndexForm.ts) for async state.
+Follow patterns from [`useMetadata`](Warp.ClientApp/src/composables/use-metadata.ts) and [`useGallery`](Warp.ClientApp/src/composables/use-gallery.ts) for async state.
+
+## When Adding New Types
+
+Template for a new domain type:
+
+```ts
+// File: types/<domain>/<type-name>.ts
+import { SomeEnum } from './enums/some-enum'
+
+
+/** Describes the purpose of this type. */
+export interface SomeType {
+    id: string
+    status: SomeEnum
+    // ...
+}
+```
+
+Template for a new enum:
+
+```ts
+// File: types/<domain>/enums/<enum-name>.ts
+
+/** Describes the purpose of this enum. */
+export enum SomeEnum {
+    Value1 = 'Value1',
+    Value2 = 'Value2'
+}
+```
 
 ---
 
