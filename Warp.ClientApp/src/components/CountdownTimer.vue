@@ -8,6 +8,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue'
 import { useEntryCountdown } from '../composables/use-entry-countdown'
+import { useI18n } from 'vue-i18n'
 
 
 interface Props {
@@ -17,6 +18,9 @@ interface Props {
 }
 
 
+const { t } = useI18n()
+
+
 const props = withDefaults(defineProps<Props>(), {
     target: null,
     label: undefined,
@@ -24,11 +28,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 
-import { useI18n } from 'vue-i18n'
-const { t } = useI18n()
-
 const displayLabel = computed(() => props.label ?? t('components.countdown.label') ?? 'the entry expires in')
-
 const { markup, start } = useEntryCountdown()
 const countdownEl = ref<HTMLElement | null>(null)
 const started = ref(false)

@@ -10,6 +10,7 @@
 </template>
 
 <script setup lang="ts">
+import { ref, watch, onMounted, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 
@@ -24,6 +25,9 @@ interface Props {
 }
 
 
+const { t } = useI18n()
+
+
 const props = withDefaults(defineProps<Props>(), {
     modelValue: '',
     placeholder: '',
@@ -31,12 +35,6 @@ const props = withDefaults(defineProps<Props>(), {
     label: '',
     disabled: false,
 });
-
-
-import { ref, watch, onMounted, nextTick } from 'vue'
-
-
-const { t } = useI18n()
 const element = ref<HTMLTextAreaElement | null>(null)
 const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
 

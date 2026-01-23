@@ -22,6 +22,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+
+
 interface Props {
     id: string
     src?: string
@@ -29,15 +31,24 @@ interface Props {
     editable?: boolean
 }
 
-const { id, src, name, editable = true } = defineProps<Props>()
 
-const loaded = ref(false)
 const { t } = useI18n()
 
-function onLoad() { loaded.value = true }
-function onError() { loaded.value = true }
 
+const { id, src, name, editable = true } = defineProps<Props>()
+const loaded = ref(false)
 const emit = defineEmits<{ (e: 'remove'): void }>()
+
+
+function onLoad() { 
+    loaded.value = true 
+}
+
+
+function onError() { 
+    loaded.value = true 
+}
+
 
 function emitRemove() {
     emit('remove')

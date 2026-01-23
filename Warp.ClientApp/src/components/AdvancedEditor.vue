@@ -21,5 +21,6 @@ import { useI18n } from 'vue-i18n'
 import imageIcon from '../assets/image_icon.svg'
 import textIcon from '../assets/text_icon.svg'
 
+
 const { t } = useI18n()
 </script>

@@ -26,14 +26,15 @@ interface Props {
 }
 
 
+const { t } = useI18n()
+
+
 withDefaults(defineProps<Props>(), {
     modelValue: ExpirationPeriod.FiveMinutes,
     label: 'Expires in',
     disabled: false,
 });
 
-
-const { t } = useI18n()
 
 const emit = defineEmits<{
     (e: 'update:modelValue', value: ExpirationPeriod): void;

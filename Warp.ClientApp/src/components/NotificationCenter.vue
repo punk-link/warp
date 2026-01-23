@@ -44,8 +44,8 @@ import { NotificationLevel } from '../types/notifications/enums/notification-lev
 import Button from './Button.vue'
 
 
-const { items, remove } = useNotifications()
 const { t } = useI18n()
+const { items, remove } = useNotifications()
 
 
 function containerClass(level: NotificationLevel): string {

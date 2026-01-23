@@ -15,10 +15,12 @@ import { useI18n } from 'vue-i18n'
 import { ViewNames } from '../router/enums/view-names'
 
 
+const { t } = useI18n()
+
+
 const { clearDraft } = useDraftEntry()
 const { clear: clearGallery } = useGallery()
 const router = useRouter()
-const { t } = useI18n()
 
 
 function onLogoClick() {
