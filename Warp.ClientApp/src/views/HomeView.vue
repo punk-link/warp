@@ -120,22 +120,6 @@ function getEditMode(editMode: EditMode): EditMode {
 }
 
 
-function onFilesSelected(e: Event) {
-    const input = e.target as HTMLInputElement
-    if (!input.files) return
-    addFiles(input.files)
-    input.value = ''
-}
-
-
-function onFileInputChange(e: Event) {
-    const input = e.target as HTMLInputElement
-    if (!input.files) return
-    addFiles(input.files)
-    input.value = ''
-}
-
-
 function hydrateStateFromDraft(draft: DraftEntry): string {
     entryIdRef.value = draft.id
 
@@ -163,6 +147,16 @@ async function initiateStateFromServer(): Promise<string> {
     text.value = entry.textContent
 
     return entry.id
+}
+
+
+function onFileInputChange(e: Event) {
+    const input = e.target as HTMLInputElement
+    if (!input.files) 
+        return
+    
+    addFiles(input.files)
+    input.value = ''
 }
 
 

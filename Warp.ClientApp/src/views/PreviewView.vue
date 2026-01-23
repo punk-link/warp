@@ -159,34 +159,16 @@ async function onSave() {
     if (saving.value || !draft.value)
         return
 
+    const entryId = draft.value.id
+    if (!entryId)
+        return
+
     try {
         saving.value = true
-        const entry = draft.value
-        const entryId = entry.id
-        if (!entryId)
-            return
-
-        const response: any = await entryApi.addOrUpdateEntry(entryId, {
-            editMode: entry.editMode,
-            expirationPeriod: entry.expirationPeriod,
-            textContent: entry.textContent,
-            imageIds: []
-        }, galleryItems.value.filter((g: any) => g.kind === 'local').map((g: any) => g.file))
-
-        try {
-            const savedEntry: any = await entryApi.getEntry(entryId)
-            const serverUrls: string[] = Array.isArray(savedEntry?.images)
-                ? savedEntry.images.map((i: any) => typeof i === 'string' ? i : (i?.url ?? '')).filter((u: string) => !!u)
-                : []
-
-            if (serverUrls.length) {
-                setServerImages(serverUrls)
-                images.value = [...serverUrls]
-            }
-        } catch (e) {
-            console.error('failed to rehydrate server image urls', e)
-        }
-
+        
+        await saveEntry(entryId)
+        await refreshServerImages(entryId)
+        
         clearDraft()
         saved.value = true
     } catch (e) {
@@ -194,6 +176,46 @@ async function onSave() {
     } finally {
         saving.value = false
     }
+}
+
+
+async function saveEntry(entryId: string) {
+    const entry = draft.value!
+    const localFiles = galleryItems.value
+        .filter((g: any) => g.kind === 'local')
+        .map((g: any) => g.file)
+
+    await entryApi.addOrUpdateEntry(entryId, {
+        editMode: entry.editMode,
+        expirationPeriod: entry.expirationPeriod,
+        textContent: entry.textContent,
+        imageIds: []
+    }, localFiles)
+}
+
+
+async function refreshServerImages(entryId: string) {
+    try {
+        const savedEntry: any = await entryApi.getEntry(entryId)
+        const serverUrls = extractImageUrls(savedEntry)
+
+        if (serverUrls.length) {
+            setServerImages(serverUrls)
+            images.value = [...serverUrls]
+        }
+    } catch (e) {
+        console.error('failed to rehydrate server image urls', e)
+    }
+}
+
+
+function extractImageUrls(savedEntry: any): string[] {
+    if (!Array.isArray(savedEntry?.images))
+        return []
+
+    return savedEntry.images
+        .map((i: any) => typeof i === 'string' ? i : (i?.url ?? ''))
+        .filter((u: string) => !!u)
 }
 
 

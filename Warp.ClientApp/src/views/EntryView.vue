@@ -95,7 +95,6 @@ const router = useRouter()
 const { t } = useI18n()
 
 const props = defineProps<{ id?: string }>()
-
 const entry = ref<Entry | null>(null)
 const loading = ref(false)
 const error = ref(false)
@@ -125,43 +124,64 @@ function animateCount(target: number, durationMs = 1200) {
     requestAnimationFrame(step)
 }
 
-async function load() {
-    const currentId = props.id || (route.params.id as string | undefined)
 
-    if (!currentId) {
-        error.value = true;
-        router.replace({ name: ViewNames.Error });
+function applyEntryData(fetchedEntry: Entry) {
+    entry.value = fetchedEntry
+    images.value = processImages(fetchedEntry)
+    countdownTarget.value = fetchedEntry.expiresAt
+    
+    if (fetchedEntry.textContent)
+        setTimeout(() => textContentEl.value?.classList.add('visible'), 100)
+    
+    animateCount(fetchedEntry.viewCount || 0)
+}
+
+
+function bindFancybox() {
+    if (!(window as any).Fancybox)
         return
+
+    const Fb = (window as any).Fancybox
+
+    if (fancyboxBound) {
+        try { Fb.unbind('[data-fancybox="entry"]') } catch { /* noop */ }
+        fancyboxBound = false
     }
+
+    Fb.bind('[data-fancybox="entry"]', {
+        placeFocusBack: true,
+        groupAll: true,
+        Thumbs: false
+    })
+
+    fancyboxBound = true
+}
+
+
+function getCurrentId(): string | null {
+    const currentId = props.id || (route.params.id as string | undefined)
+    
+    if (!currentId) {
+        error.value = true
+        router.replace({ name: ViewNames.Error })
+        return null
+    }
+    
+    return currentId
+}
+
+async function load() {
+    const currentId = getCurrentId()
+    if (!currentId)
+        return
 
     try {
         loading.value = true
-
         const fetchedEntry = await entryApi.getEntry(currentId)
-        entry.value = fetchedEntry as Entry
-        if (Array.isArray((fetchedEntry as any).images)) {
-            images.value = (fetchedEntry as any).images
-                .map((imageInfo: any) => {
-                    return {
-                        entryId: typeof imageInfo.entryId === 'string' ? imageInfo.entryId : (fetchedEntry.id ?? ''),
-                        id: imageInfo.id,
-                        url: imageInfo.url
-                    } as EntryImage
-                })
-                .filter((x: EntryImage | null): x is EntryImage => !!x)
-        } else {
-            images.value = []
-        }
-
-        countdownTarget.value = fetchedEntry.expiresAt
-
-        if (fetchedEntry.textContent)
-            setTimeout(() => { textContentEl.value?.classList.add('visible') }, 100)
-
-        animateCount(fetchedEntry.viewCount || 0)
-
+        
+        applyEntryData(fetchedEntry)
         scheduleExpirationRedirect()
-
+        
         await nextTick()
         bindFancybox()
     } catch (e) {
@@ -174,9 +194,29 @@ async function load() {
 }
 
 
+onBeforeUnmount(() => {
+    if (expirationTimer) {
+        clearTimeout(expirationTimer)
+        expirationTimer = null
+    }
+
+    if (fancyboxBound && (window as any).Fancybox) {
+        try {
+            (window as any).Fancybox.unbind('[data-fancybox="entry"]')
+        } catch {
+            console.warn('failed to unbind Fancybox')
+        }
+    }
+})
+
+
+function onClose() {
+    router.replace({ name: ViewNames.Home })
+}
+
+
 async function onCopyLink() {
     const currentId = props.id
-
     if (!currentId)
         return
 
@@ -193,14 +233,8 @@ async function onCopyLink() {
 }
 
 
-function onClose() {
-    router.replace({ name: ViewNames.Home })
-}
-
-
 async function onReport() {
     const currentId = props.id
-
     if (!currentId || reporting.value)
         return
 
@@ -217,6 +251,22 @@ async function onReport() {
     } finally {
         reporting.value = false
     }
+}
+
+
+function processImages(fetchedEntry: Entry): EntryImage[] {
+    const rawImages = (fetchedEntry as any).images
+    
+    if (!Array.isArray(rawImages))
+        return []
+    
+    return rawImages
+        .map((imageInfo: any) => ({
+            entryId: typeof imageInfo.entryId === 'string' ? imageInfo.entryId : (fetchedEntry.id ?? ''),
+            id: imageInfo.id,
+            url: imageInfo.url
+        } as EntryImage))
+        .filter((x: EntryImage | null): x is EntryImage => !!x)
 }
 
 
@@ -241,42 +291,6 @@ function scheduleExpirationRedirect() {
         router.replace({ name: ViewNames.Home })
     }, delay)
 }
-
-function bindFancybox() {
-    if (!(window as any).Fancybox)
-        return
-
-    const Fb = (window as any).Fancybox
-
-    if (fancyboxBound) {
-        try { Fb.unbind('[data-fancybox="entry"]') } catch { /* noop */ }
-        fancyboxBound = false
-    }
-
-    Fb.bind('[data-fancybox="entry"]', {
-        placeFocusBack: true,
-        groupAll: true,
-        Thumbs: false
-    })
-
-    fancyboxBound = true
-}
-
-
-onBeforeUnmount(() => {
-    if (expirationTimer) {
-        clearTimeout(expirationTimer)
-        expirationTimer = null
-    }
-
-    if (fancyboxBound && (window as any).Fancybox) {
-        try {
-            (window as any).Fancybox.unbind('[data-fancybox="entry"]')
-        } catch {
-            console.warn('failed to unbind Fancybox')
-        }
-    }
-})
 
 
 onMounted(load)
