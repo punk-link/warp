@@ -8,22 +8,17 @@ import { NotificationLevel } from '../types/notifications/enums/notification-lev
 import { RedirectAction } from '../types/apis/enums/redirect-action'
 
 
-export function shouldRedirect(status: number | undefined | null): boolean {
-    if (status == null)
-        return false
+/** Builds a deduplication key for the specified request parameters. */
+export function buildDedupeKey(method: string | undefined, url: string | undefined, status: number | undefined | null): string {
+    const normalizedMethod = (method || 'GET').toUpperCase()
+    const normalizedUrl = (url || '').replace(/\?.*$/, '') // strip query string for dedupe
+    const normalizedStatus = status == null ? 'net' : String(status)
 
-    if (status === 404)
-        return true
-
-    return status >= 500 && status <= 599
+    return `${normalizedMethod} ${normalizedUrl} -> ${normalizedStatus}`
 }
 
 
-export function isValidation(status: number | undefined | null): boolean {
-    return status === 422
-}
-
-
+/** Classifies the specified status into a redirect action. */
 export function classify(status: number | undefined | null): RedirectAction {
     return shouldRedirect(status)
         ? RedirectAction.Redirect 
@@ -31,6 +26,7 @@ export function classify(status: number | undefined | null): RedirectAction {
 }
 
 
+/** Determines the default notification level for the specified status. */
 export function defaultNotifyLevel(status: number | undefined | null): NotificationLevel {
     if (status == null)
         return NotificationLevel.Error
@@ -45,15 +41,25 @@ export function defaultNotifyLevel(status: number | undefined | null): Notificat
 }
 
 
-export function buildDedupeKey(method: string | undefined, url: string | undefined, status: number | undefined | null): string {
-    const m = (method || 'GET').toUpperCase()
-    const u = (url || '').replace(/\?.*$/, '') // strip query string for dedupe
-    const s = status == null ? 'net' : String(status)
-
-    return `${m} ${u} -> ${s}`
+/** Determines whether the specified status represents a validation error. */
+export function isValidation(status: number | undefined | null): boolean {
+    return status === 422
 }
 
 
+/** Determines whether the specified status should trigger a redirect. */
+export function shouldRedirect(status: number | undefined | null): boolean {
+    if (status == null)
+        return false
+
+    if (status === 404)
+        return true
+
+    return status >= 500 && status <= 599
+}
+
+
+/** Buckets the specified status into a high-level category. */
 export function statusBucket(status: number | undefined | null): 'network' | '4xx' | '404' | '5xx' | 'ok' | 'other' {
     if (status == null)
         return 'network'

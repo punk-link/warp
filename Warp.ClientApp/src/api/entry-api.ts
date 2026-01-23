@@ -1,25 +1,15 @@
-import { Entry } from '../types/entry';
-import { fetchJson } from './fetchHelper'
+import { Entry } from '../types/entries/entry';
+import { fetchJson } from './fetch-service'
 import { API_BASE } from './constants'
-import { routeApiError } from './errorRouting'
+import { routeApiError } from './error-routing'
+import { EntryAddOrUpdateRequest } from '../types/apis/entries/entry-add-or-update-request';
+import { EntryCreateResponse } from '../types/apis/entries/entry-create-response';
+import { EntryCopyResponse } from '../types/apis/entries/entry-copy-response';
 
 // Server pattern: GET /api/entries returns a new entry shell with id. Then POST /api/entries/{id}
 // with JSON payload (AddOrUpdate) and optional separate image uploads.
 
-export interface EntryAddOrUpdateRequest {
-    editMode: number | string
-    expirationPeriod: number | string
-    textContent: string
-    imageIds: string[]
-}
-
-
-export interface EntryCreateResponse { id: string; previewUrl?: string }
-
-
-export interface EntryCopyResponse { id: string; }
-
-
+/** Adds or updates an entry with the specified ID, payload, and image files. */
 export async function addOrUpdateEntry(id: string, payload: EntryAddOrUpdateRequest, files: File[]) {
     const form = new FormData()
 
@@ -42,6 +32,7 @@ export async function addOrUpdateEntry(id: string, payload: EntryAddOrUpdateRequ
 }
 
 
+/** Copies an entry by ID. */
 export async function copyEntry(id: string): Promise<EntryCopyResponse> {
     try {
         return await fetchJson<EntryCopyResponse>(`${API_BASE}/entries/${encodeURIComponent(id)}/copy`, {
@@ -54,6 +45,18 @@ export async function copyEntry(id: string): Promise<EntryCopyResponse> {
 }
 
 
+/** Deletes an entry by ID. */
+export async function deleteEntry(id: string): Promise<void> {
+    try {
+        return await fetchJson(`${API_BASE}/entries/${encodeURIComponent(id)}`, { method: 'DELETE' })
+    } catch (e) {
+        routeApiError(e)
+        throw e
+    }
+}
+
+
+/** Gets an entry by ID, or a new entry shell if no ID is provided. */
 export async function getEntry(id?: string): Promise<Entry> {
     try {
         if (!id)
@@ -67,16 +70,7 @@ export async function getEntry(id?: string): Promise<Entry> {
 }
 
 
-export async function deleteEntry(id: string): Promise<void> {
-    try {
-        return await fetchJson(`${API_BASE}/entries/${encodeURIComponent(id)}`, { method: 'DELETE' })
-    } catch (e) {
-        routeApiError(e)
-        throw e
-    }
-}
-
-
+/** Reports an entry for inappropriate content or other issues. */
 export async function reportEntry(id: string): Promise<void> {
     try {
         return await fetchJson(`${API_BASE}/entries/${encodeURIComponent(id)}/report`, { method: 'POST' })
@@ -87,4 +81,5 @@ export async function reportEntry(id: string): Promise<void> {
 }
 
 
+/** API methods related to entries. */
 export const entryApi = { addOrUpdateEntry, copyEntry, getEntry, deleteEntry, reportEntry }

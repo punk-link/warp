@@ -1,4 +1,4 @@
-import { fetchJson } from '../api/fetchHelper'
+import { fetchJson } from '../api/fetch-service'
 import type { ApiError } from '../types/apis/api-error'
 
 

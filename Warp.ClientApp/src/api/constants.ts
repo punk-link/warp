@@ -9,6 +9,7 @@ function trimTrailingSlash(value: string): string {
 }
 
 
+/** The base URL for API requests. */
 export const API_BASE = CONFIG_BASE
 	? trimTrailingSlash(CONFIG_BASE)
 	: ENV_ORIGIN

@@ -1,8 +1,9 @@
-import { fetchJson } from './fetchHelper'
+import { fetchJson } from './fetch-service'
 import { API_BASE } from './constants'
-import { routeApiError } from './errorRouting'
+import { routeApiError } from './error-routing'
 
 
+/** Gets the creator info, or sets it if not present. */
 export async function getOrSetCreator() {
     try {
         return await fetchJson(`${API_BASE}/creators`)
@@ -13,4 +14,5 @@ export async function getOrSetCreator() {
 }
 
 
+/** API methods related to creators. */
 export const creatorApi = { getOrSetCreator }

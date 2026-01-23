@@ -63,7 +63,7 @@
 import { ref, onMounted, watchEffect, onBeforeUnmount } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
-import { entryApi } from '../api/entryApi'
+import { entryApi } from '../api/entry-api'
 import Logo from '../components/Logo.vue'
 import { useDraftEntry } from '../composables/use-draft-entry'
 import { useGallery } from '../composables/use-gallery'
