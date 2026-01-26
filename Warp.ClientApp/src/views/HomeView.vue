@@ -49,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { EditMode } from '../types/entries/enums/edit-modes'
 import { parseEditMode } from '../helpers/edit-mode-helper'
 import { useGallery } from '../composables/use-gallery'
@@ -83,7 +83,7 @@ const entryIdRef = ref<string | null>(null)
 
 const dropAreaRef = ref<HTMLElement | null>(null)
 const fileInputRef = ref<HTMLInputElement | null>(null)
-const { items, addFiles, remove, count: galleryCount } = useGallery(entryIdRef)
+const { items, addFiles, remove, count: galleryCount, setServerImages } = useGallery(entryIdRef)
 
 const { setDraft, draft } = useDraftEntry()
 const route = useRoute()
@@ -145,6 +145,17 @@ async function initiateStateFromServer(): Promise<string> {
     mode.value = entry.editMode
     expiration.value = entry.expirationPeriod ?? ExpirationPeriod.FiveMinutes
     text.value = entry.textContent
+
+    if (Array.isArray(entry.images) && entry.images.length > 0) {
+        const imageUrls = (entry.images as any[])
+            .map(img => typeof img === 'string' ? img : img?.url)
+            .filter(url => !!url)
+        
+        if (imageUrls.length > 0) {
+            await nextTick()
+            setServerImages(imageUrls)
+        }
+    }
 
     return entry.id
 }

@@ -77,6 +77,7 @@ public class EntryController : BaseController
             return BadRequest(DomainErrors.MultipartReaderError());
 
         var formValues = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var existingImageIds = new List<string>(_imageOptions.MaxFileCount);
         var uploadedImageIds = new List<string>(_imageOptions.MaxFileCount);
         var fileHelper = new FileHelper(_loggerFactory, _imageOptions.AllowedExtensions, _imageOptions.MaxFileSize);
 
@@ -108,15 +109,20 @@ public class EntryController : BaseController
                 var value = await formDataReader.ReadToEndAsync(cancellationToken);
                 var key = contentDisposition.Name.Value?.Trim('"');
                 if (!string.IsNullOrEmpty(key))
-                    formValues[key] = value;
+                {
+                    if (string.Equals(key, "imageIds", StringComparison.OrdinalIgnoreCase))
+                        existingImageIds.Add(value);
+                    else
+                        formValues[key] = value;
+                }
             }
         } while (section is not null);
 
-        var apiRequest = CreateEntryApiRequest(formValues, uploadedImageIds);
+        var apiRequest = CreateEntryApiRequest(formValues, uploadedImageIds, existingImageIds);
         return await AddOrUpdateInternal(id, apiRequest, cancellationToken);
 
 
-        static EntryApiRequest CreateEntryApiRequest(Dictionary<string, string> formValues, List<string> uploadedImageIds)
+        static EntryApiRequest CreateEntryApiRequest(Dictionary<string, string> formValues, List<string> uploadedImageIds, List<string> existingImageIds)
         {
             var editModeStr = formValues.TryGetValue("editMode", out var editModeValue) ? editModeValue : "0";
             var expirationStr = formValues.TryGetValue("expirationPeriod", out var expirationPeriodValue) ? expirationPeriodValue : "0";
@@ -125,11 +131,15 @@ public class EntryController : BaseController
             Enum.TryParse(editModeStr, true, out Models.Entries.Enums.EditMode editMode);
             Enum.TryParse(expirationStr, true, out Models.Entries.Enums.ExpirationPeriod expirationPeriod);
 
+            var allImageIds = new List<string>(existingImageIds.Count + uploadedImageIds.Count);
+            allImageIds.AddRange(existingImageIds);
+            allImageIds.AddRange(uploadedImageIds);
+
             return new EntryApiRequest
             {
                 EditMode = editMode,
                 ExpirationPeriod = expirationPeriod,
-                ImageIds = uploadedImageIds,
+                ImageIds = allImageIds,
                 TextContent = textContent
             };
         }

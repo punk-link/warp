@@ -17,6 +17,9 @@ export async function addOrUpdateEntry(id: string, payload: EntryAddOrUpdateRequ
     form.append('expirationPeriod', String(payload.expirationPeriod))
     form.append('textContent', payload.textContent)
 
+    for (const imageId of payload.imageIds)
+        form.append('imageIds', imageId)
+
     for (const file of files) 
         form.append('images', file, file.name)
 

@@ -220,4 +220,65 @@ test.describe.serial('entry image flows', () => {
         await expect(getTextArea(page)).toHaveValue(entryText)
         await expect(getEditorGalleryImages(page)).toHaveCount(1)
     })
+
+
+    // Scenario: Clone & Edit preserves existing images when adding new ones
+    // Steps:
+    // 1. Create and save an entry with 1 image.
+    // 2. Click Clone & Edit to create a copy.
+    // 3. Verify the cloned entry shows the image in the editor.
+    // 4. Add a second image and preview.
+    // 5. Save the entry and verify both images are preserved on the entry page.
+    test('@smoke clone & edit preserves images when adding new ones', async ({ page }) => {
+        await page.context().clearCookies()
+        await page.context().addInitScript(() => {
+            window.localStorage.removeItem('warp.locale')
+            window.localStorage.removeItem('warp.editMode')
+        })
+
+        await setupClipboardSpy(page)
+        await gotoHome(page)
+
+        await setTextMode(page, 'Advanced')
+
+        const entryText = `Clone images ${Date.now()}`
+        await getTextArea(page).fill(entryText)
+
+        const fileInput = getImageFileInput(page)
+        const fixture1 = resolveFixturePath('sample-image-1.png')
+        await fileInput.setInputFiles(fixture1)
+
+        await expect(getEditorGalleryImages(page)).toHaveCount(1)
+
+        await clickElement(getPreviewButton(page))
+        await expectOnPreview(page)
+        await expect(getPreviewGalleryImages(page)).toHaveCount(1)
+
+        await clickElement(getSaveButton(page))
+        await clickElement(page.getByRole('button', { name: /clone edit|clone & edit/i }))
+        await page.waitForURL(/\?id=/)
+
+        const escaped = entryText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        const textValuePattern = new RegExp(`^${escaped}\\s*$`)
+        await expect(getTextArea(page)).toHaveValue(textValuePattern, { timeout: 10000 })
+        await expect(getEditorGalleryImages(page)).toHaveCount(1, { timeout: 10000 })
+
+        // Use a different fixture to avoid duplicate hash detection on server
+        const fixture2 = resolveFixturePath('sample-image-2.png')
+        await fileInput.setInputFiles(fixture2)
+        await expect(getEditorGalleryImages(page)).toHaveCount(2)
+
+        await clickElement(getPreviewButton(page))
+        await expectOnPreview(page)
+        await expect(getPreviewGalleryImages(page)).toHaveCount(2, { timeout: 10000 })
+
+        await clickElement(getSaveButton(page))
+        await clickElement(getCopyLinkButton(page))
+        const link = await getCopiedLink(page)
+
+        await page.goto(link)
+        await expectOnEntry(page)
+        await expect(page.locator('[data-fancybox="entry"] img')).toHaveCount(2)
+        await expect(getEntryArticle(page)).toContainText(entryText)
+    })
 })

@@ -60,7 +60,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watchEffect, onBeforeUnmount } from 'vue'
+import { ref, onMounted, watchEffect, onBeforeUnmount, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { entryApi } from '../api/entry-api'
@@ -92,19 +92,6 @@ const saved = ref<boolean>(!!routeId)
 const preserveGalleryOnUnmount = ref(false)
 const showContent = ref(false)
 const { t } = useI18n()
-
-
-function loadDraft(): string {
-    const entry = draft.value as DraftEntry | null
-    if (!entry)
-        return ''
-
-    text.value = entry.textContent || ''
-    if (images.value.length === 0 && entry.images && entry.images.length)
-        images.value = [...entry.images]
-
-    return entry.id || ''
-}
 
 
 async function onCloneEdit() {
@@ -200,12 +187,27 @@ async function saveEntry(entryId: string) {
         .filter((g: any) => g.kind === 'local')
         .map((g: any) => g.file)
 
+    const imageIds = galleryItems.value
+        .filter((g: any) => g.kind === 'remote')
+        .map((g: any) => extractImageIdFromUrl(g.url))
+        .filter((id: string | null) => !!id)
+
     await entryApi.addOrUpdateEntry(entryId, {
         editMode: entry.editMode,
         expirationPeriod: entry.expirationPeriod,
         textContent: entry.textContent,
-        imageIds: []
+        imageIds: imageIds
     }, localFiles)
+}
+
+
+function extractImageIdFromUrl(url: string): string | null {
+    try {
+        const match = url.match(/\/image-id\/([^/]+)/)
+        return match ? match[1] : null
+    } catch {
+        return null
+    }
 }
 
 
@@ -246,14 +248,24 @@ onBeforeRouteLeave((to) => {
 })
 
 
-onMounted(() => {
-    const entryId = loadDraft()
-    if (!entryId) {
+onMounted(async () => {
+    const entry = draft.value as DraftEntry | null
+    if (!entry?.id) {
         router.replace({ name: ViewNames.Home })
         return
     }
 
-    entryIdRef.value = entryId
+    entryIdRef.value = entry.id
+    text.value = entry.textContent || ''
+
+    await nextTick()
+
+    if (entry.images && entry.images.length > 0) {
+        const remoteUrls = entry.images.filter(url => url.startsWith('/api/'))
+        if (remoteUrls.length > 0 && galleryItems.value.length === 0)
+            setServerImages(remoteUrls)
+    }
+
     requestAnimationFrame(() => { showContent.value = true })
 })
 
