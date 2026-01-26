@@ -47,10 +47,10 @@
                             <Button variant="outline-gray" :title="t('preview.actions.delete')" :disabled="deleting" :pending="deleting" @click="onDelete" icon-class="icofont-bin text-xl" />
                         </div>
                         <div class="bg-white rounded-sm">
-                            <Button variant="outline-gray" :title="t('preview.actions.cloneEdit')" :disabled="deleting" @click="onCloneEdit" icon-class="icofont-loop text-xl" />
+                            <Button variant="outline-gray" :title="t('preview.actions.cloneEdit')" :disabled="deleting || cloning" :pending="cloning" @click="onCloneEdit" icon-class="icofont-loop text-xl" />
                         </div>
                         <div class="bg-white rounded-sm">
-                            <Button variant="primary" :disabled="deleting" @click="onCopyLink" :label="t('preview.actions.copyLink')" icon-class="icofont-link text-white/50" />
+                            <Button variant="primary" :disabled="deleting || copying" :pending="copying" @click="onCopyLink" :label="t('preview.actions.copyLink')" icon-class="icofont-link text-white/50" />
                         </div>
                     </template>
                 </div>
@@ -60,16 +60,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watchEffect, onBeforeUnmount } from 'vue'
+import { ref, onMounted, watchEffect, onBeforeUnmount, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
-import { entryApi } from '../api/entryApi'
+import { entryApi } from '../api/entry-api'
 import Logo from '../components/Logo.vue'
-import { useDraftEntry } from '../composables/useDraftEntry'
-import { useGallery } from '../composables/useGallery'
-import type { DraftEntry } from '../types/draft-entry'
+import { useDraftEntry } from '../composables/use-draft-entry'
+import { useGallery } from '../composables/use-gallery'
+import type { DraftEntry } from '../types/entries/draft-entry'
 import Button from '../components/Button.vue'
 import GalleryItem from '../components/GalleryItem.vue'
+import { ViewNames } from '../router/enums/view-names'
 
 const route = useRoute()
 const router = useRouter()
@@ -79,6 +80,8 @@ const routeId = route.params.id as string | undefined
 const loading = ref(false)
 const saving = ref(false)
 const deleting = ref(false)
+const cloning = ref(false)
+const copying = ref(false)
 const error = ref(false)
 const text = ref('')
 const images = ref<string[]>([])
@@ -91,38 +94,38 @@ const showContent = ref(false)
 const { t } = useI18n()
 
 
-function loadDraft(): string {
-    const entry = draft.value as DraftEntry | null
-    if (!entry)
-        return ''
-
-    text.value = entry.textContent || ''
-    if (images.value.length === 0 && entry.images && entry.images.length)
-        images.value = [...entry.images]
-
-    return entry.id || ''
-}
-
-
 async function onCloneEdit() {
-    if (!entryIdRef.value)
+    if (!entryIdRef.value || cloning.value)
         return
 
-    const clone = await entryApi.copyEntry(entryIdRef.value)
-    setTimeout(() => {
-        router.push({ name: 'Home', query: { id: clone.id } })
-    })
+    try {
+        cloning.value = true
+        const clone = await entryApi.copyEntry(entryIdRef.value)
+        setTimeout(() => {
+            router.push({ name: ViewNames.Home, query: { id: clone.id } })
+        })
+    } catch (e) {
+        console.error('clone failed', e)
+    } finally {
+        cloning.value = false
+    }
 }
 
 
 async function onCopyLink() {
+    if (copying.value)
+        return
+
     try {
+        copying.value = true
         const link = `${window.location.origin}/entry/${encodeURIComponent(entryIdRef.value!)}`
         await navigator.clipboard.writeText(link)
         copied.value = true
         setTimeout(() => copied.value = false, 2500)
     } catch (e) {
         console.error('copy failed', e)
+    } finally {
+        copying.value = false
     }
 }
 
@@ -135,7 +138,7 @@ async function onDelete() {
         deleting.value = true
 
         await entryApi.deleteEntry(entryIdRef.value)
-        router.replace({ name: 'Deleted' })
+        router.replace({ name: ViewNames.Deleted })
     } catch (e) {
         console.error(e)
     } finally {
@@ -148,7 +151,7 @@ function onEdit() {
     preserveGalleryOnUnmount.value = true
 
     router.push({
-        name: 'Home',
+        name: ViewNames.Home,
         query: draft.value?.id ? { id: draft.value.id } : {}
     })
 }
@@ -158,34 +161,16 @@ async function onSave() {
     if (saving.value || !draft.value)
         return
 
+    const entryId = draft.value.id
+    if (!entryId)
+        return
+
     try {
         saving.value = true
-        const entry = draft.value
-        const entryId = entry.id
-        if (!entryId)
-            return
-
-        const response: any = await entryApi.addOrUpdateEntry(entryId, {
-            editMode: entry.editMode,
-            expirationPeriod: entry.expirationPeriod,
-            textContent: entry.textContent,
-            imageIds: []
-        }, galleryItems.value.filter((g: any) => g.kind === 'local').map((g: any) => g.file))
-
-        try {
-            const savedEntry: any = await entryApi.getEntry(entryId)
-            const serverUrls: string[] = Array.isArray(savedEntry?.images)
-                ? savedEntry.images.map((i: any) => typeof i === 'string' ? i : (i?.url ?? '')).filter((u: string) => !!u)
-                : []
-
-            if (serverUrls.length) {
-                setServerImages(serverUrls)
-                images.value = [...serverUrls]
-            }
-        } catch (e) {
-            console.error('failed to rehydrate server image urls', e)
-        }
-
+        
+        await saveEntry(entryId)
+        await refreshServerImages(entryId)
+        
         clearDraft()
         saved.value = true
     } catch (e) {
@@ -196,6 +181,61 @@ async function onSave() {
 }
 
 
+async function saveEntry(entryId: string) {
+    const entry = draft.value!
+    const localFiles = galleryItems.value
+        .filter((g: any) => g.kind === 'local')
+        .map((g: any) => g.file)
+
+    const imageIds = galleryItems.value
+        .filter((g: any) => g.kind === 'remote')
+        .map((g: any) => extractImageIdFromUrl(g.url))
+        .filter((id: string | null) => !!id)
+
+    await entryApi.addOrUpdateEntry(entryId, {
+        editMode: entry.editMode,
+        expirationPeriod: entry.expirationPeriod,
+        textContent: entry.textContent,
+        imageIds: imageIds
+    }, localFiles)
+}
+
+
+function extractImageIdFromUrl(url: string): string | null {
+    try {
+        const match = url.match(/\/image-id\/([^/]+)/)
+        return match ? match[1] : null
+    } catch {
+        return null
+    }
+}
+
+
+async function refreshServerImages(entryId: string) {
+    try {
+        const savedEntry: any = await entryApi.getEntry(entryId)
+        const serverUrls = extractImageUrls(savedEntry)
+
+        if (serverUrls.length) {
+            setServerImages(serverUrls)
+            images.value = [...serverUrls]
+        }
+    } catch (e) {
+        console.error('failed to rehydrate server image urls', e)
+    }
+}
+
+
+function extractImageUrls(savedEntry: any): string[] {
+    if (!Array.isArray(savedEntry?.images))
+        return []
+
+    return savedEntry.images
+        .map((i: any) => typeof i === 'string' ? i : (i?.url ?? ''))
+        .filter((u: string) => !!u)
+}
+
+
 onBeforeUnmount(() => {
     if (!preserveGalleryOnUnmount.value)
         clearGallery()
@@ -203,19 +243,29 @@ onBeforeUnmount(() => {
 
 
 onBeforeRouteLeave((to) => {
-    if (to.name === 'Home')
+    if (to.name === ViewNames.Home)
         preserveGalleryOnUnmount.value = true
 })
 
 
-onMounted(() => {
-    const entryId = loadDraft()
-    if (!entryId) {
-        router.replace({ name: 'Home' })
+onMounted(async () => {
+    const entry = draft.value as DraftEntry | null
+    if (!entry?.id) {
+        router.replace({ name: ViewNames.Home })
         return
     }
 
-    entryIdRef.value = entryId
+    entryIdRef.value = entry.id
+    text.value = entry.textContent || ''
+
+    await nextTick()
+
+    if (entry.images && entry.images.length > 0) {
+        const remoteUrls = entry.images.filter(url => url.startsWith('/api/'))
+        if (remoteUrls.length > 0 && galleryItems.value.length === 0)
+            setServerImages(remoteUrls)
+    }
+
     requestAnimationFrame(() => { showContent.value = true })
 })
 

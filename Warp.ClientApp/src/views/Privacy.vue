@@ -10,7 +10,6 @@ import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
-
 const html = ref<string>('');
 
 onMounted(async () => {

@@ -65,10 +65,13 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import Button from '../components/Button.vue'
 import Logo from '../components/Logo.vue'
+import { ViewNames } from '../router/enums/view-names'
 
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
+
+
 const hasErrorParams = computed(() => ['status', 'title', 'detail', 'rid'].some(k => route.query[k] != null))
 
 
@@ -86,39 +89,6 @@ const status = computed<number>(() => {
         : 500
 })
 
-function parsePossibleJson(input?: string | null): string | undefined {
-    if (!input)
-        return undefined
-
-    // Try to handle values that were URL-encoded into the query string
-    let maybe = input
-    try {
-        maybe = decodeURIComponent(input)
-    } catch {
-        // ignore decode errors, keep original
-    }
-
-    // Some encoders use '+' for spaces in query-string context; normalize those
-    maybe = maybe.replace(/\+/g, ' ')
-
-    try {
-        const parsed = JSON.parse(maybe)
-        if (parsed && typeof parsed === 'object') {
-            if (typeof parsed.detail === 'string' && parsed.detail)
-                return parsed.detail
-
-            if (typeof parsed.message === 'string' && parsed.message)
-                return parsed.message
-            
-            if (typeof parsed.title === 'string' && parsed.title)
-                return parsed.title
-        }
-    } catch (e) {
-        // not JSON, fall through to return normalized string
-    }
-
-    return maybe
-}
 
 const message = computed<string>(() => {
     if (!hasErrorParams.value)
@@ -172,6 +142,40 @@ async function copy() {
 }
 
 function goHome() {
-    router.push({ name: 'Home' })
+    router.push({ name: ViewNames.Home })
+}
+
+
+function parsePossibleJson(input?: string | null): string | undefined {
+    if (!input)
+        return undefined
+
+    let potentialValue = input
+    try {
+        potentialValue = decodeURIComponent(input)
+    } catch {
+        // ignore decode errors, keep original
+    }
+
+    // Some encoders use '+' for spaces in query-string context; normalize those
+    potentialValue = potentialValue.replace(/\+/g, ' ')
+
+    try {
+        const parsed = JSON.parse(potentialValue)
+        if (parsed && typeof parsed === 'object') {
+            if (typeof parsed.detail === 'string' && parsed.detail)
+                return parsed.detail
+
+            if (typeof parsed.message === 'string' && parsed.message)
+                return parsed.message
+            
+            if (typeof parsed.title === 'string' && parsed.title)
+                return parsed.title
+        }
+    } catch (e) {
+        // not JSON, fall through to return normalized string
+    }
+
+    return potentialValue
 }
 </script>

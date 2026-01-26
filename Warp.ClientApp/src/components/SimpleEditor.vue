@@ -1,9 +1,9 @@
 <template>
-  <div class="simple-editor space-y-4">
-    <div class="w-full md:w-1/2 mb-5 mx-auto">
-        <slot name="text"></slot>
+    <div class="simple-editor space-y-4">
+        <div class="w-full md:w-1/2 mb-5 mx-auto">
+            <slot name="text"></slot>
+        </div>
     </div>
-  </div>
 </template>
 
 <script setup lang="ts">

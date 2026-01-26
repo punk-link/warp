@@ -6,19 +6,23 @@ import ErrorPage from '../views/ErrorView.vue'
 import Deleted from '../views/DeletedView.vue'
 import Privacy from '../views/Privacy.vue'
 import DataRequest from '../views/DataRequestView.vue'
+import { ViewNames } from './enums/view-names'
+
 
 const router = createRouter({
     history: createWebHistory('/'),
     routes: [
-        { path: '/', name: 'Home', component: Home },
-        { path: '/preview/:id?', name: 'Preview', component: Preview, props: true },
-        { path: '/entry/:id', name: 'Entry', component: Entry, props: true },
-        { path: '/error', name: 'Error', component: ErrorPage, meta: { pageBg: 'bg-gray-300' } },
-        { path: '/deleted', name: 'Deleted', component: Deleted },
-        { path: '/privacy', name: 'Privacy', component: Privacy },
-        { path: '/data-request', name: 'DataRequest', component: DataRequest },
-        { path: '/:pathMatch(.*)*', name: 'NotFound', component: ErrorPage, meta: { pageBg: 'bg-gray-300' } }
+        { path: '/', name: ViewNames.Home, component: Home },
+        { path: '/preview/:id?', name: ViewNames.Preview, component: Preview, props: true },
+        { path: '/entry/:id', name: ViewNames.Entry, component: Entry, props: true },
+        { path: '/error', name: ViewNames.Error, component: ErrorPage, meta: { pageBg: 'bg-gray-300' } },
+        { path: '/deleted', name: ViewNames.Deleted, component: Deleted },
+        { path: '/privacy', name: ViewNames.Privacy, component: Privacy },
+        { path: '/data-request', name: ViewNames.DataRequest, component: DataRequest },
+        { path: '/:pathMatch(.*)*', name: ViewNames.NotFound, component: ErrorPage, meta: { pageBg: 'bg-gray-300' } }
     ]
 })
 
+
+/** The router instance for the application. */
 export default router

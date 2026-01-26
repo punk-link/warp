@@ -11,11 +11,11 @@
 <script setup lang="ts">
 import { ref, watchEffect } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { supportedLocales, setLocale, currentLocale } from '../i18n'
+import { supportedLocales, setLocale, getCurrentLocale } from '../i18n'
 
 
 const { t } = useI18n()
-const selected = ref<string>(currentLocale())
+const selected = ref<string>(getCurrentLocale())
 
 
 async function onChange() {
@@ -24,7 +24,7 @@ async function onChange() {
 
 
 watchEffect(() => {
-    selected.value = currentLocale()
+    selected.value = getCurrentLocale()
 })
 </script>
 

@@ -78,20 +78,23 @@
 import { ref, onMounted, watch, onBeforeUnmount, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import { entryApi } from '../api/entryApi'
-import { routeApiError } from '../api/errorRouting'
-import type { Entry } from '../types/entry'
+import { entryApi } from '../api/entry-api'
+import { routeApiError } from '../api/error-routing'
+import type { Entry } from '../types/entries/entry'
 import CountdownTimer from '../components/CountdownTimer.vue'
 import GalleryItem from '../components/GalleryItem.vue'
 import Logo from '../components/Logo.vue'
 import Button from '../components/Button.vue'
+import { ViewNames } from '../router/enums/view-names'
+
+
+interface EntryImage { entryId: string; id: string; url: string }
 
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
 
 const props = defineProps<{ id?: string }>()
-
 const entry = ref<Entry | null>(null)
 const loading = ref(false)
 const error = ref(false)
@@ -99,10 +102,8 @@ const copied = ref(false)
 const reported = ref(false)
 const reporting = ref(false)
 const showReportModal = ref(false)
-interface EntryImage { entryId: string; id: string; url: string }
 const images = ref<EntryImage[]>([])
 const textContentEl = ref<HTMLElement | null>(null)
-const galleryElement = ref<HTMLElement | null>(null)
 const animatedViewCount = ref(0)
 const countdownTarget = ref<Date | string | null>(null)
 let expirationTimer: number | null = null
@@ -123,122 +124,18 @@ function animateCount(target: number, durationMs = 1200) {
     requestAnimationFrame(step)
 }
 
-async function load() {
-    const currentId = props.id || (route.params.id as string | undefined)
 
-    if (!currentId) {
-        error.value = true;
-        router.replace({ name: 'Error' })
-        return
-    }
-
-    try {
-        loading.value = true
-
-        const fetchedEntry = await entryApi.getEntry(currentId)
-        entry.value = fetchedEntry as Entry
-        if (Array.isArray((fetchedEntry as any).images)) {
-            images.value = (fetchedEntry as any).images
-                .map((imageInfo: any) => {
-                    return {
-                        entryId: typeof imageInfo.entryId === 'string' ? imageInfo.entryId : (fetchedEntry.id ?? ''),
-                        id: imageInfo.id,
-                        url: imageInfo.url
-                    } as EntryImage
-                })
-                .filter((x: EntryImage | null): x is EntryImage => !!x)
-        } else {
-            images.value = []
-        }
-
-        countdownTarget.value = fetchedEntry.expiresAt
-
-        if (fetchedEntry.textContent)
-            setTimeout(() => { textContentEl.value?.classList.add('visible') }, 100)
-
-        animateCount(fetchedEntry.viewCount || 0)
-
-        scheduleExpirationRedirect()
-
-        await nextTick()
-        bindFancybox()
-    } catch (e) {
-        console.error('failed to load entry', e)
-        error.value = true
-        routeApiError(e)
-    } finally {
-        loading.value = false
-    }
+function applyEntryData(fetchedEntry: Entry) {
+    entry.value = fetchedEntry
+    images.value = processImages(fetchedEntry)
+    countdownTarget.value = fetchedEntry.expiresAt
+    
+    if (fetchedEntry.textContent)
+        setTimeout(() => textContentEl.value?.classList.add('visible'), 100)
+    
+    animateCount(fetchedEntry.viewCount || 0)
 }
 
-
-async function onCopyLink() {
-    const currentId = props.id
-
-    if (!currentId)
-        return
-
-    try {
-        const link = `${window.location.origin}/entry/${encodeURIComponent(currentId)}`
-        await navigator.clipboard.writeText(link)
-
-        copied.value = true
-
-        setTimeout(() => copied.value = false, 2500)
-    } catch (e) {
-        console.error('copy failed', e)
-    }
-}
-
-
-function onClose() {
-    router.replace({ name: 'Home' })
-}
-
-
-async function onReport() {
-    const currentId = props.id
-
-    if (!currentId || reporting.value)
-        return
-
-    try {
-        reporting.value = true
-        await entryApi.reportEntry(currentId)
-
-        reported.value = true
-        showReportModal.value = false
-
-        setTimeout(() => router.replace({ name: 'Home' }), 1200)
-    } catch (e) {
-        console.error('report failed', e)
-    } finally {
-        reporting.value = false
-    }
-}
-
-
-function scheduleExpirationRedirect() {
-    if (!countdownTarget.value)
-        return
-
-    if (expirationTimer) {
-        clearTimeout(expirationTimer)
-        expirationTimer = null
-    }
-
-    const targetTs = new Date(countdownTarget.value).getTime()
-    const now = Date.now()
-    const delay = targetTs - now
-    if (delay <= 0) {
-        router.replace({ name: 'Error' })
-        return
-    }
-
-    expirationTimer = window.setTimeout(() => {
-        router.replace({ name: 'Home' })
-    }, delay)
-}
 
 function bindFancybox() {
     if (!(window as any).Fancybox)
@@ -261,6 +158,42 @@ function bindFancybox() {
 }
 
 
+function getCurrentId(): string | null {
+    const currentId = props.id || (route.params.id as string | undefined)
+    
+    if (!currentId) {
+        error.value = true
+        router.replace({ name: ViewNames.Error })
+        return null
+    }
+    
+    return currentId
+}
+
+async function load() {
+    const currentId = getCurrentId()
+    if (!currentId)
+        return
+
+    try {
+        loading.value = true
+        const fetchedEntry = await entryApi.getEntry(currentId)
+        
+        applyEntryData(fetchedEntry)
+        scheduleExpirationRedirect()
+        
+        await nextTick()
+        bindFancybox()
+    } catch (e) {
+        console.error('failed to load entry', e)
+        error.value = true
+        routeApiError(e)
+    } finally {
+        loading.value = false
+    }
+}
+
+
 onBeforeUnmount(() => {
     if (expirationTimer) {
         clearTimeout(expirationTimer)
@@ -275,6 +208,89 @@ onBeforeUnmount(() => {
         }
     }
 })
+
+
+function onClose() {
+    router.replace({ name: ViewNames.Home })
+}
+
+
+async function onCopyLink() {
+    const currentId = props.id
+    if (!currentId)
+        return
+
+    try {
+        const link = `${window.location.origin}/entry/${encodeURIComponent(currentId)}`
+        await navigator.clipboard.writeText(link)
+
+        copied.value = true
+
+        setTimeout(() => copied.value = false, 2500)
+    } catch (e) {
+        console.error('copy failed', e)
+    }
+}
+
+
+async function onReport() {
+    const currentId = props.id
+    if (!currentId || reporting.value)
+        return
+
+    try {
+        reporting.value = true
+        await entryApi.reportEntry(currentId)
+
+        reported.value = true
+        showReportModal.value = false
+
+        setTimeout(() => router.replace({ name: ViewNames.Home }), 1200)
+    } catch (e) {
+        console.error('report failed', e)
+    } finally {
+        reporting.value = false
+    }
+}
+
+
+function processImages(fetchedEntry: Entry): EntryImage[] {
+    const rawImages = (fetchedEntry as any).images
+    
+    if (!Array.isArray(rawImages))
+        return []
+    
+    return rawImages
+        .map((imageInfo: any) => ({
+            entryId: typeof imageInfo.entryId === 'string' ? imageInfo.entryId : (fetchedEntry.id ?? ''),
+            id: imageInfo.id,
+            url: imageInfo.url
+        } as EntryImage))
+        .filter((x: EntryImage | null): x is EntryImage => !!x)
+}
+
+
+function scheduleExpirationRedirect() {
+    if (!countdownTarget.value)
+        return
+
+    if (expirationTimer) {
+        clearTimeout(expirationTimer)
+        expirationTimer = null
+    }
+
+    const targetTs = new Date(countdownTarget.value).getTime()
+    const now = Date.now()
+    const delay = targetTs - now
+    if (delay <= 0) {
+        router.replace({ name: ViewNames.Error })
+        return
+    }
+
+    expirationTimer = window.setTimeout(() => {
+        router.replace({ name: ViewNames.Home })
+    }, delay)
+}
 
 
 onMounted(load)

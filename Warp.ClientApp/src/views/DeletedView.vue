@@ -30,6 +30,7 @@ import { useRouter } from 'vue-router';
 import Logo from '../components/Logo.vue'
 import Button from '../components/Button.vue'
 import { useI18n } from 'vue-i18n'
+import { ViewNames } from '../router/enums/view-names'
 
 
 const router = useRouter();
@@ -37,6 +38,6 @@ const { t } = useI18n()
 
 
 function onCreate() {
-    router.push({ name: 'Home' });
+    router.push({ name: ViewNames.Home });
 }
 </script>

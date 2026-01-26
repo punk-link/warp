@@ -5,7 +5,7 @@
                 <Logo />
             </div>
             <div class="w-full sm:w-1/2 flex justify-end md:justify-center">
-                <ModeSwitch v-model="mode" :disabled="pending" :simple-label="t('home.mode.text')" :advanced-label="t('home.mode.advanced')" />
+                <ModeSwitcher v-model="mode" :disabled="pending" :simple-label="t('home.mode.text')" :advanced-label="t('home.mode.advanced')" />
             </div>
         </div>
 
@@ -49,27 +49,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
-import { EditMode, parseEditMode } from '../types/edit-modes'
-import { useGallery } from '../composables/useGallery'
-import { initDropAreaHandlers, handlePaste } from '../composables/useImageUpload'
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
+import { EditMode } from '../types/entries/enums/edit-modes'
+import { parseEditMode } from '../helpers/edit-mode-helper'
+import { useGallery } from '../composables/use-gallery'
+import { initDropAreaHandlers, handlePaste } from '../composables/use-image-upload'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { entryApi } from '../api/entryApi'
-import { creatorApi } from '../api/creatorApi'
-import { useMetadata } from '../composables/useMetadata'
+import { entryApi } from '../api/entry-api'
+import { creatorApi } from '../api/creator-api'
+import { useMetadata } from '../composables/use-metadata'
 import Logo from '../components/Logo.vue'
-import ModeSwitch from '../components/ModeSwitch.vue'
+import ModeSwitcher from '../components/ModeSwitcher.vue'
 import SimpleEditor from '../components/SimpleEditor.vue'
 import DynamicTextArea from '../components/DynamicTextArea.vue'
 import AdvancedEditor from '../components/AdvancedEditor.vue'
 import GalleryItem from '../components/GalleryItem.vue'
 import ExpirationSelect from '../components/ExpirationSelect.vue'
 import Button from '../components/Button.vue'
-import { useDraftEntry } from '../composables/useDraftEntry'
-import { routeApiError } from '../api/errorRouting'
-import { DraftEntry } from '../types/draft-entry'
-import { ExpirationPeriod } from '../types/expiration-periods'
+import { useDraftEntry } from '../composables/use-draft-entry'
+import { routeApiError } from '../api/error-routing'
+import { DraftEntry } from '../types/entries/draft-entry'
+import { ExpirationPeriod } from '../types/entries/enums/expiration-periods'
+import { ViewNames } from '../router/enums/view-names'
 
 const EDIT_MODE_STORAGE_KEY = 'warp.editMode'
 const mode = ref<EditMode>(EditMode.Simple)
@@ -81,7 +83,7 @@ const entryIdRef = ref<string | null>(null)
 
 const dropAreaRef = ref<HTMLElement | null>(null)
 const fileInputRef = ref<HTMLInputElement | null>(null)
-const { items, addFiles, remove, count: galleryCount } = useGallery(entryIdRef)
+const { items, addFiles, remove, count: galleryCount, setServerImages } = useGallery(entryIdRef)
 
 const { setDraft, draft } = useDraftEntry()
 const route = useRoute()
@@ -118,22 +120,6 @@ function getEditMode(editMode: EditMode): EditMode {
 }
 
 
-function onFilesSelected(e: Event) {
-    const input = e.target as HTMLInputElement
-    if (!input.files) return
-    addFiles(input.files)
-    input.value = ''
-}
-
-
-function onFileInputChange(e: Event) {
-    const input = e.target as HTMLInputElement
-    if (!input.files) return
-    addFiles(input.files)
-    input.value = ''
-}
-
-
 function hydrateStateFromDraft(draft: DraftEntry): string {
     entryIdRef.value = draft.id
 
@@ -160,7 +146,28 @@ async function initiateStateFromServer(): Promise<string> {
     expiration.value = entry.expirationPeriod ?? ExpirationPeriod.FiveMinutes
     text.value = entry.textContent
 
+    if (Array.isArray(entry.images) && entry.images.length > 0) {
+        const imageUrls = (entry.images as any[])
+            .map(img => typeof img === 'string' ? img : img?.url)
+            .filter(url => !!url)
+        
+        if (imageUrls.length > 0) {
+            await nextTick()
+            setServerImages(imageUrls)
+        }
+    }
+
     return entry.id
+}
+
+
+function onFileInputChange(e: Event) {
+    const input = e.target as HTMLInputElement
+    if (!input.files) 
+        return
+    
+    addFiles(input.files)
+    input.value = ''
 }
 
 
@@ -180,7 +187,7 @@ function onPreview() {
     })
 
     router.push({ 
-        name: 'Preview', 
+        name: ViewNames.Preview, 
         query: { id: entryIdRef.value }
     })
 }

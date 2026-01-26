@@ -26,6 +26,9 @@ interface Props {
 }
 
 
+const { t } = useI18n()
+
+
 const props = withDefaults(defineProps<Props>(), {
     variant: 'primary',
     label: null,
@@ -37,13 +40,10 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 
-const { t } = useI18n()
 const pendingLabelComputed = computed(() => props.pendingLabel ?? t('components.buttons.pending') ?? 'Pending…')
 const computedClasses = computed(() => [
     variantClassMap[props.variant]
 ])
-
-
 const emit = defineEmits<{ (e: 'click'): void }>()
 
 
@@ -66,6 +66,7 @@ const variantClassMap: Record<NonNullable<Props['variant']>, string> = {
 
 
 let globalPendingCount = 0
+
 
 function updateRootPendingClass() {
     const root = document.documentElement
@@ -97,4 +98,3 @@ onBeforeUnmount(() => {
     }
 })
 </script>
-

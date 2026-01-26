@@ -34,9 +34,15 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
+
+
+const { t } = useI18n()
+
+
 const startYear = 2024;
 const currentYear = new Date().getFullYear();
-const yearDisplay = startYear === currentYear ? `${startYear}` : `${startYear}\u2013${currentYear}`;
-import { useI18n } from 'vue-i18n'
-const { t } = useI18n()
+const yearDisplay = startYear === currentYear 
+    ? `${startYear}` 
+    : `${startYear}\u2013${currentYear}`;
 </script>

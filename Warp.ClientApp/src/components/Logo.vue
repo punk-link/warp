@@ -9,21 +9,24 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { useDraftEntry } from '../composables/useDraftEntry'
-import { useGallery } from '../composables/useGallery'
+import { useDraftEntry } from '../composables/use-draft-entry'
+import { useGallery } from '../composables/use-gallery'
 import { useI18n } from 'vue-i18n'
+import { ViewNames } from '../router/enums/view-names'
+
+
+const { t } = useI18n()
 
 
 const { clearDraft } = useDraftEntry()
 const { clear: clearGallery } = useGallery()
 const router = useRouter()
-const { t } = useI18n()
 
 
 function onLogoClick() {
     clearDraft()
     clearGallery()
     
-    router.push({ name: 'Home' })
+    router.push({ name: ViewNames.Home })
 }
 </script>
