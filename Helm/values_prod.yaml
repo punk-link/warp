@@ -6,16 +6,16 @@ jaeger:
 
 
 image:
-  repository: registry.punk.link/warp-webapp
+  repository: ghcr.io/punk-link/warp
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "latest"
+  tag: "21143560098"
 
 imagePullSecrets:
-  - name: punk-link-registry
+  - name: ghcr-secret
 nameOverride: ""
 imagePullSecrets:
-  - name: punk-link-registry
+  - name: ghcr-secret
 fullnameOverride: ""
 
 serviceAccount:
