@@ -47,10 +47,10 @@
                             <Button variant="outline-gray" :title="t('preview.actions.delete')" :disabled="deleting" :pending="deleting" @click="onDelete" icon-class="icofont-bin text-xl" />
                         </div>
                         <div class="bg-white rounded-sm">
-                            <Button variant="outline-gray" :title="t('preview.actions.cloneEdit')" :disabled="deleting" @click="onCloneEdit" icon-class="icofont-loop text-xl" />
+                            <Button variant="outline-gray" :title="t('preview.actions.cloneEdit')" :disabled="deleting || cloning" :pending="cloning" @click="onCloneEdit" icon-class="icofont-loop text-xl" />
                         </div>
                         <div class="bg-white rounded-sm">
-                            <Button variant="primary" :disabled="deleting" @click="onCopyLink" :label="t('preview.actions.copyLink')" icon-class="icofont-link text-white/50" />
+                            <Button variant="primary" :disabled="deleting || copying" :pending="copying" @click="onCopyLink" :label="t('preview.actions.copyLink')" icon-class="icofont-link text-white/50" />
                         </div>
                     </template>
                 </div>
@@ -80,6 +80,8 @@ const routeId = route.params.id as string | undefined
 const loading = ref(false)
 const saving = ref(false)
 const deleting = ref(false)
+const cloning = ref(false)
+const copying = ref(false)
 const error = ref(false)
 const text = ref('')
 const images = ref<string[]>([])
@@ -106,24 +108,37 @@ function loadDraft(): string {
 
 
 async function onCloneEdit() {
-    if (!entryIdRef.value)
+    if (!entryIdRef.value || cloning.value)
         return
 
-    const clone = await entryApi.copyEntry(entryIdRef.value)
-    setTimeout(() => {
-        router.push({ name: ViewNames.Home, query: { id: clone.id } })
-    })
+    try {
+        cloning.value = true
+        const clone = await entryApi.copyEntry(entryIdRef.value)
+        setTimeout(() => {
+            router.push({ name: ViewNames.Home, query: { id: clone.id } })
+        })
+    } catch (e) {
+        console.error('clone failed', e)
+    } finally {
+        cloning.value = false
+    }
 }
 
 
 async function onCopyLink() {
+    if (copying.value)
+        return
+
     try {
+        copying.value = true
         const link = `${window.location.origin}/entry/${encodeURIComponent(entryIdRef.value!)}`
         await navigator.clipboard.writeText(link)
         copied.value = true
         setTimeout(() => copied.value = false, 2500)
     } catch (e) {
         console.error('copy failed', e)
+    } finally {
+        copying.value = false
     }
 }
 
