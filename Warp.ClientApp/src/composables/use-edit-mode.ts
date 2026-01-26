@@ -3,6 +3,9 @@ import { EditMode } from '../types/entries/enums/edit-modes'
 import { parseEditMode } from '../helpers/edit-mode-helper'
 
 
+const STORAGE_KEY = 'warp.editMode'
+
+
 /** Composable for restoring and persisting the user's selected edit mode. */
 export function useEditMode() {
     const stored = typeof localStorage !== 'undefined' 
@@ -21,6 +24,3 @@ export function useEditMode() {
 
     return { mode }
 }
-
-
-const STORAGE_KEY = 'warp.editMode'

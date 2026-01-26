@@ -6,6 +6,10 @@ import { ExpirationPeriod } from '../types/entries/enums/expiration-periods'
 import { parseExpirationPeriod } from '../helpers/expiration-period-helper'
 
 
+const editModes = ref<EditMode[]>([])
+const expirationOptions = ref<ExpirationPeriod[]>([])
+
+
 /** Composable for loading metadata such as enum values from the API. */
 export function useMetadata() {
     return { editModes, expirationOptions, loadEditModes, loadExpirationOptions }
@@ -62,7 +66,3 @@ async function loadExpirationOptions(): Promise<ExpirationPeriod[]> {
 
     return expirationOptions.value
 }
-
-
-const editModes = ref<EditMode[]>([])
-const expirationOptions = ref<ExpirationPeriod[]>([])

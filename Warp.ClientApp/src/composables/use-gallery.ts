@@ -4,6 +4,14 @@ import type { LocalGalleryItem } from '../types/galleries/local-gallery-item'
 import { GalleryApi } from '../types/galleries/gallery-api'
 
 
+const DEFAULT_MAX_FILE_BYTES = 10 * 1024 * 1024 // 10MB
+const DEFAULT_MAX_FILE_COUNT = 10
+const DISPOSE_DELAY_MS = 4000
+
+const disposableTimers = new Map<string, number>()
+const stores = new Map<string, InternalStore>()
+
+
 export function useGallery(entryIdRef?: Ref<string | null | undefined>, options?: UseGalleryOptions): GalleryApi {
     const maxBytes = options?.maxFileBytes ?? DEFAULT_MAX_FILE_BYTES
     const maxCount = options?.maxFileCount ?? DEFAULT_MAX_FILE_COUNT
@@ -263,14 +271,6 @@ function setServerImagesToStore(urls: string[], store: InternalStore | null, loc
 function syncStoreToLocal(store: InternalStore | null, localItems: Ref<GalleryItem[]>) {
     localItems.value = store ? store.items.value : []
 }
-
-
-const DEFAULT_MAX_FILE_BYTES = 10 * 1024 * 1024 // 10MB
-const DEFAULT_MAX_FILE_COUNT = 10
-const DISPOSE_DELAY_MS = 4000
-
-const disposableTimers = new Map<string, number>()
-const stores = new Map<string, InternalStore>()
 
 
 interface InternalStore {

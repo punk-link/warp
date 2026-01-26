@@ -2,6 +2,10 @@ import { ref } from 'vue'
 import { DraftEntry } from '../types/entries/draft-entry'
 
 
+const STORAGE_KEY = 'warp.draftEntry'
+const draft = ref<DraftEntry | null>(null)
+
+
 /** Composable for restoring and persisting a draft entry. */
 export function useDraftEntry() {
     return { draft, setDraft, clearDraft }
@@ -52,7 +56,3 @@ function setDraft(d: DraftEntry) {
 
 
 loadFromStorage()
-
-
-const STORAGE_KEY = 'warp.draftEntry'
-const draft = ref<DraftEntry | null>(null)

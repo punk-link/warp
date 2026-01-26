@@ -1,6 +1,17 @@
 import { ref, onBeforeUnmount } from 'vue'
 
 
+const markup = ref('')
+let timeoutId: any = null
+let targetTime: number | null = null
+
+const MILLISECONDS = { 
+    SECOND: 1_000, 
+    MINUTE: 60_000, 
+    HOUR: 3_600_000 
+}
+
+
 /** Composable for displaying a countdown to a entry's release time. */
 export function useEntryCountdown() {
     return { markup, start, stop }
@@ -115,14 +126,3 @@ function update() {
 
 
 onBeforeUnmount(stop)
-
-
-const markup = ref('')
-let timeoutId: any = null
-let targetTime: number | null = null
-
-const MILLISECONDS = { 
-    SECOND: 1_000, 
-    MINUTE: 60_000, 
-    HOUR: 3_600_000 
-}

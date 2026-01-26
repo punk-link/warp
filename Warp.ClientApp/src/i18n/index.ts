@@ -3,6 +3,11 @@ import type { I18n, Composer } from 'vue-i18n';
 import { detectInitialLocale, LOCALE_STORAGE_KEY, supportedLocales, type SupportedLocale } from './detect';
 
 
+let i18nSingleton: I18n | null = null;
+let creatingPromise: Promise<I18n> | null = null;
+const loaded = new Set<string>();
+
+
 // Type schema derived from base (en) without eagerly importing runtime data
 // (Only used for type inference; messages loaded lazily.)
 export type MessageSchema = typeof import('./locales/en').default;
@@ -92,11 +97,6 @@ export function tOr(key: string, fallback: string, params?: Record<string, unkno
 
 
 export { supportedLocales };
-
-
-let i18nSingleton: I18n | null = null;
-let creatingPromise: Promise<I18n> | null = null;
-const loaded = new Set<string>();
 
 
 async function ensureMessages(locale: SupportedLocale, i18n: I18n) {

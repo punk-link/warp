@@ -2,6 +2,23 @@ import { ProblemDetails } from "../types/apis/problem-details/problem-details"
 import { ProblemDetailsParseError } from "../types/apis/problem-details/problem-details-parse-error"
 
 
+const RESERVED_PROPERTY_NAMES = [ 
+    'trace-id', 
+    'event-id', 
+    'sentry-id', 
+    'stack-trace', 
+    'traceId', 
+    'eventId', 
+    'sentryId', 
+    'stackTrace', 
+    'errors', 
+    'type', 
+    'title', 
+    'status', 
+    'detail' 
+]
+
+
 /** Type guard to check if a value conforms to ProblemDetails shape. */
 export function isProblemDetails(value: unknown): value is ProblemDetails {
     if (!value || typeof value !== 'object')
@@ -173,20 +190,3 @@ function validateRequiredFields(required: ReturnType<typeof parseRequiredFields>
     if (missing.length > 0)
         throw new ProblemDetailsParseError(`Problem details missing required field(s): ${missing.join(', ')}`, raw)
 }
-
-
-const RESERVED_PROPERTY_NAMES = [ 
-    'trace-id', 
-    'event-id', 
-    'sentry-id', 
-    'stack-trace', 
-    'traceId', 
-    'eventId', 
-    'sentryId', 
-    'stackTrace', 
-    'errors', 
-    'type', 
-    'title', 
-    'status', 
-    'detail' 
-]

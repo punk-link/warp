@@ -4,6 +4,32 @@ import type { NotificationItem } from '../types/notifications/notification-item'
 import type { NotificationOptions } from '../types/notifications/notification-options'
 
 
+const DEFAULT_TTL_INFO_MS = 3_500
+const DEFAULT_TTL_WARN_MS = 6_000
+const DEFAULT_TTL_ERROR_MS = 8_000
+
+
+const removeTimers = new Map<string, number>()
+const recentPushes: number[] = []
+const state: NotificationsState = {
+	items: null!,
+	maxStack: 0,
+	rateLimit: { maxPerWindow: 0, windowMs: 0 },
+	dedupeWindowMs: 0
+}
+
+
+let singleton: {
+	state: NotificationsState
+	push: (options: NotificationOptions) => string | null
+	remove: (id: string) => void
+	clear: () => void
+	setMaxStack: (n: number) => void
+	setRateLimit: (cfg: RateLimitConfig) => void
+	setDedupeWindowMs: (ms: number) => void
+} | null = null
+
+
 /** Composable for managing application notifications. */
 export function useNotifications() {
 	const { state, push, remove, clear, setMaxStack, setRateLimit, setDedupeWindowMs } = ensure()
@@ -215,32 +241,6 @@ function tryDeduplicate(options: NotificationOptions, now: number): string | nul
 
 	return existing.id
 }
-
-
-const DEFAULT_TTL_INFO_MS = 3_500
-const DEFAULT_TTL_WARN_MS = 6_000
-const DEFAULT_TTL_ERROR_MS = 8_000
-
-
-const removeTimers = new Map<string, number>()
-const recentPushes: number[] = []
-const state: NotificationsState = {
-	items: null!,
-	maxStack: 0,
-	rateLimit: { maxPerWindow: 0, windowMs: 0 },
-	dedupeWindowMs: 0
-}
-
-
-let singleton: {
-	state: NotificationsState
-	push: (options: NotificationOptions) => string | null
-	remove: (id: string) => void
-	clear: () => void
-	setMaxStack: (n: number) => void
-	setRateLimit: (cfg: RateLimitConfig) => void
-	setDedupeWindowMs: (ms: number) => void
-} | null = null
 
 
 interface RateLimitConfig {
