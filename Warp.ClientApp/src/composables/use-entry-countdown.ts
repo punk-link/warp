@@ -14,6 +14,7 @@ const MILLISECONDS = {
 
 /** Composable for displaying a countdown to a entry's release time. */
 export function useEntryCountdown() {
+    onBeforeUnmount(stop)
     return { markup, start, stop }
 }
 
@@ -123,6 +124,3 @@ function update() {
     markup.value = formatCountdown(seg.hours, seg.minutes, seg.seconds)
     scheduleNextAlignedTick(() => requestAnimationFrame(update))
 }
-
-
-onBeforeUnmount(stop)
