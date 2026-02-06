@@ -1,0 +1,84 @@
+{{- if .Values.tempo.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.tempo.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "tempo.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ .Values.tempo.name }}
+  replicas: {{ .Values.tempo.replicas }}
+  selector:
+    matchLabels:
+      {{- include "tempo.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "tempo.selectorLabels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/tempo-configmap.yaml") . | sha256sum }}
+    spec:
+      securityContext:
+        fsGroup: 10001
+        runAsUser: 10001
+        runAsNonRoot: true
+      containers:
+      - name: tempo
+        image: "{{ .Values.tempo.image.repository }}:{{ .Values.tempo.image.tag }}"
+        imagePullPolicy: {{ .Values.tempo.image.pullPolicy }}
+        args:
+          - -config.file=/etc/tempo.yaml
+          - -log.level=info
+        ports:
+        - name: http
+          containerPort: {{ .Values.tempo.ports.http }}
+          protocol: TCP
+        - name: grpc
+          containerPort: {{ .Values.tempo.ports.grpc }}
+          protocol: TCP
+        - name: otlp-grpc
+          containerPort: {{ .Values.tempo.ports.otlpGrpc }}
+          protocol: TCP
+        - name: otlp-http
+          containerPort: {{ .Values.tempo.ports.otlpHttp }}
+          protocol: TCP
+        volumeMounts:
+        - name: config
+          mountPath: /etc/tempo.yaml
+          subPath: tempo-config.yaml
+        - name: storage
+          mountPath: /tempo
+        resources:
+          {{- toYaml .Values.tempo.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /ready
+            port: http
+          initialDelaySeconds: 45
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 5
+      volumes:
+      - name: config
+        configMap:
+          name: {{ .Values.tempo.name }}-config
+  volumeClaimTemplates:
+  - metadata:
+      name: storage
+      labels:
+        {{- include "tempo.labels" . | nindent 8 }}
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      {{- if .Values.tempo.storage.storageClassName }}
+      storageClassName: {{ .Values.tempo.storage.storageClassName }}
+      {{- end }}
+      resources:
+        requests:
+          storage: {{ .Values.tempo.storage.size }}
+{{- end }}
