@@ -1,0 +1,79 @@
+{{- if .Values.loki.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.loki.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "loki.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ .Values.loki.name }}
+  replicas: {{ .Values.loki.replicas }}
+  selector:
+    matchLabels:
+      {{- include "loki.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "loki.selectorLabels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/loki-configmap.yaml") . | sha256sum }}
+    spec:
+      securityContext:
+        fsGroup: 10001
+        runAsUser: 10001
+        runAsNonRoot: true
+      containers:
+      - name: loki
+        image: "{{ .Values.loki.image.repository }}:{{ .Values.loki.image.tag }}"
+        imagePullPolicy: {{ .Values.loki.image.pullPolicy }}
+        args:
+          - -config.file=/etc/loki/config.yaml
+        ports:
+        - name: http
+          containerPort: {{ .Values.loki.ports.http }}
+          protocol: TCP
+        - name: grpc
+          containerPort: {{ .Values.loki.ports.grpc }}
+          protocol: TCP
+        volumeMounts:
+        - name: config
+          mountPath: /etc/loki
+        - name: storage
+          mountPath: /loki
+        resources:
+          {{- toYaml .Values.loki.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /ready
+            port: http
+          initialDelaySeconds: 45
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 5
+      volumes:
+      - name: config
+        configMap:
+          name: {{ .Values.loki.name }}-config
+          items:
+          - key: loki-config.yaml
+            path: config.yaml
+  volumeClaimTemplates:
+  - metadata:
+      name: storage
+      labels:
+        {{- include "loki.labels" . | nindent 8 }}
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      {{- if .Values.loki.storage.storageClassName }}
+      storageClassName: {{ .Values.loki.storage.storageClassName }}
+      {{- end }}
+      resources:
+        requests:
+          storage: {{ .Values.loki.storage.size }}
+{{- end }}

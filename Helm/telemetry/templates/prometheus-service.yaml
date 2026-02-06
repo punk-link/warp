@@ -1,0 +1,19 @@
+{{- if .Values.prometheus.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.prometheus.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "prometheus.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: http
+    port: {{ .Values.prometheus.ports.http }}
+    targetPort: http
+    protocol: TCP
+  selector:
+    {{- include "prometheus.selectorLabels" . | nindent 4 }}
+{{- end }}

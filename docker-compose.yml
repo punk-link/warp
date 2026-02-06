@@ -6,11 +6,12 @@ services:
     volumes:
       - ./data:/data
     command: keydb-server
+    networks:
+      - warp-network
 
-  aspire-dashboard:
-    image: mcr.microsoft.com/dotnet/aspire-dashboard
-    ports:
-      - 18888:18888
-      - 4317:18889
+networks:
+  warp-network:
+    name: warp-network
+    driver: bridge
 
 

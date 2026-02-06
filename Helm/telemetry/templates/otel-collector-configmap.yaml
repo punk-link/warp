@@ -1,0 +1,62 @@
+{{- if .Values.otelCollector.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.otelCollector.name }}-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "otel-collector.labels" . | nindent 4 }}
+data:
+  otel-collector-config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:{{ .Values.otelCollector.ports.grpc }}
+          http:
+            endpoint: 0.0.0.0:{{ .Values.otelCollector.ports.http }}
+
+    processors:
+      batch:
+        timeout: 10s
+        send_batch_size: 1024
+
+    exporters:
+      otlphttp/loki:
+        endpoint: http://{{ .Values.loki.name }}.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.loki.ports.http }}/otlp
+        tls:
+          insecure: true
+        
+      otlp:
+        endpoint: {{ .Values.tempo.name }}.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.tempo.ports.otlpGrpc }}
+        tls:
+          insecure: true
+      
+      prometheus:
+        endpoint: "0.0.0.0:{{ .Values.otelCollector.ports.metrics }}"
+        namespace: warp
+
+      debug:
+        verbosity: normal
+
+    extensions:
+      health_check: {}
+
+    service:
+      extensions: [health_check]
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [otlp, debug]
+        
+        metrics:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [prometheus, debug]
+        
+        logs:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [otlphttp/loki, debug]
+{{- end }}

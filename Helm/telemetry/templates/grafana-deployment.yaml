@@ -1,0 +1,68 @@
+{{- if .Values.grafana.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.grafana.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "grafana.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.grafana.replicas }}
+  selector:
+    matchLabels:
+      {{- include "grafana.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "grafana.selectorLabels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/grafana-configmap.yaml") . | sha256sum }}
+    spec:
+      securityContext:
+        fsGroup: 472
+        runAsUser: 472
+        runAsNonRoot: true
+      containers:
+      - name: grafana
+        image: "{{ .Values.grafana.image.repository }}:{{ .Values.grafana.image.tag }}"
+        imagePullPolicy: {{ .Values.grafana.image.pullPolicy }}
+        env:
+        - name: GF_AUTH_ANONYMOUS_ENABLED
+          value: "{{ .Values.grafana.auth.anonymousEnabled }}"
+        - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+          value: "{{ .Values.grafana.auth.anonymousOrgRole }}"
+        - name: GF_AUTH_DISABLE_LOGIN_FORM
+          value: "{{ .Values.grafana.auth.disableLoginForm }}"
+        - name: GF_FEATURE_TOGGLES_ENABLE
+          value: "traceqlEditor"
+        ports:
+        - name: http
+          containerPort: {{ .Values.grafana.ports.http }}
+          protocol: TCP
+        volumeMounts:
+        - name: datasources
+          mountPath: /etc/grafana/provisioning/datasources
+        - name: storage
+          mountPath: /var/lib/grafana
+        resources:
+          {{- toYaml .Values.grafana.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: http
+          initialDelaySeconds: 15
+          periodSeconds: 5
+      volumes:
+      - name: datasources
+        configMap:
+          name: {{ .Values.grafana.name }}-datasources
+      - name: storage
+        persistentVolumeClaim:
+          claimName: {{ .Values.grafana.name }}-storage
+{{- end }}

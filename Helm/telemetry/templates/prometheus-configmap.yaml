@@ -1,0 +1,31 @@
+{{- if .Values.prometheus.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.prometheus.name }}-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "prometheus.labels" . | nindent 4 }}
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: {{ .Values.prometheus.scrapeInterval }}
+      evaluation_interval: {{ .Values.prometheus.evaluationInterval }}
+
+    scrape_configs:
+      - job_name: 'prometheus'
+        static_configs:
+          - targets: ['localhost:{{ .Values.prometheus.ports.http }}']
+
+      - job_name: 'otel-collector'
+        static_configs:
+          - targets: ['{{ .Values.otelCollector.name }}.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.otelCollector.ports.metrics }}']
+
+      - job_name: 'tempo'
+        static_configs:
+          - targets: ['{{ .Values.tempo.name }}.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.tempo.ports.http }}']
+
+      - job_name: 'loki'
+        static_configs:
+          - targets: ['{{ .Values.loki.name }}.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.loki.ports.http }}']
+{{- end }}

@@ -28,21 +28,6 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-        - args:
-          - --reporter.grpc.host-port={{ .Values.jaeger.collector_host }}
-          env:
-          - name: POD_NAME
-            valueFrom:
-              fieldRef:
-                apiVersion: v1
-                fieldPath: metadata.name
-          image: jaegertracing/jaeger-agent:1.23.0
-          imagePullPolicy: IfNotPresent
-          name: jaeger-agent
-          resources: {}
-          terminationMessagePath: /dev/termination-log
-          terminationMessagePolicy: File
-
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
@@ -68,6 +53,8 @@ spec:
             - configMapRef:
                 name: {{ .Chart.Name }}-env
           env:
+          - name: OpenTelemetry__Endpoint
+            value: {{ .Values.opentelemetry.endpoint }}
           - name: PNKL_VAULT_TOKEN
             valueFrom:
               secretKeyRef:

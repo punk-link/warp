@@ -1,0 +1,63 @@
+{{- if .Values.loki.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.loki.name }}-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "loki.labels" . | nindent 4 }}
+data:
+  loki-config.yaml: |
+    auth_enabled: false
+
+    server:
+      http_listen_port: {{ .Values.loki.ports.http }}
+      grpc_listen_port: {{ .Values.loki.ports.grpc }}
+
+    common:
+      instance_addr: 127.0.0.1
+      path_prefix: /loki
+      storage:
+        filesystem:
+          chunks_directory: /loki/chunks
+          rules_directory: /loki/rules
+      replication_factor: 1
+      ring:
+        kvstore:
+          store: inmemory
+
+    query_range:
+      results_cache:
+        cache:
+          embedded_cache:
+            enabled: true
+            max_size_mb: 100
+
+    schema_config:
+      configs:
+        - from: 2020-10-24
+          store: tsdb
+          object_store: filesystem
+          schema: v13
+          index:
+            prefix: index_
+            period: 24h
+
+    ruler:
+      alertmanager_url: http://localhost:9093
+
+    limits_config:
+      retention_period: {{ .Values.loki.retention.period }}
+      ingestion_rate_mb: 16
+      ingestion_burst_size_mb: 32
+      per_stream_rate_limit: 8MB
+      per_stream_rate_limit_burst: 16MB
+
+    compactor:
+      working_directory: /loki/compactor
+      compaction_interval: 10m
+      retention_enabled: true
+      retention_delete_delay: 2h
+      retention_delete_worker_count: 150
+      delete_request_store: filesystem
+{{- end }}

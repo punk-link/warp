@@ -1,8 +1,8 @@
 replicaCount: 1
 
 
-jaeger:
-  collector_host: dns:///jaeger-all-in-one.observability:14250
+opentelemetry:
+  endpoint: http://otel-collector.observability.svc.cluster.local:4317
 
 
 image:

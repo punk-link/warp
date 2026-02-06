@@ -1,0 +1,68 @@
+server:
+  http_listen_port: 3200
+  grpc_listen_port: 9095
+  log_level: info
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+
+ingester:
+  max_block_duration: 5m
+  lifecycler:
+    address: 127.0.0.1
+    ring:
+      kvstore:
+        store: inmemory
+      replication_factor: 1
+
+metrics_generator:
+  ring:
+    kvstore:
+      store: inmemory
+    instance_addr: 127.0.0.1
+    instance_port: 9095
+  processor:
+    service_graphs:
+      dimensions:
+        - service.namespace
+    span_metrics:
+      dimensions:
+        - service.namespace
+      enable_target_info: true
+  registry:
+    external_labels:
+      source: tempo
+    collection_interval: 15s
+  traces_storage:
+    path: /tmp/tempo/generator/traces
+  storage:
+    path: /tmp/tempo/generator/wal
+    remote_write:
+      - url: http://prometheus:9090/api/v1/write
+        send_exemplars: true
+    remote_write_flush_deadline: 1m
+  metrics_ingestion_time_range_slack: 30s
+  query_timeout: 30s
+
+storage:
+  trace:
+    backend: local
+    wal:
+      path: /tmp/tempo/wal
+    local:
+      path: /tmp/tempo/blocks
+
+overrides:
+  defaults:
+    metrics_generator:
+      processors: [service-graphs, span-metrics, local-blocks]
+      generate_native_histograms: both
+
+usage_report:
+  reporting_enabled: false

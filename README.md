@@ -14,11 +14,39 @@ To run the service you have to pass the following environment variables:
 |----------------|------|-----|-----------------------------------|
 |PNKL_VAULT_ADDR |String|     |An address of a Vault instance     |
 |PNKL_VAULT_TOKEN|String|     |An access token of a Vault instance|
-|DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS|Boolean|Local env only| Dsiables the telemetry dashboard login|
 
 ### Docker Compose
 
-Run the compose file inside the root directory. It sets up external dependencies like a database etc.
+Run the compose file inside the root directory. It sets up external dependencies like KeyDB.
+
+**Basic (KeyDB only):**
+```powershell
+docker compose up
+```
+
+**With full observability stack (Grafana, Loki, Tempo, Prometheus):**
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.telemetry.yml up
+```
+
+Access Grafana at http://localhost:3000 (anonymous access enabled for local dev).
+
+> **Note:** Tempo is pinned to v2.7.1 due to a MetricsGenerator gRPC service registration bug in v2.10.0 that breaks TraceQL metrics queries.
+
+### Observability
+
+The project uses OpenTelemetry for distributed tracing, metrics, and structured logging. Telemetry can be exported to:
+
+- **Local Development:** Grafana LGTM stack (Loki, Grafana, Tempo, Prometheus) via `docker-compose.telemetry.yml`
+- **Kubernetes:** OTEL Collector in the `observability` namespace
+
+**Grafana Features:**
+- **Traces:** View distributed traces in Tempo
+- **Logs:** Search structured logs in Loki with trace correlation
+- **Metrics:** Query application metrics in Prometheus
+- **Correlation:** Click a trace span to jump to related logs
+
+The app automatically includes trace IDs in all logs and API responses. See [docs/tracing.md](docs/tracing.md) for architecture details.
 
 ### Local Vault Emulation
 
@@ -26,7 +54,7 @@ The compose stack now ships with a HashiCorp Vault dev server that mirrors the p
 
 ```powershell
 # Run the base compose and the e2e override so Vault containers are available for local e2e work
-docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d keydb vault aspire-dashboard vault-init
+docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d keydb vault vault-init
 ```
 
 During boot the Vault container enables a KV v2 engine at `secrets/` and seeds `consul-address`, `consul-token`, and `s3-secret-access-key` placeholders under `secrets/warp`. Override them at any time:
@@ -62,7 +90,7 @@ docker compose exec vault vault kv get secrets/warp
 
   ```powershell
   # recommended - uses the e2e override so vault and vault-init only start when you include the file
-  docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d keydb vault aspire-dashboard vault-init
+  docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d keydb vault vault-init
 
   # Or use the convenience npm script from the repo root
   npm run compose:e2e:up
