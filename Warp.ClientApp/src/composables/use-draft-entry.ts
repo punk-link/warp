@@ -6,7 +6,11 @@ const STORAGE_KEY = 'warp.draftEntry'
 const draft = ref<DraftEntry | null>(null)
 
 
-/** Composable for restoring and persisting a draft entry. */
+/**
+ * Composable for restoring and persisting a draft entry.
+ * Stores the complete entry state including textContent (HTML for Advanced mode, plain text for Simple mode)
+ * and contentDelta (ProseMirror JSON for Advanced mode) in session storage.
+ */
 export function useDraftEntry() {
     return { draft, setDraft, clearDraft }
 }
@@ -48,6 +52,7 @@ function persist() {
         console.log('Failed to persist draft entry')
     }
 }
+
 
 function setDraft(d: DraftEntry) {
     draft.value = d;
