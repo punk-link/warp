@@ -136,7 +136,7 @@ import type { JSONContent } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Underline from '@tiptap/extension-underline'
-import { getByteSize, getSizeIndicatorState, MAX_HTML_SIZE, MAX_CONTENT_DELTA_SIZE } from '../composables/use-content-size-indicator'
+import { getByteSize, getSizeIndicatorState, maxHtmlContentSize, maxContentDeltaSize } from '../composables/use-content-size-indicator'
 
 
 interface Props {
@@ -169,17 +169,17 @@ const htmlSizeBytes = computed(() => getByteSize(currentHtml.value))
 const jsonSizeBytes = computed(() => getByteSize(currentJson.value))
 
 
-const htmlState = computed(() => getSizeIndicatorState(htmlSizeBytes.value, MAX_HTML_SIZE))
-const jsonState = computed(() => getSizeIndicatorState(jsonSizeBytes.value, MAX_CONTENT_DELTA_SIZE))
+const htmlState = computed(() => getSizeIndicatorState(htmlSizeBytes.value, maxHtmlContentSize))
+const jsonState = computed(() => getSizeIndicatorState(jsonSizeBytes.value, maxContentDeltaSize))
 
 
-const isOverLimit = computed(() => htmlSizeBytes.value > MAX_HTML_SIZE || jsonSizeBytes.value > MAX_CONTENT_DELTA_SIZE)
+const isOverLimit = computed(() => htmlSizeBytes.value > maxHtmlContentSize || jsonSizeBytes.value > maxContentDeltaSize)
 
 
 const showSizeWarning = computed(() => htmlState.value.showWarning || jsonState.value.showWarning)
 const circleColor = computed(() => {
-  const htmlPercent = (htmlSizeBytes.value / MAX_HTML_SIZE) * 100
-  const jsonPercent = (jsonSizeBytes.value / MAX_CONTENT_DELTA_SIZE) * 100
+  const htmlPercent = (htmlSizeBytes.value / maxHtmlContentSize) * 100
+  const jsonPercent = (jsonSizeBytes.value / maxContentDeltaSize) * 100
   return htmlPercent >= jsonPercent ? htmlState.value.circleColor : jsonState.value.circleColor
 })
 const sizeWarningText = computed(() => {

@@ -1,8 +1,10 @@
 ﻿using CSharpFunctionalExtensions;
+using Microsoft.Extensions.Options;
 using Warp.WebApp.Attributes;
 using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Entries.Enums;
 using Warp.WebApp.Models.Errors;
+using Warp.WebApp.Models.Options;
 using Warp.WebApp.Models.Validators;
 
 namespace Warp.WebApp.Services.Entries;
@@ -12,6 +14,12 @@ namespace Warp.WebApp.Services.Entries;
 /// </summary>
 public sealed class EntryService : IEntryService
 {
+    public EntryService(IOptions<EntryValidatorOptions> entryValidatorOptions)
+    {
+        _validatorOptions = entryValidatorOptions.Value;
+    }
+
+
     /// <inheritdoc cref="IEntryService.Add"/>
     [TraceMethod]
     public async Task<Result<Entry, DomainError>> Add(EntryRequest entryRequest, CancellationToken cancellationToken)
@@ -35,7 +43,7 @@ public sealed class EntryService : IEntryService
 
         async Task<Result<Entry, DomainError>> Validate(Entry entry)
         {
-            var validator = new EntryValidator(entryRequest);
+            var validator = new EntryValidator(entryRequest, _validatorOptions);
             var validationResult = await validator.ValidateAsync(entry, cancellationToken);
             if (validationResult.IsValid)
                 return entry;
@@ -47,4 +55,7 @@ public sealed class EntryService : IEntryService
             return error;
         }
     }
+
+
+    private readonly EntryValidatorOptions _validatorOptions;
 }

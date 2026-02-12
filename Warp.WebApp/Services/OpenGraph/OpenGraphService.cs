@@ -117,7 +117,6 @@ public partial class OpenGraphService : IOpenGraphService
 
     private static string StripHtmlAndNormalizeWhitespace(string text)
     {
-        // Handles all HTML tags including Tiptap rich text output (headings, lists, blockquotes, code blocks, etc.)
         var textWithoutTags = HtmlTagsExpression().Replace(text, " ");
         var decodedText = WebUtility.HtmlDecode(textWithoutTags);
         

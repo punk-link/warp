@@ -18,7 +18,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, nextTick, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useContentSizeIndicator, MAX_PLAIN_TEXT_SIZE } from '../composables/use-content-size-indicator'
+import { useContentSizeIndicator, maxPlainTextContentSize } from '../composables/use-content-size-indicator'
 
 
 interface Props {
@@ -50,7 +50,7 @@ const emit = defineEmits<{
 
 
 const modelValueRef = computed(() => props.modelValue)
-const { sizeBytes, circleColor, warningText, showWarning, isOverLimit } = useContentSizeIndicator(modelValueRef, MAX_PLAIN_TEXT_SIZE)
+const { sizeBytes, circleColor, warningText, showWarning, isOverLimit } = useContentSizeIndicator(modelValueRef, maxPlainTextContentSize)
 
 function resize() {
     const textArea = element.value

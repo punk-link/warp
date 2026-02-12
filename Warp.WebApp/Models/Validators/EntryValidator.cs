@@ -4,12 +4,13 @@ using Warp.WebApp.Extensions;
 using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Entries.Enums;
 using Warp.WebApp.Models.Errors;
+using Warp.WebApp.Models.Options;
 
 namespace Warp.WebApp.Models.Validators;
 
 public class EntryValidator : AbstractValidator<Entry>
 {
-    public EntryValidator(EntryRequest entryRequest)
+    public EntryValidator(EntryRequest entryRequest, EntryValidatorOptions entryValidatorOptions)
     {
         var error = DomainErrors.WarpContentEmpty();
         switch (entryRequest.EditMode)
@@ -26,8 +27,8 @@ public class EntryValidator : AbstractValidator<Entry>
                     .WithMessage(error.Detail);
 
                 RuleFor(x => x.Content)
-                    .Must((content) => BeWithinContentSizeLimit(content, MaxPlainTextContentSizeBytes))
-                    .WithMessage($"Content size must not exceed {MaxPlainTextContentSizeBytes / 1024} KB");
+                    .Must((content) => BeWithinContentSizeLimit(content, entryValidatorOptions.MaxContentDeltaSizeBytes))
+                    .WithMessage($"Content size must not exceed {entryValidatorOptions.MaxContentDeltaSizeBytes / 1024} KB");
                 break;
             // Business rule: Entry content must not be empty if the edit mode is Advanced and there are no images attached.
             case EditMode.Advanced when entryRequest.ImageIds.Count == 0:
@@ -42,8 +43,8 @@ public class EntryValidator : AbstractValidator<Entry>
         if (entryRequest.EditMode == EditMode.Advanced)
         {
             RuleFor(x => x.Content)
-                .Must((content) => BeWithinContentSizeLimit(content, MaxHtmlContentSizeBytes))
-                .WithMessage($"HTML content size must not exceed {MaxHtmlContentSizeBytes / 1024} KB");
+                .Must((content) => BeWithinContentSizeLimit(content, entryValidatorOptions.MaxHtmlSizeBytes))
+                .WithMessage($"HTML content size must not exceed {entryValidatorOptions.MaxHtmlSizeBytes / 1024} KB");
 
             RuleFor(x => x.ContentDelta)
                 .NotEmpty()
@@ -55,8 +56,8 @@ public class EntryValidator : AbstractValidator<Entry>
                 .When(x => !string.IsNullOrWhiteSpace(x.ContentDelta));
 
             RuleFor(x => x.ContentDelta)
-                .Must((json) => BeWithinContentSizeLimit(json, MaxContentDeltaSizeBytes))
-                .WithMessage($"ContentDelta size must not exceed {MaxContentDeltaSizeBytes / 1024} KB")
+                .Must((json) => BeWithinContentSizeLimit(json, entryValidatorOptions.MaxContentDeltaSizeBytes))
+                .WithMessage($"ContentDelta size must not exceed {entryValidatorOptions.MaxContentDeltaSizeBytes / 1024} KB")
                 .When(x => !string.IsNullOrWhiteSpace(x.ContentDelta));
         }
     }
@@ -97,8 +98,4 @@ public class EntryValidator : AbstractValidator<Entry>
         var plainText = Services.HtmlSanitizer.GetPlainText(content);
         return !string.IsNullOrWhiteSpace(plainText);
     }
-
-    private const int MaxPlainTextContentSizeBytes = 256 * 1024;
-    private const int MaxHtmlContentSizeBytes = 256 * 1024;
-    private const int MaxContentDeltaSizeBytes = 512 * 1024;
 }

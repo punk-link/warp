@@ -12,6 +12,9 @@ declare global {
         appConfig?: {
             apiBaseUrl?: string
             environment?: string
+            maxContentDeltaSize?: number
+            maxHtmlContentSize?: number
+            maxPlainTextContentSize?: number
             sentryDsn?: string
             sentryProfilesSampleRate?: number | null
             sentryTracesSampleRate?: number | null
