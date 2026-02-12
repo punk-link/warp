@@ -119,17 +119,24 @@
             </button>
         </div>
 
-        <EditorContent :editor="editor" class="editor-content" />
+        <div class="editor-wrapper">
+            <EditorContent :editor="editor" class="editor-content" />
+        </div>
+        <div v-if="showSizeWarning" class="flex items-center justify-end gap-2 mt-1">
+            <div class="w-2 h-2 rounded-full" :class="circleColor"></div>
+            <span class="text-xs text-gray-600">{{ sizeWarningText }}</span>
+        </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { watch, onBeforeUnmount } from 'vue'
+import { watch, onBeforeUnmount, ref, computed } from 'vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import type { JSONContent } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Underline from '@tiptap/extension-underline'
+import { getByteSize, getSizeIndicatorState, MAX_HTML_SIZE, MAX_CONTENT_DELTA_SIZE } from '../composables/use-content-size-indicator'
 
 
 interface Props {
@@ -150,8 +157,37 @@ const emit = defineEmits<{
     (e: 'update:modelValue', value: string): void;
     (e: 'update:html', value: string): void;
     (e: 'update:textLength', value: number): void;
+    (e: 'update:sizeWarning', htmlBytes: number, jsonBytes: number, isOverLimit: boolean): void;
 }>()
 
+
+const currentHtml = ref('')
+const currentJson = ref('')
+
+
+const htmlSizeBytes = computed(() => getByteSize(currentHtml.value))
+const jsonSizeBytes = computed(() => getByteSize(currentJson.value))
+
+
+const htmlState = computed(() => getSizeIndicatorState(htmlSizeBytes.value, MAX_HTML_SIZE))
+const jsonState = computed(() => getSizeIndicatorState(jsonSizeBytes.value, MAX_CONTENT_DELTA_SIZE))
+
+
+const isOverLimit = computed(() => htmlSizeBytes.value > MAX_HTML_SIZE || jsonSizeBytes.value > MAX_CONTENT_DELTA_SIZE)
+
+
+const showSizeWarning = computed(() => htmlState.value.showWarning || jsonState.value.showWarning)
+const circleColor = computed(() => {
+  const htmlPercent = (htmlSizeBytes.value / MAX_HTML_SIZE) * 100
+  const jsonPercent = (jsonSizeBytes.value / MAX_CONTENT_DELTA_SIZE) * 100
+  return htmlPercent >= jsonPercent ? htmlState.value.circleColor : jsonState.value.circleColor
+})
+const sizeWarningText = computed(() => {
+  if (htmlState.value.showWarning && jsonState.value.showWarning) {
+    return isOverLimit.value ? 'Content size limit exceeded' : 'Content getting large'
+  }
+  return htmlState.value.warningText || jsonState.value.warningText
+})
 
 function parseContent(value: string): JSONContent | string {
     if (!value || value.trim() === '')
@@ -185,7 +221,7 @@ const editor = useEditor({
     ],
     editorProps: {
         attributes: {
-            class: 'tiptap-editor rich-text-content min-h-40 max-h-96 overflow-y-auto px-3 py-2 border-0 border-b-2 border-primary rounded-none focus:outline-none focus:border-primary/80 transition-all duration-200',
+            class: 'tiptap-editor rich-text-content min-h-40 max-h-96 overflow-y-auto px-3 py-2 rounded-none focus:outline-none transition-all duration-200 border-0 border-b-2 border-primary',
             placeholder: props.placeholder,
         },
     },
@@ -196,10 +232,15 @@ const editor = useEditor({
         const json = editor.value.getJSON()
         const html = editor.value.getHTML()
         const textLength = editor.value.getText().length
+        const jsonString = JSON.stringify(json)
 
-        emit('update:modelValue', JSON.stringify(json))
+        currentHtml.value = html
+        currentJson.value = jsonString
+
+        emit('update:modelValue', jsonString)
         emit('update:html', html)
         emit('update:textLength', textLength)
+        emit('update:sizeWarning', htmlSizeBytes.value, jsonSizeBytes.value, isOverLimit.value)
     },
 })
 
@@ -208,12 +249,12 @@ watch(() => props.modelValue, (newValue) => {
     if (!editor.value)
         return
 
-    const currentJson = JSON.stringify(editor.value.getJSON())
-    if (currentJson === newValue)
+    const currentJsonString = JSON.stringify(editor.value.getJSON())
+    if (currentJsonString === newValue)
         return
 
     const content = parseContent(newValue)
-    editor.value.commands.setContent(content, false)
+    editor.value.commands.setContent(content, { emitUpdate: false })
 })
 
 

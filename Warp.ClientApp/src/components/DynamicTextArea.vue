@@ -1,17 +1,24 @@
 <template>
     <div class="flex flex-col">
         <label v-if="label" class="form-label floating-label order-1">{{ label }}</label>
-        <textarea ref="element" class="form-textarea order-2 bg-transparent" placeholder=" "
-            style="height:40px; overflow-y:hidden;" :maxlength="maxLength ?? undefined" :disabled="disabled"
-            :aria-label="ariaLabel || t('home.editor.textLabel') || 'Text'" :value="modelValue" @input="onInput" />
+        <div class="textarea-wrapper">
+            <textarea ref="element" class="form-textarea order-2 bg-transparent" placeholder=" "
+                style="height:40px; overflow-y:hidden;" :maxlength="maxLength ?? undefined" :disabled="disabled"
+                :aria-label="ariaLabel || t('home.editor.textLabel') || 'Text'" :value="modelValue" @input="onInput" />
+        </div>
         <label class="form-label floating-label order-1" style="z-index: -1;">{{ placeholder }}</label>
+        <div v-if="showWarning" class="flex items-center justify-end gap-2 mt-1">
+            <div class="w-2 h-2 rounded-full" :class="circleColor"></div>
+            <span class="text-xs text-gray-600">{{ warningText }}</span>
+        </div>
         <p v-if="helper" class="text-xs text-gray-400 mt-2">{{ helper }}</p>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, nextTick } from 'vue'
+import { ref, watch, onMounted, nextTick, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useContentSizeIndicator, MAX_PLAIN_TEXT_SIZE } from '../composables/use-content-size-indicator'
 
 
 interface Props {
@@ -36,8 +43,14 @@ const props = withDefaults(defineProps<Props>(), {
     disabled: false,
 });
 const element = ref<HTMLTextAreaElement | null>(null)
-const emit = defineEmits<{ (e: 'update:modelValue', value: string): void }>()
+const emit = defineEmits<{
+    (e: 'update:modelValue', value: string): void;
+    (e: 'update:sizeWarning', sizeBytes: number, isOverLimit: boolean): void;
+}>()
 
+
+const modelValueRef = computed(() => props.modelValue)
+const { sizeBytes, circleColor, warningText, showWarning, isOverLimit } = useContentSizeIndicator(modelValueRef, MAX_PLAIN_TEXT_SIZE)
 
 function resize() {
     const textArea = element.value
@@ -55,6 +68,7 @@ function resize() {
 function onInput(e: Event) {
     const val = (e.target as HTMLTextAreaElement).value
     emit('update:modelValue', val)
+    emit('update:sizeWarning', sizeBytes.value, isOverLimit.value)
     resize()
 }
 
@@ -62,8 +76,12 @@ function onInput(e: Event) {
 watch(() => props.modelValue, async () => {
     await nextTick()
     resize()
+    emit('update:sizeWarning', sizeBytes.value, isOverLimit.value)
 })
 
 
-onMounted(() => resize())
+onMounted(() => {
+    resize()
+    emit('update:sizeWarning', sizeBytes.value, isOverLimit.value)
+})
 </script>

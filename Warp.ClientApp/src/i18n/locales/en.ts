@@ -133,6 +133,11 @@ export default {
             ariaClose: 'Close notification',
             copyDetails: 'Copy details',
             copyDiagnostics: 'Copy diagnostic identifiers'
+        },
+        contentSizeIndicator: {
+            exceeded: 'Content size limit exceeded',
+            approaching: 'Approaching content size limit',
+            large: 'Content size getting large'
         }
     },
 

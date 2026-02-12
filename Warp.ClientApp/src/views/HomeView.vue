@@ -15,7 +15,7 @@
                 <div v-if="mode === EditMode.Advanced" class="w-full">
                     <AdvancedEditor>
                         <template #text>
-                            <RichTextEditor v-model="contentDelta" :editable="!pending" :placeholder="t('home.editor.textPlaceholder')" @update:html="text = $event" @update:text-length="richTextLength = $event" />
+                            <RichTextEditor v-model="contentDelta" :editable="!pending" :placeholder="t('home.editor.textPlaceholder')" @update:html="text = $event" @update:text-length="richTextLength = $event" @update:size-warning="onAdvancedSizeWarning" />
                         </template>
                         <template #gallery>
                             <div class="gallery" ref="dropAreaRef">
@@ -30,7 +30,7 @@
                 <div v-else class="w-full">
                     <SimpleEditor>
                         <template #text>
-                            <DynamicTextArea v-model="text" :placeholder="t('home.editor.textPlaceholder')" />
+                            <DynamicTextArea v-model="text" :placeholder="t('home.editor.textPlaceholder')" @update:size-warning="onSimpleSizeWarning" />
                         </template>
                     </SimpleEditor>
                 </div>
@@ -84,6 +84,7 @@ const expiration = ref<ExpirationPeriod>(ExpirationPeriod.FiveMinutes)
 const expirationOptions = ref<ExpirationPeriod[]>([])
 const pending = ref(false)
 const entryIdRef = ref<string | null>(null)
+const isContentOverLimit = ref(false)
 
 const dropAreaRef = ref<HTMLElement | null>(null)
 const fileInputRef = ref<HTMLInputElement | null>(null)
@@ -109,7 +110,20 @@ function removeItem(idx: number) {
 }
 
 
+function onSimpleSizeWarning(sizeBytes: number, isOverLimit: boolean) {
+    isContentOverLimit.value = isOverLimit
+}
+
+
+function onAdvancedSizeWarning(htmlBytes: number, jsonBytes: number, isOverLimit: boolean) {
+    isContentOverLimit.value = isOverLimit
+}
+
+
 const isValid = computed(() => {
+    if (isContentOverLimit.value)
+        return false
+    
     if (mode.value === EditMode.Advanced)
         return hasTextContent(text.value) || galleryCount.value > 0
     
