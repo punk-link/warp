@@ -2,17 +2,17 @@
 
 namespace Warp.WebApp.Services;
 
-public static partial class TextFormatter
+public static partial class PlainTextSanitizer
 {
     /// <summary>
-    /// Normalizes raw user text for storage while preserving Markdown semantics:
+    /// Normalizes raw plain text for storage:
     /// - Normalizes all line endings to '\n'
     /// - Preserves blank lines (paragraph separators)
     /// - Trims trailing spaces and tabs on non-blank lines
     /// - Converts whitespace-only lines to empty string
-    /// Does not strip HTML so that future Markdown (which can allow or post-process raw HTML) has the original source.
+    /// WARNING: Do NOT use for HTML content as it will strip formatting-significant whitespace and add newlines that mangle HTML.
     /// </summary>
-    public static string NormalizeForMarkdownSource(string text)
+    public static string Sanitize(string text)
     {
         if (string.IsNullOrEmpty(text))
             return string.Empty;

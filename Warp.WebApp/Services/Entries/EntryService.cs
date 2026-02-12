@@ -1,6 +1,7 @@
 ﻿using CSharpFunctionalExtensions;
 using Warp.WebApp.Attributes;
 using Warp.WebApp.Models.Entries;
+using Warp.WebApp.Models.Entries.Enums;
 using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Models.Validators;
 
@@ -21,8 +22,14 @@ public sealed class EntryService : IEntryService
 
         Result<Entry, DomainError> BuildEntry()
         {
-            var normalized = TextFormatter.NormalizeForMarkdownSource(entryRequest.TextContent);
-            return new Entry(normalized);
+            if (entryRequest.EditMode is EditMode.Advanced)
+            {
+                var sanitizedHtml = HtmlSanitizer.Sanitize(entryRequest.TextContent);
+                return new Entry(content: sanitizedHtml, contentDelta: entryRequest.ContentDelta);
+            }
+
+            var normalizedText = PlainTextSanitizer.Sanitize(entryRequest.TextContent);
+            return new Entry(content: normalizedText, contentDelta: null);
         }
 
 
