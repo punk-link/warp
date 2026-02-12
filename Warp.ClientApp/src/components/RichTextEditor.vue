@@ -122,10 +122,19 @@
         <div class="editor-wrapper">
             <EditorContent :editor="editor" class="editor-content" />
         </div>
-        <div v-if="showSizeWarning" class="flex items-center justify-end gap-2 mt-1">
-            <div class="w-2 h-2 rounded-full" :class="circleColor"></div>
-            <span class="text-xs text-gray-600">{{ sizeWarningText }}</span>
-        </div>
+        <Transition
+            enter-active-class="transition-all duration-200 ease-out"
+            enter-from-class="opacity-0 -translate-y-1"
+            enter-to-class="opacity-100 translate-y-0"
+            leave-active-class="transition-all duration-150 ease-in"
+            leave-from-class="opacity-100 translate-y-0"
+            leave-to-class="opacity-0 -translate-y-1"
+        >
+            <div v-if="showSizeWarning" class="flex items-center justify-end gap-2 mt-1">
+                <span class="text-xs text-gray-600">{{ sizeWarningText }}</span>
+                <div class="w-2 h-2 rounded-full flex-shrink-0 transition-colors duration-300" :class="circleColor"></div>
+            </div>
+        </Transition>
     </div>
 </template>
 
@@ -136,6 +145,7 @@ import type { JSONContent } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Underline from '@tiptap/extension-underline'
+import { useI18n } from 'vue-i18n'
 import { getByteSize, getSizeIndicatorState, maxHtmlContentSize, maxContentDeltaSize } from '../composables/use-content-size-indicator'
 
 
@@ -144,6 +154,9 @@ interface Props {
     editable?: boolean;
     placeholder?: string;
 }
+
+
+const { t } = useI18n()
 
 
 const props = withDefaults(defineProps<Props>(), {
@@ -178,15 +191,21 @@ const isOverLimit = computed(() => htmlSizeBytes.value > maxHtmlContentSize || j
 
 const showSizeWarning = computed(() => htmlState.value.showWarning || jsonState.value.showWarning)
 const circleColor = computed(() => {
-  const htmlPercent = (htmlSizeBytes.value / maxHtmlContentSize) * 100
-  const jsonPercent = (jsonSizeBytes.value / maxContentDeltaSize) * 100
-  return htmlPercent >= jsonPercent ? htmlState.value.circleColor : jsonState.value.circleColor
+    const htmlPercent = (htmlSizeBytes.value / maxHtmlContentSize) * 100
+    const jsonPercent = (jsonSizeBytes.value / maxContentDeltaSize) * 100
+    return htmlPercent >= jsonPercent ? htmlState.value.circleColor : jsonState.value.circleColor
 })
 const sizeWarningText = computed(() => {
-  if (htmlState.value.showWarning && jsonState.value.showWarning) {
-    return isOverLimit.value ? 'Content size limit exceeded' : 'Content getting large'
-  }
-  return htmlState.value.warningText || jsonState.value.warningText
+    const htmlPercent = (htmlSizeBytes.value / maxHtmlContentSize) * 100
+    const jsonPercent = (jsonSizeBytes.value / maxContentDeltaSize) * 100
+    
+    const dominantState = htmlPercent >= jsonPercent ? htmlState.value : jsonState.value
+    const key = dominantState.warningKey
+    
+    if (!key)
+        return null
+    
+    return t(`components.contentSizeIndicator.${key}`)
 })
 
 function parseContent(value: string): JSONContent | string {

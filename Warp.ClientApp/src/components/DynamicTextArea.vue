@@ -1,17 +1,26 @@
 <template>
     <div class="flex flex-col">
         <label v-if="label" class="form-label floating-label order-1">{{ label }}</label>
-        <div class="textarea-wrapper">
-            <textarea ref="element" class="form-textarea order-2 bg-transparent" placeholder=" "
+        <div class="textarea-wrapper order-2">
+            <textarea ref="element" class="form-textarea bg-transparent" placeholder=" "
                 style="height:40px; overflow-y:hidden;" :maxlength="maxLength ?? undefined" :disabled="disabled"
                 :aria-label="ariaLabel || t('home.editor.textLabel') || 'Text'" :value="modelValue" @input="onInput" />
+            <label class="form-label floating-label">{{ placeholder }}</label>
         </div>
-        <label class="form-label floating-label order-1" style="z-index: -1;">{{ placeholder }}</label>
-        <div v-if="showWarning" class="flex items-center justify-end gap-2 mt-1">
-            <div class="w-2 h-2 rounded-full" :class="circleColor"></div>
-            <span class="text-xs text-gray-600">{{ warningText }}</span>
-        </div>
-        <p v-if="helper" class="text-xs text-gray-400 mt-2">{{ helper }}</p>
+        <Transition
+            enter-active-class="transition-all duration-200 ease-out"
+            enter-from-class="opacity-0 -translate-y-1"
+            enter-to-class="opacity-100 translate-y-0"
+            leave-active-class="transition-all duration-150 ease-in"
+            leave-from-class="opacity-100 translate-y-0"
+            leave-to-class="opacity-0 -translate-y-1"
+        >
+            <div v-if="showWarning" class="flex items-center justify-end gap-2 mt-1 order-3">
+                <span class="text-xs text-gray-600">{{ warningText }}</span>
+                <div class="w-2 h-2 rounded-full flex-shrink-0 transition-colors duration-300" :class="circleColor"></div>
+            </div>
+        </Transition>
+        <p v-if="helper" class="text-xs text-gray-400 mt-2 order-4">{{ helper }}</p>
     </div>
 </template>
 

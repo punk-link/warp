@@ -5,9 +5,9 @@ import { useI18n } from 'vue-i18n'
 /**
  * Content size limits in bytes (matching backend validation)
  */
-export const maxPlainTextContentSize = window.appConfig?.maxPlainTextContentSize
-export const maxHtmlContentSize = window.appConfig?.maxHtmlContentSize
-export const maxContentDeltaSize = window.appConfig?.maxContentDeltaSize
+export const maxPlainTextContentSize = window.appConfig?.maxPlainTextContentSize ?? 262144
+export const maxHtmlContentSize = window.appConfig?.maxHtmlContentSize ?? 262144
+export const maxContentDeltaSize = window.appConfig?.maxContentDeltaSize ?? 524288
 
 
 /**
