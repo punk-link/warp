@@ -252,23 +252,43 @@ onMounted(async () => {
 })
 
 
+function textToProseMirrorJson(plainText: string): string {
+    const lines = plainText.split('\n')
+    const content = lines.map(line => {
+        if (line.trim()) {
+            return {
+                type: 'paragraph',
+                content: [{ type: 'text', text: line }]
+            }
+        } else {
+            return {
+                type: 'paragraph'
+            }
+        }
+    })
+    
+    const doc = {
+        type: 'doc',
+        content
+    }
+    
+    return JSON.stringify(doc)
+}
+
+
 watch(mode, (val, oldVal) => {
     localStorage.setItem(EDIT_MODE_STORAGE_KEY, val)
     
     if (val === EditMode.Advanced && oldVal === EditMode.Simple) {
         if (text.value && text.value.trim().length > 0)
-            contentDelta.value = text.value
+            contentDelta.value = textToProseMirrorJson(text.value)
     }
     
     if (val === EditMode.Simple && oldVal === EditMode.Advanced) {
         contentDelta.value = ''
         richTextLength.value = 0
         
-        //if (text.value === '<p></p>' || !hasTextContent(text.value)) {
-            //text.value = ''
-        //} else {
-            text.value = stripHtml(text.value)
-        //}
+        text.value = stripHtml(text.value)
     }
 })
 </script>
