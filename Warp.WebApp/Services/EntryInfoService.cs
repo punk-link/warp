@@ -236,6 +236,7 @@ public partial class EntryInfoService : IEntryInfoService
             {
                 Id = newEntryId,
                 TextContent = tuple.EntryInfo.Entry.Content,
+                ContentDelta = tuple.EntryInfo.Entry.ContentDelta,
                 ExpiresIn = expiresIn,
                 EditMode = tuple.EntryInfo.EditMode,
                 ImageIds = tuple.NewImageIds

@@ -32,9 +32,7 @@
                         <div class="text-content font-sans-serif text-base pt-5 whitespace-pre-wrap break-words" :class="{ visible: showContent }" v-if="editMode === EditMode.Simple">
                             {{ text }}
                         </div>
-                        <div class="text-content pt-5" :class="{ visible: showContent }" v-else-if="editMode === EditMode.Advanced">
-                            <RichTextEditor v-model="contentDelta" :editable="false" />
-                        </div>
+                        <div class="text-content rich-text-content font-sans-serif text-base pt-5" :class="{ visible: showContent }" v-else-if="editMode === EditMode.Advanced" v-html="sanitizedHtml"></div>
                     </div>
                 </article>
 
@@ -63,10 +61,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watchEffect, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, onMounted, watchEffect, onBeforeUnmount, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { entryApi } from '../api/entry-api'
+import { sanitize } from '../helpers/sanitize-html'
 import Logo from '../components/Logo.vue'
 import { useDraftEntry } from '../composables/use-draft-entry'
 import { useGallery } from '../composables/use-gallery'
@@ -74,7 +73,6 @@ import { EditMode } from '../types/entries/enums/edit-modes'
 import type { DraftEntry } from '../types/entries/draft-entry'
 import Button from '../components/Button.vue'
 import GalleryItem from '../components/GalleryItem.vue'
-import RichTextEditor from '../components/RichTextEditor.vue'
 import { ViewNames } from '../router/enums/view-names'
 
 const route = useRoute()
@@ -99,6 +97,14 @@ const saved = ref<boolean>(!!routeId)
 const preserveGalleryOnUnmount = ref(false)
 const showContent = ref(false)
 const { t } = useI18n()
+
+
+const sanitizedHtml = computed(() => {
+    if (!text.value)
+        return ''
+    
+    return sanitize(text.value)
+})
 
 
 async function onCloneEdit() {

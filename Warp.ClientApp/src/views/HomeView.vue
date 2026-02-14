@@ -146,12 +146,13 @@ function getEditMode(editMode: EditMode): EditMode {
 function hydrateStateFromDraft(draft: DraftEntry): string {
     entryIdRef.value = draft.id
 
-    mode.value = getEditMode(parseEditMode(draft.editMode as unknown))
     expiration.value = draft.expirationPeriod ?? ExpirationPeriod.FiveMinutes
     text.value = draft.textContent
     
     if (draft.contentDelta)
         contentDelta.value = draft.contentDelta
+    
+    mode.value = getEditMode(parseEditMode(draft.editMode as unknown))
 
     return draft.id
 }
@@ -168,12 +169,13 @@ async function initiateStateFromServer(): Promise<string> {
     entryIdRef.value = entry.id
 
     entry.editMode = getEditMode(parseEditMode(entry.editMode as unknown))
-    mode.value = entry.editMode
     expiration.value = entry.expirationPeriod ?? ExpirationPeriod.FiveMinutes
     text.value = entry.textContent
     
     if (entry.contentDelta)
         contentDelta.value = entry.contentDelta
+    
+    mode.value = entry.editMode
 
     if (Array.isArray(entry.images) && entry.images.length > 0) {
         const imageUrls = (entry.images as any[])
@@ -280,7 +282,8 @@ watch(mode, (val, oldVal) => {
     localStorage.setItem(EDIT_MODE_STORAGE_KEY, val)
     
     if (val === EditMode.Advanced && oldVal === EditMode.Simple) {
-        if (text.value && text.value.trim().length > 0)
+        // Only convert text to JSON if contentDelta is not already set (i.e., user manually switched modes)
+        if (text.value && text.value.trim().length > 0 && !contentDelta.value)
             contentDelta.value = textToProseMirrorJson(text.value)
     }
     
