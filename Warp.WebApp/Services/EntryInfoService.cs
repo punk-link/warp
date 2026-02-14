@@ -1,10 +1,13 @@
 ﻿using CSharpFunctionalExtensions;
 using CSharpFunctionalExtensions.ValueTasks;
 using System.Diagnostics;
+using System.Net;
+using System.Text.RegularExpressions;
 using Warp.WebApp.Attributes;
 using Warp.WebApp.Data;
 using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Models.Entries;
+using Warp.WebApp.Models.Entries.Enums;
 using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Models.Images;
 using Warp.WebApp.Models.Validators;
@@ -21,7 +24,7 @@ namespace Warp.WebApp.Services;
 /// Service responsible for managing entry information including creation, 
 /// retrieval, copying, and removal of entries and their associated images.
 /// </summary>
-public class EntryInfoService : IEntryInfoService
+public partial class EntryInfoService : IEntryInfoService
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="EntryInfoService"/> class.
@@ -73,6 +76,7 @@ public class EntryInfoService : IEntryInfoService
             .Bind(GetImageInfos)
             .Bind(AddOpenGraphDescription)
             .Bind(BuildEntryInfo)
+            .Tap(RecordContentSizeMetric)
             .Bind(Validate)
             .Bind(AttachToCreator)
             .Tap(CacheEntryInfo)
@@ -116,6 +120,25 @@ public class EntryInfoService : IEntryInfoService
         {
             var expirationTime = now + entryRequest.ExpiresIn;
             return new EntryInfo(entryInfoId, creator.Id, now, expirationTime, entryRequest.EditMode, tuple.Entry, tuple.ImageInfos, 0);
+        }
+
+
+        void RecordContentSizeMetric(EntryInfo entryInfo)
+        {
+            var content = entryInfo.Entry.Content;
+            var plainTextContent = entryInfo.EditMode == EditMode.Advanced 
+                ? StripHtmlTags(content) 
+                : content;
+
+            var characterCount = plainTextContent.Length;
+            var editMode = entryInfo.EditMode.ToString().ToLowerInvariant();
+
+            var tags = new TagList
+            {
+                { EntryInfoMetricTagNames.EditMode, editMode }
+            };
+
+            ApplicationMetrics.EntryContentSizeChars.Record(characterCount, tags);
         }
 
 
@@ -498,6 +521,17 @@ public class EntryInfoService : IEntryInfoService
 
         return result;
     }
+
+
+    private static string StripHtmlTags(string html)
+    {
+        var textWithoutTags = HtmlTagsExpression().Replace(html, " ");
+        return WebUtility.HtmlDecode(textWithoutTags);
+    }
+
+
+    [GeneratedRegex(@"<(?:[^""'<>]|""[^""]*""|'[^']*')*?>", RegexOptions.Compiled)]
+    private static partial Regex HtmlTagsExpression();
 
 
     private readonly ICreatorService _creatorService;

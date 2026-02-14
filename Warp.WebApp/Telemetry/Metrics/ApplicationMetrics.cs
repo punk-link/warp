@@ -11,4 +11,6 @@ public static class ApplicationMetrics
     public static readonly Counter<long> EntryInfoActionCounter = Meter.CreateCounter<long>("entry_info_action_total");
 
     public static readonly Histogram<double> EntryInfoActionDuration = Meter.CreateHistogram<double>("entry_info_action_duration_ms", "ms");
+
+    public static readonly Histogram<int> EntryContentSizeChars = Meter.CreateHistogram<int>("entry_content_size_chars", "characters");
 }
