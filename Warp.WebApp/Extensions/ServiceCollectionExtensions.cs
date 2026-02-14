@@ -122,9 +122,9 @@ internal static class ServiceCollectionExtensions
                 {
                     var section = builder.Configuration.GetSection("Content:SizeLimits");
 
-                    options.MaxContentDeltaSizeBytes = section.GetValue<int>("EntryValidatorOptions:MaxTitleLength");
-                    options.MaxHtmlSizeBytes = section.GetValue<int>("EntryValidatorOptions:MaxDescriptionLength");
-                    options.MaxPlainTextSizeBytes = section.GetValue<int>("EntryValidatorOptions:MaxTagsCount");
+                    options.MaxContentDeltaSizeBytes = section.GetValue<int>("MaxContentDeltaSize");
+                    options.MaxHtmlSizeBytes = section.GetValue<int>("MaxHtmlSize");
+                    options.MaxPlainTextSizeBytes = section.GetValue<int>("MaxPlainTextSize");
                 })
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
