@@ -16,7 +16,7 @@
             leave-to-class="opacity-0 -translate-y-1"
         >
             <div v-if="showWarning" class="flex items-center justify-end gap-2 mt-1 order-3">
-                <span class="text-xs text-gray-600">{{ warningText }}</span>
+                <span class="text-xs text-gray-400">{{ warningText }}</span>
                 <div class="w-2 h-2 rounded-full flex-shrink-0 transition-colors duration-300" :class="circleColor"></div>
             </div>
         </Transition>

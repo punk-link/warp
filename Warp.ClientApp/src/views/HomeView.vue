@@ -59,7 +59,7 @@ import { useI18n } from 'vue-i18n'
 import { entryApi } from '../api/entry-api'
 import { creatorApi } from '../api/creator-api'
 import { useMetadata } from '../composables/use-metadata'
-import { hasTextContent } from '../helpers/sanitize-html'
+import { hasTextContent, stripHtml } from '../helpers/sanitize-html'
 import Logo from '../components/Logo.vue'
 import ModeSwitcher from '../components/ModeSwitcher.vue'
 import SimpleEditor from '../components/SimpleEditor.vue'
@@ -252,12 +252,23 @@ onMounted(async () => {
 })
 
 
-watch(mode, (val) => {
+watch(mode, (val, oldVal) => {
     localStorage.setItem(EDIT_MODE_STORAGE_KEY, val)
     
-    if (val === EditMode.Simple) {
+    if (val === EditMode.Advanced && oldVal === EditMode.Simple) {
+        if (text.value && text.value.trim().length > 0)
+            contentDelta.value = text.value
+    }
+    
+    if (val === EditMode.Simple && oldVal === EditMode.Advanced) {
         contentDelta.value = ''
         richTextLength.value = 0
+        
+        //if (text.value === '<p></p>' || !hasTextContent(text.value)) {
+            //text.value = ''
+        //} else {
+            text.value = stripHtml(text.value)
+        //}
     }
 })
 </script>

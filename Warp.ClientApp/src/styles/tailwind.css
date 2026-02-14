@@ -202,6 +202,14 @@
         @apply text-secondary hover:text-secondary/80 focus:text-secondary/80 active:text-secondary/80 disabled:text-secondary/80;
     }
 
+    .textarea-wrapper {
+        @apply relative;
+    }
+
+    .textarea-wrapper .floating-label {
+        @apply absolute left-0 top-full mt-1 -z-10;
+    }
+
     .floating-label {
         @apply transition-all duration-200 ease-in-out;
     }
@@ -223,7 +231,7 @@
     }
 
     .form-textarea:placeholder-shown + .floating-label {
-        @apply cursor-text max-w-[66.66%] whitespace-nowrap overflow-hidden text-ellipsis origin-bottom-left translate-y-[2.125rem] scale-150;
+        @apply cursor-text max-w-[66.66%] whitespace-nowrap overflow-hidden text-ellipsis origin-bottom-left -translate-y-[2.75rem] scale-150;
     }
 
     .gallery {
