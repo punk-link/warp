@@ -48,7 +48,7 @@ spec:
           mountPath: /etc/tempo.yaml
           subPath: tempo-config.yaml
         - name: storage
-          mountPath: /tempo
+          mountPath: /var/tempo
         resources:
           {{- toYaml .Values.tempo.resources | nindent 10 }}
         livenessProbe:

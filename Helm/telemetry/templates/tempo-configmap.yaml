@@ -50,9 +50,9 @@ data:
           source: tempo
         collection_interval: 15s
       traces_storage:
-        path: /tempo/generator/traces
+        path: /var/tempo/generator/traces
       storage:
-        path: /tempo/generator/wal
+        path: /var/tempo/generator/wal
         remote_write:
           - url: http://{{ .Values.prometheus.name }}.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.prometheus.ports.http }}/api/v1/write
             send_exemplars: true
@@ -64,9 +64,9 @@ data:
       trace:
         backend: local
         wal:
-          path: /tempo/wal
+          path: /var/tempo/wal
         local:
-          path: /tempo/blocks
+          path: /var/tempo/blocks
 
     overrides:
       defaults:
