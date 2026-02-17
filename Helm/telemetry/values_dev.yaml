@@ -1,0 +1,133 @@
+# Development environment values for Warp Telemetry Stack
+
+namespace: observability
+
+# OTEL Collector
+otelCollector:
+  enabled: true
+  name: otel-collector
+  image:
+    repository: otel/opentelemetry-collector-contrib
+    tag: "0.144.0"
+    pullPolicy: IfNotPresent
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  ports:
+    grpc: 4317
+    http: 4318
+    metrics: 8889
+
+# Loki
+loki:
+  enabled: true
+  name: loki
+  image:
+    repository: grafana/loki
+    tag: "3.6.4"
+    pullPolicy: IfNotPresent
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  ports:
+    http: 3100
+    grpc: 9096
+  storage:
+    size: 10Gi
+    storageClassName: "local-path"  # Explicit storage class
+  retention:
+    period: 168h  # 7 days
+
+# Tempo
+tempo:
+  enabled: true
+  name: tempo
+  image:
+    repository: grafana/tempo
+    tag: "2.7.1"
+    pullPolicy: IfNotPresent
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  ports:
+    http: 3200
+    grpc: 9095
+    otlpGrpc: 4317
+    otlpHttp: 4318
+  storage:
+    size: 10Gi
+    storageClassName: "local-path"  # Explicit storage class
+
+# Prometheus
+prometheus:
+  enabled: true
+  name: prometheus
+  image:
+    repository: prom/prometheus
+    tag: "v3.5.1"
+    pullPolicy: IfNotPresent
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+  ports:
+    http: 9090
+  storage:
+    size: 20Gi
+    storageClassName: "local-path"  # Explicit storage class
+  retention:
+    time: 7d
+  scrapeInterval: 15s
+  evaluationInterval: 15s
+
+# Grafana
+grafana:
+  enabled: true
+  name: grafana
+  image:
+    repository: grafana/grafana
+    tag: "12.3"
+    pullPolicy: IfNotPresent
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  ports:
+    http: 3000
+  storage:
+    size: 1Gi
+    storageClassName: "local-path"  # Explicit storage class
+  auth:
+    anonymousEnabled: true
+    anonymousOrgRole: Admin
+    disableLoginForm: true
+  ingress:
+    enabled: false
+    className: nginx
+    host: grafana-dev.example.com
+    tls:
+      enabled: false
+      secretName: grafana-tls
