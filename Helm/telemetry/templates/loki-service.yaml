@@ -1,0 +1,23 @@
+{{- if .Values.loki.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.loki.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "loki.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: http
+    port: {{ .Values.loki.ports.http }}
+    targetPort: http
+    protocol: TCP
+  - name: grpc
+    port: {{ .Values.loki.ports.grpc }}
+    targetPort: grpc
+    protocol: TCP
+  selector:
+    {{- include "loki.selectorLabels" . | nindent 4 }}
+{{- end }}

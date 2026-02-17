@@ -1,0 +1,60 @@
+{{- if .Values.otelCollector.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.otelCollector.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "otel-collector.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.otelCollector.replicas }}
+  selector:
+    matchLabels:
+      {{- include "otel-collector.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "otel-collector.selectorLabels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/otel-collector-configmap.yaml") . | sha256sum }}
+    spec:
+      containers:
+      - name: otel-collector
+        image: "{{ .Values.otelCollector.image.repository }}:{{ .Values.otelCollector.image.tag }}"
+        imagePullPolicy: {{ .Values.otelCollector.image.pullPolicy }}
+        args:
+          - "--config=/etc/otel-collector-config.yaml"
+        ports:
+        - name: otlp-grpc
+          containerPort: {{ .Values.otelCollector.ports.grpc }}
+          protocol: TCP
+        - name: otlp-http
+          containerPort: {{ .Values.otelCollector.ports.http }}
+          protocol: TCP
+        - name: metrics
+          containerPort: {{ .Values.otelCollector.ports.metrics }}
+          protocol: TCP
+        volumeMounts:
+        - name: config
+          mountPath: /etc/otel-collector-config.yaml
+          subPath: otel-collector-config.yaml
+        resources:
+          {{- toYaml .Values.otelCollector.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 13133
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 13133
+          initialDelaySeconds: 10
+          periodSeconds: 5
+      volumes:
+      - name: config
+        configMap:
+          name: {{ .Values.otelCollector.name }}-config
+      restartPolicy: Always
+{{- end }}

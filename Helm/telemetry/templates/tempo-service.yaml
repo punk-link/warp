@@ -1,0 +1,31 @@
+{{- if .Values.tempo.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.tempo.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "tempo.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: http
+    port: {{ .Values.tempo.ports.http }}
+    targetPort: http
+    protocol: TCP
+  - name: grpc
+    port: {{ .Values.tempo.ports.grpc }}
+    targetPort: grpc
+    protocol: TCP
+  - name: otlp-grpc
+    port: {{ .Values.tempo.ports.otlpGrpc }}
+    targetPort: otlp-grpc
+    protocol: TCP
+  - name: otlp-http
+    port: {{ .Values.tempo.ports.otlpHttp }}
+    targetPort: otlp-http
+    protocol: TCP
+  selector:
+    {{- include "tempo.selectorLabels" . | nindent 4 }}
+{{- end }}

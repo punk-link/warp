@@ -1,0 +1,62 @@
+{{- if .Values.grafana.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.grafana.name }}-datasources
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "grafana.labels" . | nindent 4 }}
+data:
+  datasources.yaml: |
+    apiVersion: 1
+
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        url: http://{{ .Values.prometheus.name }}.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.prometheus.ports.http }}
+        isDefault: true
+        editable: true
+        jsonData:
+          timeInterval: {{ .Values.prometheus.scrapeInterval }}
+
+      - name: Loki
+        type: loki
+        access: proxy
+        url: http://{{ .Values.loki.name }}.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.loki.ports.http }}
+        editable: true
+        jsonData:
+          derivedFields:
+            - datasourceUid: tempo
+              matcherRegex: "traceId[\"=:]([0-9a-f]{32})"
+              name: TraceID
+              url: "$${__value.raw}"
+
+      - name: Tempo
+        type: tempo
+        access: proxy
+        url: http://{{ .Values.tempo.name }}.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.tempo.ports.http }}
+        editable: true
+        jsonData:
+          tracesToLogsV2:
+            datasourceUid: loki
+            spanStartTimeShift: '-1m'
+            spanEndTimeShift: '1m'
+            tags:
+              - key: 'traceId'
+                value: 'traceId'
+            filterByTraceID: true
+            filterBySpanID: false
+          tracesToMetrics:
+            datasourceUid: prometheus
+            spanStartTimeShift: '-1m'
+            spanEndTimeShift: '1m'
+          serviceMap:
+            datasourceUid: prometheus
+          nodeGraph:
+            enabled: true
+          search:
+            hide: false
+          lokiSearch:
+            datasourceUid: loki
+{{- end }}
