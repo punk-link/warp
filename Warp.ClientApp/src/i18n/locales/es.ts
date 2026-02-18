@@ -91,6 +91,15 @@ export default {
         goHome: 'Ir al inicio'
     },
 
+    feedback: {
+        title: 'Enviar comentarios',
+        description: '¡Agradecemos tus comentarios! Envíanos tus sugerencias, problemas o comentarios generales por correo electrónico.',
+        instructions: 'Apreciamos todas las ideas de producto, quejas y reportes de errores. Simplemente haz clic en el botón a continuación para abrir tu cliente de correo:',
+        sendEmailButton: 'Enviar correo de comentarios',
+        note: 'Tus comentarios nos ayudan a mejorar el servicio. ¡Gracias por tomarte el tiempo de compartir tus pensamientos!',
+        goHome: 'Ir al inicio'
+    },
+
     components: {
         expirationSelect: {
             label: 'Expira en',
@@ -121,6 +130,7 @@ export default {
                 index: 'Índice',
                 privacy: 'Privacidad',
                 dataRequest: 'Solicitud de datos',
+                feedback: 'Comentarios',
                 sources: 'Fuentes'
             },
             copyright: 'todos los derechos reservados'

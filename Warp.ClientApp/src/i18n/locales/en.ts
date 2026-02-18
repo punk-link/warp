@@ -91,6 +91,15 @@ export default {
         goHome: 'Go to main'
     },
 
+    feedback: {
+        title: 'Send Feedback',
+        description: 'We welcome your feedback! Please send your suggestions, issues, or general comments by email.',
+        instructions: 'All product ideas, complaints, and bug reports are appreciated. Simply click the button below to open your email client:',
+        sendEmailButton: 'Send Feedback Email',
+        note: 'Your feedback helps us improve the service. Thank you for taking the time to share your thoughts!',
+        goHome: 'Go to main'
+    },
+
     components: {
         expirationSelect: {
             label: 'Expires in',
@@ -121,6 +130,7 @@ export default {
                 index: 'Index',
                 privacy: 'Privacy',
                 dataRequest: 'Data Request',
+                feedback: 'Feedback',
                 sources: 'Sources'
             },
             copyright: 'all rights reserved'
