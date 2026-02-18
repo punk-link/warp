@@ -1,5 +1,16 @@
 # Plan: Tiptap Rich Text Editor for Advanced Mode
 
+> **Status:** ✅ **COMPLETED** (February 2026)
+> 
+> All steps (1-26) have been implemented and tested:
+> - Frontend: RichTextEditor component, sanitization, composables
+> - Backend: HTML sanitization service, validators, storage
+> - Telemetry: Content-size histogram with edit_mode tagging
+> - Security: CSP headers, three-layer HTML sanitization
+> - Tests: Backend (34 passing), Frontend unit (43 passing), E2E (code complete)
+> 
+> See [README.md](README.md#edit-modes) for user-facing documentation.
+
 Integrate `@tiptap/vue-3` (ProseMirror-based, actively maintained, Vue 3-native) as the text editor in Advanced mode. Store both ProseMirror JSON (`contentDelta` — lossless for re-editing) and sanitized HTML (`textContent` — for display). Simple mode stays completely unchanged. Backend adds `Ganss.Xss.HtmlSanitizer` for server-side HTML sanitization and a histogram metric for content-size monitoring.
 
 **Key difference vs Quill:** Tiptap is headless/unstyled and schema-constrained — ProseMirror's document model only emits HTML for nodes/marks you explicitly register, giving implicit output sanitization. Combined with server-side `HtmlSanitizer` and client-side DOMPurify, this is defense-in-depth at three layers.
