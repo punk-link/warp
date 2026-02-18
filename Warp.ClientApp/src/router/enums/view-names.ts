@@ -7,5 +7,6 @@ export enum ViewNames {
     Deleted = 'Deleted',
     Privacy = 'Privacy',
     DataRequest = 'DataRequest',
+    Feedback = 'Feedback',
     NotFound = 'NotFound'
 }

@@ -6,6 +6,7 @@ import ErrorPage from '../views/ErrorView.vue'
 import Deleted from '../views/DeletedView.vue'
 import Privacy from '../views/Privacy.vue'
 import DataRequest from '../views/DataRequestView.vue'
+import Feedback from '../views/FeedbackView.vue'
 import { ViewNames } from './enums/view-names'
 
 
@@ -19,6 +20,7 @@ const router = createRouter({
         { path: '/deleted', name: ViewNames.Deleted, component: Deleted },
         { path: '/privacy', name: ViewNames.Privacy, component: Privacy },
         { path: '/data-request', name: ViewNames.DataRequest, component: DataRequest },
+        { path: '/feedback', name: ViewNames.Feedback, component: Feedback },
         { path: '/:pathMatch(.*)*', name: ViewNames.NotFound, component: ErrorPage, meta: { pageBg: 'bg-gray-300' } }
     ]
 })
