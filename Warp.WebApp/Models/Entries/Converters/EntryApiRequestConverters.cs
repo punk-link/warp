@@ -13,7 +13,8 @@ public static class EntryApiRequestConverters
             EditMode = request.EditMode,
             ExpiresIn = GetExpirationPeriod(request.ExpirationPeriod),
             ImageIds = [.. request.ImageIds.Select(IdCoder.Decode)],
-            TextContent = request.TextContent
+            TextContent = request.TextContent,
+            ContentDelta = request.ContentDelta
         };
 
 

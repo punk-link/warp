@@ -4,10 +4,14 @@ Warp is a service that allows users to share short-lived texts and media with fr
 
 ## Technologies
 - ASP.NET Core for the web application
+- Vue 3 + TypeScript + Vite for the SPA (Warp.ClientApp)
 - KeyDB (Redis fork) for data storage
 - Docker for containerization
 - .NET code generators for logging constants, domain errors and messages
 - Tailwind CSS and Sass for styling
+- Tiptap v3 (ProseMirror-based) for rich text editing in Advanced mode
+- DOMPurify for client-side HTML sanitization
+- Ganss.Xss.HtmlSanitizer for server-side HTML sanitization
 
 # Code Style
 

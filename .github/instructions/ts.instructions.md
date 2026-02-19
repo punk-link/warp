@@ -148,6 +148,71 @@ These rules supplement (do not override) any automatic formatter; adjust formatt
   - Attempt JSON parse if `content-type` is JSON; else fallback to text (already implemented in `fetchJson`).
 - Use the `ApiResult<T>` discriminated union type for API response handling, with explicit checks for `result.ok` and `result.kind`.
 
+
+## Rich Text Editor (Tiptap)
+
+The RichTextEditor component ([Warp.ClientApp/src/components/RichTextEditor.vue](Warp.ClientApp/src/components/RichTextEditor.vue)) wraps Tiptap for Advanced mode editing:
+
+### Component Usage
+
+```vue
+<RichTextEditor
+    v-model="contentDelta"
+    :editable="!isReadOnly"
+    :placeholder="t('create.contentPlaceholder')"
+    @update:html="html = $event"
+    @update:textLength="textLength = $event"
+/>
+```
+
+### Props and Events
+
+- **Props:**
+  - `modelValue` (string): ProseMirror JSON string (required)
+  - `editable` (boolean): Enable/disable editing (default: true)
+  - `placeholder` (string): Placeholder text when empty
+
+- **Events:**
+  - `update:modelValue`: Emits ProseMirror JSON string (for persistence)
+  - `update:html`: Emits sanitized HTML (for preview/rendering)
+  - `update:textLength`: Emits plain text character count (for validation)
+
+### HTML Sanitization
+
+All HTML content must be sanitized before rendering with `v-html`:
+
+```ts
+import { sanitize } from '../helpers/sanitize-html'
+
+const safeHtml = sanitize(rawHtml) // Uses DOMPurify with strict allow-list
+```
+
+**Never render unsanitized HTML** — always use the `sanitize()` helper which enforces:
+- Allow-list of safe tags (p, strong, em, u, s, h1-h3, ul, ol, li, a, blockquote, pre, code, br)
+- Removal of dangerous attributes (onclick, onerror, style, etc.)
+- Removal of javascript: hrefs
+- Removal of all script tags
+
+### Content Storage Pattern
+
+When persisting Advanced mode entries:
+
+```ts
+const contentDelta = ref('')  // ProseMirror JSON from editor modelValue
+const contentHtml = ref('')   // Sanitized HTML from update:html event
+
+// Send both to backend:
+formData.append('contentDelta', contentDelta.value)  // For re-editing
+formData.append('textContent', contentHtml.value)    // For display
+```
+
+### Testing Rich Text Components
+
+- Use `@testing-library/vue`'s `render()` and `waitFor()` for component tests
+- Test toolbar button presence and disabled state
+- Avoid testing Tiptap internals (focus on props/events/rendered output)
+- Use Playwright for E2E testing of actual editing workflows
+
 ## State & Persistence
 
 - Draft persistence:

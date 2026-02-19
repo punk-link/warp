@@ -1,8 +1,8 @@
 ﻿using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 
-var summary = BenchmarkRunner.Run<MemoryBenchmarkDemo>();
-Console.WriteLine(summary);
+//var summary = BenchmarkRunner.Run<MemoryBenchmarkDemo>();
+//Console.WriteLine(summary);
 Console.ReadLine();
 
 

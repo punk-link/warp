@@ -30,9 +30,10 @@
                             <GalleryItem :id="img.id" :src="img.url" :editable="false" />
                         </a>
                     </div>
-                    <div ref="textContentEl" class="text-content font-sans-serif text-base whitespace-pre-wrap break-words">
+                    <div v-if="entry?.editMode === EditMode.Simple" ref="textContentEl" class="text-content font-sans-serif text-base whitespace-pre-wrap break-words">
                         {{ entry?.textContent }}
                     </div>
+                    <div v-else-if="entry?.editMode === EditMode.Advanced" ref="textContentEl" class="text-content rich-text-content font-sans-serif text-base" v-html="sanitizedHtml"></div>
                     <div v-if="loading" class="text-center text-gray-400 py-10">
                         {{ t('entry.loading') }}
                     </div>
@@ -75,11 +76,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, onBeforeUnmount, nextTick } from 'vue'
+import { ref, onMounted, watch, onBeforeUnmount, nextTick, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { entryApi } from '../api/entry-api'
 import { routeApiError } from '../api/error-routing'
+import { sanitize } from '../helpers/sanitize-html'
+import { EditMode } from '../types/entries/enums/edit-modes'
 import type { Entry } from '../types/entries/entry'
 import CountdownTimer from '../components/CountdownTimer.vue'
 import GalleryItem from '../components/GalleryItem.vue'
@@ -108,6 +111,14 @@ const animatedViewCount = ref(0)
 const countdownTarget = ref<Date | string | null>(null)
 let expirationTimer: number | null = null
 let fancyboxBound = false
+
+
+const sanitizedHtml = computed(() => {
+    if (!entry.value?.textContent)
+        return ''
+    
+    return sanitize(entry.value.textContent)
+})
 
 
 function animateCount(target: number, durationMs = 1200) {

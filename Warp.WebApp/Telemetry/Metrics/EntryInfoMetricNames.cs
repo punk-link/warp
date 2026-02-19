@@ -8,4 +8,5 @@ public static class EntryInfoMetricTagNames
     public const string Action = "entry_info.action";
     public const string Outcome = "entry_info.outcome";
     public const string FailureReason = "entry_info.failure_reason";
+    public const string EditMode = "entry_info.edit_mode";
 }

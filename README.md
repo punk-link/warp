@@ -266,6 +266,56 @@ Warp offers a `TransitEncryptionService` which integrates with HashiCorp Vault's
 The `EncryptionOptions:Type` setting is mandatory and must be set to either `AesEncryptionService` or `TransitEncryptionService` to specify which encryption service implementation to use. The service implementation is selected at application startup based on this configuration value.
 
 
+## Edit Modes
+
+Warp supports two entry editing modes:
+
+### Simple Mode (Default)
+- Plain text with automatic Markdown-style formatting
+- Normalized whitespace handling
+- Suitable for quick text snippets and code sharing
+
+### Advanced Mode
+- Rich text editing powered by [Tiptap](https://tiptap.dev/) (ProseMirror)
+- Formatting toolbar with:
+  - Text styles: **bold**, *italic*, <u>underline</u>, ~~strikethrough~~
+  - Headings (H1, H2, H3)
+  - Lists (bullet, ordered)
+  - Blockquotes and code blocks
+  - Links
+- Three-layer HTML sanitization:
+  - ProseMirror schema constraints (structural)
+  - Server-side sanitization with `Ganss.Xss.HtmlSanitizer`
+  - Client-side sanitization with DOMPurify on render
+- Content stored as both:
+  - ProseMirror JSON (`ContentDelta`) for lossless re-editing
+  - Sanitized HTML (`Content`) for rendering without loading editor
+
+**Security:** Content-Security-Policy headers restrict inline scripts while allowing Tiptap's minimal inline styling.
+
+## Testing
+
+### Backend Tests
+```bash
+dotnet test Warp.WebApp.Tests/
+```
+
+### Frontend Unit Tests
+```bash
+cd Warp.ClientApp
+npm run test
+```
+
+### E2E Tests
+```bash
+# Start backend and dependencies first
+docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d
+
+# Run E2E tests
+cd Warp.ClientApp
+npm run e2e
+```
+
 ## Project Icons
 
 The project uses these [icofont](https://icofont.com) glyphs:

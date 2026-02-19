@@ -15,7 +15,7 @@
                 <div v-if="mode === EditMode.Advanced" class="w-full">
                     <AdvancedEditor>
                         <template #text>
-                            <DynamicTextArea v-model="text" label="Text" />
+                            <RichTextEditor v-model="contentDelta" :editable="!pending" :placeholder="t('home.editor.textPlaceholder')" @update:html="text = $event" @update:text-length="richTextLength = $event" @update:size-warning="onAdvancedSizeWarning" />
                         </template>
                         <template #gallery>
                             <div class="gallery" ref="dropAreaRef">
@@ -30,7 +30,7 @@
                 <div v-else class="w-full">
                     <SimpleEditor>
                         <template #text>
-                            <DynamicTextArea v-model="text" :placeholder="t('home.editor.textPlaceholder')" />
+                            <DynamicTextArea v-model="text" :placeholder="t('home.editor.textPlaceholder')" @update:size-warning="onSimpleSizeWarning" />
                         </template>
                     </SimpleEditor>
                 </div>
@@ -59,11 +59,13 @@ import { useI18n } from 'vue-i18n'
 import { entryApi } from '../api/entry-api'
 import { creatorApi } from '../api/creator-api'
 import { useMetadata } from '../composables/use-metadata'
+import { hasTextContent, stripHtml } from '../helpers/sanitize-html'
 import Logo from '../components/Logo.vue'
 import ModeSwitcher from '../components/ModeSwitcher.vue'
 import SimpleEditor from '../components/SimpleEditor.vue'
 import DynamicTextArea from '../components/DynamicTextArea.vue'
 import AdvancedEditor from '../components/AdvancedEditor.vue'
+import RichTextEditor from '../components/RichTextEditor.vue'
 import GalleryItem from '../components/GalleryItem.vue'
 import ExpirationSelect from '../components/ExpirationSelect.vue'
 import Button from '../components/Button.vue'
@@ -76,10 +78,13 @@ import { ViewNames } from '../router/enums/view-names'
 const EDIT_MODE_STORAGE_KEY = 'warp.editMode'
 const mode = ref<EditMode>(EditMode.Simple)
 const text = ref<string>('')
+const contentDelta = ref<string>('')
+const richTextLength = ref<number>(0)
 const expiration = ref<ExpirationPeriod>(ExpirationPeriod.FiveMinutes)
 const expirationOptions = ref<ExpirationPeriod[]>([])
 const pending = ref(false)
 const entryIdRef = ref<string | null>(null)
+const isContentOverLimit = ref(false)
 
 const dropAreaRef = ref<HTMLElement | null>(null)
 const fileInputRef = ref<HTMLInputElement | null>(null)
@@ -105,7 +110,25 @@ function removeItem(idx: number) {
 }
 
 
-const isValid = computed(() => text.value.trim().length > 0 || galleryCount.value > 0)
+function onSimpleSizeWarning(sizeBytes: number, isOverLimit: boolean) {
+    isContentOverLimit.value = isOverLimit
+}
+
+
+function onAdvancedSizeWarning(htmlBytes: number, jsonBytes: number, isOverLimit: boolean) {
+    isContentOverLimit.value = isOverLimit
+}
+
+
+const isValid = computed(() => {
+    if (isContentOverLimit.value)
+        return false
+    
+    if (mode.value === EditMode.Advanced)
+        return hasTextContent(text.value) || galleryCount.value > 0
+    
+    return text.value.trim().length > 0 || galleryCount.value > 0
+})
 
 
 function getEditMode(editMode: EditMode): EditMode {
@@ -123,9 +146,13 @@ function getEditMode(editMode: EditMode): EditMode {
 function hydrateStateFromDraft(draft: DraftEntry): string {
     entryIdRef.value = draft.id
 
-    mode.value = getEditMode(parseEditMode(draft.editMode as unknown))
     expiration.value = draft.expirationPeriod ?? ExpirationPeriod.FiveMinutes
     text.value = draft.textContent
+    
+    if (draft.contentDelta)
+        contentDelta.value = draft.contentDelta
+    
+    mode.value = getEditMode(parseEditMode(draft.editMode as unknown))
 
     return draft.id
 }
@@ -142,9 +169,13 @@ async function initiateStateFromServer(): Promise<string> {
     entryIdRef.value = entry.id
 
     entry.editMode = getEditMode(parseEditMode(entry.editMode as unknown))
-    mode.value = entry.editMode
     expiration.value = entry.expirationPeriod ?? ExpirationPeriod.FiveMinutes
     text.value = entry.textContent
+    
+    if (entry.contentDelta)
+        contentDelta.value = entry.contentDelta
+    
+    mode.value = entry.editMode
 
     if (Array.isArray(entry.images) && entry.images.length > 0) {
         const imageUrls = (entry.images as any[])
@@ -183,7 +214,8 @@ function onPreview() {
         editMode: mode.value,
         expirationPeriod: expiration.value!,
         images: items.value.map(i => i.url),
-        textContent: text.value
+        textContent: text.value,
+        contentDelta: mode.value === EditMode.Advanced ? contentDelta.value : undefined
     })
 
     router.push({ 
@@ -222,7 +254,44 @@ onMounted(async () => {
 })
 
 
-watch(mode, (val) => {
+function textToProseMirrorJson(plainText: string): string {
+    const lines = plainText.split('\n')
+    const content = lines.map(line => {
+        if (line.trim()) {
+            return {
+                type: 'paragraph',
+                content: [{ type: 'text', text: line }]
+            }
+        } else {
+            return {
+                type: 'paragraph'
+            }
+        }
+    })
+    
+    const doc = {
+        type: 'doc',
+        content
+    }
+    
+    return JSON.stringify(doc)
+}
+
+
+watch(mode, (val, oldVal) => {
     localStorage.setItem(EDIT_MODE_STORAGE_KEY, val)
+    
+    if (val === EditMode.Advanced && oldVal === EditMode.Simple) {
+        // Only convert text to JSON if contentDelta is not already set (i.e., user manually switched modes)
+        if (text.value && text.value.trim().length > 0 && !contentDelta.value)
+            contentDelta.value = textToProseMirrorJson(text.value)
+    }
+    
+    if (val === EditMode.Simple && oldVal === EditMode.Advanced) {
+        contentDelta.value = ''
+        richTextLength.value = 0
+        
+        text.value = stripHtml(text.value)
+    }
 })
 </script>

@@ -8,4 +8,5 @@ public readonly record struct EntryApiRequest
     public ExpirationPeriod ExpirationPeriod { get; init; }
     public List<string> ImageIds { get; init; } 
     public string TextContent { get; init; }
+    public string? ContentDelta { get; init; }
 }

@@ -9,4 +9,5 @@ export interface DraftEntry {
     expirationPeriod: ExpirationPeriod;
     images: string[] | [];
     textContent: string | '';
+    contentDelta?: string;
 }

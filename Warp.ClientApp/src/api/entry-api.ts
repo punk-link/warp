@@ -16,6 +16,9 @@ export async function addOrUpdateEntry(id: string, payload: EntryAddOrUpdateRequ
     form.append('editMode', String(payload.editMode))
     form.append('expirationPeriod', String(payload.expirationPeriod))
     form.append('textContent', payload.textContent)
+    
+    if (payload.contentDelta)
+        form.append('contentDelta', payload.contentDelta)
 
     for (const imageId of payload.imageIds)
         form.append('imageIds', imageId)

@@ -29,9 +29,10 @@
                         <div v-if="images.length" class="gallery pt-5 grid grid-cols-3 gap-2">
                             <GalleryItem v-for="(img, idx) in images" :key="idx" :id="`preview-${idx}`" :src="img" :editable="false" />
                         </div>
-                        <div class="text-content font-sans-serif text-base pt-5 whitespace-pre-wrap break-words" :class="{ visible: showContent }">
+                        <div class="text-content font-sans-serif text-base pt-5 whitespace-pre-wrap break-words" :class="{ visible: showContent }" v-if="editMode === EditMode.Simple">
                             {{ text }}
                         </div>
+                        <div class="text-content rich-text-content font-sans-serif text-base pt-5" :class="{ visible: showContent }" v-else-if="editMode === EditMode.Advanced" v-html="sanitizedHtml"></div>
                     </div>
                 </article>
 
@@ -60,13 +61,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watchEffect, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, onMounted, watchEffect, onBeforeUnmount, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
 import { entryApi } from '../api/entry-api'
+import { sanitize } from '../helpers/sanitize-html'
 import Logo from '../components/Logo.vue'
 import { useDraftEntry } from '../composables/use-draft-entry'
 import { useGallery } from '../composables/use-gallery'
+import { EditMode } from '../types/entries/enums/edit-modes'
 import type { DraftEntry } from '../types/entries/draft-entry'
 import Button from '../components/Button.vue'
 import GalleryItem from '../components/GalleryItem.vue'
@@ -84,6 +87,8 @@ const cloning = ref(false)
 const copying = ref(false)
 const error = ref(false)
 const text = ref('')
+const contentDelta = ref('')
+const editMode = ref<EditMode>(EditMode.Simple)
 const images = ref<string[]>([])
 const entryIdRef = ref<string | null>(null)
 const { items: galleryItems, clear: clearGallery, setServerImages } = useGallery(entryIdRef)
@@ -92,6 +97,14 @@ const saved = ref<boolean>(!!routeId)
 const preserveGalleryOnUnmount = ref(false)
 const showContent = ref(false)
 const { t } = useI18n()
+
+
+const sanitizedHtml = computed(() => {
+    if (!text.value)
+        return ''
+    
+    return sanitize(text.value)
+})
 
 
 async function onCloneEdit() {
@@ -196,6 +209,7 @@ async function saveEntry(entryId: string) {
         editMode: entry.editMode,
         expirationPeriod: entry.expirationPeriod,
         textContent: entry.textContent,
+        contentDelta: entry.contentDelta,
         imageIds: imageIds
     }, localFiles)
 }
@@ -257,6 +271,10 @@ onMounted(async () => {
 
     entryIdRef.value = entry.id
     text.value = entry.textContent || ''
+    editMode.value = entry.editMode
+    
+    if (entry.contentDelta)
+        contentDelta.value = entry.contentDelta
 
     await nextTick()
 

@@ -13,10 +13,12 @@ import {
 } from './locators'
 import {
     clickElement,
+    clickRichTextToolbarButton,
     expectOnDeleted,
     expectOnEntry,
     expectOnHome,
     expectOnPreview,
+    fillRichTextAndVerify,
     fillTextAndVerify,
     getCopiedLink,
     getViewCount,
@@ -195,5 +197,105 @@ test.describe.serial('entry crud flows', () => {
         await pageB.close()
         await contextA.close()
         await contextB.close()
+    })
+
+
+    // Scenario: Create Advanced mode entry with rich text formatting
+    // Steps:
+    // 1. Select Advanced mode, add formatted text with bold, heading, and list
+    // 2. Preview and verify formatted HTML renders correctly
+    // 3. Save and view entry, verify formatting persists
+    test('@smoke user can create Advanced mode entry with rich text formatting', async ({ page }) => {
+        await page.context().clearCookies()
+        await page.context().addInitScript(() => {
+            window.localStorage.removeItem('warp.locale')
+            window.localStorage.removeItem('warp.editMode')
+        })
+
+        await setupClipboardSpy(page)
+        await gotoHome(page)
+
+        await setTextMode(page, 'Advanced')
+
+        await fillRichTextAndVerify(page, 'Title')
+        await page.locator('.tiptap-editor').press('Control+a')
+        await clickRichTextToolbarButton(page, 'Heading 1')
+
+        await page.locator('.tiptap-editor').press('End')
+        await page.locator('.tiptap-editor').press('Enter')
+        await page.locator('.tiptap-editor').type('Text with ')
+
+        await clickRichTextToolbarButton(page, 'Bold')
+        await page.locator('.tiptap-editor').type('bold')
+        await clickRichTextToolbarButton(page, 'Bold')
+
+        await page.locator('.tiptap-editor').type(' and ')
+        await clickRichTextToolbarButton(page, 'Italic')
+        await page.locator('.tiptap-editor').type('italic')
+
+        const previewButton = getPreviewButton(page)
+        await clickElement(previewButton)
+        await expectOnPreview(page)
+
+        await expect(page.locator('article h1')).toContainText('Title')
+        await expect(page.locator('article strong')).toContainText('bold')
+        await expect(page.locator('article em')).toContainText('italic')
+
+        await clickElement(getSaveButton(page))
+        await clickElement(getCopyLinkButton(page))
+
+        const copiedLink = await getCopiedLink(page)
+        await page.goto(copiedLink)
+        await expectOnEntry(page)
+
+        await expect(page.locator('article h1')).toContainText('Title')
+        await expect(page.locator('article strong')).toContainText('bold')
+        await expect(page.locator('article em')).toContainText('italic')
+    })
+
+
+    // Scenario: Advanced mode entry with lists and blockquote
+    // Steps:
+    // 1. Create entry with bullet list, ordered list, and blockquote
+    // 2. Verify formatting renders correctly in preview and entry view
+    test('@smoke user can create Advanced mode entry with lists and blockquote', async ({ page }) => {
+        await page.context().clearCookies()
+        await page.context().addInitScript(() => {
+            window.localStorage.removeItem('warp.locale')
+            window.localStorage.removeItem('warp.editMode')
+        })
+
+        await setupClipboardSpy(page)
+        await gotoHome(page)
+
+        await setTextMode(page, 'Advanced')
+
+        await fillRichTextAndVerify(page, 'First item')
+        await clickRichTextToolbarButton(page, 'Bullet List')
+        await page.locator('.tiptap-editor').press('Enter')
+        await page.locator('.tiptap-editor').type('Second item')
+
+        await page.locator('.tiptap-editor').press('Enter')
+        await page.locator('.tiptap-editor').press('Enter')
+
+        await page.locator('.tiptap-editor').type('Quote text')
+        await clickRichTextToolbarButton(page, 'Blockquote')
+
+        await clickElement(getPreviewButton(page))
+        await expectOnPreview(page)
+
+        await expect(page.locator('article ul li').first()).toContainText('First item')
+        await expect(page.locator('article ul li').nth(1)).toContainText('Second item')
+        await expect(page.locator('article blockquote')).toContainText('Quote text')
+
+        await clickElement(getSaveButton(page))
+        await clickElement(getCopyLinkButton(page))
+
+        const copiedLink = await getCopiedLink(page)
+        await page.goto(copiedLink)
+        await expectOnEntry(page)
+
+        await expect(page.locator('article ul')).toBeVisible()
+        await expect(page.locator('article blockquote')).toContainText('Quote text')
     })
 })

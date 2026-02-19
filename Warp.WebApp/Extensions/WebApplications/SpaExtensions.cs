@@ -117,6 +117,9 @@ internal static class SpaExtensions
             {
                 ["apiBaseUrl"] = "/api",
                 ["environment"] = env.EnvironmentName,
+                ["maxContentDeltaSize"] = configuration.GetValue<int>("Content:SizeLimits:MaxContentDeltaSize"),
+                ["maxHtmlContentSize"] = configuration.GetValue<int>("Content:SizeLimits:MaxHtmlSize"),
+                ["maxPlainTextContentSize"] = configuration.GetValue<int>("Content:SizeLimits:MaxPlainTextSize"),
                 ["sentryDsn"] = configuration["Sentry:FrontendDsn"]
             };
 

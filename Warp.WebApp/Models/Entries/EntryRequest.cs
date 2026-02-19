@@ -9,4 +9,5 @@ public readonly record struct EntryRequest
     public TimeSpan ExpiresIn { get; init; }
     public List<Guid> ImageIds { get; init; }
     public string TextContent { get; init; }
+    public string? ContentDelta { get; init; }
 }

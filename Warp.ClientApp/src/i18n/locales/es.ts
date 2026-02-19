@@ -112,7 +112,7 @@ export default {
         },
         logo: {
             title: 'Warplyn', // do not translate
-            beta: 'beta 3' // do not translate
+            beta: 'beta 4' // do not translate
         },
         footer: {
             taglineStrong: 'captura, comparte y di adiós',
@@ -133,6 +133,11 @@ export default {
             ariaClose: 'Cerrar notificación',
             copyDetails: 'Copiar detalles',
             copyDiagnostics: 'Copiar identificadores de diagnóstico'
+        },
+        contentSizeIndicator: {
+            exceeded: 'Límite de tamaño de contenido excedido',
+            approaching: 'Aproximándose al límite de tamaño',
+            large: 'El tamaño del contenido es grande'
         }
     },
 

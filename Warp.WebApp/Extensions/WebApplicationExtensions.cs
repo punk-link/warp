@@ -24,6 +24,12 @@ internal static class WebApplicationExtensions
             ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedFor
         });
 
+        app.Use(async (context, next) =>
+        {
+            context.Response.Headers.ContentSecurityPolicy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:";
+            await next();
+        });
+
         if (!app.Environment.IsDevelopmentOrLocal())
         {
             app.UseExceptionHandler("/Error");

@@ -79,7 +79,7 @@ test.describe.serial('entry misc flows', () => {
         await setTextMode(page, 'Simple')
 
         const text = `Failing ${Date.now()}`
-        await getTextArea(page).fill(text)
+        await fillTextAndVerify(page, text)
         await clickElement(getPreviewButton(page))
         await expectOnPreview(page)
 

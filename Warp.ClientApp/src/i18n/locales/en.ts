@@ -112,7 +112,7 @@ export default {
         },
         logo: {
             title: 'Warplyn', // do not translate
-            beta: 'beta 3' // do not translate
+            beta: 'beta 4' // do not translate
         },
         footer: {
             taglineStrong: 'snap, share and say goodbye',
@@ -133,6 +133,11 @@ export default {
             ariaClose: 'Close notification',
             copyDetails: 'Copy details',
             copyDiagnostics: 'Copy diagnostic identifiers'
+        },
+        contentSizeIndicator: {
+            exceeded: 'Content size limit exceeded',
+            approaching: 'Approaching content size limit',
+            large: 'Content size getting large'
         }
     },
 
