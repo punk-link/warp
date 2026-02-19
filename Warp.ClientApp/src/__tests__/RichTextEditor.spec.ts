@@ -134,7 +134,7 @@ describe('RichTextEditor.vue', () => {
 
         await waitFor(() => {
             const editorElement = container.querySelector('.tiptap-editor')
-            expect(editorElement?.getAttribute('placeholder')).toBe(placeholder)
+            expect(editorElement?.getAttribute('data-placeholder')).toBe(placeholder)
         })
     })
 })
