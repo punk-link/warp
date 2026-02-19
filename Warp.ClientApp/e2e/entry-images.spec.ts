@@ -144,9 +144,9 @@ test.describe.serial('entry image flows', () => {
         await page.waitForSelector('[data-fancybox="entry"] img', { state: 'visible', timeout: 10000 })
         await page.waitForFunction(() => !!(window as any).Fancybox, { timeout: 10000 })
 
-        const fancyboxImage = page.locator('[data-fancybox="entry"] img').first()
-        await fancyboxImage.waitFor({ state: 'visible', timeout: 10000 })
-        await fancyboxImage.click()
+        const fancyboxAnchor = page.locator('a[data-fancybox="entry"]').first()
+        await fancyboxAnchor.waitFor({ state: 'visible', timeout: 10000 })
+        await fancyboxAnchor.click()
 
         await page.waitForSelector('.fancybox__container, .fancybox-bg, .fancybox__stage', { timeout: 10000 })
         await expect(page.locator('.fancybox__container, .fancybox-bg, .fancybox__stage').first()).toBeVisible()
