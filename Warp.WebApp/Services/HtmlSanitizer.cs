@@ -10,11 +10,15 @@ public static partial class HtmlSanitizer
     {
         _sanitizer = new Ganss.Xss.HtmlSanitizer();
         ConfigureSanitizer();
+
+        _textExtractor = new Ganss.Xss.HtmlSanitizer();
+        ConfigureTextExtractor();
     }
 
 
     /// <summary>
-    /// Extracts plain text from HTML by removing all tags and normalizing whitespace
+    /// Extracts plain text from HTML by removing all tags and normalizing whitespace.
+    /// Uses HtmlSanitizer for robust handling of malformed HTML and edge cases.
     /// </summary>
     /// <param name="html">The HTML content</param>
     /// <returns>Plain text content without HTML tags</returns>
@@ -23,7 +27,7 @@ public static partial class HtmlSanitizer
         if (string.IsNullOrWhiteSpace(html))
             return string.Empty;
 
-        var plainText = HtmlTagRegex().Replace(html, string.Empty);
+        var plainText = _textExtractor.Sanitize(html);
         plainText = LongSpaceRegex().Replace(plainText, " ");
         return plainText.Trim();
     }
@@ -65,6 +69,8 @@ public static partial class HtmlSanitizer
             _sanitizer.AllowedTags.Add(tag);
 
         _sanitizer.AllowedAttributes.Add("href");
+        _sanitizer.AllowedAttributes.Add("target");
+        _sanitizer.AllowedAttributes.Add("rel");
 
         _sanitizer.AllowedSchemes.Add("http");
         _sanitizer.AllowedSchemes.Add("https");
@@ -76,11 +82,21 @@ public static partial class HtmlSanitizer
     }
 
 
-    [System.Text.RegularExpressions.GeneratedRegex("<.*?>")]
-    private static partial System.Text.RegularExpressions.Regex HtmlTagRegex();
+    private static void ConfigureTextExtractor()
+    {
+        _textExtractor.AllowedTags.Clear();
+        _textExtractor.AllowedAttributes.Clear();
+        _textExtractor.AllowedSchemes.Clear();
+        _textExtractor.AllowedCssProperties.Clear();
+        _textExtractor.AllowDataAttributes = false;
+        _textExtractor.KeepChildNodes = true;
+    }
+
+
     [System.Text.RegularExpressions.GeneratedRegex(@"\s+")]
     private static partial System.Text.RegularExpressions.Regex LongSpaceRegex();
 
 
     private static readonly Ganss.Xss.HtmlSanitizer _sanitizer;
+    private static readonly Ganss.Xss.HtmlSanitizer _textExtractor;
 }

@@ -2,7 +2,6 @@
 using CSharpFunctionalExtensions.ValueTasks;
 using System.Diagnostics;
 using System.Net;
-using System.Text.RegularExpressions;
 using Warp.WebApp.Attributes;
 using Warp.WebApp.Data;
 using Warp.WebApp.Models.Creators;
@@ -24,7 +23,7 @@ namespace Warp.WebApp.Services;
 /// Service responsible for managing entry information including creation, 
 /// retrieval, copying, and removal of entries and their associated images.
 /// </summary>
-public partial class EntryInfoService : IEntryInfoService
+public class EntryInfoService : IEntryInfoService
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="EntryInfoService"/> class.
@@ -526,13 +525,9 @@ public partial class EntryInfoService : IEntryInfoService
 
     private static string StripHtmlTags(string html)
     {
-        var textWithoutTags = HtmlTagsExpression().Replace(html, " ");
+        var textWithoutTags = HtmlSanitizer.GetPlainText(html);
         return WebUtility.HtmlDecode(textWithoutTags);
     }
-
-
-    [GeneratedRegex(@"<(?:[^""'<>]|""[^""]*""|'[^']*')*?>", RegexOptions.Compiled)]
-    private static partial Regex HtmlTagsExpression();
 
 
     private readonly ICreatorService _creatorService;

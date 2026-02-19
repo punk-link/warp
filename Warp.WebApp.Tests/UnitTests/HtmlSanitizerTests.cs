@@ -48,10 +48,23 @@ public class HtmlSanitizerTests
     public void Sanitize_AllowedLinks_PassThroughWithHref()
     {
         var html = "<a href=\"https://example.com\">Link</a>";
-        
+
         var result = HtmlSanitizer.Sanitize(html);
-        
+
         Assert.Contains("<a href=\"https://example.com\">", result);
+    }
+
+
+    [Fact]
+    public void Sanitize_AllowedLinks_PassThroughWithTargetAndRel()
+    {
+        var html = "<a href=\"https://example.com\" target=\"_blank\" rel=\"noopener noreferrer nofollow\">Link</a>";
+
+        var result = HtmlSanitizer.Sanitize(html);
+
+        Assert.Contains("href=\"https://example.com\"", result);
+        Assert.Contains("target=\"_blank\"", result);
+        Assert.Contains("rel=\"noopener noreferrer nofollow\"", result);
     }
 
 
@@ -207,12 +220,101 @@ public class HtmlSanitizerTests
     public void GetPlainText_ComplexNestedHtml_ExtractsText()
     {
         var html = "<h1>Title</h1><p>Paragraph with <strong>bold</strong> and <em>italic</em>.</p><ul><li>Item 1</li><li>Item 2</li></ul>";
-        
+
         var result = HtmlSanitizer.GetPlainText(html);
-        
+
         Assert.Contains("Title", result);
         Assert.Contains("Paragraph with bold and italic", result);
         Assert.Contains("Item 1", result);
         Assert.DoesNotContain("<", result);
+    }
+
+
+    [Fact]
+    public void GetPlainText_MalformedHtml_ExtractsText()
+    {
+        var html = "<p>Text with <strong>unclosed tag and <em>more text</p>";
+
+        var result = HtmlSanitizer.GetPlainText(html);
+
+        Assert.Contains("Text with unclosed tag and more text", result);
+        Assert.DoesNotContain("<", result);
+        Assert.DoesNotContain(">", result);
+    }
+
+
+    [Fact]
+    public void GetPlainText_AttributeWithGreaterThanInQuotes_ExtractsText()
+    {
+        var html = "<p title=\"a > b\">Content here</p>";
+
+        var result = HtmlSanitizer.GetPlainText(html);
+
+        Assert.Equal("Content here", result);
+        Assert.DoesNotContain("<", result);
+    }
+
+
+    [Fact]
+    public void GetPlainText_NestedMalformedTags_ExtractsText()
+    {
+        var html = "<div><p>Text <span>with <b>nested <i>malformed</p></div> content";
+
+        var result = HtmlSanitizer.GetPlainText(html);
+
+        Assert.Contains("Text with nested malformed content", result);
+        Assert.DoesNotContain("<", result);
+    }
+
+
+    [Fact]
+    public void GetPlainText_AttributesWithSpecialCharacters_ExtractsText()
+    {
+        var html = "<a href=\"?param=value&other=123\">Link text</a>";
+
+        var result = HtmlSanitizer.GetPlainText(html);
+
+        Assert.Equal("Link text", result);
+        Assert.DoesNotContain("href", result);
+    }
+
+
+    [Fact]
+    public void GetPlainText_SelfClosingTags_HandlesCorrectly()
+    {
+        var html = "<p>Before<br/>After<img src=\"test.jpg\" />End</p>";
+
+        var result = HtmlSanitizer.GetPlainText(html);
+
+        Assert.Contains("Before", result);
+        Assert.Contains("After", result);
+        Assert.Contains("End", result);
+        Assert.DoesNotContain("<", result);
+    }
+
+
+    [Fact]
+    public void Sanitize_MalformedHtml_SanitizesCorrectly()
+    {
+        var html = "<p>Safe <strong>text <script>alert('xss')</strong></p>";
+
+        var result = HtmlSanitizer.Sanitize(html);
+
+        Assert.DoesNotContain("<script>", result);
+        Assert.DoesNotContain("alert", result);
+        Assert.Contains("Safe", result);
+        Assert.Contains("text", result);
+    }
+
+
+    [Fact]
+    public void Sanitize_UnclosedTags_HandlesGracefully()
+    {
+        var html = "<p>Paragraph<strong>Bold text";
+
+        var result = HtmlSanitizer.Sanitize(html);
+
+        Assert.Contains("Paragraph", result);
+        Assert.Contains("Bold text", result);
     }
 }
