@@ -26,9 +26,11 @@ public class EntryValidator : AbstractValidator<Entry>
                     .WithErrorCode(error.Code.ToHttpStatusCodeInt().ToString())
                     .WithMessage(error.Detail);
 
+                var plainTextSizeError = DomainErrors.EntryPlainTextSizeExceeded();
                 RuleFor(x => x.Content)
-                    .Must((content) => BeWithinContentSizeLimit(content, entryValidatorOptions.MaxContentDeltaSizeBytes))
-                    .WithMessage($"Content size must not exceed {entryValidatorOptions.MaxContentDeltaSizeBytes / 1024} KB");
+                    .Must((content) => BeWithinContentSizeLimit(content, entryValidatorOptions.MaxPlainTextSizeBytes))
+                    .WithErrorCode(plainTextSizeError.Code.ToHttpStatusCodeInt().ToString())
+                    .WithMessage(plainTextSizeError.Detail);
                 break;
             // Business rule: Entry content must not be empty if the edit mode is Advanced and there are no images attached.
             case EditMode.Advanced when entryRequest.ImageIds.Count == 0:
@@ -42,22 +44,30 @@ public class EntryValidator : AbstractValidator<Entry>
         // Business rule: Content size limits and ContentDelta validation for Advanced mode
         if (entryRequest.EditMode == EditMode.Advanced)
         {
+            var htmlSizeError = DomainErrors.EntryHtmlSizeExceeded();
             RuleFor(x => x.Content)
                 .Must((content) => BeWithinContentSizeLimit(content, entryValidatorOptions.MaxHtmlSizeBytes))
-                .WithMessage($"HTML content size must not exceed {entryValidatorOptions.MaxHtmlSizeBytes / 1024} KB");
+                .WithErrorCode(htmlSizeError.Code.ToHttpStatusCodeInt().ToString())
+                .WithMessage(htmlSizeError.Detail);
 
+            var contentDeltaRequiredError = DomainErrors.EntryContentDeltaRequired();
             RuleFor(x => x.ContentDelta)
                 .NotEmpty()
-                .WithMessage("ContentDelta is required for Advanced mode entries");
+                .WithErrorCode(contentDeltaRequiredError.Code.ToHttpStatusCodeInt().ToString())
+                .WithMessage(contentDeltaRequiredError.Detail);
 
+            var contentDeltaInvalidJsonError = DomainErrors.EntryContentDeltaInvalidJson();
             RuleFor(x => x.ContentDelta)
                 .Must(BeValidJson)
-                .WithMessage("ContentDelta must be valid JSON")
+                .WithErrorCode(contentDeltaInvalidJsonError.Code.ToHttpStatusCodeInt().ToString())
+                .WithMessage(contentDeltaInvalidJsonError.Detail)
                 .When(x => !string.IsNullOrWhiteSpace(x.ContentDelta));
 
+            var contentDeltaSizeError = DomainErrors.EntryContentDeltaSizeExceeded();
             RuleFor(x => x.ContentDelta)
                 .Must((json) => BeWithinContentSizeLimit(json, entryValidatorOptions.MaxContentDeltaSizeBytes))
-                .WithMessage($"ContentDelta size must not exceed {entryValidatorOptions.MaxContentDeltaSizeBytes / 1024} KB")
+                .WithErrorCode(contentDeltaSizeError.Code.ToHttpStatusCodeInt().ToString())
+                .WithMessage(contentDeltaSizeError.Detail)
                 .When(x => !string.IsNullOrWhiteSpace(x.ContentDelta));
         }
     }
