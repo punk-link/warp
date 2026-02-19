@@ -1,6 +1,6 @@
 <template>
     <div class="rich-text-editor flex flex-col">
-        <div v-if="editor" class="editor-toolbar flex flex-wrap gap-1 mb-2 pb-2 border-b border-gray-200">
+        <div v-if="editor" class="editor-toolbar flex flex-wrap gap-1 mb-2 pb-2 border-b border-gray-200" @mousedown.prevent>
             <button type="button" class="toolbar-btn" :class="{ 'is-active': editor.isActive('bold') }"
                 @click="editor.chain().focus().toggleBold().run()" :disabled="!editable"
                 title="Bold" aria-label="Bold">
@@ -241,6 +241,7 @@ const editor = useEditor({
     editorProps: {
         attributes: {
             class: 'tiptap-editor rich-text-content min-h-40 max-h-96 overflow-y-auto px-3 py-2 rounded-none focus:outline-none transition-all duration-200 border-0 border-b-2 border-primary',
+            'aria-label': t('home.editor.textLabel'),
             'data-placeholder': props.placeholder,
         },
     },
