@@ -241,7 +241,7 @@ const editor = useEditor({
     editorProps: {
         attributes: {
             class: 'tiptap-editor rich-text-content min-h-40 max-h-96 overflow-y-auto px-3 py-2 rounded-none focus:outline-none transition-all duration-200 border-0 border-b-2 border-primary',
-            placeholder: props.placeholder,
+            'data-placeholder': props.placeholder,
         },
     },
     onUpdate: () => {
