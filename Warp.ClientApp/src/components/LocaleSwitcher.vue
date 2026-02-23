@@ -1,11 +1,13 @@
 <template>
-    <label class="inline-flex items-center gap-2 text-sm" :aria-label="t('language')">
-        <span class="font-medium">{{ t('language') }}</span>
-        <select v-model="selected" @change="onChange"
-            class="border rounded px-2 py-1 bg-white dark:bg-neutral-800 dark:border-neutral-600 focus:outline-none focus:ring">
-            <option v-for="loc in supportedLocales" :key="loc" :value="loc">{{ loc.toUpperCase() }}</option>
-        </select>
-    </label>
+    <div>
+        <label class="form-label">{{ t('language') }}</label>
+        <div class="flex items-baseline">
+            <i class="icofont-loop text-primary text-base mr-2" aria-hidden="true"></i>
+            <select class="form-select" v-model="selected" @change="onChange" :aria-label="t('language')">
+                <option v-for="loc in supportedLocales" :key="loc" :value="loc">{{ nativeName(loc) }}</option>
+            </select>
+        </div>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -18,6 +20,15 @@ const { t } = useI18n()
 const selected = ref<string>(getCurrentLocale())
 
 
+function nativeName(locale: string): string {
+    try {
+        return new Intl.DisplayNames([locale], { type: 'language' }).of(locale) ?? locale
+    } catch {
+        return locale
+    }
+}
+
+
 async function onChange() {
     await setLocale(selected.value as typeof supportedLocales[number])
 }
@@ -27,9 +38,3 @@ watchEffect(() => {
     selected.value = getCurrentLocale()
 })
 </script>
-
-<style scoped>
-select {
-    min-width: 4.5rem;
-}
-</style>
