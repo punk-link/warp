@@ -87,7 +87,17 @@ export default {
         title: 'Solicitud de datos',
         description: 'Tienes derecho a solicitar una copia de tus datos personales que procesamos. Para solicitar tus datos, ponte en contacto con nosotros por correo electrónico.',
         instructions: 'Envía tu solicitud de datos a:',
+        sendEmailButton: 'Enviar solicitud',
         note: 'Por favor, incluye los detalles de tu cuenta o cualquier información relevante que pueda ayudarnos a identificar tus datos en tu correo electrónico.',
+        goHome: 'Ir al inicio'
+    },
+
+    feedback: {
+        title: 'Enviar comentarios',
+        description: '¡Agradecemos tus comentarios! Envíanos tus sugerencias, problemas o comentarios generales por correo electrónico.',
+        instructions: 'Apreciamos todas las ideas de producto, quejas y reportes de errores. Simplemente haz clic en el botón a continuación para abrir tu cliente de correo:',
+        sendEmailButton: 'Enviar correo de comentarios',
+        note: 'Tus comentarios nos ayudan a mejorar el servicio. ¡Gracias por tomarte el tiempo de compartir tus pensamientos!',
         goHome: 'Ir al inicio'
     },
 
@@ -121,6 +131,7 @@ export default {
                 index: 'Índice',
                 privacy: 'Privacidad',
                 dataRequest: 'Solicitud de datos',
+                feedback: 'Comentarios',
                 sources: 'Fuentes'
             },
             copyright: 'todos los derechos reservados'

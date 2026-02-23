@@ -10,28 +10,28 @@
             <div class="flex flex-col items-center justify-around min-h-[75vh]">
                 <div class="w-full md:w-1/2 flex flex-col justify-center items-start mb-5 space-y-4">
                     <h1 class="text-gray-700 text-3xl font-semibold">
-                        {{ t('dataRequest.title') }}
+                        {{ t('feedback.title') }}
                     </h1>
                     <p class="text-gray-600 text-base">
-                        {{ t('dataRequest.description') }}
+                        {{ t('feedback.description') }}
                     </p>
                     <p class="text-gray-600 text-base">
-                        {{ t('dataRequest.instructions') }}
+                        {{ t('feedback.instructions') }}
                     </p>
                     <div class="flex items-center gap-2 flex-wrap">
-                        <a :href="`mailto:${dataRequestEmail}`" class="btn btn-primary no-underline">
-                            {{ t('dataRequest.sendEmailButton') }}
+                        <a :href="`mailto:${feedbackEmail}`" class="btn btn-primary no-underline">
+                            {{ t('feedback.sendEmailButton') }}
                         </a>
-                        <span class="text-gray-500 text-sm">{{ dataRequestEmail }}</span>
+                        <span class="text-gray-500 text-sm">{{ feedbackEmail }}</span>
                     </div>
                     <p class="text-gray-500 text-sm">
-                        {{ t('dataRequest.note') }}
+                        {{ t('feedback.note') }}
                     </p>
                 </div>
 
                 <div class="flex justify-center items-center w-full md:w-1/2 pb-3 sticky bottom-0 bg-transparent">
                     <div class="bg-white rounded-sm">
-                        <Button variant="outline-primary" @click="goHome" :label="t('dataRequest.goHome')" icon-class="icofont-home" />
+                        <Button variant="outline-primary" @click="goHome" :label="t('feedback.goHome')" icon-class="icofont-home" />
                     </div>
                 </div>
             </div>
@@ -51,7 +51,7 @@ const router = useRouter();
 const { t } = useI18n()
 
 
-const dataRequestEmail = window.appConfig?.dataRequestEmail;
+const feedbackEmail = window.appConfig?.feedbackEmail;
 
 
 function goHome() {

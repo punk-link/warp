@@ -18,6 +18,8 @@ declare global {
             sentryDsn?: string
             sentryProfilesSampleRate?: number | null
             sentryTracesSampleRate?: number | null
+            feedbackEmail?: string
+            dataRequestEmail?: string
         }
     }
 }

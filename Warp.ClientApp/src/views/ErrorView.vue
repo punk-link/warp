@@ -50,7 +50,7 @@
 
                 <div class="flex justify-center items-center w-full md:w-1/2 pb-3 sticky bottom-0 bg-transparent">
                     <div>
-                        <Button variant="primary" icon-class="icofont-simple-left text-white/50"
+                        <Button variant="outline-primary" icon-class="icofont-simple-left"
                             :label="t('error.goHome')" @click="goHome" />
                     </div>
                 </div>

@@ -1,7 +1,7 @@
 <template>
     <div class="flex">
         <h1 class="logo-style">
-            <RouterLink to="/" class="text-xl" @click.prevent="onLogoClick">{{ t('components.logo.title') }}</RouterLink>
+            <RouterLink to="/" class="text-xl transition-opacity duration-200 hover:opacity-70" @click.prevent="onLogoClick">{{ t('components.logo.title') }}</RouterLink>
         </h1>
         <span class="px-2 text-gray-300 text-xs">{{ t('components.logo.beta') }}</span>
     </div>

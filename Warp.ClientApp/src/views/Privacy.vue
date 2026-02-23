@@ -16,13 +16,16 @@ onMounted(async () => {
     try {
         const res = await fetch('/privacy.html', { cache: 'no-cache' });
         if (res.ok) {
-            html.value = await res.text();
+            const raw = await res.text();
+            const doc = new DOMParser().parseFromString(raw, 'text/html');
+            doc.querySelectorAll('style, script').forEach(el => el.remove());
+            html.value = doc.body.innerHTML;
         } else {
             console.error('Failed to load privacy policy:', res.statusText);
-            html.value = '<h1>Privacy Policy</h1><p>Content not available.</p>';
+            html.value = `<h1>${t('privacy.notAvailableTitle')}</h1><p>${t('privacy.notAvailableContent')}</p>`;
         }
     } catch {
-        html.value = '<h1>Privacy Policy</h1><p>Content not available.</p>';
+        html.value = `<h1>${t('privacy.notAvailableTitle')}</h1><p>${t('privacy.notAvailableContent')}</p>`;
     }
 });
 </script>
