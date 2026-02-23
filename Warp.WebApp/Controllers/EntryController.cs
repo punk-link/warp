@@ -127,6 +127,7 @@ public class EntryController : BaseController
             var editModeStr = formValues.TryGetValue("editMode", out var editModeValue) ? editModeValue : "0";
             var expirationStr = formValues.TryGetValue("expirationPeriod", out var expirationPeriodValue) ? expirationPeriodValue : "0";
             var textContent = formValues.TryGetValue("textContent", out var textContentValue) ? textContentValue : string.Empty;
+            var contentDelta = formValues.TryGetValue("contentDelta", out var contentDeltaValue) ? contentDeltaValue : null;
 
             Enum.TryParse(editModeStr, true, out Models.Entries.Enums.EditMode editMode);
             Enum.TryParse(expirationStr, true, out Models.Entries.Enums.ExpirationPeriod expirationPeriod);
@@ -140,7 +141,8 @@ public class EntryController : BaseController
                 EditMode = editMode,
                 ExpirationPeriod = expirationPeriod,
                 ImageIds = allImageIds,
-                TextContent = textContent
+                TextContent = textContent,
+                ContentDelta = contentDelta
             };
         }
     }

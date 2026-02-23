@@ -10,5 +10,6 @@ export interface Entry {
     expiresAt: Date;
     images: string[] | [];
     textContent: string | '';
+    contentDelta?: string;
     viewCount: number | 0;
 }

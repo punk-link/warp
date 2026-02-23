@@ -117,6 +117,18 @@ internal static class ServiceCollectionExtensions
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 
+            services.AddOptions<EntryValidatorOptions>()
+                .Configure(options =>
+                {
+                    var section = builder.Configuration.GetSection("Content:SizeLimits");
+
+                    options.MaxContentDeltaSizeBytes = section.GetValue<int>("MaxContentDeltaSize");
+                    options.MaxHtmlSizeBytes = section.GetValue<int>("MaxHtmlSize");
+                    options.MaxPlainTextSizeBytes = section.GetValue<int>("MaxPlainTextSize");
+                })
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+
             services.AddOptions<OrphanImageCleanupOptions>()
                 .BindConfiguration(nameof(OrphanImageCleanupOptions))
                 .ValidateDataAnnotations()

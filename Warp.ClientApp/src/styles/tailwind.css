@@ -76,6 +76,96 @@
 
 
 @layer components {
+    /* Rich text content styling - shared across editor, preview, and view */
+    .rich-text-content p {
+        @apply mb-3;
+    }
+
+    .rich-text-content h1 {
+        @apply text-2xl font-bold mb-4 mt-6;
+    }
+
+    .rich-text-content h2 {
+        @apply text-xl font-bold mb-3 mt-5;
+    }
+
+    .rich-text-content h3 {
+        @apply text-lg font-bold mb-2 mt-4;
+    }
+
+    .rich-text-content ul {
+        @apply list-disc list-inside mb-3 pl-4;
+    }
+
+    .rich-text-content ol {
+        @apply list-decimal list-inside mb-3 pl-4;
+    }
+
+    .rich-text-content li {
+        @apply mb-1;
+    }
+
+    .rich-text-content blockquote {
+        @apply border-l-4 border-gray-300 pl-4 italic text-gray-600 mb-3;
+    }
+
+    .rich-text-content pre {
+        @apply bg-gray-100 rounded p-3 mb-3 overflow-x-auto;
+    }
+
+    .rich-text-content code {
+        @apply bg-gray-100 rounded px-1 py-0.5 text-sm font-mono;
+    }
+
+    .rich-text-content pre code {
+        @apply bg-transparent p-0 text-sm;
+    }
+
+    .rich-text-content a {
+        @apply text-primary underline cursor-pointer hover:text-primary/80;
+    }
+
+    .rich-text-content strong,
+    .rich-text-content b {
+        @apply font-bold;
+    }
+
+    .rich-text-content em,
+    .rich-text-content i {
+        @apply italic;
+    }
+
+    .rich-text-content u {
+        @apply underline;
+    }
+
+    .rich-text-content s {
+        @apply line-through;
+    }
+
+    /* Rich text editor - toolbar and controls */
+    .rich-text-editor {
+        @apply w-full;
+    }
+
+    .editor-toolbar {
+        @apply select-none;
+    }
+
+    .toolbar-btn {
+        @apply flex items-center justify-center w-8 h-8 border border-gray-300 rounded bg-white text-gray-600 cursor-pointer transition-colors duration-150;
+        @apply hover:bg-gray-100 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary;
+        @apply disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-gray-300;
+    }
+
+    .toolbar-btn.is-active {
+        @apply bg-primary/10 border-primary text-primary;
+    }
+
+    .toolbar-divider {
+        @apply w-px h-8 bg-gray-300 mx-1;
+    }
+
     .btn {
         @apply flex items-center border-none rounded cursor-pointer gap-2.5 px-4 py-2 font-sans-serif text-base font-semibold leading-normal text-center lowercase disabled:cursor-auto transition-colors duration-200;
     }
@@ -112,6 +202,14 @@
         @apply text-secondary hover:text-secondary/80 focus:text-secondary/80 active:text-secondary/80 disabled:text-secondary/80;
     }
 
+    .textarea-wrapper {
+        @apply relative;
+    }
+
+    .textarea-wrapper .floating-label {
+        @apply absolute left-0 top-full mt-1 -z-10;
+    }
+
     .floating-label {
         @apply transition-all duration-200 ease-in-out;
     }
@@ -133,7 +231,7 @@
     }
 
     .form-textarea:placeholder-shown + .floating-label {
-        @apply cursor-text max-w-[66.66%] whitespace-nowrap overflow-hidden text-ellipsis origin-bottom-left translate-y-[2.125rem] scale-150;
+        @apply cursor-text max-w-[66.66%] whitespace-nowrap overflow-hidden text-ellipsis origin-bottom-left -translate-y-[2.75rem] scale-150;
     }
 
     .gallery {

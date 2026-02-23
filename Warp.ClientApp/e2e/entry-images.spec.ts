@@ -78,7 +78,7 @@ test.describe.serial('entry image flows', () => {
         await clickElement(getEditButton(page))
         await page.waitForURL(/\?id=/)
 
-        await expect(textArea).toHaveValue(entryText)
+        await expect(textArea).toContainText(entryText)
         await expect(editorGalleryImages).toHaveCount(1)
 
         const previewImageTwo = resolveFixturePath('sample-image-2.png')
@@ -144,9 +144,9 @@ test.describe.serial('entry image flows', () => {
         await page.waitForSelector('[data-fancybox="entry"] img', { state: 'visible', timeout: 10000 })
         await page.waitForFunction(() => !!(window as any).Fancybox, { timeout: 10000 })
 
-        const fancyboxImage = page.locator('[data-fancybox="entry"] img').first()
-        await fancyboxImage.waitFor({ state: 'visible', timeout: 10000 })
-        await fancyboxImage.click()
+        const fancyboxAnchor = page.locator('a[data-fancybox="entry"]').first()
+        await fancyboxAnchor.waitFor({ state: 'visible', timeout: 10000 })
+        await fancyboxAnchor.click()
 
         await page.waitForSelector('.fancybox__container, .fancybox-bg, .fancybox__stage', { timeout: 10000 })
         await expect(page.locator('.fancybox__container, .fancybox-bg, .fancybox__stage').first()).toBeVisible()
@@ -217,7 +217,7 @@ test.describe.serial('entry image flows', () => {
         await clickElement(getEditButton(page))
         await page.waitForURL(/\?id=/)
 
-        await expect(getTextArea(page)).toHaveValue(entryText)
+        await expect(getTextArea(page)).toContainText(entryText)
         await expect(getEditorGalleryImages(page)).toHaveCount(1)
     })
 
@@ -258,9 +258,7 @@ test.describe.serial('entry image flows', () => {
         await clickElement(page.getByRole('button', { name: /clone edit|clone & edit/i }))
         await page.waitForURL(/\?id=/)
 
-        const escaped = entryText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-        const textValuePattern = new RegExp(`^${escaped}\\s*$`)
-        await expect(getTextArea(page)).toHaveValue(textValuePattern, { timeout: 10000 })
+        await expect(getTextArea(page)).toContainText(entryText, { timeout: 10000 })
         await expect(getEditorGalleryImages(page)).toHaveCount(1, { timeout: 10000 })
 
         // Use a different fixture to avoid duplicate hash detection on server

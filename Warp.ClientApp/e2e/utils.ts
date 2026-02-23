@@ -88,6 +88,28 @@ export async function fillTextAndVerify(page: Page, text: string): Promise<void>
 }
 
 
+export async function fillRichTextAndVerify(page: Page, text: string): Promise<void> {
+    const editor = page.locator('.tiptap-editor')
+    await expect(editor).toBeVisible({ timeout: 10000 })
+
+    const previewButton = getPreviewButton(page)
+    await expect(previewButton).toHaveAttribute('aria-busy', 'false', { timeout: 15000 })
+
+    await editor.click()
+    await editor.fill(text)
+
+    await expect(editor).toContainText(text, { timeout: 10000 })
+    await expect(previewButton).toBeEnabled({ timeout: 15000 })
+}
+
+
+export async function clickRichTextToolbarButton(page: Page, title: string): Promise<void> {
+    const button = page.locator(`.editor-toolbar button[title="${title}"]`)
+    await expect(button).toBeVisible({ timeout: 5000 })
+    await button.click()
+}
+
+
 export async function getCopiedLink(page: Page): Promise<string> {
     return page.evaluate(() => window.__copiedLink || '')
 }

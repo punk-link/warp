@@ -478,6 +478,51 @@
           "generateLogMessage": false,
           "obsolete": false,
           "httpCode": 400
+        },
+        {
+          "id": 20311,
+          "name": "EntryPlainTextSizeExceeded",
+          "description": "The entry plain text content size exceeded the allowed limit.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        },
+        {
+          "id": 20312,
+          "name": "EntryHtmlSizeExceeded",
+          "description": "The entry HTML content size exceeded the allowed limit.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        },
+        {
+          "id": 20313,
+          "name": "EntryContentDeltaRequired",
+          "description": "The entry ContentDelta is required for Advanced mode entries.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        },
+        {
+          "id": 20314,
+          "name": "EntryContentDeltaInvalidJson",
+          "description": "The entry ContentDelta must be valid JSON.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        },
+        {
+          "id": 20315,
+          "name": "EntryContentDeltaSizeExceeded",
+          "description": "The entry ContentDelta size exceeded the allowed limit.",
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
         }
       ]
     },
