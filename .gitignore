@@ -368,3 +368,4 @@ FodyWeavers.xsd
 /Warp.WebApp/wwwroot/**
 .vault/
 /Warp.ClientApp/playwright-report/
+/Warp.ClientApp/package-lock.json
