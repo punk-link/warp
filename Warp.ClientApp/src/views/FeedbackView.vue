@@ -18,8 +18,8 @@
                     <p class="text-gray-600 text-base">
                         {{ t('feedback.instructions') }}
                     </p>
-                    <div class="flex items-center gap-2">
-                        <a :href="`mailto:${feedbackEmail}`" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded transition-colors duration-200">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <a :href="`mailto:${feedbackEmail}`" class="btn btn-primary no-underline">
                             {{ t('feedback.sendEmailButton') }}
                         </a>
                         <span class="text-gray-500 text-sm">{{ feedbackEmail }}</span>
