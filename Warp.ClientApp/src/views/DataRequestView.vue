@@ -15,9 +15,15 @@
                     <p class="text-gray-600 text-base">
                         {{ t('dataRequest.description') }}
                     </p>
-                    <p>
-                        {{ t('dataRequest.instructions') }} <a href="mailto:privacy@synonym.fans" class="text-blue-600 hover:underline text-lg font-semibold">privacy@synonym.fans</a>
+                    <p class="text-gray-600 text-base">
+                        {{ t('dataRequest.instructions') }}
                     </p>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <a :href="`mailto:${dataRequestEmail}`" class="btn btn-primary no-underline">
+                            {{ t('dataRequest.sendEmailButton') }}
+                        </a>
+                        <span class="text-gray-500 text-sm">{{ dataRequestEmail }}</span>
+                    </div>
                     <p class="text-gray-500 text-sm">
                         {{ t('dataRequest.note') }}
                     </p>
@@ -43,6 +49,9 @@ import { ViewNames } from '../router/enums/view-names'
 
 const router = useRouter();
 const { t } = useI18n()
+
+
+const dataRequestEmail = 'privacy@synonym.fans';
 
 
 function goHome() {

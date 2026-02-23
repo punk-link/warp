@@ -87,6 +87,7 @@ export default {
         title: 'Data Request',
         description: 'You have the right to request a copy of your personal data that we process. To request your data, please contact us via email.',
         instructions: 'Send your data request to:',
+        sendEmailButton: 'Send Data Request Email',
         note: 'Please include your account details or any relevant information that can help us identify your data in your email.',
         goHome: 'Go to main'
     },

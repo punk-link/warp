@@ -87,6 +87,7 @@ export default {
         title: 'Solicitud de datos',
         description: 'Tienes derecho a solicitar una copia de tus datos personales que procesamos. Para solicitar tus datos, ponte en contacto con nosotros por correo electrónico.',
         instructions: 'Envía tu solicitud de datos a:',
+        sendEmailButton: 'Enviar solicitud',
         note: 'Por favor, incluye los detalles de tu cuenta o cualquier información relevante que pueda ayudarnos a identificar tus datos en tu correo electrónico.',
         goHome: 'Ir al inicio'
     },
