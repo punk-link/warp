@@ -29,6 +29,9 @@
             <span class="mx-2">|</span>
             <a href="https://github.com/punk-link/warp" target="_blank" rel="noopener" class="hover:underline">{{ t('components.footer.links.sources') }}</a>
         </nav>
+        <div class="mt-4">
+            <LocaleSwitcher />
+        </div>
         <p class="text-gray-300 text-sm mt-3">
             &copy; warplyn.com {{ yearDisplay }} | {{ t('components.footer.copyright') }}
         </p>
@@ -37,6 +40,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
+import LocaleSwitcher from './LocaleSwitcher.vue'
 
 
 const { t } = useI18n()
