@@ -12,6 +12,7 @@ import { ViewNames } from './enums/view-names'
 
 const router = createRouter({
     history: createWebHistory('/'),
+    scrollBehavior: () => ({ top: 0 }),
     routes: [
         { path: '/', name: ViewNames.Home, component: Home },
         { path: '/preview/:id?', name: ViewNames.Preview, component: Preview, props: true },
