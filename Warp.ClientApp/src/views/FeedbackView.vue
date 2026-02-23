@@ -31,7 +31,7 @@
 
                 <div class="flex justify-center items-center w-full md:w-1/2 pb-3 sticky bottom-0 bg-transparent">
                     <div class="bg-white rounded-sm">
-                        <Button variant="primary" @click="goHome" :label="t('feedback.goHome')" icon-class="icofont-home text-white/50" />
+                        <Button variant="outline-primary" @click="goHome" :label="t('feedback.goHome')" icon-class="icofont-home" />
                     </div>
                 </div>
             </div>

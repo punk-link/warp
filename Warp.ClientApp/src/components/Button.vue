@@ -16,7 +16,7 @@ import { useI18n } from 'vue-i18n'
 
 
 interface Props {
-    variant?: 'primary' | 'secondary' | 'gray' | 'outline-gray' | 'outline-secondary' | 'outline-primary-round'
+    variant?: 'primary' | 'secondary' | 'gray' | 'outline-gray' | 'outline-secondary' | 'outline-primary' | 'outline-primary-round'
     label?: string | null
     pending?: boolean
     pendingLabel?: string
@@ -61,6 +61,7 @@ const variantClassMap: Record<NonNullable<Props['variant']>, string> = {
     gray: 'btn btn-gray',
     'outline-gray': 'btn btn-outline-gray',
     'outline-secondary': 'btn btn-outline-secondary',
+    'outline-primary': 'btn btn-outline-primary',
     'outline-primary-round': 'btn btn-round btn-outline-primary'
 }
 
