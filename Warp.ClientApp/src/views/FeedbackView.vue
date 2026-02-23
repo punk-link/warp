@@ -51,7 +51,7 @@ const router = useRouter();
 const { t } = useI18n()
 
 
-const feedbackEmail = 'feedback@synonym.fans'
+const feedbackEmail = window.appConfig?.feedbackEmail;
 
 
 function goHome() {

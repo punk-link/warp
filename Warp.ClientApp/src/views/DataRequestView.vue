@@ -51,7 +51,7 @@ const router = useRouter();
 const { t } = useI18n()
 
 
-const dataRequestEmail = 'privacy@synonym.fans';
+const dataRequestEmail = window.appConfig?.dataRequestEmail;
 
 
 function goHome() {

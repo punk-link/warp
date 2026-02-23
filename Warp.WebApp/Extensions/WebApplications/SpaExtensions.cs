@@ -120,7 +120,9 @@ internal static class SpaExtensions
                 ["maxContentDeltaSize"] = configuration.GetValue<int>("Content:SizeLimits:MaxContentDeltaSize"),
                 ["maxHtmlContentSize"] = configuration.GetValue<int>("Content:SizeLimits:MaxHtmlSize"),
                 ["maxPlainTextContentSize"] = configuration.GetValue<int>("Content:SizeLimits:MaxPlainTextSize"),
-                ["sentryDsn"] = configuration["Sentry:FrontendDsn"]
+                ["sentryDsn"] = configuration["Sentry:FrontendDsn"],
+                ["feedbackEmail"] = configuration["ContactEmails:FeedbackEmail"],
+                ["dataRequestEmail"] = configuration["ContactEmails:DataRequestEmail"]
             };
 
             var tracesSampleRate = ParseSampleRate(configuration, "Sentry:FrontendTracesSampleRate");
