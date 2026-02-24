@@ -149,6 +149,23 @@ export default {
             exceeded: 'Content size limit exceeded',
             approaching: 'Approaching content size limit',
             large: 'Content size getting large'
+        },
+        richTextEditor: {
+            toolbar: {
+                bold: 'Bold',
+                italic: 'Italic',
+                underline: 'Underline',
+                strikethrough: 'Strikethrough',
+                heading1: 'Heading 1',
+                heading2: 'Heading 2',
+                heading3: 'Heading 3',
+                bulletList: 'Bullet List',
+                orderedList: 'Ordered List',
+                blockquote: 'Blockquote',
+                codeBlock: 'Code Block',
+                link: 'Link'
+            },
+            linkPrompt: 'URL'
         }
     },
 

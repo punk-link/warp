@@ -18,8 +18,10 @@
             <br />
             {{ t('components.footer.tagline') }}
         </p>
-        <nav class="text-gray-400 text-sm mt-3">
+        <nav class="text-gray-400 text-sm mt-3 flex flex-wrap items-center gap-x-0 gap-y-2">
             <router-link to="/" class="hover:underline">{{ t('components.footer.links.index') }}</router-link>
+            <span class="mx-2">|</span>
+            <LocaleSwitcher />
             <span class="mx-2">|</span>
             <router-link to="/privacy" class="hover:underline">{{ t('components.footer.links.privacy') }}</router-link>
             <span class="mx-2">|</span>
@@ -37,12 +39,11 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-
+import LocaleSwitcher from './LocaleSwitcher.vue'
 
 const { t } = useI18n()
 
-
-const startYear = 2024;
+const startYear = 2023;
 const currentYear = new Date().getFullYear();
 const yearDisplay = startYear === currentYear 
     ? `${startYear}` 

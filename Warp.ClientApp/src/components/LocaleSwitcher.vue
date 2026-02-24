@@ -1,11 +1,9 @@
 <template>
-    <label class="inline-flex items-center gap-2 text-sm" :aria-label="t('language')">
-        <span class="font-medium">{{ t('language') }}</span>
-        <select v-model="selected" @change="onChange"
-            class="border rounded px-2 py-1 bg-white dark:bg-neutral-800 dark:border-neutral-600 focus:outline-none focus:ring">
-            <option v-for="loc in supportedLocales" :key="loc" :value="loc">{{ loc.toUpperCase() }}</option>
-        </select>
-    </label>
+    <select v-model="selected" @change="onChange"
+        :aria-label="t('language')"
+        class="appearance-none bg-transparent border-none text-gray-400 cursor-pointer hover:underline focus:outline-none px-1 py-0.5">
+        <option v-for="loc in supportedLocales" :key="loc" :value="loc">{{ localeDisplayName(loc) }}</option>
+    </select>
 </template>
 
 <script setup lang="ts">
@@ -23,13 +21,13 @@ async function onChange() {
 }
 
 
+function localeDisplayName(loc: string): string {
+    const name = new Intl.DisplayNames([loc], { type: 'language' }).of(loc) ?? loc
+    return name.charAt(0).toUpperCase() + name.slice(1)
+}
+
+
 watchEffect(() => {
     selected.value = getCurrentLocale()
 })
 </script>
-
-<style scoped>
-select {
-    min-width: 4.5rem;
-}
-</style>
