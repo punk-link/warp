@@ -43,6 +43,7 @@ import LocaleSwitcher from './LocaleSwitcher.vue'
 
 const { t } = useI18n()
 
+const startYear = 2023;
 const currentYear = new Date().getFullYear();
 const yearDisplay = startYear === currentYear 
     ? `${startYear}` 
