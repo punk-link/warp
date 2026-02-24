@@ -3,7 +3,7 @@
         <div v-if="editor" class="editor-toolbar flex flex-wrap gap-1 mb-2 pb-2 border-b border-gray-200" @mousedown.prevent>
             <button type="button" class="toolbar-btn" :class="{ 'is-active': editor.isActive('bold') }"
                 @click="editor.chain().focus().toggleBold().run()" :disabled="!editable"
-                title="Bold" aria-label="Bold">
+                :title="t('components.richTextEditor.toolbar.bold')" :aria-label="t('components.richTextEditor.toolbar.bold')">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" />
                     <path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" />
@@ -12,7 +12,7 @@
 
             <button type="button" class="toolbar-btn" :class="{ 'is-active': editor.isActive('italic') }"
                 @click="editor.chain().focus().toggleItalic().run()" :disabled="!editable"
-                title="Italic" aria-label="Italic">
+                :title="t('components.richTextEditor.toolbar.italic')" :aria-label="t('components.richTextEditor.toolbar.italic')">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="19" y1="4" x2="10" y2="4" />
                     <line x1="14" y1="20" x2="5" y2="20" />
@@ -22,7 +22,7 @@
 
             <button type="button" class="toolbar-btn" :class="{ 'is-active': editor.isActive('underline') }"
                 @click="editor.chain().focus().toggleUnderline().run()" :disabled="!editable"
-                title="Underline" aria-label="Underline">
+                :title="t('components.richTextEditor.toolbar.underline')" :aria-label="t('components.richTextEditor.toolbar.underline')">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M6 3v7a6 6 0 0 0 6 6 6 6 0 0 0 6-6V3" />
                     <line x1="4" y1="21" x2="20" y2="21" />
@@ -31,7 +31,7 @@
 
             <button type="button" class="toolbar-btn" :class="{ 'is-active': editor.isActive('strike') }"
                 @click="editor.chain().focus().toggleStrike().run()" :disabled="!editable"
-                title="Strikethrough" aria-label="Strikethrough">
+                :title="t('components.richTextEditor.toolbar.strikethrough')" :aria-label="t('components.richTextEditor.toolbar.strikethrough')">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M16 4H9a3 3 0 0 0-2.83 4" />
                     <path d="M14 12a4 4 0 0 1 0 8H6" />
@@ -43,19 +43,19 @@
 
             <button type="button" class="toolbar-btn" :class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
                 @click="editor.chain().focus().toggleHeading({ level: 1 }).run()" :disabled="!editable"
-                title="Heading 1" aria-label="Heading 1">
+                :title="t('components.richTextEditor.toolbar.heading1')" :aria-label="t('components.richTextEditor.toolbar.heading1')">
                 <span class="font-semibold">H1</span>
             </button>
 
             <button type="button" class="toolbar-btn" :class="{ 'is-active': editor.isActive('heading', { level: 2 }) }"
                 @click="editor.chain().focus().toggleHeading({ level: 2 }).run()" :disabled="!editable"
-                title="Heading 2" aria-label="Heading 2">
+                :title="t('components.richTextEditor.toolbar.heading2')" :aria-label="t('components.richTextEditor.toolbar.heading2')">
                 <span class="font-semibold">H2</span>
             </button>
 
             <button type="button" class="toolbar-btn" :class="{ 'is-active': editor.isActive('heading', { level: 3 }) }"
                 @click="editor.chain().focus().toggleHeading({ level: 3 }).run()" :disabled="!editable"
-                title="Heading 3" aria-label="Heading 3">
+                :title="t('components.richTextEditor.toolbar.heading3')" :aria-label="t('components.richTextEditor.toolbar.heading3')">
                 <span class="font-semibold">H3</span>
             </button>
 
@@ -63,7 +63,7 @@
 
             <button type="button" class="toolbar-btn" :class="{ 'is-active': editor.isActive('bulletList') }"
                 @click="editor.chain().focus().toggleBulletList().run()" :disabled="!editable"
-                title="Bullet List" aria-label="Bullet List">
+                :title="t('components.richTextEditor.toolbar.bulletList')" :aria-label="t('components.richTextEditor.toolbar.bulletList')">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="8" y1="6" x2="21" y2="6" />
                     <line x1="8" y1="12" x2="21" y2="12" />
@@ -76,7 +76,7 @@
 
             <button type="button" class="toolbar-btn" :class="{ 'is-active': editor.isActive('orderedList') }"
                 @click="editor.chain().focus().toggleOrderedList().run()" :disabled="!editable"
-                title="Ordered List" aria-label="Ordered List">
+                :title="t('components.richTextEditor.toolbar.orderedList')" :aria-label="t('components.richTextEditor.toolbar.orderedList')">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="10" y1="6" x2="21" y2="6" />
                     <line x1="10" y1="12" x2="21" y2="12" />
@@ -91,7 +91,7 @@
 
             <button type="button" class="toolbar-btn" :class="{ 'is-active': editor.isActive('blockquote') }"
                 @click="editor.chain().focus().toggleBlockquote().run()" :disabled="!editable"
-                title="Blockquote" aria-label="Blockquote">
+                :title="t('components.richTextEditor.toolbar.blockquote')" :aria-label="t('components.richTextEditor.toolbar.blockquote')">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z" />
                     <path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z" />
@@ -100,7 +100,7 @@
 
             <button type="button" class="toolbar-btn" :class="{ 'is-active': editor.isActive('codeBlock') }"
                 @click="editor.chain().focus().toggleCodeBlock().run()" :disabled="!editable"
-                title="Code Block" aria-label="Code Block">
+                :title="t('components.richTextEditor.toolbar.codeBlock')" :aria-label="t('components.richTextEditor.toolbar.codeBlock')">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="16 18 22 12 16 6" />
                     <polyline points="8 6 2 12 8 18" />
@@ -111,7 +111,7 @@
 
             <button type="button" class="toolbar-btn" :class="{ 'is-active': editor.isActive('link') }"
                 @click="toggleLink" :disabled="!editable"
-                title="Link" aria-label="Link">
+                :title="t('components.richTextEditor.toolbar.link')" :aria-label="t('components.richTextEditor.toolbar.link')">
                 <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
                     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
@@ -291,7 +291,7 @@ function toggleLink() {
         return
 
     const previousUrl = editor.value.getAttributes('link').href as string | undefined
-    const url = window.prompt('URL', previousUrl)
+    const url = window.prompt(t('components.richTextEditor.linkPrompt'), previousUrl)
 
     if (url === null)
         return

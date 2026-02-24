@@ -149,6 +149,23 @@ export default {
             exceeded: 'Límite de tamaño de contenido excedido',
             approaching: 'Aproximándose al límite de tamaño',
             large: 'El tamaño del contenido es grande'
+        },
+        richTextEditor: {
+            toolbar: {
+                bold: 'Negrita',
+                italic: 'Cursiva',
+                underline: 'Subrayado',
+                strikethrough: 'Tachado',
+                heading1: 'Encabezado 1',
+                heading2: 'Encabezado 2',
+                heading3: 'Encabezado 3',
+                bulletList: 'Lista de viñetas',
+                orderedList: 'Lista ordenada',
+                blockquote: 'Cita',
+                codeBlock: 'Bloque de código',
+                link: 'Enlace'
+            },
+            linkPrompt: 'URL'
         }
     },
 
