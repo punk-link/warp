@@ -39,14 +39,10 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
-
 import LocaleSwitcher from './LocaleSwitcher.vue'
-
 
 const { t } = useI18n()
 
-
-const startYear = 2024;
 const currentYear = new Date().getFullYear();
 const yearDisplay = startYear === currentYear 
     ? `${startYear}` 
