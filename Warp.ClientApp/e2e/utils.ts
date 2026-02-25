@@ -24,6 +24,15 @@ export async function clickElement(locator: Locator, timeout = 15000): Promise<v
 }
 
 
+export async function saveAndAwaitPostSaveButtons(page: Page, timeout = 30000): Promise<void> {
+    const saveButton = page.getByRole('button', { name: /^Save$/i })
+    await clickElement(saveButton)
+
+    const copyLinkButton = page.getByRole('button', { name: /copy link/i })
+    await expect(copyLinkButton).toBeVisible({ timeout })
+}
+
+
 type PasteFilePayload = {
     bytes: number[]
     mimeType: string
