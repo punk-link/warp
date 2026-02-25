@@ -42,7 +42,6 @@ jobs:
       with:
         context: .
         target: test
-        load: true
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
@@ -215,7 +214,6 @@ jobs:
         load: true
         tags: warp-webapp:e2e
         cache-from: type=gha
-        cache-to: type=gha,mode=max
 
     - name: Start backend
       run: |
