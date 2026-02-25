@@ -47,6 +47,7 @@ jobs:
         cache-to: type=gha,mode=max
 
   web-e2e:
+    needs: docker-test
     runs-on: ubuntu-latest
     timeout-minutes: 40
 
@@ -208,7 +209,13 @@ jobs:
         exit 1
 
     - name: Build backend image
-      run: docker build -t warp-webapp:e2e .
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        load: true
+        tags: warp-webapp:e2e
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
 
     - name: Start backend
       run: |
