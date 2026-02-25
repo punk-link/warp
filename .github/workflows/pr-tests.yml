@@ -5,9 +5,6 @@ permissions:
 on:
   pull_request:
     branches: [ master, main, develop ]
-  # Optional: also run on pushes to main branches
-  push:
-    branches: [ master, main, develop ]
 
 jobs:
   docker-test:
