@@ -10,7 +10,6 @@ import {
     getImageFileInput,
     getPreviewButton,
     getPreviewGalleryImages,
-    getSaveButton,
     getEditorGalleryImages,
     getTextArea
 } from './locators'
@@ -22,6 +21,7 @@ import {
     getCopiedLink,
     gotoHome,
     resolveFixturePath,
+    saveAndAwaitPostSaveButtons,
     setTextMode,
     setupClipboardSpy
 } from './utils'
@@ -89,7 +89,7 @@ test.describe.serial('entry image flows', () => {
         await expectOnPreview(page)
         await expect(previewGalleryImages).toHaveCount(2)
 
-        await clickElement(getSaveButton(page))
+        await saveAndAwaitPostSaveButtons(page)
         await clickElement(getCopyLinkButton(page))
         await expect(page.getByText(/link copied/i)).toBeVisible()
         const previewLink = await getCopiedLink(page)
@@ -133,8 +133,7 @@ test.describe.serial('entry image flows', () => {
 
         await clickElement(getPreviewButton(page))
         await expectOnPreview(page)
-        await clickElement(getSaveButton(page))
-
+        await saveAndAwaitPostSaveButtons(page)
         await clickElement(getCopyLinkButton(page))
         const copied = await getCopiedLink(page)
         await page.goto(copied)
@@ -254,7 +253,7 @@ test.describe.serial('entry image flows', () => {
         await expectOnPreview(page)
         await expect(getPreviewGalleryImages(page)).toHaveCount(1)
 
-        await clickElement(getSaveButton(page))
+        await saveAndAwaitPostSaveButtons(page)
         await clickElement(page.getByRole('button', { name: /clone edit|clone & edit/i }))
         await page.waitForURL(/\?id=/)
 
@@ -270,7 +269,7 @@ test.describe.serial('entry image flows', () => {
         await expectOnPreview(page)
         await expect(getPreviewGalleryImages(page)).toHaveCount(2, { timeout: 10000 })
 
-        await clickElement(getSaveButton(page))
+        await saveAndAwaitPostSaveButtons(page)
         await clickElement(getCopyLinkButton(page))
         const link = await getCopiedLink(page)
 
