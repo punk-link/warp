@@ -1,9 +1,11 @@
 FROM node:25.7.0-alpine AS frontend-deps
+RUN corepack enable
 WORKDIR /src/Warp.ClientApp
 COPY ["Warp.ClientApp/package.json", "Warp.ClientApp/yarn.lock", "./"]
 RUN --mount=type=cache,target=/root/.yarn-cache yarn install --frozen-lockfile --non-interactive
 
 FROM node:25.7.0-alpine AS frontend-builder
+RUN corepack enable
 WORKDIR /src/Warp.ClientApp
 COPY ["Warp.ClientApp/", "./"]
 COPY --from=frontend-deps /src/Warp.ClientApp/node_modules ./node_modules
