@@ -29,7 +29,7 @@ COPY . .
 WORKDIR "/src/Warp.WebApp"
 COPY --from=frontend-builder /src/Warp.ClientApp/dist/. ./wwwroot/
 RUN --mount=type=cache,target=/root/.nuget/packages dotnet publish "./Warp.WebApp.csproj" -c $BUILD_CONFIGURATION \
-    --runtime linux-x64 --no-restore -o /app/publish /p:UseAppHost=false
+    --runtime linux-x64 -o /app/publish /p:UseAppHost=false
 
 FROM build AS test
 ARG BUILD_CONFIGURATION=Release
