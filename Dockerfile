@@ -1,19 +1,11 @@
-FROM node:25.7.0-alpine AS frontend-deps
-RUN apk add --no-cache curl \
-    && curl -fsSL -o /tmp/yarn.tar.gz https://github.com/yarnpkg/yarn/releases/download/v1.22.19/yarn-v1.22.19.tar.gz \
-    && tar xzf /tmp/yarn.tar.gz -C /opt \
-    && ln -s /opt/yarn-v1.22.19/bin/yarn /usr/local/bin/yarn \
-    && rm /tmp/yarn.tar.gz
+FROM node:24-alpine AS frontend-deps
+RUN corepack enable
 WORKDIR /src/Warp.ClientApp
 COPY ["Warp.ClientApp/package.json", "Warp.ClientApp/yarn.lock", "./"]
 RUN --mount=type=cache,target=/root/.yarn-cache yarn install --frozen-lockfile --non-interactive
 
-FROM node:25.7.0-alpine AS frontend-builder
-RUN apk add --no-cache curl \
-    && curl -fsSL -o /tmp/yarn.tar.gz https://github.com/yarnpkg/yarn/releases/download/v1.22.19/yarn-v1.22.19.tar.gz \
-    && tar xzf /tmp/yarn.tar.gz -C /opt \
-    && ln -s /opt/yarn-v1.22.19/bin/yarn /usr/local/bin/yarn \
-    && rm /tmp/yarn.tar.gz
+FROM node:24-alpine AS frontend-builder
+RUN corepack enable
 WORKDIR /src/Warp.ClientApp
 COPY ["Warp.ClientApp/", "./"]
 COPY --from=frontend-deps /src/Warp.ClientApp/node_modules ./node_modules
