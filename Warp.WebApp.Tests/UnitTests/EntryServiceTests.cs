@@ -6,6 +6,7 @@ using Warp.WebApp.Models.Options;
 using Warp.WebApp.Services.Entries;
 
 namespace Warp.WebApp.Tests.UnitTests;
+
 public class EntryServiceTests
 {
     public EntryServiceTests()
