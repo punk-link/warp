@@ -7,8 +7,8 @@ RUN --mount=type=cache,target=/root/.yarn-cache yarn install --frozen-lockfile -
 FROM node:24-alpine AS frontend-builder
 RUN corepack enable
 WORKDIR /src/Warp.ClientApp
-COPY ["Warp.ClientApp/", "./"]
 COPY --from=frontend-deps /src/Warp.ClientApp/node_modules ./node_modules
+COPY ["Warp.ClientApp/", "./"]
 RUN yarn vitest --run
 RUN --mount=type=cache,target=/tmp/vite-cache yarn build
 
@@ -28,8 +28,8 @@ RUN --mount=type=cache,target=/root/.nuget/packages dotnet restore "./Warp.WebAp
 COPY . .
 WORKDIR "/src/Warp.WebApp"
 COPY --from=frontend-builder /src/Warp.ClientApp/dist/. ./wwwroot/
-RUN --mount=type=cache,target=/root/.nuget/packages dotnet build "./Warp.WebApp.csproj" -c $BUILD_CONFIGURATION \
-    -o /app/build --runtime linux-x64
+RUN --mount=type=cache,target=/root/.nuget/packages dotnet publish "./Warp.WebApp.csproj" -c $BUILD_CONFIGURATION \
+    --runtime linux-x64 --no-restore -o /app/publish /p:UseAppHost=false
 
 FROM build AS test
 ARG BUILD_CONFIGURATION=Release
@@ -39,16 +39,11 @@ RUN dotnet test --verbosity normal -c $BUILD_CONFIGURATION \
     --blame-hang-timeout 60s \
     -- xUnit.parallelizeTestCollections=true xUnit.maxParallelThreads=0
 
-FROM build AS publish
-ARG BUILD_CONFIGURATION=Release
-RUN --mount=type=cache,target=/root/.nuget/packages dotnet publish "./Warp.WebApp.csproj" -c $BUILD_CONFIGURATION \
-    --runtime linux-x64 --no-restore --no-build -o /app/publish /p:OutputPath=/app/build /p:UseAppHost=false
-
 FROM base AS final
 ARG PNKL_VAULT_TOKEN
 ENV PNKL_VAULT_TOKEN=$PNKL_VAULT_TOKEN
 WORKDIR /app
-COPY --from=publish /app/publish .
+COPY --from=build /app/publish .
 
 HEALTHCHECK --interval=6s --timeout=10s --retries=3 CMD curl -sS 127.0.0.1/health || exit 1
 
