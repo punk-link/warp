@@ -25,7 +25,7 @@ internal static class WebApplicationBuilderExtensions
         else
         {
             var secrets = await VaultHelper.GetSecrets<ProgramSecrets>(logger, builder.Configuration);
-            builder.AddConsulConfiguration(secrets.ConsulAddress, secrets.ConsulToken);
+            builder.AddConsulConfiguration(secrets.ConsulAddress, secrets.ConsulToken, logger);
 
             builder.Configuration.AddInMemoryCollection(
             [

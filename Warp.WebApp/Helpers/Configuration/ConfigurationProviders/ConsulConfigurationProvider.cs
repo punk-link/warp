@@ -1,14 +1,16 @@
 ﻿using Consul;
 using System.Text;
 using System.Text.Json.Nodes;
+using Warp.WebApp.Telemetry.Logging;
 
 namespace Warp.WebApp.Helpers.Configuration.ConfigurationProviders;
 
 public class ConsulConfigurationProvider : ConfigurationProvider
 {
-    public ConsulConfigurationProvider(string address, string token, string storageName)
+    public ConsulConfigurationProvider(string address, string token, string storageName, ILogger logger)
     {
         _address = $"http://{address}";
+        _logger = logger;
         _storageName = storageName;
         _token = token;
     }
@@ -17,12 +19,22 @@ public class ConsulConfigurationProvider : ConfigurationProvider
     public override void Load()
     {
         var consulClient = GetConsulClient(_address, _token);
-        var configuration = consulClient.KV.Get(_storageName).GetAwaiter().GetResult();
-        var configurationString = Encoding.UTF8.GetString(configuration.Response.Value, 0, configuration.Response.Value.Length);
+        var result = consulClient.KV.Get(_storageName).GetAwaiter().GetResult();
+
+        if (result.Response is null)
+        {
+            _logger.LogConsulKvKeyNotFound(_storageName);
+            throw new InvalidOperationException($"Consul KV key '{_storageName}' was not found. Verify the key exists and the service name and environment are configured correctly.");
+        }
+
+        var configurationString = Encoding.UTF8.GetString(result.Response.Value, 0, result.Response.Value.Length);
         var jsonNode = JsonNode.Parse(configurationString);
 
         if (jsonNode is null)
-            return;
+        {
+            _logger.LogConsulKvInvalidJson(_storageName);
+            throw new InvalidOperationException($"Consul KV key '{_storageName}' returned null or invalid JSON.");
+        }
 
         foreach (var (nodeKey, value) in jsonNode.AsObject().AsEnumerable())
             FlattenNode(value, nodeKey);
@@ -64,6 +76,7 @@ public class ConsulConfigurationProvider : ConfigurationProvider
 
 
     private readonly string _address;
+    private readonly ILogger _logger;
     private readonly string _storageName;
     private readonly string _token;
 }
