@@ -55,6 +55,12 @@ public enum LogEvents
     [Description("Startup error: Options validation exception occurred. Details: '{ErrorMessage:string}'.")]
     [HttpStatusCode(500)]
     OptionsValidationException = 11301,
+    [Description("Startup error: Consul KV key '{StorageName:string}' was not found. Verify the key exists and the service name and environment are configured correctly.")]
+    [HttpStatusCode(500)]
+    ConsulKvKeyNotFound = 11302,
+    [Description("Startup error: Consul KV key '{StorageName:string}' returned null or invalid JSON.")]
+    [HttpStatusCode(500)]
+    ConsulKvInvalidJson = 11303,
 
 
     // Infrastructure

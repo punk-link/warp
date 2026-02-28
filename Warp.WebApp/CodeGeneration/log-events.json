@@ -134,6 +134,24 @@
           "generateLogMessage": true,
           "obsolete": false,
           "httpCode": 500
+        },
+        {
+          "id": 11302,
+          "name": "ConsulKvKeyNotFound",
+          "description": "Startup error: Consul KV key '{StorageName:string}' was not found. Verify the key exists and the service name and environment are configured correctly.",
+          "logLevel": "Critical",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
+          "id": 11303,
+          "name": "ConsulKvInvalidJson",
+          "description": "Startup error: Consul KV key '{StorageName:string}' returned null or invalid JSON.",
+          "logLevel": "Critical",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
         }
       ]
     },

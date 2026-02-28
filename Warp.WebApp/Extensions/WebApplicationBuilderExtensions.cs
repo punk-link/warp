@@ -11,27 +11,27 @@ internal static class WebApplicationBuilderExtensions
     {
         var environmentName = builder.Environment.EnvironmentName;
 
-        if (builder.Environment.IsLocal())
-        {
-            logger.LogLocalConfigurationIsInUse();
-            builder.Configuration.AddJsonFile($"appsettings.{environmentName}.json", optional: true, reloadOnChange: true);
-        }
-        else if (builder.Environment.IsEndToEndTests())
-        {
-            logger.LogEndToEndTestsConfigurationIsInUse();
-            builder.Configuration.AddJsonFile($"appsettings.{environmentName}.json", optional: true, reloadOnChange: true);
-            AddVaultTokenFromFile(builder, logger);
-        }
-        else
-        {
+        //if (builder.Environment.IsLocal())
+        //{
+        //    logger.LogLocalConfigurationIsInUse();
+        //    builder.Configuration.AddJsonFile($"appsettings.{environmentName}.json", optional: true, reloadOnChange: true);
+        //}
+        //else if (builder.Environment.IsEndToEndTests())
+        //{
+        //    logger.LogEndToEndTestsConfigurationIsInUse();
+        //    builder.Configuration.AddJsonFile($"appsettings.{environmentName}.json", optional: true, reloadOnChange: true);
+        //    AddVaultTokenFromFile(builder, logger);
+        //}
+        //else
+        //{
             var secrets = await VaultHelper.GetSecrets<ProgramSecrets>(logger, builder.Configuration);
-            builder.AddConsulConfiguration(secrets.ConsulAddress, secrets.ConsulToken);
+            builder.AddConsulConfiguration(secrets.ConsulAddress, secrets.ConsulToken, logger);
 
             builder.Configuration.AddInMemoryCollection(
             [
                 new KeyValuePair<string, string?>("S3Options:SecretAccessKey", secrets.S3SecretAccessKey)
             ]);
-        }
+        //}
 
         builder.Services.AddFeatureManagement();
 

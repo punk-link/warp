@@ -54,6 +54,12 @@ internal static partial class LogMessages
     [LoggerMessage((int)LogEvents.OptionsValidationException, LogLevel.Error, "Startup error: Options validation exception occurred. Details: '{ErrorMessage:string}'.")]
     public static partial void LogOptionsValidationException(this ILogger logger, string errorMessage);
 
+    [LoggerMessage((int)LogEvents.ConsulKvKeyNotFound, LogLevel.Critical, "Startup error: Consul KV key '{StorageName:string}' was not found. Verify the key exists and the service name and environment are configured correctly.")]
+    public static partial void LogConsulKvKeyNotFound(this ILogger logger, string storageName);
+
+    [LoggerMessage((int)LogEvents.ConsulKvInvalidJson, LogLevel.Critical, "Startup error: Consul KV key '{StorageName:string}' returned null or invalid JSON.")]
+    public static partial void LogConsulKvInvalidJson(this ILogger logger, string storageName);
+
 
     // Infrastructure
     [LoggerMessage((int)LogEvents.DefaultCacheValueError, LogLevel.Warning, "Unable to store a default value {CacheValue}.")]
