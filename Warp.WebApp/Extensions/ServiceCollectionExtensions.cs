@@ -91,24 +91,7 @@ internal static class ServiceCollectionExtensions
                 .ValidateOnStart();
 
             services.AddOptions<ImageUploadOptions>()
-                .Configure(options =>
-                {
-                    // AppSettings configuration provider returns an array of string,
-                    // but Consul configuration provider returns a single string.
-                    // So we need to handle both cases differently.
-                    var allowedExtensionsSection = builder.Configuration.GetSection("ImageUploadOptions:AllowedExtensions");
-                    var allowedExtensions = Array.Empty<string>();
-
-                    if (allowedExtensionsSection.Value is not null)
-                        allowedExtensions = JsonSerializer.Deserialize<string[]>(allowedExtensionsSection.Value)!;
-                    else if (allowedExtensionsSection.GetChildren().Any())
-                        allowedExtensions = allowedExtensionsSection.Get<string[]>() ?? [];
-
-                    options.AllowedExtensions = allowedExtensions;
-                    options.MaxFileCount = builder.Configuration.GetValue<int>("ImageUploadOptions:MaxFileCount");
-                    options.MaxFileSize = builder.Configuration.GetValue<long>("ImageUploadOptions:MaxFileSize");
-                    options.RequestBoundaryLengthLimit = builder.Configuration.GetValue<int>("ImageUploadOptions:RequestBoundaryLengthLimit");
-                })
+                .BindConfiguration(nameof(ImageUploadOptions))
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 
