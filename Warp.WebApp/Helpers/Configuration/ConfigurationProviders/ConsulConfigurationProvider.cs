@@ -25,24 +25,32 @@ public class ConsulConfigurationProvider : ConfigurationProvider
             return;
 
         foreach (var (nodeKey, value) in jsonNode.AsObject().AsEnumerable())
-        {
-            switch (value)
-            {
-                case JsonValue:
-                    Data.Add(nodeKey, value.ToString());
-                    continue;
-                case JsonObject:
-                    foreach (var prop in value.AsObject().AsEnumerable())
-                    {
-                        if (prop.Value is null)
-                            continue;
+            FlattenNode(value, nodeKey);
+    }
 
-                        Data.Add($"{nodeKey}:{prop.Key}", prop.Value.ToString());
-                    }
-                    continue;
-                case JsonArray:
-                    throw new NotImplementedException();
-            }
+
+    private void FlattenNode(JsonNode? node, string parentKey)
+    {
+        switch (node)
+        { 
+            case JsonValue:
+                Data.Add(parentKey, node.ToString());
+                break;
+            case JsonObject:
+                foreach (var prop in node.AsObject().AsEnumerable())
+                {
+                    if (prop.Value is null)
+                        continue;
+
+                    FlattenNode(prop.Value, $"{parentKey}:{prop.Key}");
+                }
+
+                break;
+            case JsonArray jsonArray:
+                for (var i = 0; i < jsonArray.Count; i++ )
+                    FlattenNode(jsonArray[i], $"{parentKey}:{i}");
+
+                break;
         }
     }
 
