@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.ResponseCompression;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using Warp.WebApp.Constants;
 using Warp.WebApp.Data;
@@ -79,14 +78,7 @@ internal static class ServiceCollectionExtensions
                 .BindConfiguration(nameof(AnalyticsOptions));
 
             services.AddOptions<S3Options>()
-                .Configure(options =>
-                {
-                    options.AccessKey = builder.Configuration["S3Options:AccessKey"]!;
-                    options.BucketName = builder.Configuration["S3Options:BucketName"]!;
-                    options.ForcePathStyle = builder.Configuration.GetValue<bool>("S3Options:ForcePathStyle");
-                    options.SecretAccessKey = builder.Configuration["S3Options:SecretAccessKey"]!;
-                    options.ServiceUrl = builder.Configuration["S3Options:ServiceUrl"];
-                })
+                .BindConfiguration(nameof(S3Options))
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 
@@ -101,14 +93,7 @@ internal static class ServiceCollectionExtensions
                 .ValidateOnStart();
 
             services.AddOptions<EntryValidatorOptions>()
-                .Configure(options =>
-                {
-                    var section = builder.Configuration.GetSection("Content:SizeLimits");
-
-                    options.MaxContentDeltaSizeBytes = section.GetValue<int>("MaxContentDeltaSize");
-                    options.MaxHtmlSizeBytes = section.GetValue<int>("MaxHtmlSize");
-                    options.MaxPlainTextSizeBytes = section.GetValue<int>("MaxPlainTextSize");
-                })
+                .BindConfiguration("Content:SizeLimits")
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 
@@ -163,11 +148,7 @@ internal static class ServiceCollectionExtensions
             }
 
             services.AddOptions<OpenGraphOptions>()
-                .Configure(options =>
-                {
-                    options.DefaultImageUrl = new Uri(builder.Configuration["OpenGraph:DefaultImageUrl"]!);
-                    options.Title = builder.Configuration["OpenGraph:Title"]!;
-                });
+                .BindConfiguration("OpenGraph");
         }
         catch (Exception ex)
         {

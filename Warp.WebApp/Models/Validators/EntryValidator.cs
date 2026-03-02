@@ -28,7 +28,7 @@ public class EntryValidator : AbstractValidator<Entry>
 
                 var plainTextSizeError = DomainErrors.EntryPlainTextSizeExceeded();
                 RuleFor(x => x.Content)
-                    .Must((content) => BeWithinContentSizeLimit(content, entryValidatorOptions.MaxPlainTextSizeBytes))
+                    .Must((content) => BeWithinContentSizeLimit(content, entryValidatorOptions.MaxPlainTextSize))
                     .WithErrorCode(plainTextSizeError.Code.ToHttpStatusCodeInt().ToString())
                     .WithMessage(plainTextSizeError.Detail);
                 break;
@@ -46,7 +46,7 @@ public class EntryValidator : AbstractValidator<Entry>
         {
             var htmlSizeError = DomainErrors.EntryHtmlSizeExceeded();
             RuleFor(x => x.Content)
-                .Must((content) => BeWithinContentSizeLimit(content, entryValidatorOptions.MaxHtmlSizeBytes))
+                .Must((content) => BeWithinContentSizeLimit(content, entryValidatorOptions.MaxHtmlSize))
                 .WithErrorCode(htmlSizeError.Code.ToHttpStatusCodeInt().ToString())
                 .WithMessage(htmlSizeError.Detail);
 
@@ -65,7 +65,7 @@ public class EntryValidator : AbstractValidator<Entry>
 
             var contentDeltaSizeError = DomainErrors.EntryContentDeltaSizeExceeded();
             RuleFor(x => x.ContentDelta)
-                .Must((json) => BeWithinContentSizeLimit(json, entryValidatorOptions.MaxContentDeltaSizeBytes))
+                .Must((json) => BeWithinContentSizeLimit(json, entryValidatorOptions.MaxContentDeltaSize))
                 .WithErrorCode(contentDeltaSizeError.Code.ToHttpStatusCodeInt().ToString())
                 .WithMessage(contentDeltaSizeError.Detail)
                 .When(x => !string.IsNullOrWhiteSpace(x.ContentDelta));

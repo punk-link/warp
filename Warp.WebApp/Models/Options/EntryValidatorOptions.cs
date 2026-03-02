@@ -5,9 +5,9 @@ namespace Warp.WebApp.Models.Options;
 public sealed class EntryValidatorOptions
 {
     [Range(1, int.MaxValue)]
-    public required int MaxContentDeltaSizeBytes { get; set; }
+    public required int MaxContentDeltaSize { get; set; }
     [Range(1, int.MaxValue)]
-    public required int MaxHtmlSizeBytes { get; set; }
+    public required int MaxHtmlSize { get; set; }
     [Range(1, int.MaxValue)]
-    public required int MaxPlainTextSizeBytes { get; set; }
+    public required int MaxPlainTextSize { get; set; }
 }

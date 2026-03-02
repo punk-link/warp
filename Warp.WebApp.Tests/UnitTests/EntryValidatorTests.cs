@@ -11,9 +11,9 @@ public class EntryValidatorTests
     {
         _options = new EntryValidatorOptions
         {
-            MaxContentDeltaSizeBytes = 1024 * 1024,
-            MaxHtmlSizeBytes = 1024 * 1024,
-            MaxPlainTextSizeBytes = 1024 * 1024
+            MaxContentDeltaSize = 1024 * 1024,
+            MaxHtmlSize = 1024 * 1024,
+            MaxPlainTextSize = 1024 * 1024
         };
     }
 
