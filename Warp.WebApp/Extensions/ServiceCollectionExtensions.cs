@@ -93,7 +93,7 @@ internal static class ServiceCollectionExtensions
                 .ValidateOnStart();
 
             services.AddOptions<EntryValidatorOptions>()
-                .BindConfiguration("Content:SizeLimits")
+                .BindConfiguration(nameof(EntryValidatorOptions))
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 
