@@ -60,6 +60,10 @@ internal static partial class LogMessages
     [LoggerMessage((int)LogEvents.ConsulKvInvalidJson, LogLevel.Critical, "Startup error: Consul KV key '{StorageName:string}' returned null or invalid JSON.")]
     public static partial void LogConsulKvInvalidJson(this ILogger logger, string storageName);
 
+    // Consul
+    [LoggerMessage((int)LogEvents.ConsulConfigLoaded, LogLevel.Information, "Consul configuration loaded. Storage: '{StorageName}'. Keys count: {KeysCount}. Data: {ConfigurationData}")]
+    public static partial void LogConsulConfigLoaded(this ILogger logger, string storageName, int keysCount, string configurationData);
+
 
     // Infrastructure
     [LoggerMessage((int)LogEvents.DefaultCacheValueError, LogLevel.Warning, "Unable to store a default value {CacheValue}.")]
