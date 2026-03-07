@@ -62,6 +62,11 @@ public enum LogEvents
     [HttpStatusCode(500)]
     ConsulKvInvalidJson = 11303,
 
+    // Consul
+    [Description("Consul configuration loaded. Storage: '{StorageName:string}'. Keys: {KeysCount:int}.")]
+    [HttpStatusCode(200)]
+    ConsulConfigLoaded = 11304,
+
 
     // Infrastructure
     [Description("Unable to store a default value {CacheValue}.")]

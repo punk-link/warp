@@ -1,4 +1,5 @@
-﻿using Consul;
+using Consul;
+using System.Linq;
 using System.Text;
 using System.Text.Json.Nodes;
 using Warp.WebApp.Telemetry.Logging;
@@ -38,6 +39,16 @@ public class ConsulConfigurationProvider : ConfigurationProvider
 
         foreach (var (nodeKey, value) in jsonNode.AsObject().AsEnumerable())
             FlattenNode(value, nodeKey);
+
+        // Логируем загруженную конфигурацию
+        LogLoadedConfiguration();
+    }
+
+
+    private void LogLoadedConfiguration()
+    {
+        var configData = string.Join(", ", Data.Select(kv => $"{kv.Key}={kv.Value}"));
+        _logger.LogConsulConfigLoaded(_storageName, Data.Count, configData);
     }
 
 
