@@ -11,7 +11,13 @@ Systematic methodology for diagnosing and fixing Playwright E2E test failures.
 
 ### 1. Collect Error Context
 
-Read the **error message**, **call stack**, and **error-context artifacts** (page snapshots, screenshots) produced by Playwright:
+| Pattern | Likely cause | Where to look |
+|---|---|---|
+| Same failure across **all 3 browsers** | Code bug or config issue | Application code, config pipeline |
+| Failure in **one browser only** | Timing/flakiness | Timeouts, parallel worker contention |
+| **Different** test fails each run, one browser | Worker contention / resource exhaustion | `playwright.config.ts` worker count, missing waits |
+| **All tests** fail identically | Infrastructure or config | Pre-flight checks, `/config.js` output |
+| Specific **test group** fails | Feature-specific bug | The feature's component and API |
 
 - Error message reveals which locator timed out and with what timeout.
 - Call stack pinpoints the exact spec line and utility function involved.
@@ -99,8 +105,44 @@ await clickElement(getCopyLinkButton(page))
 
 **Diagnosis**: Check the error-context snapshot for redirect to error pages or stuck spinner states. Add `page.on('console')` or `page.on('response')` listeners in the test to capture API failures.
 
+### Worker Contention / Resource Exhaustion
+
+**Problem**: Unlimited parallel workers (Playwright's default is half CPU cores) launch too many concurrent browser processes. The OS runs out of resources and individual tests fail randomly — a different test each run, almost always in only one browser (typically Chromium, which is heaviest). Serial test blocks cascade: one timeout causes all subsequent tests in the block to be skipped.
+
+**Symptoms**:
+- "Test timeout of Nms exceeded while setting up 'page'" — browser couldn't even create a page.
+- "saving..." / "Pending…" stuck in the error-context snapshot — the API call hung under system load.
+- Failures are **non-deterministic**: different tests fail on each run.
+- Only **one browser** is affected (Chromium most often, being the most resource-intensive).
+- Serial blocks show 1 failure + N skipped, inflating the apparent failure count.
+
+**Diagnosis**: Run the same suite twice. If different tests fail each time, and only in one browser, this is almost certainly resource contention rather than a code defect. Check `playwright.config.ts` for `workers: undefined` (unlimited) and `retries: 0` (no tolerance for transient failures).
+
+**Fix** (in `playwright.config.ts`):
+
+```ts
+// Before (resource-hungry, zero tolerance)
+workers: process.env.CI ? 2 : undefined,
+retries: process.env.CI ? 2 : 0,
+
+// After (bounded parallelism, 1 retry for transient failures)
+workers: process.env.CI ? 2 : 4,
+retries: process.env.CI ? 2 : 1,
+```
+
+Also audit the failing test for missing waits between sequential actions (see "Missing Wait Between Sequential Actions" above) — under load, a missing wait that normally succeeds by luck will start failing.
+
+### Global Setup Timeout
+
+**Problem**: `global-setup.ts` times out with "Vue app did not initialize within 120000ms". Logs show repeated `ECONNREFUSED` errors from the Vite proxy.
+
+**Fix**: This always means the backend is unreachable. Verify that `dotnet run --project Warp.WebApp --launch-profile e2e-local` is running and healthy on `https://localhost:8001`.
+
 ## Checklist
 
+- [ ] Verify infrastructure: Docker services up, Vault token exists, backend running, Playwright browsers installed
+- [ ] Classify failure pattern: all-browser (code/config) vs single-browser (timing) vs non-deterministic (resource contention)
+- [ ] If non-deterministic single-browser failures: check `playwright.config.ts` worker count and retry settings
 - [ ] Read error message, call stack, and error-context snapshot
 - [ ] Read the full test case and all referenced helpers/locators
 - [ ] Analyze the page snapshot: what is the actual UI state vs expected?
