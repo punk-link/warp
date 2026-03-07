@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using Microsoft.Extensions.Options;
+using System.Globalization;
 using System.Text.Json;
 using Warp.WebApp.Helpers.Configuration;
 using Warp.WebApp.Models.Options;
@@ -111,15 +112,16 @@ internal static class SpaExtensions
 
     internal static WebApplication MapSpaConfigs(this WebApplication app)
     { 
-        app.MapGet("/config.js", async (HttpContext ctx, IConfiguration configuration, IWebHostEnvironment env) =>
+        app.MapGet("/config.js", async (HttpContext ctx, IOptions<EntryValidatorOptions> entryValidatorOptions, IConfiguration configuration, IWebHostEnvironment env) =>
         {
+            var validatorOptions = entryValidatorOptions.Value;
             var config = new Dictionary<string, object?>
             {
                 ["apiBaseUrl"] = "/api",
                 ["environment"] = env.EnvironmentName,
-                ["maxContentDeltaSize"] = configuration.GetValue<int>("Content:SizeLimits:MaxContentDeltaSize"),
-                ["maxHtmlContentSize"] = configuration.GetValue<int>("Content:SizeLimits:MaxHtmlSize"),
-                ["maxPlainTextContentSize"] = configuration.GetValue<int>("Content:SizeLimits:MaxPlainTextSize"),
+                ["maxContentDeltaSize"] = validatorOptions.MaxContentDeltaSize,
+                ["maxHtmlContentSize"] = validatorOptions.MaxHtmlSize,
+                ["maxPlainTextContentSize"] = validatorOptions.MaxPlainTextSize,
                 ["sentryDsn"] = configuration["Sentry:FrontendDsn"],
                 ["feedbackEmail"] = configuration["ContactEmails:FeedbackEmail"],
                 ["dataRequestEmail"] = configuration["ContactEmails:DataRequestEmail"]
