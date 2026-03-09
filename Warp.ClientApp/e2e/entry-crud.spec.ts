@@ -135,7 +135,11 @@ test.describe.serial('entry crud flows', () => {
         await expectOnPreview(page)
 
         await clickElement(getSaveButton(page))
-        await clickElement(getCopyLinkButton(page))
+
+        const copyLinkButton = getCopyLinkButton(page)
+        await expect(copyLinkButton).toBeVisible({ timeout: 10000 })
+        await expect(copyLinkButton).toBeEnabled({ timeout: 10000 })
+        await clickElement(copyLinkButton)
 
         const copied = await getCopiedLink(page)
         await page.goto(copied)

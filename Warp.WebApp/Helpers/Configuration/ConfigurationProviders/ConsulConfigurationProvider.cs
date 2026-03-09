@@ -1,5 +1,4 @@
 using Consul;
-using System.Linq;
 using System.Text;
 using System.Text.Json.Nodes;
 using Warp.WebApp.Telemetry.Logging;
@@ -8,9 +7,10 @@ namespace Warp.WebApp.Helpers.Configuration.ConfigurationProviders;
 
 public class ConsulConfigurationProvider : ConfigurationProvider
 {
-    public ConsulConfigurationProvider(string address, string token, string storageName, ILogger logger)
+    public ConsulConfigurationProvider(string address, string token, string storageName, IWebHostEnvironment environment, ILogger logger)
     {
         _address = $"http://{address}";
+        _environment = environment;
         _logger = logger;
         _storageName = storageName;
         _token = token;
@@ -40,8 +40,8 @@ public class ConsulConfigurationProvider : ConfigurationProvider
         foreach (var (nodeKey, value) in jsonNode.AsObject().AsEnumerable())
             FlattenNode(value, nodeKey);
 
-        // Логируем загруженную конфигурацию
-        LogLoadedConfiguration();
+        if (!_environment.IsProduction())
+            LogLoadedConfiguration();
     }
 
 
@@ -87,6 +87,7 @@ public class ConsulConfigurationProvider : ConfigurationProvider
 
 
     private readonly string _address;
+    private readonly IWebHostEnvironment _environment;
     private readonly ILogger _logger;
     private readonly string _storageName;
     private readonly string _token;
