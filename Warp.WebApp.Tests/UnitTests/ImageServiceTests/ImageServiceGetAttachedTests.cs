@@ -1,10 +1,12 @@
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using NSubstitute;
 using Warp.WebApp.Constants.Logging;
 using Warp.WebApp.Data;
 using Warp.WebApp.Data.S3;
 using Warp.WebApp.Models.Errors;
+using Warp.WebApp.Models.Options;
 using Warp.WebApp.Services.Images;
 
 namespace Warp.WebApp.Tests.UnitTests.ImageServiceTests;
@@ -20,7 +22,7 @@ public class ImageServiceGetAttachedTests
         _dataStorageSubstitute = Substitute.For<IDataStorage>();
         _s3StorageSubstitute = Substitute.For<IS3FileStorage>();
         
-        _imageService = new ImageService(_dataStorageSubstitute, _s3StorageSubstitute);
+        _imageService = new ImageService(_dataStorageSubstitute, _s3StorageSubstitute, Options.Create(new ImageCacheOptions { MaxCachableFileSize = 1_048_576 }));
     }
 
 

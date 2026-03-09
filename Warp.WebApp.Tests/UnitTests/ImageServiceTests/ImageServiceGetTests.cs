@@ -1,11 +1,13 @@
 using CSharpFunctionalExtensions;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using NSubstitute;
 using Warp.WebApp.Constants.Logging;
 using Warp.WebApp.Data;
 using Warp.WebApp.Data.S3;
+using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Models.Files;
+using Warp.WebApp.Models.Options;
 using Warp.WebApp.Services.Images;
 
 namespace Warp.WebApp.Tests.UnitTests.ImageServiceTests;
@@ -14,14 +16,32 @@ public class ImageServiceGetTests
 {
     public ImageServiceGetTests()
     {
-        _loggerFactorySubstitute = Substitute.For<ILoggerFactory>();
-        _loggerSubstitute = Substitute.For<ILogger<ImageService>>();
-        _loggerFactorySubstitute.CreateLogger<ImageService>().Returns(_loggerSubstitute);
-        
         _dataStorageSubstitute = Substitute.For<IDataStorage>();
         _s3StorageSubstitute = Substitute.For<IS3FileStorage>();
-        
-        _imageService = new ImageService(_dataStorageSubstitute, _s3StorageSubstitute);
+
+        _imageService = new ImageService(_dataStorageSubstitute, _s3StorageSubstitute, Options.Create(new ImageCacheOptions { MaxCachableFileSize = 1_048_576 }));
+    }
+
+
+    [Fact]
+    public async Task Get_ImageFoundInCache_ReturnsCachedImage()
+    {
+        var entryId = Guid.NewGuid();
+        var imageId = Guid.NewGuid();
+        var imageBytes = new byte[] { 0x01, 0x02, 0x03 };
+
+        _dataStorageSubstitute.TryGet<CachedImage>(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(_ => new ValueTask<CachedImage>(new CachedImage { Content = imageBytes, ContentType = "image/png" }));
+
+        var result = await _imageService.Get(entryId, imageId, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(imageId, result.Value.Id);
+        Assert.Equal("image/png", result.Value.ContentType);
+        Assert.Equal(imageBytes, ((MemoryStream)result.Value.Content).ToArray());
+
+        await _s3StorageSubstitute.DidNotReceive()
+            .Get(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 
 
@@ -46,8 +66,12 @@ public class ImageServiceGetTests
     {
         var entryId = Guid.NewGuid();
         var imageId = Guid.NewGuid();
+        var imageBytes = new byte[] { 0x01, 0x02, 0x03 };
 
-        using var stream = new MemoryStream([0x01, 0x02, 0x03]);
+        _dataStorageSubstitute.TryGet<EntryInfo?>(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new ValueTask<EntryInfo?>((EntryInfo?)null));
+
+        using var stream = new MemoryStream(imageBytes);
         var appFile = new AppFile(stream, "image/png");
 
         _s3StorageSubstitute
@@ -56,15 +80,14 @@ public class ImageServiceGetTests
 
         var result = await _imageService.Get(entryId, imageId, CancellationToken.None);
 
-        Assert.Equal(result.Value.Content, appFile.Content);
-        Assert.Equal(result.Value.Id, imageId);
-        Assert.Equal(result.Value.ContentType, appFile.ContentMimeType);
+        Assert.True(result.IsSuccess);
+        Assert.Equal(imageId, result.Value.Id);
+        Assert.Equal("image/png", result.Value.ContentType);
+        Assert.Equal(imageBytes, ((MemoryStream)result.Value.Content).ToArray());
     }
     
 
     private readonly IS3FileStorage _s3StorageSubstitute;
-    private readonly ILoggerFactory _loggerFactorySubstitute;
-    private readonly ILogger<ImageService> _loggerSubstitute;
     private readonly IDataStorage _dataStorageSubstitute;
     private readonly ImageService _imageService;
 }

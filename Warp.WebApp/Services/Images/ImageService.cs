@@ -165,7 +165,7 @@ public class ImageService : IImageService, IUnauthorizedImageService
     public async Task<Result<Image, DomainError>> Get(Guid entryId, Guid imageId, CancellationToken cancellationToken)
     {
         var cached = await TryGetFromCache(entryId, imageId, cancellationToken);
-        if (cached is not null)
+        if (cached?.Content is not null)
         {
             return new Image
             {
@@ -175,39 +175,49 @@ public class ImageService : IImageService, IUnauthorizedImageService
             };
         }
 
-        var result = await _s3FileStorage.Get(entryId.ToString(), imageId.ToString(), cancellationToken);
-        if (result.IsFailure)
-            return result.Error;
+        return await _s3FileStorage.Get(entryId.ToString(), imageId.ToString(), cancellationToken)
+            .Map(MaterializeContent)
+            .Tap(CacheResult)
+            .Map(BuildImage);
 
-        var appFile = result.Value;
-        using var sourceStream = appFile.Content;
-        using var ms = new MemoryStream();
-        await sourceStream.CopyToAsync(ms, cancellationToken);
-        var imageBytes = ms.ToArray();
 
-        var expiresIn = await GetRemainingTtl(entryId, cancellationToken);
-        await SetInCache(entryId, imageId, imageBytes, appFile.ContentMimeType, expiresIn, cancellationToken);
-
-        return new Image
+        async Task<(byte[] Bytes, string ContentType)> MaterializeContent(AppFile appFile)
         {
-            Id = imageId,
-            Content = new MemoryStream(imageBytes),
-            ContentType = appFile.ContentMimeType
-        };
-
-
-        async Task<TimeSpan> GetRemainingTtl(Guid id, CancellationToken ct)
-        {
-            var cacheKey = CacheKeyBuilder.BuildEntryInfoCacheKey(id);
-            var entryInfo = await _dataStorage.TryGet<EntryInfo?>(cacheKey, ct);
-            if (entryInfo is null)
-                return CachingConstants.MaxSupportedCachingTime;
-
-            var remaining = entryInfo.Value.ExpiresAt - DateTimeOffset.UtcNow;
-            return remaining > TimeSpan.Zero 
-                ? remaining 
-                : TimeSpan.Zero;
+            using var sourceStream = appFile.Content;
+            using var ms = new MemoryStream();
+            await sourceStream.CopyToAsync(ms, cancellationToken);
+            return (ms.ToArray(), appFile.ContentMimeType);
         }
+
+
+        async Task CacheResult((byte[] Bytes, string ContentType) content)
+        {
+            var expiresIn = await GetRemainingTtl(entryId, cancellationToken);
+            await SetInCache(entryId, imageId, content.Bytes, content.ContentType, expiresIn, cancellationToken);
+
+
+            async Task<TimeSpan> GetRemainingTtl(Guid id, CancellationToken ct)
+            {
+                var cacheKey = CacheKeyBuilder.BuildEntryInfoCacheKey(id);
+                var entryInfo = await _dataStorage.TryGet<EntryInfo?>(cacheKey, ct);
+                if (entryInfo is null)
+                    return CachingConstants.MaxSupportedCachingTime;
+
+                var remaining = entryInfo.Value.ExpiresAt - DateTimeOffset.UtcNow;
+                return remaining > TimeSpan.Zero
+                    ? remaining
+                    : TimeSpan.Zero;
+            }
+        }
+
+
+        Image BuildImage((byte[] Bytes, string ContentType) content)
+            => new()
+            {
+                Id = imageId,
+                Content = new MemoryStream(content.Bytes),
+                ContentType = content.ContentType
+            };
     }
 
 
@@ -290,16 +300,23 @@ public class ImageService : IImageService, IUnauthorizedImageService
     {
         foreach (var imageId in imageIds)
         {
-            var result = await _s3FileStorage.Get(entryId.ToString(), imageId.ToString(), cancellationToken);
-            if (result.IsFailure)
-                continue;
+            await _s3FileStorage.Get(entryId.ToString(), imageId.ToString(), cancellationToken)
+                .Map(MaterializeContent)
+                .Tap(CacheResult);
 
-            var appFile = result.Value;
-            using var sourceStream = appFile.Content;
-            using var ms = new MemoryStream();
-            await sourceStream.CopyToAsync(ms, cancellationToken);
 
-            await SetInCache(entryId, imageId, ms.ToArray(), appFile.ContentMimeType, expiresIn, cancellationToken);
+            async Task<(byte[] Bytes, string ContentType)> MaterializeContent(AppFile appFile)
+            {
+                using var sourceStream = appFile.Content;
+                using var memoryStream = new MemoryStream();
+                await sourceStream.CopyToAsync(memoryStream, cancellationToken);
+
+                return (memoryStream.ToArray(), appFile.ContentMimeType);
+            }
+
+
+            Task CacheResult((byte[] Bytes, string ContentType) content)
+                => SetInCache(entryId, imageId, content.Bytes, content.ContentType, expiresIn, cancellationToken);
         }
     }
     
