@@ -1,13 +1,16 @@
 ﻿using CSharpFunctionalExtensions;
 using CSharpFunctionalExtensions.ValueTasks;
+using Microsoft.Extensions.Options;
 using System.Diagnostics;
 using System.IO.Hashing;
 using Warp.WebApp.Constants.Caching;
 using Warp.WebApp.Data;
 using Warp.WebApp.Data.S3;
+using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Models.Files;
 using Warp.WebApp.Models.Images;
+using Warp.WebApp.Models.Options;
 
 namespace Warp.WebApp.Services.Images;
 
@@ -23,8 +26,10 @@ public class ImageService : IImageService, IUnauthorizedImageService
     /// </summary>
     /// <param name="dataStorage">The data storage provider for caching operations.</param>
     /// <param name="s3FileStorage">The S3 file storage provider for image persistence.</param>
-    public ImageService(IDataStorage dataStorage, IS3FileStorage s3FileStorage)
+    /// <param name="cacheOptions">The configuration options controlling image caching behavior.</param>
+    public ImageService(IDataStorage dataStorage, IS3FileStorage s3FileStorage, IOptions<ImageCacheOptions> cacheOptions)
     {
+        _cacheOptions = cacheOptions.Value;
         _dataStorage = dataStorage;
         _s3FileStorage = s3FileStorage;
     }
@@ -157,23 +162,52 @@ public class ImageService : IImageService, IUnauthorizedImageService
 
 
     /// <inheritdoc cref="IUnauthorizedImageService.Get"/>
-    public Task<Result<Image, DomainError>> Get(Guid entryId, Guid imageId, CancellationToken cancellationToken)
+    public async Task<Result<Image, DomainError>> Get(Guid entryId, Guid imageId, CancellationToken cancellationToken)
     {
-        return GetImage(imageId, cancellationToken)
-            .Bind(BuildImage);
-
-
-        Task<Result<AppFile, DomainError>> GetImage(Guid imageId, CancellationToken cancellationToken) 
-            => _s3FileStorage.Get(entryId.ToString(), imageId.ToString(), cancellationToken);
-
-
-        Result<Image, DomainError> BuildImage(AppFile stream)
-            => new Image()
+        var cached = await TryGetFromCache(entryId, imageId, cancellationToken);
+        if (cached is not null)
+        {
+            return new Image
             {
                 Id = imageId,
-                Content = stream.Content,
-                ContentType = stream.ContentMimeType
+                Content = new MemoryStream(cached.Value.Content),
+                ContentType = cached.Value.ContentType
             };
+        }
+
+        var result = await _s3FileStorage.Get(entryId.ToString(), imageId.ToString(), cancellationToken);
+        if (result.IsFailure)
+            return result.Error;
+
+        var appFile = result.Value;
+        using var sourceStream = appFile.Content;
+        using var ms = new MemoryStream();
+        await sourceStream.CopyToAsync(ms, cancellationToken);
+        var imageBytes = ms.ToArray();
+
+        var expiresIn = await GetRemainingTtl(entryId, cancellationToken);
+        await SetInCache(entryId, imageId, imageBytes, appFile.ContentMimeType, expiresIn, cancellationToken);
+
+        return new Image
+        {
+            Id = imageId,
+            Content = new MemoryStream(imageBytes),
+            ContentType = appFile.ContentMimeType
+        };
+
+
+        async Task<TimeSpan> GetRemainingTtl(Guid id, CancellationToken ct)
+        {
+            var cacheKey = CacheKeyBuilder.BuildEntryInfoCacheKey(id);
+            var entryInfo = await _dataStorage.TryGet<EntryInfo?>(cacheKey, ct);
+            if (entryInfo is null)
+                return CachingConstants.MaxSupportedCachingTime;
+
+            var remaining = entryInfo.Value.ExpiresAt - DateTimeOffset.UtcNow;
+            return remaining > TimeSpan.Zero 
+                ? remaining 
+                : TimeSpan.Zero;
+        }
     }
 
 
@@ -229,7 +263,7 @@ public class ImageService : IImageService, IUnauthorizedImageService
             return await _dataStorage.TryGet<string>(imageHashCacheKey, cancellationToken);
         }
 
-    
+
         async Task CleanupHash(string? hash)
         {
             if (hash is null)
@@ -237,17 +271,63 @@ public class ImageService : IImageService, IUnauthorizedImageService
 
             var imageHashCacheKey = CacheKeyBuilder.BuildImageToHashBindingCacheKey(imageId);
             var hashCacheKey = CacheKeyBuilder.BuildImageHashCacheKey(entryId, hash);
-            
+
             await _dataStorage.Remove<string>(hashCacheKey, cancellationToken);
             await _dataStorage.Remove<string>(imageHashCacheKey, cancellationToken);
         }
-        
-    
-        Task<UnitResult<DomainError>> DeleteFile(string? _)
-            => _s3FileStorage.Delete(entryId.ToString(), imageId.ToString(), cancellationToken);
+
+
+        async Task<UnitResult<DomainError>> DeleteFile(string? _)
+        {
+            await RemoveFromCache(entryId, imageId, cancellationToken);
+            return await _s3FileStorage.Delete(entryId.ToString(), imageId.ToString(), cancellationToken);
+        }
+    }
+
+
+    /// <inheritdoc/>
+    public async Task CacheImages(Guid entryId, List<Guid> imageIds, TimeSpan expiresIn, CancellationToken cancellationToken)
+    {
+        foreach (var imageId in imageIds)
+        {
+            var result = await _s3FileStorage.Get(entryId.ToString(), imageId.ToString(), cancellationToken);
+            if (result.IsFailure)
+                continue;
+
+            var appFile = result.Value;
+            using var sourceStream = appFile.Content;
+            using var ms = new MemoryStream();
+            await sourceStream.CopyToAsync(ms, cancellationToken);
+
+            await SetInCache(entryId, imageId, ms.ToArray(), appFile.ContentMimeType, expiresIn, cancellationToken);
+        }
     }
     
     
+    private async Task<CachedImage?> TryGetFromCache(Guid entryId, Guid imageId, CancellationToken cancellationToken)
+    {
+        var cacheKey = CacheKeyBuilder.BuildImageContentCacheKey(entryId, imageId);
+        return await _dataStorage.TryGet<CachedImage>(cacheKey, cancellationToken);
+    }
+
+
+    private async Task SetInCache(Guid entryId, Guid imageId, byte[] content, string contentType, TimeSpan expiresIn, CancellationToken cancellationToken)
+    {
+        if (content.Length > _cacheOptions.MaxCachableFileSize)
+            return;
+
+        var cacheKey = CacheKeyBuilder.BuildImageContentCacheKey(entryId, imageId);
+        await _dataStorage.Set(cacheKey, new CachedImage { Content = content, ContentType = contentType }, expiresIn, cancellationToken);
+    }
+
+
+    private async Task RemoveFromCache(Guid entryId, Guid imageId, CancellationToken cancellationToken)
+    {
+        var cacheKey = CacheKeyBuilder.BuildImageContentCacheKey(entryId, imageId);
+        await _dataStorage.Remove<CachedImage>(cacheKey, cancellationToken);
+    }
+
+
     private static readonly HashSet<string> _imageMimeTypes = new(
     [
         "image/bmp",
@@ -265,6 +345,7 @@ public class ImageService : IImageService, IUnauthorizedImageService
     private const string ImageUrlBaseTemplate = "/api/images/entry-id/{0}/image-id/{1}";
 
 
+    private readonly ImageCacheOptions _cacheOptions;
     private readonly IDataStorage _dataStorage;
     private readonly IS3FileStorage _s3FileStorage;
 }

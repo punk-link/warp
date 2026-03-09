@@ -7,6 +7,16 @@ namespace Warp.WebApp.Services.Images;
 public interface IImageService
 {
     /// <summary>
+    /// Caches image binaries in KeyDB for the given entry using the specified TTL.
+    /// Images exceeding the configured size threshold are silently skipped.
+    /// </summary>
+    /// <param name="entryId">The ID of the entry that owns the images.</param>
+    /// <param name="imageIds">The list of image IDs to cache.</param>
+    /// <param name="expiresIn">The duration after which the cached images should expire.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+    public Task CacheImages(Guid entryId, List<Guid> imageIds, TimeSpan expiresIn, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Retrieves metadata for a list of images associated with a specific entry.
     /// </summary>
     /// <param name="entryId">The ID of the entry containing the images.</param>

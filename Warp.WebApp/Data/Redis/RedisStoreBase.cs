@@ -1,6 +1,7 @@
 using StackExchange.Redis;
 using Warp.WebApp.Models;
 using Warp.WebApp.Models.Entries;
+using Warp.WebApp.Models.Files;
 using Warp.WebApp.Models.Images;
 
 namespace Warp.WebApp.Data.Redis;
@@ -68,6 +69,7 @@ public abstract class RedisStoreBase
             string => 4,
             Guid => 5,
             EntryImageLifecycle => 6,
+            CachedImage => 7,
             _ => 0
         };
 
