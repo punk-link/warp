@@ -193,6 +193,33 @@ await clickElement(getCopyLinkButton(page))
 
 **Diagnosis**: Check the error-context snapshot for redirect to error pages or stuck spinner states. Add `page.on('console')` or `page.on('response')` listeners in the test to capture API failures.
 
+### Worker Contention / Resource Exhaustion
+
+**Problem**: Unlimited parallel workers (Playwright's default is half CPU cores) launch too many concurrent browser processes. The OS runs out of resources and individual tests fail randomly — a different test each run, almost always in only one browser (typically Chromium, which is heaviest). Serial test blocks cascade: one timeout causes all subsequent tests in the block to be skipped.
+
+**Symptoms**:
+- "Test timeout of Nms exceeded while setting up 'page'" — browser couldn't even create a page.
+- "saving..." / "Pending…" stuck in the error-context snapshot — the API call hung under system load.
+- Failures are **non-deterministic**: different tests fail on each run.
+- Only **one browser** is affected (Chromium most often, being the most resource-intensive).
+- Serial blocks show 1 failure + N skipped, inflating the apparent failure count.
+
+**Diagnosis**: Run the same suite twice. If different tests fail each time, and only in one browser, this is almost certainly resource contention rather than a code defect. Check `playwright.config.ts` for `workers: undefined` (unlimited) and `retries: 0` (no tolerance for transient failures).
+
+**Fix** (in `playwright.config.ts`):
+
+```ts
+// Before (resource-hungry, zero tolerance)
+workers: process.env.CI ? 2 : undefined,
+retries: process.env.CI ? 2 : 0,
+
+// After (bounded parallelism, 1 retry for transient failures)
+workers: process.env.CI ? 2 : 4,
+retries: process.env.CI ? 2 : 1,
+```
+
+Also audit the failing test for missing waits between sequential actions (see "Missing Wait Between Sequential Actions" above) — under load, a missing wait that normally succeeds by luck will start failing.
+
 ### Global Setup Timeout
 
 **Problem**: `global-setup.ts` times out with "Vue app did not initialize within 120000ms". Logs show repeated `ECONNREFUSED` errors from the Vite proxy.

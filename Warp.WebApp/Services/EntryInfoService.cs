@@ -79,6 +79,7 @@ public class EntryInfoService : IEntryInfoService
             .Bind(Validate)
             .Bind(AttachToCreator)
             .Tap(CacheEntryInfo)
+            .Tap(CacheEntryImages)
             .Tap(TrackEntryLifecycle)
             .Finally(result =>
             {
@@ -170,6 +171,13 @@ public class EntryInfoService : IEntryInfoService
         {
             var cacheKey = CacheKeyBuilder.BuildEntryInfoCacheKey(entryInfo.Id);
             return _dataStorage.Set(cacheKey, entryInfo, entryRequest.ExpiresIn, cancellationToken);
+        }
+
+
+        Task CacheEntryImages(EntryInfo entryInfo)
+        {
+            var imageIds = entryInfo.ImageInfos.Select(imageInfo => imageInfo.Id).ToList();
+            return _imageService.CacheImages(entryInfoId, imageIds, entryRequest.ExpiresIn, cancellationToken);
         }
 
 

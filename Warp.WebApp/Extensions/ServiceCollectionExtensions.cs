@@ -87,6 +87,11 @@ internal static class ServiceCollectionExtensions
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 
+            services.AddOptions<ImageCacheOptions>()
+                .BindConfiguration(nameof(ImageCacheOptions))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+
             services.AddOptions<EntryCleanupOptions>()
                 .BindConfiguration(nameof(EntryCleanupOptions))
                 .ValidateDataAnnotations()

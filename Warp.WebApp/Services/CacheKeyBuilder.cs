@@ -1,6 +1,7 @@
 ﻿using System.IO.Hashing;
 using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Models.Entries;
+using Warp.WebApp.Models.Files;
 using Warp.WebApp.Models.Images;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
@@ -27,6 +28,10 @@ public static class CacheKeyBuilder
 
     public static string BuildEntryOpenGraphDescriptionCacheKey(in Guid entryId)
         => BuildCacheKey<EntryOpenGraphDescription>(entryId);
+
+
+    public static string BuildImageContentCacheKey(in Guid entryId, in Guid imageId)
+        => BuildCacheKey<CachedImage>(entryId, imageId);
 
 
     public static string BuildImageHashCacheKey(in Guid entryId, string hash)
