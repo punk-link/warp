@@ -60,16 +60,16 @@ public abstract class RedisStoreBase
     }
 
 
-    private static int ToDatabaseIndex<T>(T type)
+    private static int ToDatabaseIndex(Type type)
         => type switch
         {
-            EntryInfo => 1,
-            ImageInfo => 2,
-            Report => 3,
-            string => 4,
-            Guid => 5,
-            EntryImageLifecycle => 6,
-            CachedImage => 7,
+            _ when type == typeof(EntryInfo) => 1,
+            _ when type == typeof(ImageInfo) => 2,
+            _ when type == typeof(Report) => 3,
+            _ when type == typeof(string) => 4,
+            _ when type == typeof(Guid) => 5,
+            _ when type == typeof(EntryImageLifecycle) => 6,
+            _ when type == typeof(CachedImage) => 7,
             _ => 0
         };
 
