@@ -32,7 +32,7 @@ public class ImageServiceCacheImagesTests
         await imageService.CacheImages(entryId, imageIds, TimeSpan.FromMinutes(10), CancellationToken.None);
 
         await _dataStorageSubstitute.DidNotReceive()
-            .Set(Arg.Any<string>(), Arg.Any<object>(), Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>());
+            .Set<CachedImage>(Arg.Any<string>(), Arg.Any<CachedImage>(), Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>());
     }
 
 
@@ -53,7 +53,7 @@ public class ImageServiceCacheImagesTests
         await imageService.CacheImages(entryId, imageIds, expiresIn, CancellationToken.None);
 
         await _dataStorageSubstitute.Received(1)
-            .Set(Arg.Any<string>(), Arg.Any<object>(), Arg.Is<TimeSpan>(ts => ts == expiresIn), Arg.Any<CancellationToken>());
+            .Set<CachedImage>(Arg.Any<string>(), Arg.Any<CachedImage>(), Arg.Is<TimeSpan>(ts => ts == expiresIn), Arg.Any<CancellationToken>());
     }
 
 
@@ -73,7 +73,7 @@ public class ImageServiceCacheImagesTests
         await imageService.CacheImages(entryId, imageIds, TimeSpan.FromMinutes(10), CancellationToken.None);
 
         await _dataStorageSubstitute.DidNotReceive()
-            .Set(Arg.Any<string>(), Arg.Any<object>(), Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>());
+            .Set<CachedImage>(Arg.Any<string>(), Arg.Any<CachedImage>(), Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>());
     }
 
 
@@ -91,7 +91,7 @@ public class ImageServiceCacheImagesTests
         await imageService.CacheImages(entryId, imageIds, expiresIn, CancellationToken.None);
 
         await _dataStorageSubstitute.Received(imageIds.Count)
-            .Set(Arg.Any<string>(), Arg.Any<object>(), Arg.Is<TimeSpan>(ts => ts == expiresIn), Arg.Any<CancellationToken>());
+            .Set<CachedImage>(Arg.Any<string>(), Arg.Any<CachedImage>(), Arg.Is<TimeSpan>(ts => ts == expiresIn), Arg.Any<CancellationToken>());
     }
 
 

@@ -176,18 +176,9 @@ public class ImageService : IImageService, IUnauthorizedImageService
         }
 
         return await _s3FileStorage.Get(entryId.ToString(), imageId.ToString(), cancellationToken)
-            .Map(MaterializeContent)
+            .Map(appFile => MaterializeContent(appFile, cancellationToken))
             .Tap(CacheResult)
             .Map(BuildImage);
-
-
-        async Task<(byte[] Bytes, string ContentType)> MaterializeContent(AppFile appFile)
-        {
-            using var sourceStream = appFile.Content;
-            using var ms = new MemoryStream();
-            await sourceStream.CopyToAsync(ms, cancellationToken);
-            return (ms.ToArray(), appFile.ContentMimeType);
-        }
 
 
         async Task CacheResult((byte[] Bytes, string ContentType) content)
@@ -199,11 +190,11 @@ public class ImageService : IImageService, IUnauthorizedImageService
             async Task<TimeSpan> GetRemainingTtl(Guid id, CancellationToken ct)
             {
                 var cacheKey = CacheKeyBuilder.BuildEntryInfoCacheKey(id);
-                var entryInfo = await _dataStorage.TryGet<EntryInfo?>(cacheKey, ct);
-                if (entryInfo is null)
+                var entryInfo = await _dataStorage.TryGet<EntryInfo>(cacheKey, ct);
+                if (entryInfo == default)
                     return CachingConstants.MaxSupportedCachingTime;
 
-                var remaining = entryInfo.Value.ExpiresAt - DateTimeOffset.UtcNow;
+                var remaining = entryInfo.ExpiresAt - DateTimeOffset.UtcNow;
                 return remaining > TimeSpan.Zero
                     ? remaining
                     : TimeSpan.Zero;
@@ -287,11 +278,9 @@ public class ImageService : IImageService, IUnauthorizedImageService
         }
 
 
-        async Task<UnitResult<DomainError>> DeleteFile(string? _)
-        {
-            await RemoveFromCache(entryId, imageId, cancellationToken);
-            return await _s3FileStorage.Delete(entryId.ToString(), imageId.ToString(), cancellationToken);
-        }
+        async Task<UnitResult<DomainError>> DeleteFile(string? _) 
+            => await _s3FileStorage.Delete(entryId.ToString(), imageId.ToString(), cancellationToken)
+                .Tap(() => RemoveFromCache(entryId, imageId, cancellationToken));
     }
 
 
@@ -301,18 +290,8 @@ public class ImageService : IImageService, IUnauthorizedImageService
         foreach (var imageId in imageIds)
         {
             await _s3FileStorage.Get(entryId.ToString(), imageId.ToString(), cancellationToken)
-                .Map(MaterializeContent)
+                .Map(appFile => MaterializeContent(appFile, cancellationToken))
                 .Tap(CacheResult);
-
-
-            async Task<(byte[] Bytes, string ContentType)> MaterializeContent(AppFile appFile)
-            {
-                using var sourceStream = appFile.Content;
-                using var memoryStream = new MemoryStream();
-                await sourceStream.CopyToAsync(memoryStream, cancellationToken);
-
-                return (memoryStream.ToArray(), appFile.ContentMimeType);
-            }
 
 
             Task CacheResult((byte[] Bytes, string ContentType) content)
@@ -321,6 +300,18 @@ public class ImageService : IImageService, IUnauthorizedImageService
     }
     
     
+    private static async Task<(byte[] Bytes, string ContentType)> MaterializeContent(AppFile appFile, CancellationToken cancellationToken)
+    {
+        using var sourceStream = appFile.Content;
+        if (sourceStream is MemoryStream memoryStream)
+            return (memoryStream.ToArray(), appFile.ContentMimeType);
+
+        using var buffer = new MemoryStream();
+        await sourceStream.CopyToAsync(buffer, cancellationToken);
+        return (buffer.ToArray(), appFile.ContentMimeType);
+    }
+
+
     private async Task<CachedImage?> TryGetFromCache(Guid entryId, Guid imageId, CancellationToken cancellationToken)
     {
         var cacheKey = CacheKeyBuilder.BuildImageContentCacheKey(entryId, imageId);
