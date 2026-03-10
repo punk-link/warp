@@ -9,6 +9,7 @@ applyTo: '**/*.cs'
 - Insert one blank line between properties for clear separation.
 - Do not include blank lines between private fields when grouping related fields.
 - Place all private fields at the end of the file, after public members and methods.
+- Use meaningful, descriptive variable names that reflect their purpose. Avoid abbreviations and single-letter or shortened names (e.g., prefer `memoryStream` over `ms`, `cancellationToken` over `ct`).
 - Use named parameters for clarity, especially when creating new objects (e.g., `id: Guid.NewGuid()`).
 - Ensure parameter names in method calls match the method's parameter declarations.
 - Remove any unused using directives to keep files clean and efficient.
@@ -29,7 +30,16 @@ Follow this specific order for members within a class:
 6. Private methods 
 7. Private fields (at the end of the file)
 
+Prefer a private method over identical or near-identical local functions defined in multiple methods. Extract the shared logic into a single private (static where possible) method and call it from each site.
+
 Use XML documentation comments before each public member and class definition. Keep related members together when appropriate.
+
+
+# Functional Programming with CSharpFunctionalExtensions
+
+- Methods returning `Result<T, E>`, `UnitResult<E>`, or their `ValueTask` counterparts should be implemented using railway-oriented chaining: `.Map()`, `.Bind()`, `.Tap()`, `.Ensure()`, etc.
+- Avoid imperative-style checking (e.g., `if (result.IsFailure) return result.Error;`) inside methods that can be expressed as a chain.
+- Use local functions as named pipeline steps to keep chains readable and self-documenting.
 
 
 # Code Annotations And Comments
