@@ -111,7 +111,7 @@ jobs:
           helm upgrade --install warp-webapp ./Helm \
             --namespace dev \
             --create-namespace \
-            --wait --atomic --timeout 10m \
+            --wait  --timeout 5m \
             --set image.repository=${{ env.IMAGE }} \
             --set image.tag=${{ github.run_id }}  \
             --set image.pullPolicy=IfNotPresent \
