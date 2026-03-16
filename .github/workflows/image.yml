@@ -98,6 +98,25 @@ jobs:
             --set image.pullPolicy=IfNotPresent \
             --values ./Helm/values_dev.yaml
 
+      - name: Kubernetes newdev config
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG_NEWDEV }}" | base64 -d > ~/.kube/config    
+
+      - name: Helm newdev deploy
+        run: |
+          echo "${{ secrets.GHCR_PAT }}" | helm registry login ghcr.io \
+            --username punk-link --password-stdin
+
+          helm upgrade --install warp-webapp ./Helm \
+            --namespace dev \
+            --create-namespace \
+            --wait --atomic --timeout 10m \
+            --set image.repository=${{ env.IMAGE }} \
+            --set image.tag=${{ github.run_id }}  \
+            --set image.pullPolicy=IfNotPresent \
+            --values ./Helm/values_newdev.yaml          
+
         env:
           HELM_EXPERIMENTAL_OCI: 1
       - name: Send message to Telegram
