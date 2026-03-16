@@ -56,6 +56,10 @@ export default {
         loading: 'loading...',
         saving: 'saving...',
         failedToLoad: 'failed to load entry',
+        maliciousImagesExcluded: {
+            title: 'Some images were removed',
+            message: '{count} image(s) were flagged as potentially harmful and excluded from the entry.'
+        },
         actions: {
             save: 'Save',
             delete: 'Delete',

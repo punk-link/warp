@@ -12,6 +12,7 @@ using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
 using Warp.WebApp.Services.OpenGraph;
+using Warp.WebApp.Models.Files;
 using Warp.WebApp.Telemetry.Metrics;
 
 namespace Warp.WebApp.Tests.UnitTests.EntryInfoServiceTests;
@@ -21,7 +22,11 @@ public class EntryInfoServiceRemoveImageTests
     public EntryInfoServiceRemoveImageTests()
     {
         _loggerFactorySubstitute.CreateLogger<EntryInfoService>().Returns(_loggerSubstitute);
-        
+
+        _malwareScanServiceSubstitute
+            .ScanImages(Arg.Any<Guid>(), Arg.Any<List<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new List<MalwareScanResult>()));
+
         _entryInfoService = new EntryInfoService(
             _creatorServiceSubstitute,
             _dataStorageSubstitute,
@@ -32,7 +37,8 @@ public class EntryInfoServiceRemoveImageTests
             _openGraphServiceSubstitute,
             _reportServiceSubstitute,
             _viewCountServiceSubstitute,
-            _entryInfoMetricsSubstitute
+            _entryInfoMetricsSubstitute,
+            _malwareScanServiceSubstitute
         );
         _creator = new Creator(Guid.NewGuid());
 
@@ -194,4 +200,5 @@ public class EntryInfoServiceRemoveImageTests
     private readonly ICreatorService _creatorServiceSubstitute = Substitute.For<ICreatorService>();
     private readonly IEntryImageLifecycleService _entryImageLifecycleServiceSubstitute = Substitute.For<IEntryImageLifecycleService>();
     private readonly IEntryInfoMetrics _entryInfoMetricsSubstitute = Substitute.For<IEntryInfoMetrics>();
+    private readonly IMalwareScanService _malwareScanServiceSubstitute = Substitute.For<IMalwareScanService>();
 }
