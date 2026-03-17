@@ -73,6 +73,27 @@ public abstract partial class BaseGenerator
 
 
     /// <summary>
+    /// Strips type annotations from message template placeholders so the string is safe
+    /// to use as a <c>[LoggerMessage]</c> template.
+    /// For example, <c>{ImageId:Guid}</c> becomes <c>{ImageId}</c>.
+    /// </summary>
+    protected static string StripTypeAnnotations(string? description)
+    {
+        if (string.IsNullOrEmpty(description))
+            return string.Empty;
+
+        return LogParametersRegex().Replace(description, match =>
+        {
+            var placeholder = match.Groups[1].Value;
+            if (placeholder.Contains(':'))
+                placeholder = placeholder.Split(':')[0].Trim();
+
+            return $"{{{placeholder}}}";
+        });
+    }
+
+
+    /// <summary>
     /// Regex to extract parameters from message templates like {RequestId}, {ErrorMessage}, {ImageId:Guid}
     /// </summary>
     [GeneratedRegex(@"\{([^{}]+)\}", RegexOptions.Compiled)]

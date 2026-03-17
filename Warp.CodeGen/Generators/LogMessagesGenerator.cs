@@ -55,7 +55,7 @@ public partial class LogMessagesGenerator : BaseGenerator
                     : string.Empty;
                 if (logEvent.Obsolete)
                     sb.AppendLine($"    [Obsolete(\"This log message is obsolete. Do not use it.\")]");
-                sb.AppendLine($"    [LoggerMessage((int)LogEvents.{logEvent.Name}, LogLevel.{logEvent.LogLevel}, \"{logEvent.Description}\")]");
+                sb.AppendLine($"    [LoggerMessage((int)LogEvents.{logEvent.Name}, LogLevel.{logEvent.LogLevel}, \"{StripTypeAnnotations(logEvent.Description)}\")]");
 
                 if (!string.IsNullOrEmpty(signature))
                     sb.AppendLine($"    public static partial void {methodName}(this ILogger logger, {signature});");
