@@ -612,6 +612,16 @@
           "generateLogMessage": true,
           "obsolete": false,
           "httpCode": 500
+        },
+        {
+          "id": 20407,
+          "name": "MaliciousImageRemovalFailed",
+          "description": "Failed to remove malicious image '{ImageId:Guid}' from entry '{EntryId:Guid}'. Entry creation has been blocked. Details: '{ErrorMessage:string}'.",
+          "domainErrorDescription": "One or more images failed a malware scan. The entry was not created.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
         }
       ]
     },
