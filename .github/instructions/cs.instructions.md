@@ -35,6 +35,12 @@ Prefer a private method over identical or near-identical local functions defined
 Use XML documentation comments before each public member and class definition. Keep related members together when appropriate.
 
 
+# Enums
+
+- Always assign explicit integer values to all enum members.
+- Order members by ascending severity or significance where applicable (e.g., `None = 0`, `Low = 1`, ... `Critical = 4`), because code frequently casts or compares enum values as integers for threshold checks and fallback logic.
+
+
 # Functional Programming with CSharpFunctionalExtensions
 
 - Methods returning `Result<T, E>`, `UnitResult<E>`, or their `ValueTask` counterparts should be implemented using railway-oriented chaining: `.Map()`, `.Bind()`, `.Tap()`, `.Ensure()`, etc.
