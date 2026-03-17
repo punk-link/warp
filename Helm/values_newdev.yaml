@@ -60,7 +60,7 @@ ingress:
         - path: /
           pathType: Prefix
   tls:
-   - secretName: warp-tls
+   - secretName: warp-ND-tls
      hosts:
        - warp.punk.link
 
