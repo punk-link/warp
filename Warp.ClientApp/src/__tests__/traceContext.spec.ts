@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildTraceHeaders, ensureTraceContext, extractTraceIdFromHeaders } from '../telemetry/traceContext'
+import { buildTraceHeaders, ensureTraceContext, extractTraceIdFromHeaders } from '../telemetry/trace-context'
 
 
 describe('traceContext utilities', () => {
