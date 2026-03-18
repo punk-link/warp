@@ -22,3 +22,23 @@ describe('i18n bootstrap & switching', () => {
         expect(taglineEs.toLowerCase()).toContain('desaparecerán')
     })
 })
+
+describe('preview.maliciousImagesExcluded translations', () => {
+    it('resolves keys in English', async () => {
+        await createI18nInstance()
+        await setLocale('en')
+        const t = ((await createI18nInstance()).global as unknown as Composer).t
+
+        expect(t('preview.maliciousImagesExcluded.title')).toBeTruthy()
+        expect(t('preview.maliciousImagesExcluded.message', { count: 2 })).toContain('2')
+    })
+
+    it('resolves keys in Spanish', async () => {
+        await createI18nInstance()
+        await setLocale('es')
+        const t = ((await createI18nInstance()).global as unknown as Composer).t
+
+        expect(t('preview.maliciousImagesExcluded.title')).toBeTruthy()
+        expect(t('preview.maliciousImagesExcluded.message', { count: 3 })).toContain('3')
+    })
+})
