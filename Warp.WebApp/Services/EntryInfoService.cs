@@ -122,8 +122,6 @@ public class EntryInfoService : IEntryInfoService
                 .Select(result => result.ImageId)
                 .ToHashSet();
 
-            ApplicationMetrics.ImagesScannedTotal.Add(scanResults.Count);
-
             if (maliciousIds.Count == 0)
                 return tuple;
 
@@ -145,7 +143,13 @@ public class EntryInfoService : IEntryInfoService
                 if (maliciousIds.Contains(imageInfo.Id))
                 {
                     _logger.LogMaliciousImageDetected(imageInfo.Id, entryInfoId);
-                    await _imageService.Remove(entryInfoId, imageInfo.Id, cancellationToken);
+
+                    var removeResult = await _imageService.Remove(entryInfoId, imageInfo.Id, cancellationToken);
+                    if (removeResult.IsFailure)
+                    {
+                        _logger.LogMaliciousImageRemovalFailed(imageInfo.Id, entryInfoId, removeResult.Error.Detail);
+                        return DomainErrors.MaliciousImageRemovalFailed();
+                    }
 
                     excludedImages.Add(imageInfo);
                 }
@@ -237,7 +241,7 @@ public class EntryInfoService : IEntryInfoService
             var imageIds = entryInfo.ImageInfos
                 .Select(imageInfo => imageInfo.Id)
                 .ToList();
-            
+
             return _imageService.CacheImages(entryInfoId, imageIds, entryRequest.ExpiresIn, cancellationToken);
         }
 
