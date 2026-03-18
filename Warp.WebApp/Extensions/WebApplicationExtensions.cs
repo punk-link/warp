@@ -21,7 +21,9 @@ internal static class WebApplicationExtensions
 
         app.UseForwardedHeaders(new ForwardedHeadersOptions
         {
-            ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedFor
+            ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedFor,
+            KnownIPNetworks = { },
+            KnownProxies = { }
         });
 
         app.Use(async (context, next) =>
