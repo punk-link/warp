@@ -160,7 +160,7 @@
           "logLevel": "Debug",
           "generateLogMessage": true,
           "obsolete": false,
-          "httpCode": 500
+          "httpCode": 200
         }
       ]
     },
