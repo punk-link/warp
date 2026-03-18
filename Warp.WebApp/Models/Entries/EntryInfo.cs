@@ -34,5 +34,6 @@ public readonly record struct EntryInfo
     public Entry Entry { get; }
     public DateTimeOffset ExpiresAt { get; }
     public List<ImageInfo> ImageInfos { get; init; }
+    public List<ImageInfo> ExcludedImageInfos { get; init; } = [];
     public long ViewCount { get; init; }
 }

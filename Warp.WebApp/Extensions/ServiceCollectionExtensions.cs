@@ -42,6 +42,7 @@ internal static class ServiceCollectionExtensions
 
         services.AddTransient<IUnauthorizedImageService, ImageService>();
         services.AddTransient<IImageService, ImageService>();
+        services.AddTransient<IMalwareScanService, MalwareScanService>();
         services.AddScoped<IEntryImageLifecycleService, EntryImageLifecycleService>();
         services.AddTransient<IDataStorage, DataStorage>();
         services.AddTransient<IAmazonS3Factory, AmazonS3Factory>();
@@ -89,6 +90,11 @@ internal static class ServiceCollectionExtensions
 
             services.AddOptions<ImageCacheOptions>()
                 .BindConfiguration(nameof(ImageCacheOptions))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+
+            services.AddOptions<MalwareScanOptions>()
+                .BindConfiguration(nameof(MalwareScanOptions))
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 

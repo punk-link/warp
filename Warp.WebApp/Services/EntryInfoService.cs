@@ -8,6 +8,7 @@ using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Entries.Enums;
 using Warp.WebApp.Models.Errors;
+using Warp.WebApp.Models.Files;
 using Warp.WebApp.Models.Images;
 using Warp.WebApp.Models.Validators;
 using Warp.WebApp.Services.Creators;
@@ -38,6 +39,7 @@ public class EntryInfoService : IEntryInfoService
     /// <param name="reportService">The service for handling entry reports.</param>
     /// <param name="viewCountService">The service for tracking entry view counts.</param>
     /// <param name="entryInfoMetrics">The metrics recorder for entry info actions.</param>
+    /// <param name="malwareScanService">The service for scanning images for malware via GuardDuty.</param>
     public EntryInfoService(ICreatorService creatorService, 
         IDataStorage dataStorage,
         IEntryService entryService,
@@ -47,7 +49,8 @@ public class EntryInfoService : IEntryInfoService
         IOpenGraphService openGraphService,
         IReportService reportService,
         IViewCountService viewCountService,
-        IEntryInfoMetrics entryInfoMetrics)
+        IEntryInfoMetrics entryInfoMetrics,
+        IMalwareScanService malwareScanService)
     {
         _logger = loggerFactory.CreateLogger<EntryInfoService>();
 
@@ -56,6 +59,7 @@ public class EntryInfoService : IEntryInfoService
         _entryImageLifecycleService = entryImageLifecycleService;
         _entryService = entryService;
         _imageService = imageService;
+        _malwareScanService = malwareScanService;
         _openGraphService = openGraphService;
         _reportService = reportService;
         _viewCountService = viewCountService;
@@ -70,9 +74,11 @@ public class EntryInfoService : IEntryInfoService
         var entryInfoId = entryRequest.Id;
         var now = DateTimeOffset.UtcNow;
         var stopwatch = Stopwatch.StartNew();
+        var excludedImages = new List<ImageInfo>();
 
         return await AddEntry()
             .Bind(GetImageInfos)
+            .Bind(ScanForMalware)
             .Bind(AddOpenGraphDescription)
             .Bind(BuildEntryInfo)
             .Tap(RecordContentSizeMetric)
@@ -102,6 +108,61 @@ public class EntryInfoService : IEntryInfoService
         }
 
 
+        async Task<Result<(Entry, List<ImageInfo>), DomainError>> ScanForMalware((Entry Entry, List<ImageInfo> ImageInfos) tuple)
+        {
+            if (tuple.ImageInfos.Count == 0)
+                return tuple;
+
+            var imageIds = tuple.ImageInfos
+                .Select(imageInfo => imageInfo.Id)
+                .ToList();
+            var scanResults = await _malwareScanService.ScanImages(entryInfoId, imageIds, cancellationToken);
+            var maliciousIds = scanResults
+                .Where(result => result.Status == MalwareScanStatus.Malicious)
+                .Select(result => result.ImageId)
+                .ToHashSet();
+
+            if (maliciousIds.Count == 0)
+                return tuple;
+
+            ApplicationMetrics.MaliciousImagesDetectedTotal.Add(maliciousIds.Count);
+
+            if (maliciousIds.Count == tuple.ImageInfos.Count)
+            {
+                ApplicationMetrics.EntriesBlockedByMalwareTotal.Add(1);
+                _logger.LogAllImagesMalicious(maliciousIds.Count, entryInfoId);
+
+                return DomainErrors.AllImagesMalicious();
+            }
+
+            ApplicationMetrics.EntriesWithMaliciousImagesTotal.Add(1);
+
+            var cleanImages = new List<ImageInfo>(tuple.ImageInfos.Count - maliciousIds.Count);
+            foreach (var imageInfo in tuple.ImageInfos)
+            {
+                if (maliciousIds.Contains(imageInfo.Id))
+                {
+                    _logger.LogMaliciousImageDetected(imageInfo.Id, entryInfoId);
+
+                    var removeResult = await _imageService.Remove(entryInfoId, imageInfo.Id, cancellationToken);
+                    if (removeResult.IsFailure)
+                    {
+                        _logger.LogMaliciousImageRemovalFailed(imageInfo.Id, entryInfoId, removeResult.Error.Detail);
+                        return DomainErrors.MaliciousImageRemovalFailed();
+                    }
+
+                    excludedImages.Add(imageInfo);
+                }
+                else
+                {
+                    cleanImages.Add(imageInfo);
+                }
+            }
+
+            return (tuple.Entry, cleanImages);
+        }
+
+
         async Task<Result<(Entry, List<ImageInfo>), DomainError>> AddOpenGraphDescription((Entry Entry, List<ImageInfo> ImageInfos) tuple)
         {
             var previewImageUri = tuple.ImageInfos
@@ -119,7 +180,8 @@ public class EntryInfoService : IEntryInfoService
         Result<EntryInfo, DomainError> BuildEntryInfo((Entry Entry, List<ImageInfo> ImageInfos) tuple)
         {
             var expirationTime = now + entryRequest.ExpiresIn;
-            return new EntryInfo(entryInfoId, creator.Id, now, expirationTime, entryRequest.EditMode, tuple.Entry, tuple.ImageInfos, 0);
+            return new EntryInfo(entryInfoId, creator.Id, now, expirationTime, entryRequest.EditMode, tuple.Entry, tuple.ImageInfos, 0)
+                with { ExcludedImageInfos = excludedImages };
         }
 
 
@@ -176,7 +238,10 @@ public class EntryInfoService : IEntryInfoService
 
         Task CacheEntryImages(EntryInfo entryInfo)
         {
-            var imageIds = entryInfo.ImageInfos.Select(imageInfo => imageInfo.Id).ToList();
+            var imageIds = entryInfo.ImageInfos
+                .Select(imageInfo => imageInfo.Id)
+                .ToList();
+
             return _imageService.CacheImages(entryInfoId, imageIds, entryRequest.ExpiresIn, cancellationToken);
         }
 
@@ -543,6 +608,7 @@ public class EntryInfoService : IEntryInfoService
     private readonly IEntryImageLifecycleService _entryImageLifecycleService;
     private readonly IEntryService _entryService;
     private readonly IImageService _imageService;
+    private readonly IMalwareScanService _malwareScanService;
     private readonly IEntryInfoMetrics _entryInfoMetrics;
     private readonly ILogger<EntryInfoService> _logger;
     private readonly IOpenGraphService _openGraphService;

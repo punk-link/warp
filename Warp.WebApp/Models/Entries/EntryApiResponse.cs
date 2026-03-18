@@ -6,13 +6,14 @@ namespace Warp.WebApp.Models.Entries;
 
 public readonly record struct EntryApiResponse
 {
-    public EntryApiResponse(string id, EditMode editMode, ExpirationPeriod expirationPeriod, DateTimeOffset expiresAt, List<ImageInfo> images, string textContent, string? contentDelta, long viewCount)
+    public EntryApiResponse(string id, EditMode editMode, ExpirationPeriod expirationPeriod, DateTimeOffset expiresAt, List<ImageInfo> images, List<ImageInfo> excludedImages, string textContent, string? contentDelta, long viewCount)
     {
         Id = id;
         EditMode = editMode;
         ExpirationPeriod = expirationPeriod;
         ExpiresAt = expiresAt;
         Images = images.ToImageInfoResponse();
+        ExcludedImages = excludedImages.ToImageInfoResponse();
         TextContent = textContent;
         ContentDelta = contentDelta;
         ViewCount = viewCount;
@@ -21,13 +22,13 @@ public readonly record struct EntryApiResponse
 
     // TODO: save expiration period in the database
     public EntryApiResponse(string id, EntryInfo entryInfo) 
-        : this(id, entryInfo.EditMode, ExpirationPeriod.FiveMinutes, entryInfo.ExpiresAt, entryInfo.ImageInfos, entryInfo.Entry.Content, entryInfo.Entry.ContentDelta, entryInfo.ViewCount)
+        : this(id, entryInfo.EditMode, ExpirationPeriod.FiveMinutes, entryInfo.ExpiresAt, entryInfo.ImageInfos, entryInfo.ExcludedImageInfos, entryInfo.Entry.Content, entryInfo.Entry.ContentDelta, entryInfo.ViewCount)
     {
     }
 
 
     public static EntryApiResponse Empty(string id) 
-        => new (id, EditMode.Unset, ExpirationPeriod.FiveMinutes, DateTimeOffset.MinValue, [], string.Empty, null, 0);
+        => new (id, EditMode.Unset, ExpirationPeriod.FiveMinutes, DateTimeOffset.MinValue, [], [], string.Empty, null, 0);
 
 
     public string Id { get; }
@@ -35,6 +36,7 @@ public readonly record struct EntryApiResponse
     public ExpirationPeriod ExpirationPeriod { get; } = ExpirationPeriod.FiveMinutes;
     public DateTimeOffset ExpiresAt { get; }
     public List<ImageInfoResponse> Images { get; } = [];
+    public List<ImageInfoResponse> ExcludedImages { get; } = [];
     public string TextContent { get; } = string.Empty;
     public string? ContentDelta { get; }
     public long ViewCount { get; }

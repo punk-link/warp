@@ -56,6 +56,10 @@ export default {
         loading: 'cargando...',
         saving: 'guardando...',
         failedToLoad: 'no se pudo cargar la entrada',
+        maliciousImagesExcluded: {
+            title: 'Algunas imágenes fueron eliminadas',
+            message: '{count} imagen(es) fueron detectadas como potencialmente dañinas y excluidas de la entrada.'
+        },
         actions: {
             save: 'Guardar',
             delete: 'Eliminar',

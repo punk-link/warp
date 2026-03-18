@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -15,6 +16,7 @@ using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
 using Warp.WebApp.Services.OpenGraph;
+using Warp.WebApp.Models.Files;
 using Warp.WebApp.Telemetry.Metrics;
 
 namespace Warp.WebApp.Tests.UnitTests.EntryInfoServiceTests;
@@ -24,7 +26,11 @@ public class EntryInfoServiceAddTests
     public EntryInfoServiceAddTests()
     {
         _loggerFactorySubstitute.CreateLogger<EntryInfoService>().Returns(_loggerSubstitute);
-        
+
+        _malwareScanServiceSubstitute
+            .ScanImages(Arg.Any<Guid>(), Arg.Any<List<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new List<MalwareScanResult>()));
+
         _entryInfoService = new EntryInfoService(
             _creatorServiceSubstitute,
             _dataStorageSubstitute,
@@ -35,7 +41,8 @@ public class EntryInfoServiceAddTests
             _openGraphServiceSubstitute,
             _reportServiceSubstitute,
             _viewCountServiceSubstitute,
-            _entryInfoMetricsSubstitute
+            _entryInfoMetricsSubstitute,
+            _malwareScanServiceSubstitute
         );
         _creator = new Creator(Guid.NewGuid());
 
@@ -166,6 +173,103 @@ public class EntryInfoServiceAddTests
 
 
     [Fact]
+    public async Task Add_ShouldExcludeMaliciousImages_WhenSomeImagesAreMalicious()
+    {
+        var entryRequest = new EntryRequest
+        {
+            Id = Guid.NewGuid(),
+            ExpiresIn = TimeSpan.FromDays(1),
+            EditMode = EditMode.Simple,
+            TextContent = "Test",
+            ImageIds = [Guid.NewGuid(), Guid.NewGuid()]
+        };
+        var cancellationToken = CancellationToken.None;
+
+        var entry = new Entry("Test");
+        var cleanImage = new ImageInfo(id: Guid.NewGuid(), entryId: entryRequest.Id, url: new Uri("http://example.com/clean.jpg"));
+        var maliciousImage = new ImageInfo(id: Guid.NewGuid(), entryId: entryRequest.Id, url: new Uri("http://example.com/malicious.jpg"));
+        var imageInfos = new List<ImageInfo> { cleanImage, maliciousImage };
+
+        var scanResults = new List<MalwareScanResult>
+        {
+            new(cleanImage.Id, MalwareScanStatus.Clean),
+            new(maliciousImage.Id, MalwareScanStatus.Malicious)
+        };
+
+        _entryServiceSubstitute.Add(entryRequest, cancellationToken)
+            .Returns(Result.Success<Entry, DomainError>(entry));
+
+        _imageServiceSubstitute.GetAttached(entryRequest.Id, entryRequest.ImageIds, cancellationToken)
+            .Returns(Result.Success<List<ImageInfo>, DomainError>(imageInfos));
+
+        _malwareScanServiceSubstitute.ScanImages(entryRequest.Id, Arg.Any<List<Guid>>(), cancellationToken)
+            .Returns(Task.FromResult(scanResults));
+
+        _imageServiceSubstitute.Remove(entryRequest.Id, maliciousImage.Id, cancellationToken)
+            .Returns(UnitResult.Success<DomainError>());
+
+        _openGraphServiceSubstitute.Add(entryRequest.Id, entry.Content, cleanImage.Url, entryRequest.ExpiresIn, cancellationToken)
+            .Returns(UnitResult.Success<DomainError>());
+
+        _creatorServiceSubstitute.AttachEntry(_creator, Arg.Any<EntryInfo>(), cancellationToken)
+            .Returns(callInfo => Result.Success<EntryInfo, DomainError>(callInfo.Arg<EntryInfo>()));
+
+        var result = await _entryInfoService.Add(_creator, entryRequest, cancellationToken);
+
+        Assert.True(result.IsSuccess);
+        Assert.Single(result.Value.ImageInfos);
+        Assert.Equal(cleanImage.Id, result.Value.ImageInfos[0].Id);
+        Assert.Single(result.Value.ExcludedImageInfos);
+        Assert.Equal(maliciousImage.Id, result.Value.ExcludedImageInfos[0].Id);
+
+        await _imageServiceSubstitute.Received(1).Remove(entryRequest.Id, maliciousImage.Id, cancellationToken);
+        await _imageServiceSubstitute.DidNotReceive().Remove(entryRequest.Id, cleanImage.Id, cancellationToken);
+    }
+
+
+    [Fact]
+    public async Task Add_ShouldReturnAllImagesMaliciousError_WhenAllImagesAreMalicious()
+    {
+        var entryRequest = new EntryRequest
+        {
+            Id = Guid.NewGuid(),
+            ExpiresIn = TimeSpan.FromDays(1),
+            EditMode = EditMode.Simple,
+            TextContent = "Test",
+            ImageIds = [Guid.NewGuid(), Guid.NewGuid()]
+        };
+        var cancellationToken = CancellationToken.None;
+
+        var entry = new Entry("Test");
+        var imageInfos = new List<ImageInfo>
+        {
+            new(id: Guid.NewGuid(), entryId: entryRequest.Id, url: new Uri("http://example.com/image1.jpg")),
+            new(id: Guid.NewGuid(), entryId: entryRequest.Id, url: new Uri("http://example.com/image2.jpg"))
+        };
+
+        var scanResults = imageInfos
+            .Select(i => new MalwareScanResult(i.Id, MalwareScanStatus.Malicious))
+            .ToList();
+
+        _entryServiceSubstitute.Add(entryRequest, cancellationToken)
+            .Returns(Result.Success<Entry, DomainError>(entry));
+
+        _imageServiceSubstitute.GetAttached(entryRequest.Id, entryRequest.ImageIds, cancellationToken)
+            .Returns(Result.Success<List<ImageInfo>, DomainError>(imageInfos));
+
+        _malwareScanServiceSubstitute.ScanImages(entryRequest.Id, Arg.Any<List<Guid>>(), cancellationToken)
+            .Returns(Task.FromResult(scanResults));
+
+        var result = await _entryInfoService.Add(_creator, entryRequest, cancellationToken);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(DomainErrors.AllImagesMalicious().Code, result.Error.Code);
+
+        await _imageServiceSubstitute.DidNotReceive().Remove(Arg.Any<Guid>(), Arg.Any<Guid>(), Arg.Any<CancellationToken>());
+    }
+
+
+    [Fact]
     public async Task Add_ShouldReturnDomainError_AttachToCreatorFails()
     {
         _entryInfoMetricsSubstitute.ClearReceivedCalls();
@@ -216,4 +320,5 @@ public class EntryInfoServiceAddTests
     private readonly ICreatorService _creatorServiceSubstitute = Substitute.For<ICreatorService>();
     private readonly IEntryImageLifecycleService _entryImageLifecycleServiceSubstitute = Substitute.For<IEntryImageLifecycleService>();
     private readonly IEntryInfoMetrics _entryInfoMetricsSubstitute = Substitute.For<IEntryInfoMetrics>();
+    private readonly IMalwareScanService _malwareScanServiceSubstitute = Substitute.For<IMalwareScanService>();
 }

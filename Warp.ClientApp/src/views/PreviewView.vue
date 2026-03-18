@@ -74,6 +74,9 @@ import type { DraftEntry } from '../types/entries/draft-entry'
 import Button from '../components/Button.vue'
 import GalleryItem from '../components/GalleryItem.vue'
 import { ViewNames } from '../router/enums/view-names'
+import { useNotifications } from '../composables/use-notifications'
+import { NotificationLevel } from '../types/notifications/enums/notification-level'
+import type { EntryCreateResponse } from '../types/apis/entries/entry-create-response'
 
 const route = useRoute()
 const router = useRouter()
@@ -97,6 +100,7 @@ const saved = ref<boolean>(!!routeId)
 const preserveGalleryOnUnmount = ref(false)
 const showContent = ref(false)
 const { t } = useI18n()
+const { push: pushNotification } = useNotifications()
 
 
 const sanitizedHtml = computed(() => {
@@ -181,9 +185,17 @@ async function onSave() {
     try {
         saving.value = true
         
-        await saveEntry(entryId)
+        const response = await saveEntry(entryId)
         await refreshServerImages(entryId)
-        
+
+        if (response?.excludedImages?.length) {
+            pushNotification({
+                level: NotificationLevel.Warn,
+                title: t('preview.maliciousImagesExcluded.title'),
+                message: t('preview.maliciousImagesExcluded.message', { count: response.excludedImages.length })
+            })
+        }
+
         clearDraft()
         saved.value = true
     } catch (e) {
@@ -194,7 +206,7 @@ async function onSave() {
 }
 
 
-async function saveEntry(entryId: string) {
+async function saveEntry(entryId: string): Promise<EntryCreateResponse> {
     const entry = draft.value!
     const localFiles = galleryItems.value
         .filter((g: any) => g.kind === 'local')
@@ -205,7 +217,7 @@ async function saveEntry(entryId: string) {
         .map((g: any) => extractImageIdFromUrl(g.url))
         .filter((id: string | null) => !!id)
 
-    await entryApi.addOrUpdateEntry(entryId, {
+    return await entryApi.addOrUpdateEntry(entryId, {
         editMode: entry.editMode,
         expirationPeriod: entry.expirationPeriod,
         textContent: entry.textContent,
