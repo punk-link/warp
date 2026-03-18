@@ -4,7 +4,7 @@ import type { ApiError } from '../types/apis/api-error'
 import type { AppRequestInit } from '../types/apis/app-request-init'
 import { toProblemDetails } from '../helpers/problem-details-helper'
 import { ErrorHandlingMode } from '../types/apis/enums/error-handling-mode'
-import { buildTraceHeaders, extractTraceIdFromHeaders } from '../telemetry/traceContext'
+import { buildTraceHeaders, extractTraceIdFromHeaders } from '../telemetry/trace-context'
 
 
 /** Performs a fetch request and parses the JSON response. */

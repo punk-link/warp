@@ -6,7 +6,7 @@ import type { AppRequestInit } from '../types/apis/app-request-init'
 import { useNotifications } from '../composables/use-notifications'
 import { ErrorHandlingMode } from '../types/apis/enums/error-handling-mode'
 import { NotificationLevel } from '../types/notifications/enums/notification-level'
-import { emitApiErrorTelemetry } from '../telemetry/clientTelemetry'
+import { emitApiErrorTelemetry } from '../telemetry/client-telemetry'
 import { tOr } from '../i18n'
 import { ViewNames } from '../router/enums/view-names'
 
