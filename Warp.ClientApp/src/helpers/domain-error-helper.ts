@@ -2,21 +2,21 @@ import { getCurrentLocale } from '../i18n'
 import type { ProblemDetails } from '../types/apis/problem-details/problem-details'
 
 
-const localeModules: Partial<Record<string, Record<number, string>>> = {}
+const localeModules: Partial<Record<string, Record<number, string> | null>> = {}
 
 
 async function loadLocale(locale: string): Promise<Record<number, string> | undefined> {
-    if (localeModules[locale] !== undefined)
-        return localeModules[locale]
+    if (locale in localeModules)
+        return localeModules[locale] ?? undefined
 
     try {
         const mod = await import(`../i18n/generated/domain-errors.${locale}.ts`)
         localeModules[locale] = mod.default as Record<number, string>
-
-        return localeModules[locale]
     } catch {
-        return undefined
+        localeModules[locale] = null
     }
+
+    return localeModules[locale] ?? undefined
 }
 
 
