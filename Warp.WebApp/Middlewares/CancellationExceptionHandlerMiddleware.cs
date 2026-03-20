@@ -22,7 +22,7 @@ public class CancellationExceptionHandlerMiddleware
         catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
         {
             var traceId = Activity.Current?.TraceId.ToString() ?? context.TraceIdentifier;
-            var error = DomainErrors.ServiceUnavailable(traceId, ex.Message)
+            var error = DomainErrors.ServiceUnavailable()
                 .AddTraceId(traceId);
 
             var loggerFactory = context.RequestServices.GetRequiredService<ILoggerFactory>();

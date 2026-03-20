@@ -94,6 +94,39 @@ public abstract partial class BaseGenerator
 
 
     /// <summary>
+    /// Converts named format placeholders like {Name:type} to indexed format placeholders {0}, {1}, etc.
+    /// </summary>
+    /// <param name="formatString">The format string with named placeholders</param>
+    /// <returns>A format string with indexed placeholders</returns>
+    protected static string ConvertToIndexedFormat(string? formatString)
+    {
+        if (string.IsNullOrEmpty(formatString))
+            return string.Empty;
+
+        var parameterIndices = new Dictionary<string, int>();
+        var currentIndex = 0;
+
+        return LogParametersRegex().Replace(formatString, match =>
+        {
+            var paramName = match.Groups[1].Value;
+            if (paramName.Contains(':'))
+            {
+                var parts = paramName.Split(':');
+                paramName = parts[0].Trim();
+            }
+
+            if (!parameterIndices.TryGetValue(paramName, out int index))
+            {
+                index = currentIndex++;
+                parameterIndices[paramName] = index;
+            }
+
+            return "{" + index + "}";
+        });
+    }
+
+
+    /// <summary>
     /// Regex to extract parameters from message templates like {RequestId}, {ErrorMessage}, {ImageId:Guid}
     /// </summary>
     [GeneratedRegex(@"\{([^{}]+)\}", RegexOptions.Compiled)]

@@ -34,7 +34,7 @@ public class FileHelper
                 return DomainErrors.FileIsEmpty();
 
             if (memoryStream.Length > _fileSizeLimit)
-                return DomainErrors.FileSizeExceeded(memoryStream.Length, _fileSizeLimit);
+                return DomainErrors.FileSizeExceeded();
 
             if(!IsValidFileExtensionAndSignature(_logger, contentDisposition.FileName.Value!, memoryStream, _permittedExtensions))
                 return DomainErrors.FileTypeNotPermitted();

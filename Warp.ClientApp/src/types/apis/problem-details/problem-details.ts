@@ -21,6 +21,8 @@ export interface ProblemDetails {
     sentryId?: string
     /** Server stack trace (server key 'stack-trace'). */
     stackTrace?: string
+    /** Ordered parameter values for localizing parameterized error messages (server key 'error-params'). */
+    errorParams?: string[]
     /** Validation / domain errors bag. Each property -> list of messages. */
     errors?: Record<string, string[]>
 
