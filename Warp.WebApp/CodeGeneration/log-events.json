@@ -16,7 +16,10 @@
           "id": 10002,
           "name": "ServerErrorWithMessage",
           "description": "An error occurred while processing the request. Request ID: {RequestId}. Details: '{ErrorMessage:string}'.",
-          "domainErrorDescription": { "en": "An error occurred while processing the request. Details: '{ErrorMessage:string}'." },
+          "domainErrorDescription": { 
+            "en": "An error occurred while processing the request. Details: '{ErrorMessage:string}'.", 
+            "es": "Se produjo un error al procesar la solicitud. Detalles: '{ErrorMessage:string}'." 
+          },
           "logLevel": "Error",
           "generateLogMessage": true,
           "obsolete": false,
@@ -26,7 +29,10 @@
           "id": 10003,
           "name": "ServiceUnavailable",
           "description": "Service unavailable (503). Request ID: {RequestId}. Details: '{ErrorMessage:string}'.",
-          "domainErrorDescription": { "en": "The service is temporarily unavailable. Please try again later." },
+          "domainErrorDescription": { 
+            "en": "The service is temporarily unavailable. Please try again later.", 
+            "es": "El servicio no está disponible temporalmente. Por favor, inténtalo más tarde." 
+          },
           "logLevel": "Error",
           "generateLogMessage": true,
           "obsolete": false,
@@ -172,7 +178,10 @@
           "id": 12001,
           "name": "DefaultCacheValueError",
           "description": "Unable to store a default value {CacheValue}.",
-          "domainErrorDescription": { "en": "An internal error occurred. Please try again." },
+          "domainErrorDescription": { 
+            "en": "An internal error occurred. Please try again.", 
+            "es": "Se produjo un error interno. Por favor, inténtalo de nuevo." 
+          },
           "logLevel": "Warning",
           "generateLogMessage": true,
           "obsolete": false,
@@ -328,7 +337,10 @@
           "id": 12401,
           "name": "RequestIdempotencyKeyViolation",
           "description": "Request idempotency key violation. The request with the same idempotency key '{IdempotencyKey:string}' is already being processed.",
-          "domainErrorDescription": { "en": "A request with the same idempotency key is already being processed." },
+          "domainErrorDescription": { 
+            "en": "A request with the same idempotency key is already being processed.", 
+            "es": "Ya se está procesando una solicitud con la misma clave de idempotencia." 
+          },
           "logLevel": "Warning",
           "generateLogMessage": false,
           "obsolete": false,
@@ -343,7 +355,10 @@
           "id": 20001,
           "name": "WarpContentEmpty",
           "description": "The entry content is empty.",
-          "domainErrorDescription": { "en": "The entry content cannot be empty." },
+          "domainErrorDescription": { 
+            "en": "The entry content cannot be empty.", 
+            "es": "El contenido de la entrada no puede estar vacío." 
+          },
           "logLevel": "Debug",
           "generateLogMessage": false,
           "obsolete": false,
@@ -353,7 +368,10 @@
           "id": 20002,
           "name": "WarpExpirationPeriodEmpty",
           "description": "The entry expiration period is not specified.",
-          "domainErrorDescription": { "en": "The entry expiration period must be set." },
+          "domainErrorDescription": { 
+            "en": "The entry expiration period must be set.", 
+            "es": "El período de expiración de la entrada debe establecerse." 
+          },
           "logLevel": "Debug",
           "generateLogMessage": false,
           "obsolete": false,
@@ -372,7 +390,10 @@
           "id": 20102,
           "name": "IdDecodingError",
           "description": "An error occurred while decoding the ID '{Id:string}'. Details: '{ErrorMessage:string}'.",
-          "domainErrorDescription": { "en": "An error occurred while decoding the ID." },
+          "domainErrorDescription": { 
+            "en": "An error occurred while decoding the ID.", 
+            "es": "Se produjo un error al decodificar el ID." 
+          },
           "logLevel": "Error",
           "generateLogMessage": false,
           "obsolete": false,
@@ -382,7 +403,10 @@
           "id": 20103,
           "name": "UnauthorizedError",
           "description": "You do not have permission to perform this action.",
-          "domainErrorDescription": { "en": "You do not have permission to perform this action." },
+          "domainErrorDescription": { 
+            "en": "You do not have permission to perform this action.", 
+            "es": "No tienes permiso para realizar esta acción." 
+          },
           "logLevel": "Warning",
           "generateLogMessage": false,
           "obsolete": false,
@@ -397,7 +421,10 @@
           "id": 20201,
           "name": "CreatorIdIsNull",
           "description": "The creator ID is not provided.",
-          "domainErrorDescription": { "en": "The creator ID is missing." },
+          "domainErrorDescription": { 
+            "en": "The creator ID is missing.", 
+            "es": "Falta el ID del creador." 
+          },
           "logLevel": "Warning",
           "generateLogMessage": true,
           "obsolete": false,
@@ -407,7 +434,10 @@
           "id": 20202,
           "name": "CreatorIdIsNotFound",
           "description": "The creator ID is not found.",
-          "domainErrorDescription": { "en": "The creator was not found." },
+          "domainErrorDescription": { 
+            "en": "The creator was not found.", 
+            "es": "El creador no fue encontrado." 
+          },
           "logLevel": "Warning",
           "generateLogMessage": false,
           "obsolete": false,
@@ -422,7 +452,10 @@
           "id": 20301,
           "name": "CantAttachEntryToCreator",
           "description": "Can't attach the entry '{EntryId:Guid}' to the creator '{CreatorId:Guid}' due to an internal server error.",
-          "domainErrorDescription": { "en": "An error occurred while attaching the entry to the creator." },
+          "domainErrorDescription": { 
+            "en": "An error occurred while attaching the entry to the creator.", 
+            "es": "Se produjo un error al asociar la entrada al creador." 
+          },
           "logLevel": "Error",
           "generateLogMessage": true,
           "obsolete": false,
@@ -432,7 +465,10 @@
           "id": 20302,
           "name": "EntryModelValidationError",
           "description": "The entry model is invalid. Please check the provided data.",
-          "domainErrorDescription": { "en": "The entry data is invalid. Please check the provided values." },
+          "domainErrorDescription": { 
+            "en": "The entry data is invalid. Please check the provided values.", 
+            "es": "Los datos de la entrada no son válidos. Por favor, verifica los valores proporcionados." 
+          },
           "logLevel": "Warning",
           "generateLogMessage": false,
           "obsolete": false,
@@ -442,7 +478,10 @@
           "id": 20303,
           "name": "NoPermissionError",
           "description": "You do not have permission to access this entry.",
-          "domainErrorDescription": { "en": "You do not have permission to access this entry." },
+          "domainErrorDescription": { 
+            "en": "You do not have permission to access this entry.", 
+            "es": "No tienes permiso para acceder a esta entrada." 
+          },
           "logLevel": "Warning",
           "generateLogMessage": false,
           "obsolete": false,
@@ -452,7 +491,10 @@
           "id": 20304,
           "name": "EntryNotFound",
           "description": "The entry '{EntryId:Guid}' was not found.",
-          "domainErrorDescription": { "en": "The entry was not found." },
+          "domainErrorDescription": { 
+            "en": "The entry was not found.", 
+            "es": "La entrada no fue encontrada." 
+          },
           "logLevel": "Warning",
           "generateLogMessage": false,
           "obsolete": false,
@@ -462,7 +504,10 @@
           "id": 20305,
           "name": "EntryEditModeMismatch",
           "description": "The entry '{EntryId:Guid}' edit mode is already set to '{EditMode:string}'.",
-          "domainErrorDescription": { "en": "The entry edit mode is already set and cannot be changed." },
+          "domainErrorDescription": { 
+            "en": "The entry edit mode is already set and cannot be changed.", 
+            "es": "El modo de edición de la entrada ya está establecido y no se puede cambiar." 
+          },
           "logLevel": "Warning",
           "generateLogMessage": false,
           "obsolete": false,
@@ -472,7 +517,10 @@
           "id": 20306,
           "name": "EntryCannotBeEditedAfterViewed",
           "description": "The entry '{EntryId:Guid}' cannot be edited after it has been viewed.",
-          "domainErrorDescription": { "en": "The entry cannot be edited after it has been viewed. Try to create a new entry." },
+          "domainErrorDescription": { 
+            "en": "The entry cannot be edited after it has been viewed. Try to create a new entry.", 
+            "es": "La entrada no puede editarse después de haber sido visualizada. Intenta crear una nueva entrada." 
+          },
           "logLevel": "Warning",
           "generateLogMessage": false,
           "obsolete": false,
@@ -482,7 +530,10 @@
           "id": 20307,
           "name": "EntryInfoModelValidationError",
           "description": "The entry model is invalid. Please check the provided data.",
-          "domainErrorDescription": { "en": "The entry data is invalid. Please check the provided values." },
+          "domainErrorDescription": { 
+            "en": "The entry data is invalid. Please check the provided values.", 
+            "es": "Los datos de la entrada no son válidos. Por favor, verifica los valores proporcionados." 
+          },
           "logLevel": "Warning",
           "generateLogMessage": false,
           "obsolete": false,
@@ -510,7 +561,10 @@
           "id": 20310,
           "name": "EntryEditModeUnset",
           "description": "The entry '{EntryId:Guid}' edit mode is not set. Please set the edit mode before editing the entry.",
-          "domainErrorDescription": { "en": "The entry edit mode is not set. Please set the edit mode before editing the entry." },
+          "domainErrorDescription": { 
+            "en": "The entry edit mode is not set. Please set the edit mode before editing the entry.", 
+            "es": "El modo de edición de la entrada no está configurado. Por favor, establécelo antes de editar la entrada." 
+          },
           "logLevel": "Warning",
           "generateLogMessage": false,
           "obsolete": false,
@@ -520,7 +574,10 @@
           "id": 20311,
           "name": "EntryPlainTextSizeExceeded",
           "description": "The entry plain text content size exceeded the allowed limit.",
-          "domainErrorDescription": { "en": "The entry text content is too large. Please reduce the size and try again." },
+          "domainErrorDescription": { 
+            "en": "The entry text content is too large. Please reduce the size and try again.", 
+            "es": "El contenido de texto de la entrada es demasiado grande. Por favor, redúcelo e inténtalo de nuevo." 
+          },
           "logLevel": "Warning",
           "generateLogMessage": false,
           "obsolete": false,
@@ -530,7 +587,10 @@
           "id": 20312,
           "name": "EntryHtmlSizeExceeded",
           "description": "The entry HTML content size exceeded the allowed limit.",
-          "domainErrorDescription": { "en": "The entry content is too large. Please reduce the size and try again." },
+          "domainErrorDescription": { 
+            "en": "The entry content is too large. Please reduce the size and try again.", 
+            "es": "El contenido de la entrada es demasiado grande. Por favor, redúcelo e inténtalo de nuevo." 
+          },
           "logLevel": "Warning",
           "generateLogMessage": false,
           "obsolete": false,
@@ -540,7 +600,10 @@
           "id": 20313,
           "name": "EntryContentDeltaRequired",
           "description": "The entry ContentDelta is required for Advanced mode entries.",
-          "domainErrorDescription": { "en": "Content delta is required for advanced mode entries." },
+          "domainErrorDescription": { 
+            "en": "Content delta is required for advanced mode entries.", 
+            "es": "El delta de contenido es obligatorio para las entradas en modo avanzado." 
+          },
           "logLevel": "Warning",
           "generateLogMessage": false,
           "obsolete": false,
@@ -550,7 +613,10 @@
           "id": 20314,
           "name": "EntryContentDeltaInvalidJson",
           "description": "The entry ContentDelta must be valid JSON.",
-          "domainErrorDescription": { "en": "The entry content delta is not valid JSON." },
+          "domainErrorDescription": { 
+            "en": "The entry content delta is not valid JSON.", 
+            "es": "El delta de contenido de la entrada no es JSON válido." 
+          },
           "logLevel": "Warning",
           "generateLogMessage": false,
           "obsolete": false,
@@ -560,7 +626,10 @@
           "id": 20315,
           "name": "EntryContentDeltaSizeExceeded",
           "description": "The entry ContentDelta size exceeded the allowed limit.",
-          "domainErrorDescription": { "en": "The entry content delta is too large. Please reduce the size and try again." },
+          "domainErrorDescription": { 
+            "en": "The entry content delta is too large. Please reduce the size and try again.", 
+            "es": "El delta de contenido de la entrada es demasiado grande. Por favor, redúcelo e inténtalo de nuevo." 
+          },
           "logLevel": "Warning",
           "generateLogMessage": false,
           "obsolete": false,
@@ -575,7 +644,10 @@
           "id": 20401,
           "name": "UnsupportedFileExtension",
           "description": "The file extension is not supported.",
-          "domainErrorDescription": { "en": "The file extension '{FileExtension:string}' is not supported. Please use one of the following extensions: {SupportedFileExtensions:string}." },
+          "domainErrorDescription": { 
+            "en": "The file extension '{FileExtension:string}' is not supported. Please use one of the following extensions: {SupportedFileExtensions:string}.", 
+            "es": "La extensión de archivo '{FileExtension:string}' no está admitida. Por favor, usa una de las siguientes extensiones: {SupportedFileExtensions:string}." 
+          },
           "logLevel": "Warning",
           "generateLogMessage": false,
           "obsolete": false,
@@ -585,7 +657,10 @@
           "id": 20402,
           "name": "ImageAlreadyExists",
           "description": "The image already exists.",
-          "domainErrorDescription": { "en": "The image '{UntrustedImageName:string}' you are trying to upload already exists." },
+          "domainErrorDescription": { 
+            "en": "The image '{UntrustedImageName:string}' you are trying to upload already exists.", 
+            "es": "La imagen '{UntrustedImageName:string}' que intentas subir ya existe." 
+          },
           "logLevel": "Warning",
           "generateLogMessage": false,
           "obsolete": false,
@@ -604,7 +679,10 @@
           "id": 20404,
           "name": "AllImagesMalicious",
           "description": "All {ImageCount:int} uploaded images for entry '{EntryId:Guid}' were flagged as malicious by GuardDuty. The entry cannot be created.",
-          "domainErrorDescription": { "en": "All uploaded images were flagged as malicious. The entry cannot be created." },
+          "domainErrorDescription": { 
+            "en": "All uploaded images were flagged as malicious. The entry cannot be created.", 
+            "es": "Todas las imágenes subidas fueron marcadas como maliciosas. No se puede crear la entrada." 
+          },
           "logLevel": "Warning",
           "generateLogMessage": true,
           "obsolete": false,
@@ -632,7 +710,10 @@
           "id": 20407,
           "name": "MaliciousImageRemovalFailed",
           "description": "Failed to remove malicious image '{ImageId:Guid}' from entry '{EntryId:Guid}'. Entry creation has been blocked. Details: '{ErrorMessage:string}'.",
-          "domainErrorDescription": { "en": "One or more images failed a malware scan. The entry was not created." },
+          "domainErrorDescription": { 
+            "en": "One or more images failed a malware scan. The entry was not created.", 
+            "es": "Una o más imágenes no superaron el análisis de malware. La entrada no fue creada." 
+          },
           "logLevel": "Error",
           "generateLogMessage": true,
           "obsolete": false,
@@ -647,7 +728,10 @@
           "id": 20501,
           "name": "S3ListObjectsError",
           "description": "An error occurred while listing objects in S3. Details: '{ErrorMessage:string}'.",
-          "domainErrorDescription": { "en": "An error occurred while listing objects." },
+          "domainErrorDescription": { 
+            "en": "An error occurred while listing objects.", 
+            "es": "Se produjo un error al listar los objetos." 
+          },
           "logLevel": "Error",
           "generateLogMessage": true,
           "obsolete": false,
@@ -657,7 +741,10 @@
           "id": 20502,
           "name": "S3DeleteObjectError",
           "description": "An error occurred while deleting an object from S3. Details: '{ErrorMessage:string}'.",
-          "domainErrorDescription": { "en": "An error occurred while deleting an object." },
+          "domainErrorDescription": { 
+            "en": "An error occurred while deleting an object.", 
+            "es": "Se produjo un error al eliminar el objeto." 
+          },
           "logLevel": "Error",
           "generateLogMessage": true,
           "obsolete": false,
@@ -667,7 +754,10 @@
           "id": 20503,
           "name": "S3UploadObjectError",
           "description": "An error occurred while uploading an object to S3. Details: '{ErrorMessage:string}'.",
-          "domainErrorDescription": { "en": "An error occurred while uploading an object." },
+          "domainErrorDescription": { 
+            "en": "An error occurred while uploading an object.", 
+            "es": "Se produjo un error al subir el objeto." 
+          },
           "logLevel": "Error",
           "generateLogMessage": true,
           "obsolete": false,
@@ -677,7 +767,10 @@
           "id": 20504,
           "name": "S3GetObjectError",
           "description": "An error occurred while getting an object from S3. Details: '{ErrorMessage:string}'.",
-          "domainErrorDescription": { "en": "An error occurred while getting an object." },
+          "domainErrorDescription": { 
+            "en": "An error occurred while getting an object.", 
+            "es": "Se produjo un error al obtener el objeto." 
+          },
           "logLevel": "Error",
           "generateLogMessage": true,
           "obsolete": false,
@@ -687,7 +780,10 @@
           "id": 20505,
           "name": "FileNameIsMissing",
           "description": "The file name is missing. Please provide a valid file name.",
-          "domainErrorDescription": { "en": "The file name is missing." },
+          "domainErrorDescription": { 
+            "en": "The file name is missing.", 
+            "es": "Falta el nombre del archivo." 
+          },
           "logLevel": "Warning",
           "generateLogMessage": false,
           "obsolete": false,
@@ -697,7 +793,10 @@
           "id": 20506,
           "name": "FileIsEmpty",
           "description": "The file is empty. Please provide a valid file.",
-          "domainErrorDescription": { "en": "The file is empty. Please provide a non-empty file." },
+          "domainErrorDescription": { 
+            "en": "The file is empty. Please provide a non-empty file.", 
+            "es": "El archivo está vacío. Por favor, proporciona un archivo no vacío." 
+          },
           "logLevel": "Warning",
           "generateLogMessage": false,
           "obsolete": false,
@@ -707,7 +806,10 @@
           "id": 20507,
           "name": "FileSizeExceeded",
           "description": "The file size is {Actual:long} bytes. Yoy can upload files up to {MaxFileSize:long} bytes.",
-          "domainErrorDescription": { "en": "The file is too large. Please upload a smaller file." },
+          "domainErrorDescription": { 
+            "en": "The file is too large. Please upload a smaller file.", 
+            "es": "El archivo es demasiado grande. Por favor, sube un archivo más pequeño." 
+          },
           "logLevel": "Warning",
           "generateLogMessage": false,
           "obsolete": false,
@@ -717,7 +819,10 @@
           "id": 20508,
           "name": "FileTypeNotPermitted",
           "description": "The provided file type is not permitted.",
-          "domainErrorDescription": { "en": "This file type is not permitted." },
+          "domainErrorDescription": { 
+            "en": "This file type is not permitted.", 
+            "es": "Este tipo de archivo no está permitido." 
+          },
           "logLevel": "Warning",
           "generateLogMessage": false,
           "obsolete": false,
@@ -727,7 +832,10 @@
           "id": 20509,
           "name": "MultipartReaderError",
           "description": "An error occurred while creating the MultipartReader. Probably the request is not a multipart/form-data request.",
-          "domainErrorDescription": { "en": "The request format is invalid." },
+          "domainErrorDescription": { 
+            "en": "The request format is invalid.", 
+            "es": "El formato de la solicitud no es válido." 
+          },
           "logLevel": "Error",
           "generateLogMessage": false,
           "obsolete": false,
@@ -737,7 +845,10 @@
           "id": 20510,
           "name": "MultipartContentTypeBoundaryError",
           "description": "The content-type boundary is missing. Please provide a valid content-type boundary.",
-          "domainErrorDescription": { "en": "The request content type is invalid." },
+          "domainErrorDescription": { 
+            "en": "The request content type is invalid.", 
+            "es": "El tipo de contenido de la solicitud no es válido." 
+          },
           "logLevel": "Error",
           "generateLogMessage": false,
           "obsolete": false,
@@ -747,7 +858,10 @@
           "id": 20511,
           "name": "MultipartBoundaryLengthLimitExceeded",
           "description": "The multipart boundary length limit has been exceeded. Please provide a valid content-type boundary.",
-          "domainErrorDescription": { "en": "The request boundary limit has been exceeded." },
+          "domainErrorDescription": { 
+            "en": "The request boundary limit has been exceeded.", 
+            "es": "El límite de frontera de la solicitud ha sido superado." 
+          },
           "logLevel": "Error",
           "generateLogMessage": false,
           "obsolete": false,
