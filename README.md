@@ -136,7 +136,7 @@ The logging configuration is defined in `Warp.WebApp/CodeGeneration/log-events.j
 - `id` - Unique numeric identifier
 - `name` - Name of the logging event
 - `description` - Description template with optional parameters in format `{ParameterName:Type}`
-- `domainErrorDescription` - Optional alternative description for domain error messages
+- `domainErrorDescription` - Optional locale object (e.g. `{ "en": "..." }`) containing human-readable error messages for each language. Only events with this field get a domain error factory method generated. Parameterized events include the argument values in a machine-readable `error-params` extension so the frontend can interpolate the localized template.
 - `logLevel` - Severity level (Debug, Information, Warning, Error, Critical)
 - `generateLogMessage` - Boolean flag to control whether a log method should be generated
 - `obsolete` - Boolean flag to mark deprecated log events that will be removed in future versions
@@ -148,7 +148,9 @@ Example event:
   "id": 12201,
   "name": "ImageUploadError",
   "description": "An error occurred while uploading the image. Details: '{ErrorMessage:string}'.",
-  "domainErrorDescription": "Failed to upload image: {ErrorMessage:string}",
+  "domainErrorDescription": {
+    "en": "Failed to upload the image."
+  },
   "logLevel": "Error",
   "generateLogMessage": true,
   "obsolete": false,
@@ -162,7 +164,8 @@ The code generator produces:
 
 1. `LogEvents.cs` - Enum definitions for all logging events with Description attributes and HTTP status code decorations
 2. `LogMessages.cs` - Extension methods for ILogger with structured logging support using the [LoggerMessage] attribute pattern
-3. `DomainErrors.cs` - Static methods to create strongly-typed DomainError instances with appropriate error codes and messages
+3. `DomainErrors.cs` - Static methods to create strongly-typed DomainError instances with appropriate error codes and messages. Only events that have a `domainErrorDescription` locale object are included. For parameterized events the factory method also calls `.WithExtension(ErrorExtensionKeys.ErrorParams, ...)` so the frontend receives the interpolation values.
+4. `domain-errors.{locale}.ts` (one file per locale key found in `domainErrorDescription`) - TypeScript record mapping event IDs to localized message templates. Parameterized placeholders are converted to positional `{0}`, `{1}` format. The frontend uses these files to display localized error messages without depending on `detail` from the server.
 
 When a log event is marked as `obsolete: true`, all related artifacts (enum value, log method, and domain error factory method) are decorated with the `[Obsolete]` attribute, generating compiler warnings when used.
 
@@ -182,8 +185,15 @@ For example, a template like `"User {UserId:Guid} uploaded {FileCount:int} files
 Code generation runs automatically during the release build process through a target in the project file. You can also run it manually:
 
 ```bash
-dotnet run --project Warp.CodeGen/Warp.CodeGen.csproj -- --json Warp.WebApp/CodeGeneration/log-events.json --constants Warp.WebApp/Constants/Logging/LogEvents.cs --messages Warp.WebApp/Telemetry/Logging/LogMessages.cs --domain-errors Warp.WebApp/Extensions/DomainErrors.cs
+dotnet run --project Warp.CodeGen/Warp.CodeGen.csproj -- \
+  --json Warp.WebApp/CodeGeneration/log-events.json \
+  --constants Warp.WebApp/Constants/Logging/LogEvents.cs \
+  --messages Warp.WebApp/Telemetry/Logging/LogMessages.cs \
+  --domain-errors Warp.WebApp/Extensions/DomainErrors.cs \
+  --i18n-errors Warp.ClientApp/src/i18n/generated
 ```
+
+The `--i18n-errors` argument accepts a directory path. One `domain-errors.{locale}.ts` file is written per locale discovered across all `domainErrorDescription` objects in the JSON. Omit the flag to skip TypeScript generation (the C# outputs are unaffected).
 
 ## Styles
 

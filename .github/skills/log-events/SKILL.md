@@ -5,7 +5,7 @@ description: "Workflow for adding, modifying, or removing log events, domain err
 
 # Log Events Workflow
 
-This skill covers the full lifecycle of adding, modifying, or removing structured log events in the Warp project. The project uses a code generator (`Warp.CodeGen`) that reads a single JSON source of truth and produces three auto-generated C# files. **Never edit the generated files directly.**
+This skill covers the full lifecycle of adding, modifying, or removing structured log events in the Warp project. The project uses a code generator (`Warp.CodeGen`) that reads a single JSON source of truth and produces three auto-generated C# files and one TypeScript file per locale. **Never edit the generated files directly.**
 
 ## Architecture
 
@@ -20,6 +20,7 @@ This skill covers the full lifecycle of adding, modifying, or removing structure
 | `Warp.WebApp/Constants/Logging/LogEvents.cs` | `EventId` constants |
 | `Warp.WebApp/Telemetry/Logging/LogMessages.cs` | `[LoggerMessage]` partial method declarations |
 | `Warp.WebApp/Extensions/DomainErrors.cs` | Static factory methods for `DomainError` instances |
+| `Warp.ClientApp/src/i18n/generated/domain-errors.{locale}.ts` | TypeScript record mapping event IDs to localized message templates (one file per locale) |
 
 ### Generator
 
@@ -56,6 +57,10 @@ Add an entry to the correct category's `events` array:
   "id": 20407,
   "name": "MyNewEvent",
   "description": "Something happened to image '{ImageId:Guid}' in entry '{EntryId:Guid}'.",
+  "domainErrorDescription": {
+    "en": "Something went wrong with the image.",
+    "es": "Algo salió mal con la imagen."
+  },
   "logLevel": "Warning",
   "generateLogMessage": true,
   "obsolete": false,
@@ -70,7 +75,7 @@ Add an entry to the correct category's `events` array:
 | `id` | Yes | Unique integer. Must be sequential within its category. |
 | `name` | Yes | PascalCase. Becomes the `LogEvents.MyNewEvent` constant and `LogMessages.LogMyNewEvent()` method. |
 | `description` | Yes | Message template. Parameters use `{ParamName:Type}` syntax (see below). |
-| `domainErrorDescription` | No | If present, generates a `DomainErrors.MyNewEvent()` factory method. May use `{ParamName:Type}` for method parameters and `{N}` positional placeholders for `string.Format`. **This text is returned to the client in API responses — never include sensitive details such as internal IDs, stack traces, or infrastructure names.** |
+| `domainErrorDescription` | No | Locale object `{ "en": "...", "es": "..." }`. If present, generates a `DomainErrors.MyNewEvent()` factory method and a corresponding entry in every `domain-errors.{locale}.ts` file. May use `{ParamName:Type}` for C# method parameters; the frontend template uses positional `{0}`, `{1}` placeholders. **This text is returned to the client — never include sensitive details such as internal IDs, stack traces, or infrastructure names.** Always include at minimum the `"en"` key. Add `"es"` (and any other supported locales) at the same time. |
 | `logLevel` | Yes | One of: `Trace`, `Debug`, `Information`, `Warning`, `Error`, `Critical`. |
 | `generateLogMessage` | Yes | `true` to emit a `LogMessages.LogMyNewEvent()` method; `false` for events that only need a constant. |
 | `includeException` | No | `true` to add an `Exception exception` parameter to the log method signature. |
@@ -97,7 +102,7 @@ Use `{ParamName:Type}` where `Type` is a C# type name:
 dotnet run --project Warp.CodeGen
 ```
 
-This regenerates all three output files. Verify the console output shows all three files generated successfully.
+This regenerates all four output files (three C# files and one TypeScript file per locale). Verify the console output shows all files generated successfully.
 
 ### Step 5 — Build
 
@@ -150,7 +155,8 @@ Use this after every log event change:
 - [ ] Edited only `log-events.json` (not generated files)
 - [ ] Event ID is unique and sequential within its category
 - [ ] `description` uses `{ParamName:Type}` syntax for parameters
-- [ ] `domainErrorDescription` added if a `DomainErrors.X()` method is needed
-- [ ] Ran `dotnet run --project Warp.CodeGen` — all three files regenerated
+- [ ] `domainErrorDescription` added as a locale object `{ "en": "...", "es": "..." }` if a `DomainErrors.X()` method is needed
+- [ ] Both `"en"` and `"es"` translations provided in `domainErrorDescription`
+- [ ] Ran `dotnet run --project Warp.CodeGen` — all four files regenerated (three C# + one TS per locale)
 - [ ] Ran `dotnet build Warp.sln` — build succeeded
 - [ ] Updated test files if a new service dependency was introduced
