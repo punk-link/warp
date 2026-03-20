@@ -8,12 +8,13 @@ import { ErrorHandlingMode } from '../types/apis/enums/error-handling-mode'
 import { NotificationLevel } from '../types/notifications/enums/notification-level'
 import { emitApiErrorTelemetry } from '../telemetry/client-telemetry'
 import { tOr } from '../i18n'
+import { getLocalizedDomainError } from '../helpers/domain-error-helper'
 import { ViewNames } from '../router/enums/view-names'
 
 
 /** Sets up the default error bridge with the specified router. */
 export function setupDefaultErrorBridge(router: Router): void {
-    registerErrorBridge((error: ApiError, req: AppRequestInit) => {
+    registerErrorBridge(async (error: ApiError, req: AppRequestInit) => {
         const mode = req.errorHandling ?? ErrorHandlingMode.Global
         if (mode !== ErrorHandlingMode.Global)
             return
@@ -35,7 +36,7 @@ export function setupDefaultErrorBridge(router: Router): void {
 
         const redirected = handleRedirect(router, error.status)
         if (!redirected)
-            pushNotification(error, req, dedupeKey)
+            await pushNotification(error, req, dedupeKey)
     })
 }
 
@@ -66,9 +67,11 @@ function buildDetails(error: ApiError): string | undefined {
 }
 
 
-function buildMessage(error: ApiError): string | undefined {
-    if (error.problem)
-        return error.problem.detail || undefined
+async function buildMessage(error: ApiError): Promise<string | undefined> {
+    if (error.problem) {
+        const localized = await getLocalizedDomainError(error.problem)
+        return localized ?? (error.problem.detail || undefined)
+    }
 
     const errMsg = error.message?.trim()
     const fallbackTitle = tOr(statusToKey(error.status), 'Request failed')
@@ -134,14 +137,14 @@ function handleRedirect(router: Router, status: number | undefined | null): bool
 }
 
 
-function pushNotification(error: ApiError, req: AppRequestInit, dedupeKey: string): void {
+async function pushNotification(error: ApiError, req: AppRequestInit, dedupeKey: string): Promise<void> {
     const { push } = useNotifications()
     const level = req.notifyLevel ?? defaultNotifyLevel(error.status)
 
     push({
         level,
         title: buildTitle(error),
-        message: buildMessage(error),
+        message: await buildMessage(error),
         details: buildDetails(error),
         dedupeKey,
         actions: level >= NotificationLevel.Warn 

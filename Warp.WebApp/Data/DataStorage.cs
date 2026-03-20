@@ -25,7 +25,7 @@ public sealed class DataStorage : IDataStorage
         if (value is null || IsDefaultStruct(value))
         {
             _logger.LogDefaultCacheValueError(value?.ToString());
-            return DomainErrors.DefaultCacheValueError(value?.ToString());
+            return DomainErrors.DefaultCacheValueError();
         }
 
         await _distributedStorage.AddToSet(key, value, expiresIn, cancellationToken);
@@ -73,7 +73,7 @@ public sealed class DataStorage : IDataStorage
         if (value is null || IsDefaultStruct(value))
         {
             _logger.LogDefaultCacheValueError(value?.ToString());
-            return DomainErrors.DefaultCacheValueError(value?.ToString());
+            return DomainErrors.DefaultCacheValueError();
         }
 
         _memoryCache.Set(key, value, expiresIn);

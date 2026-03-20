@@ -2,6 +2,7 @@
 
 public class ErrorExtensionKeys
 {
+    public const string ErrorParams = "error-params";
     public const string EventId = "event-id";
     public const string ErrorsExtensionToken = "errors";
     public const string FileName = "fileName";

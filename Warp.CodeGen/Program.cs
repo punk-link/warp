@@ -33,12 +33,18 @@ public class Program
             Description = "The output path for the DomainErrors.cs file"    
         };
 
+        var i18nErrorsOutputOption = new Option<DirectoryInfo?>("--i18n-errors")
+        {
+            Description = "The output directory for generated i18n domain error locale files"
+        };
+
         var rootCommand = new RootCommand("Generates code files from JSON logging definitions")
         {
             jsonFileOption,
             constantsOutputOption,
             messagesOutputOption,
-            domainErrorsOutputOption
+            domainErrorsOutputOption,
+            i18nErrorsOutputOption
         };
 
         rootCommand.SetAction(async parseResults =>
@@ -65,6 +71,10 @@ public class Program
             var domainErrorsOutput = parseResults.GetValue(domainErrorsOutputOption);
             if (domainErrorsOutput is not null)
                 DomainErrorGenerator.Generate(loggingConfig, domainErrorsOutput.FullName);
+
+            var i18nErrorsOutput = parseResults.GetValue(i18nErrorsOutputOption);
+            if (i18nErrorsOutput is not null)
+                I18nErrorGenerator.Generate(loggingConfig, i18nErrorsOutput.FullName);
 
             return 0;
         });

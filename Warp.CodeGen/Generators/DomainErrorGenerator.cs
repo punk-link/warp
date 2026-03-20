@@ -18,6 +18,7 @@ public partial class DomainErrorGenerator : BaseGenerator
         sb.AppendLine("// Generated on: " + DateTimeOffset.UtcNow.ToString("yyyy-MM-dd HH:mm:ss UTC"));
         sb.AppendLine("#nullable enable");
         sb.AppendLine("using Warp.WebApp.Constants.Logging;");
+        sb.AppendLine("using Warp.WebApp.Constants;");
         sb.AppendLine();
         sb.AppendLine("#pragma warning disable IDE0130 // Namespace does not match folder structure");
         sb.AppendLine("namespace Warp.WebApp.Models.Errors;");
@@ -29,75 +30,43 @@ public partial class DomainErrorGenerator : BaseGenerator
         sb.AppendLine("public static class DomainErrors");
         sb.AppendLine("{");
         
-        foreach (var category in loggingConfig.LoggingCategories)
-        {
-            var isLastCategory = category == loggingConfig.LoggingCategories.Last();
-            
-            if (!string.IsNullOrEmpty(category.Name))
-                sb.AppendLine($"    // {category.Name}");
-            
-            foreach (var logEvent in category.Events)
-            {
-                if (logEvent.Obsolete)
-                    sb.AppendLine($"    [Obsolete(\"This error is obsolete. Do not use.\")]");
+        var eventsWithDomainError = loggingConfig.LoggingCategories
+            .SelectMany(c => c.Events.Select(e => (Category: c, Event: e)))
+            .Where(x => x.Event.DomainErrorDescription != null)
+            .ToList();
 
-                var description = logEvent.DomainErrorDescription ?? logEvent.Description;
-                var methodParameters = ExtractParameters(description);
-                var methodArguments = GetMethodArguments(description);
-                
-                // Convert named placeholders to indexed placeholders
-                string indexedDescription = ConvertToIndexedFormat(description);
-                
-                sb.AppendLine($"    public static DomainError {logEvent.Name}({methodParameters})");
-                
-                if (!string.IsNullOrEmpty(description) && !string.IsNullOrEmpty(methodArguments))
-                    sb.AppendLine($"        => new(LogEvents.{logEvent.Name}, string.Format(\"{indexedDescription}\", {methodArguments}));");
-                else 
-                    sb.AppendLine($"        => new(LogEvents.{logEvent.Name});");
-                
-                var isLastEventInCategory = logEvent == category.Events.Last();
-                if (!isLastEventInCategory || !isLastCategory)
-                    sb.AppendLine();
-            }
-            
-            if (!isLastCategory && !string.IsNullOrEmpty(category.Name))
+        var isFirst = true;
+        foreach (var (_, logEvent) in eventsWithDomainError)
+        {
+            if (!isFirst)
                 sb.AppendLine();
+
+            isFirst = false;
+
+            if (logEvent.Obsolete)
+                sb.AppendLine($"    [Obsolete(\"This error is obsolete. Do not use.\")]");
+
+            var description = logEvent.DomainErrorDescription!["en"];
+            var methodParameters = ExtractParameters(description);
+            var methodArguments = GetMethodArguments(description);
+            var indexedDescription = ConvertToIndexedFormat(description);
+            var hasParameters = !string.IsNullOrEmpty(methodArguments);
+
+            sb.AppendLine($"    public static DomainError {logEvent.Name}({methodParameters})");
+
+            if (hasParameters)
+            {
+                sb.AppendLine($"        => new DomainError(LogEvents.{logEvent.Name}, string.Format(\"{indexedDescription}\", {methodArguments}))");
+                sb.AppendLine($"            .WithExtension(ErrorExtensionKeys.ErrorParams, new object?[] {{ {methodArguments} }});");
+            }
+            else
+            {
+                sb.AppendLine($"        => new(LogEvents.{logEvent.Name});");
+            }
         }
         
         sb.AppendLine("}");
         
         FileUtilities.WriteToFile(outputFilePath, sb.ToString());
-    }
-    
-    /// <summary>
-    /// Converts named format placeholders like {Name:type} to indexed format placeholders {0}, {1}, etc.
-    /// </summary>
-    /// <param name="formatString">The format string with named placeholders</param>
-    /// <returns>A format string with indexed placeholders</returns>
-    private static string ConvertToIndexedFormat(string? formatString)
-    {
-        if (string.IsNullOrEmpty(formatString))
-            return string.Empty;
-            
-        var parameterIndices = new Dictionary<string, int>();
-        int currentIndex = 0;
-        
-        return LogParametersRegex().Replace(formatString, match =>
-        {
-            var paramName = match.Groups[1].Value;
-            if (paramName.Contains(':'))
-            {
-                var parts = paramName.Split(':');
-                paramName = parts[0].Trim();
-            }
-            
-            if (!parameterIndices.TryGetValue(paramName, out int index))
-            {
-                index = currentIndex++;
-                parameterIndices[paramName] = index;
-            }
-            
-            return "{" + index + "}";
-        });
     }
 }

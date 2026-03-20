@@ -38,7 +38,7 @@ public class ConstantsGenerator : BaseGenerator
                 if (logEvent.Obsolete)
                     sb.AppendLine($"    [Obsolete(\"This logging event is obsolete and will be removed in a future version.\")]");
                 
-                var description = logEvent.DomainErrorDescription ?? logEvent.Description;
+                var description = logEvent.DomainErrorDescription?.GetValueOrDefault("en") ?? logEvent.Description;
                 sb.AppendLine($"    [Description(\"{description}\")]");
                 sb.AppendLine($"    [HttpStatusCode({logEvent.HttpCode})]");
                 sb.AppendLine($"    {logEvent.Name} = {logEvent.Id},");

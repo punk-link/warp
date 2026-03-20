@@ -93,11 +93,11 @@ public class CreatorServiceTests
 
         _dataStorageSubstitute
             .TryGetSet<Guid>(userIdCacheKey, Arg.Any<CancellationToken>())
-            .Returns(new HashSet<Guid>());
+            .Returns([]);
 
         _dataStorageSubstitute
             .AddToSet(userIdCacheKey, entryInfo.Id, Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>())
-            .Returns(UnitResult.Failure(DomainErrors.DefaultCacheValueError("test")));
+            .Returns(UnitResult.Failure(DomainErrors.DefaultCacheValueError()));
 
         var result = await _creatorService.AttachEntry(_creator, entryInfo, CancellationToken.None);
 

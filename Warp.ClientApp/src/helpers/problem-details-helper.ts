@@ -7,10 +7,12 @@ const RESERVED_PROPERTY_NAMES = [
     'event-id', 
     'sentry-id', 
     'stack-trace', 
+    'error-params',
     'traceId', 
     'eventId', 
     'sentryId', 
     'stackTrace', 
+    'errorParams',
     'errors', 
     'type', 
     'title', 
@@ -100,7 +102,7 @@ function buildBaseProblemDetails(
     traceId: string,
     optional: ReturnType<typeof parseOptionalFields>
 ): ProblemDetails {
-    const { eventId, sentryId, stackTrace, errors } = optional
+    const { eventId, sentryId, stackTrace, errorParams, errors } = optional
 
     return {
         type,
@@ -111,6 +113,7 @@ function buildBaseProblemDetails(
         ...(eventId != null ? { eventId } : {}),
         ...(sentryId ? { sentryId } : {}),
         ...(stackTrace ? { stackTrace } : {}),
+        ...(errorParams ? { errorParams } : {}),
         ...(errors ? { errors } : {})
     }
 }
@@ -143,6 +146,15 @@ function collectMissingFields(
 }
 
 
+function normalizeErrorParams(raw: unknown): string[] | undefined {
+    if (!Array.isArray(raw) || raw.length === 0)
+        return undefined
+
+    const result = raw.map(asString).filter((s): s is string => s != null)
+    return result.length > 0 ? result : undefined
+}
+
+
 function normalizeErrors(raw: any): Record<string, string[]> | undefined {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) 
         return undefined
@@ -168,6 +180,7 @@ function parseOptionalFields(raw: any) {
         eventId: asNumber(raw.eventId ?? raw['event-id']),
         sentryId: asString(raw.sentryId ?? raw['sentry-id']),
         stackTrace: asString(raw.stackTrace ?? raw['stack-trace']),
+        errorParams: normalizeErrorParams(raw.errorParams ?? raw['error-params']),
         errors: normalizeErrors(raw.errors)
     }
 }

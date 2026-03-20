@@ -170,7 +170,7 @@ function handleJsonErrorResponse(response: Response, parsedBody: any, metadata: 
 function maybeHandleGlobally(error: ApiError, req: AppRequestInit): void {
     const mode = req.errorHandling ?? ErrorHandlingMode.Global
     if (mode === ErrorHandlingMode.Global && globalErrorBridge)
-        globalErrorBridge(error, req)
+        void globalErrorBridge(error, req)
 }
 
 
@@ -235,4 +235,4 @@ async function performFetch(url: string, fetchOptions: RequestInit, method: stri
 }
 
 
-type ErrorBridge = (error: ApiError, req: AppRequestInit) => void
+type ErrorBridge = (error: ApiError, req: AppRequestInit) => void | Promise<void>

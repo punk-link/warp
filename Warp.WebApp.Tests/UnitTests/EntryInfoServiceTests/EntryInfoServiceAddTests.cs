@@ -156,7 +156,7 @@ public class EntryInfoServiceAddTests
         var cancellationToken = CancellationToken.None;
 
         var entry = new Entry("Test");
-        var domainError = DomainErrors.FileUploadException("Failed to get image info");
+        var domainError = DomainErrors.S3GetObjectError();
 
         _entryServiceSubstitute.Add(entryRequest, cancellationToken)
             .Returns(Result.Success<Entry, DomainError>(entry));

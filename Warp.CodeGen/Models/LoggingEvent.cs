@@ -10,7 +10,7 @@ public class LoggingEvent
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
-    public string? DomainErrorDescription { get; set; }
+    public Dictionary<string, string>? DomainErrorDescription { get; set; }
     public bool GenerateLogMessage { get; set; } = true;
     public bool IncludeException { get; set; } = false;
     public LogLevel LogLevel { get; set; } = LogLevel.Information;
