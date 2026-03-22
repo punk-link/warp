@@ -115,6 +115,29 @@ public class ImageServiceAddTests
         Assert.NotNull(result.Value.Url);
     }
 
+
+    [Fact]
+    public async Task Add_Success_TracksImageInUploadCountSet()
+    {
+        var entryId = Guid.NewGuid();
+        using var stream = new MemoryStream([0x01, 0x02, 0x03]);
+        var appFile = new AppFile(stream, "image/png");
+
+        _dataStorageSubstitute.Contains<bool>(Arg.Any<string>(), Arg.Any<CancellationToken>())
+            .Returns(new ValueTask<bool>(false));
+
+        _dataStorageSubstitute.Set(Arg.Any<string>(), Arg.Any<object>(), Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>())
+            .Returns(UnitResult.Success<DomainError>());
+
+        _s3StorageSubstitute.Save(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<AppFile>(), Arg.Any<CancellationToken>())
+            .Returns(UnitResult.Success<DomainError>());
+
+        await _imageService.Add(entryId, appFile, CancellationToken.None);
+
+        await _dataStorageSubstitute.Received(1)
+            .AddToSet(Arg.Any<string>(), Arg.Any<Guid>(), Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>());
+    }
+
     
     private readonly IS3FileStorage _s3StorageSubstitute;
     private readonly ILoggerFactory _loggerFactorySubstitute;
