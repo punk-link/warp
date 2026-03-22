@@ -223,7 +223,7 @@ async function saveEntry(entryId: string): Promise<EntryCreateResponse> {
     const imageIds = galleryItems.value
         .filter((g: any) => g.kind === 'remote')
         .map((g: any) => extractImageIdFromUrl(g.url))
-        .filter((id: string | null) => !!id)
+        .filter((id): id is string => !!id)
 
     return await entryApi.addOrUpdateEntry(entryId, {
         editMode: entry.editMode,

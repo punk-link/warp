@@ -109,6 +109,9 @@ public class ImageService : IImageService, IUnauthorizedImageService
             var cacheKey = CacheKeyBuilder.BuildImageHashCacheKey(entryId, tuple.AppFile.Hash);
             await _dataStorage.Set(cacheKey, true, CachingConstants.MaxSupportedCachingTime, cancellationToken);
 
+            var uploadCountCacheKey = CacheKeyBuilder.BuildImageUploadCountCacheKey(entryId);
+            await _dataStorage.AddToSet(uploadCountCacheKey, tuple.ImageId, CachingConstants.MaxSupportedCachingTime, cancellationToken);
+
             return tuple;
         }
 
@@ -209,6 +212,16 @@ public class ImageService : IImageService, IUnauthorizedImageService
                 Content = new MemoryStream(content.Bytes),
                 ContentType = content.ContentType
             };
+    }
+
+
+    /// <inheritdoc cref="IUnauthorizedImageService.GetUploadedCount"/>
+    public async Task<int> GetUploadedCount(Guid entryId, CancellationToken cancellationToken)
+    {
+        var key = CacheKeyBuilder.BuildImageUploadCountCacheKey(entryId);
+        var set = await _dataStorage.TryGetSet<Guid>(key, cancellationToken);
+        
+        return set.Count;
     }
 
 
