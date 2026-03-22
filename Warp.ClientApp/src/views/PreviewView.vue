@@ -196,6 +196,14 @@ async function onSave() {
             })
         }
 
+        if (response?.rejectedFiles?.length) {
+            pushNotification({
+                level: NotificationLevel.Warn,
+                title: t('preview.rejectedFiles.title'),
+                message: t('preview.rejectedFiles.message', { count: response.rejectedFiles.length })
+            })
+        }
+
         clearDraft()
         saved.value = true
     } catch (e) {

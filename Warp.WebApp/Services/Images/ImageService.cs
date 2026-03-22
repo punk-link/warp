@@ -343,7 +343,6 @@ public class ImageService : IImageService, IUnauthorizedImageService
         "image/jpeg",
         "image/jpeg",
         "image/png",
-        "image/svg+xml",
         "image/tiff",
         "image/tiff",
         "image/webp",
