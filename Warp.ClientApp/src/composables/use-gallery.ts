@@ -2,6 +2,7 @@ import { ref, readonly, watch, onBeforeUnmount, type Ref, computed } from 'vue'
 import type { GalleryItem } from '../types/galleries/gallery-item'
 import type { LocalGalleryItem } from '../types/galleries/local-gallery-item'
 import { GalleryApi } from '../types/galleries/gallery-api'
+import { isAllowedImageExtension } from '../helpers/image-file-helper'
 
 
 const DEFAULT_MAX_FILE_BYTES = 10 * 1024 * 1024 // 10MB
@@ -163,7 +164,7 @@ function createStore(): InternalStore {
 
 
 function defaultAccept(file: File) {
-    return !!file.type && file.type.startsWith('image/')
+    return !!file.type && file.type.startsWith('image/') && isAllowedImageExtension(file)
 }
 
 

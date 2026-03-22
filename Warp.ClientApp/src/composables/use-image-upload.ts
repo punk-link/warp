@@ -1,5 +1,6 @@
 import { fetchJson } from '../api/fetch-service'
 import type { ApiError } from '../types/apis/api-error'
+import { isAllowedImageExtension } from '../helpers/image-file-helper'
 
 
 /** Handles paste events for image uploads. */
@@ -151,7 +152,7 @@ async function handleFileInputChange(e: Event, getEntryId: () => string | undefi
 
 
 function isValidImageFile(file: File | null | undefined) {
-    return !!file && !!file.type && file.type.startsWith('image/')
+    return !!file && !!file.type && file.type.startsWith('image/') && isAllowedImageExtension(file)
 }
 
 

@@ -12,6 +12,7 @@ declare global {
         appConfig?: {
             apiBaseUrl?: string
             environment?: string
+            allowedImageExtensions?: string[]
             maxContentDeltaSize?: number
             maxHtmlContentSize?: number
             maxPlainTextContentSize?: number
