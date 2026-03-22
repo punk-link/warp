@@ -69,6 +69,7 @@ public sealed class ImageController : BaseController
     [ProducesResponseType(typeof(List<KeyValuePair<string, ImageUploadResponse>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(List<KeyValuePair<string, DomainError>>), StatusCodes.Status400BadRequest)]
     [RequireCreatorCookie]
+    [ValidateAntiForgeryToken]
     [ValidateId("entryId")]
     public async Task<IActionResult> Add([FromRoute] string entryId, CancellationToken cancellationToken = default)
     {
@@ -118,6 +119,8 @@ public sealed class ImageController : BaseController
         var (_, isFailure, value, error) = await _unauthorizedImageService.Get(decodedEntryId, decodedImageId, cancellationToken);
         if (isFailure)
             return BadRequest(error);
+
+        Response.Headers.ContentDisposition = $"inline; filename=\"{imageId}\"";
 
         return new FileStreamResult(value.Content, value.ContentType);
     }

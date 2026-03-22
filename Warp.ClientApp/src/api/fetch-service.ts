@@ -73,6 +73,13 @@ function buildApiError(params: { message: string; status: number; requestId?: st
 
 
 function buildFetchOptions(opts: AppRequestInit, headers: Headers): RequestInit {
+    const method = (opts.method ?? 'GET').toUpperCase()
+    if (method !== 'GET' && method !== 'HEAD') {
+        const csrfToken = getCsrfTokenFromCookie()
+        if (csrfToken)
+            headers.set(CSRF_HEADER, csrfToken)
+    }
+
     const fetchOptions: RequestInit = {
         ...opts,
         credentials: 'include',
@@ -95,6 +102,12 @@ function extractResponseMetadata(response: Response, traceContext: { traceId: st
         requestId: response.headers.get('x-request-id'),
         traceId: extractTraceIdFromHeaders(response.headers) ?? traceContext.traceId
     }
+}
+
+
+function getCsrfTokenFromCookie(): string | null {
+    const match = document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]*)/)
+    return match ? decodeURIComponent(match[1]) : null
 }
 
 
@@ -236,3 +249,6 @@ async function performFetch(url: string, fetchOptions: RequestInit, method: stri
 
 
 type ErrorBridge = (error: ApiError, req: AppRequestInit) => void | Promise<void>
+
+
+const CSRF_HEADER = 'X-CSRF-TOKEN'
