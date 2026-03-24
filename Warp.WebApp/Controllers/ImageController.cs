@@ -69,7 +69,7 @@ public sealed class ImageController : BaseController
     [ProducesResponseType(typeof(List<KeyValuePair<string, ImageUploadResponse>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(List<KeyValuePair<string, DomainError>>), StatusCodes.Status400BadRequest)]
     [RequireCreatorCookie]
-    [ValidateAntiForgeryToken]
+    [ValidateCsrfToken]
     [ValidateId("entryId")]
     public async Task<IActionResult> Add([FromRoute] string entryId, CancellationToken cancellationToken = default)
     {

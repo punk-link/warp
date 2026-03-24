@@ -57,7 +57,7 @@ public class EntryController : BaseController
     [ProducesResponseType(typeof(EntryApiResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(DomainError), StatusCodes.Status400BadRequest)]
     [RequireCreatorCookie]
-    [ValidateAntiForgeryToken]
+    [ValidateCsrfToken]
     [ValidateId]
     [MultipartFormData]
     //[IdempotentRequest] // TODO: implement idempotency for multipart requests
