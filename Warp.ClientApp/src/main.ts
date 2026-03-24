@@ -11,6 +11,17 @@ import App from './App.vue'
 import router from './router'
 
 
+async function ensureCreator() {
+    try {
+        const { headers } = buildTraceHeaders()
+        // TODO: use a centralized fetch service
+        await fetch('/api/creators', { method: 'GET', credentials: 'include', cache: 'no-store', headers })
+    } catch {
+        // Non-blocking: continue even if creator bootstrap fails
+    }
+}
+
+
 async function ensureCsrf() {
     try {
         const hasCookie = /(?:^|; )XSRF-TOKEN=/.test(document.cookie)
@@ -26,6 +37,7 @@ async function ensureCsrf() {
 
 
 async function bootstrap(): Promise<void> {
+    await ensureCreator()
     await ensureCsrf()
 
     const i18n = await createI18nInstance()
