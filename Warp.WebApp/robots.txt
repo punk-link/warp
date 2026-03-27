@@ -1,6 +1,12 @@
 User-agent: *
 Disallow: /api/
 Disallow: /entry/
+Disallow: /preview/
 Disallow: /error
+Disallow: /deleted
 Disallow: /health
+Disallow: /config.js
+Disallow: /analytics.js
 Allow: /
+
+Sitemap: https://warplyn.com/sitemap.xml
