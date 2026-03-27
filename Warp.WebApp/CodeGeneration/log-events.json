@@ -163,7 +163,7 @@
         {
           "id": 11304,
           "name": "ConsulConfigLoaded",
-          "description": "Consul KV key '{StorageName:string}' loaded {KeyCount:int} key(s). Values: {ConfigData:string}.",
+          "description": "Consul KV key '{StorageName:string}' loaded {KeyCount:int} key(s). Configuration (sensitive values redacted): {ConfigData:string}.",
           "logLevel": "Debug",
           "generateLogMessage": true,
           "obsolete": false,
