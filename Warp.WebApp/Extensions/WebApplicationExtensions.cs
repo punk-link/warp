@@ -61,6 +61,7 @@ internal static class WebApplicationExtensions
         app.MapControllers();
 
         app.MapRobotsTxt()
+            .MapSitemap()
             .MapCsrf()
             .MapSpaConfigs()
             .MapSpaAnalytics()

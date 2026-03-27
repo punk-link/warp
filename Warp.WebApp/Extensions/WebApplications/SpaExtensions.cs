@@ -216,6 +216,6 @@ internal static class SpaExtensions
         """;
 
     private static readonly string _assetsPathSegment = $"{Path.DirectorySeparatorChar}assets{Path.DirectorySeparatorChar}";
-    private static readonly HashSet<string> _passthroughPrefixes = ["/api", "/health", "/config.js", "/analytics.js", "/robots.txt"];
+    private static readonly HashSet<string> _passthroughPrefixes = ["/api", "/health", "/config.js", "/analytics.js", "/robots.txt", "/sitemap.xml"];
     private static readonly HashSet<string> _spaAssetPrefixes = [ "/@vite", "/src", "/node_modules", "/assets", "/fonts", "/img", "/css", "/vendor" ];
 }

@@ -32,11 +32,15 @@
 
   <ItemGroup>
     <None Remove="robots.txt" />
+    <None Remove="sitemap.xml" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="BinarySources\warp.xcf" />
     <Content Include="robots.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="sitemap.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
