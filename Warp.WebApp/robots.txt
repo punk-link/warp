@@ -1,7 +1,7 @@
 User-agent: *
 Disallow: /api/
-Disallow: /entry/
-Disallow: /preview/
+Disallow: /entry
+Disallow: /preview
 Disallow: /error
 Disallow: /deleted
 Disallow: /health
