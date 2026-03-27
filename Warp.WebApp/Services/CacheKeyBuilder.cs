@@ -42,6 +42,10 @@ public static class CacheKeyBuilder
         => BuildCacheKey<ImageService>(nameof(XxHash128), imageId);
 
 
+    public static string BuildImageUploadCountCacheKey(in Guid entryId)
+        => BuildCacheKey<ImageService>("upload-count", entryId);
+
+
     public static string BuildLockKey(string member)
         => BuildCacheKey<EntryImageLifecycle>("Lock", member);
 

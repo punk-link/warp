@@ -18,6 +18,7 @@ import {
     expectOnEntry,
     expectOnHome,
     expectOnPreview,
+    expectViewCount,
     fillRichTextAndVerify,
     fillTextAndVerify,
     getCopiedLink,
@@ -190,12 +191,10 @@ test.describe.serial('entry crud flows', () => {
 
         const contextB = await browser.newContext()
         const pageB = await contextB.newPage()
-        await pageB.goto(entryLink, { waitUntil: 'networkidle' })
+        await pageB.goto(entryLink)
         await expectOnEntry(pageB)
         await pageB.waitForSelector('article')
-        const countB = await getViewCount(pageB)
-
-        expect(countB).toBe(countA + 1)
+        await expectViewCount(pageB, countA + 1)
 
         await pageA.close()
         await pageB.close()

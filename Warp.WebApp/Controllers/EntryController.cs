@@ -57,6 +57,7 @@ public class EntryController : BaseController
     [ProducesResponseType(typeof(EntryApiResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(DomainError), StatusCodes.Status400BadRequest)]
     [RequireCreatorCookie]
+    [ValidateCsrfToken]
     [ValidateId]
     [MultipartFormData]
     //[IdempotentRequest] // TODO: implement idempotency for multipart requests
@@ -79,6 +80,7 @@ public class EntryController : BaseController
         var formValues = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         var existingImageIds = new List<string>(_imageOptions.MaxFileCount);
         var uploadedImageIds = new List<string>(_imageOptions.MaxFileCount);
+        var rejectedFiles = new List<string>(_imageOptions.MaxFileCount);
         var fileHelper = new FileHelper(_loggerFactory, _imageOptions.AllowedExtensions, _imageOptions.MaxFileSize);
 
         // DO NOT refactor this to separate method - relies on memory management specific to file uploads.
@@ -96,12 +98,26 @@ public class EntryController : BaseController
             {
                 var appFileResult = await fileHelper.ProcessStreamedFile(section, contentDisposition);
                 if (appFileResult.IsFailure)
-                    continue; // skip failed file silently (could collect errors)
+                {
+                    var rejectedFileName = contentDisposition.FileName.Value?.Trim('"');
+                    if (!string.IsNullOrEmpty(rejectedFileName) && rejectedFiles.Count < _imageOptions.MaxFileCount)
+                        rejectedFiles.Add(rejectedFileName);
+
+                    continue;
+                }
 
                 var decodedEntryId = IdCoder.Decode(id);
                 var addResult = await _unauthorizedImageService.Add(decodedEntryId, appFileResult.Value, cancellationToken);
                 if (addResult.IsSuccess)
+                {
                     uploadedImageIds.Add(IdCoder.Encode(addResult.Value.Id));
+                }
+                else
+                {
+                    var rejectedFileName = contentDisposition.FileName.Value?.Trim('"');
+                    if (!string.IsNullOrEmpty(rejectedFileName) && rejectedFiles.Count < _imageOptions.MaxFileCount)
+                        rejectedFiles.Add(rejectedFileName);
+                }
             }
             else if (MultipartRequestHelper.HasFormDataContentDisposition(contentDisposition))
             {
@@ -119,7 +135,12 @@ public class EntryController : BaseController
         } while (section is not null);
 
         var apiRequest = CreateEntryApiRequest(formValues, uploadedImageIds, existingImageIds);
-        return await AddOrUpdateInternal(id, apiRequest, cancellationToken);
+        var actionResult = await AddOrUpdateInternal(id, apiRequest, cancellationToken);
+
+        if (rejectedFiles.Count > 0 && actionResult is OkObjectResult { Value: EntryApiResponse entryResponse })
+            return Ok(entryResponse with { RejectedFiles = rejectedFiles });
+
+        return actionResult;
 
 
         static EntryApiRequest CreateEntryApiRequest(Dictionary<string, string> formValues, List<string> uploadedImageIds, List<string> existingImageIds)

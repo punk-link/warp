@@ -145,10 +145,13 @@ test.describe.serial('entry image flows', () => {
 
         const fancyboxAnchor = page.locator('a[data-fancybox="entry"]').first()
         await fancyboxAnchor.waitFor({ state: 'visible', timeout: 10000 })
-        await fancyboxAnchor.click()
 
-        await page.waitForSelector('.fancybox__container, .fancybox-bg, .fancybox__stage', { timeout: 10000 })
-        await expect(page.locator('.fancybox__container, .fancybox-bg, .fancybox__stage').first()).toBeVisible()
+        // Fancybox library may exist before Fb.bind() runs in the Vue component,
+        // so retry the click until the lightbox container actually appears.
+        await expect(async () => {
+            await fancyboxAnchor.click()
+            await expect(page.locator('.fancybox__container').first()).toBeVisible({ timeout: 2000 })
+        }).toPass({ intervals: [500, 1000, 2000], timeout: 15000 })
 
         await page.keyboard.press('Escape')
         await page.waitForSelector('.fancybox__container, .fancybox-bg, .fancybox__stage', { state: 'detached', timeout: 10000 })

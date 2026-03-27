@@ -69,6 +69,7 @@ public sealed class ImageController : BaseController
     [ProducesResponseType(typeof(List<KeyValuePair<string, ImageUploadResponse>>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(List<KeyValuePair<string, DomainError>>), StatusCodes.Status400BadRequest)]
     [RequireCreatorCookie]
+    [ValidateCsrfToken]
     [ValidateId("entryId")]
     public async Task<IActionResult> Add([FromRoute] string entryId, CancellationToken cancellationToken = default)
     {
@@ -118,6 +119,8 @@ public sealed class ImageController : BaseController
         var (_, isFailure, value, error) = await _unauthorizedImageService.Get(decodedEntryId, decodedImageId, cancellationToken);
         if (isFailure)
             return BadRequest(error);
+
+        Response.Headers.ContentDisposition = $"inline; filename=\"{imageId}\"";
 
         return new FileStreamResult(value.Content, value.ContentType);
     }
@@ -180,16 +183,15 @@ public sealed class ImageController : BaseController
     private async Task<List<Result<ImageUploadResult, DomainError>>> ProcessUploadedFiles(MultipartReader reader, Guid decodedEntryId, CancellationToken cancellationToken)
     {
         var fileHelper = new FileHelper(_loggerFactory, _options.AllowedExtensions, _options.MaxFileSize);
+        var existingCount = await _unauthorizedImageService.GetUploadedCount(decodedEntryId, cancellationToken);
 
         var uploadResults = new List<Result<ImageUploadResult, DomainError>>();
-        // TODO: Consider using a configurable limit for the number of files
-        // TODO: Use global limits for file count based by entry
         var uploadedFilesCount = 0;
         MultipartSection? section;
 
         do
         {
-            if (_options.MaxFileCount <= uploadedFilesCount)
+            if (_options.MaxFileCount <= existingCount + uploadedFilesCount)
                 break;
 
             section = await reader.ReadNextSectionAsync(cancellationToken);

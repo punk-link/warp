@@ -224,6 +224,19 @@
           "httpCode": 500
         },
         {
+          "id": 12105,
+          "name": "CsrfTokenValidationFailure",
+          "description": "CSRF token validation failed.",
+          "domainErrorDescription": {
+            "en": "The request could not be validated. Please refresh the page and try again.",
+            "es": "La solicitud no pudo ser validada. Por favor, actualice la página e intente de nuevo."
+          },
+          "logLevel": "Warning",
+          "generateLogMessage": false,
+          "obsolete": false,
+          "httpCode": 400
+        },
+        {
           "id": 12201,
           "name": "ImageUploadError",
           "description": "An error occurred while uploading the image. Details: '{ErrorMessage:string}'.",

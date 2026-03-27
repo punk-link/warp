@@ -112,7 +112,7 @@ internal static class SpaExtensions
 
     internal static WebApplication MapSpaConfigs(this WebApplication app)
     { 
-        app.MapGet("/config.js", async (HttpContext ctx, IOptions<EntryValidatorOptions> entryValidatorOptions, IConfiguration configuration, IWebHostEnvironment env) =>
+        app.MapGet("/config.js", async (HttpContext ctx, IOptions<EntryValidatorOptions> entryValidatorOptions, IOptions<ImageUploadOptions> imageUploadOptions, IConfiguration configuration, IWebHostEnvironment env) =>
         {
             var validatorOptions = entryValidatorOptions.Value;
             var config = new Dictionary<string, object?>
@@ -122,6 +122,7 @@ internal static class SpaExtensions
                 ["maxContentDeltaSize"] = validatorOptions.MaxContentDeltaSize,
                 ["maxHtmlContentSize"] = validatorOptions.MaxHtmlSize,
                 ["maxPlainTextContentSize"] = validatorOptions.MaxPlainTextSize,
+                ["allowedImageExtensions"] = imageUploadOptions.Value.AllowedExtensions,
                 ["sentryDsn"] = configuration["Sentry:FrontendDsn"],
                 ["feedbackEmail"] = configuration["ContactEmails:FeedbackEmail"],
                 ["dataRequestEmail"] = configuration["ContactEmails:DataRequestEmail"]

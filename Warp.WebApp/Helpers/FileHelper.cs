@@ -39,7 +39,10 @@ public class FileHelper
             if(!IsValidFileExtensionAndSignature(_logger, contentDisposition.FileName.Value!, memoryStream, _permittedExtensions))
                 return DomainErrors.FileTypeNotPermitted();
 
-            return new AppFile(memoryStream, section.ContentType!, contentDisposition.FileName.Value!);
+            var extension = Path.GetExtension(contentDisposition.FileName.Value!).ToLowerInvariant();
+            var derivedMimeType = GetMimeTypeFromExtension(extension);
+
+            return new AppFile(memoryStream, derivedMimeType, contentDisposition.FileName.Value!);
         }
         catch (Exception ex)
         {
@@ -58,9 +61,11 @@ public class FileHelper
         data.Position = 0;
         using var reader = new BinaryReader(data, Encoding.UTF8, leaveOpen: true);
 
-        logger.LogUnverifiedFileSignatureError(extension);
         if (!_fileSignature.TryGetValue(extension, out var signatures))
-            return true; 
+        {
+            logger.LogUnverifiedFileSignatureError(extension);
+            return false;
+        }
 
         var headerBytes = reader.ReadBytes(signatures.Max(m => m.Length));
         data.Position = 0;
@@ -70,7 +75,29 @@ public class FileHelper
         if (!isValid)
             logger.LogFileSignatureVerificationError(extension, string.Join(", ", headerBytes));
 
+        if (isValid && extension == ".webp")
+            isValid = IsValidWebpSignature(data);
+
         return isValid;
+    }
+
+
+    private static bool IsValidWebpSignature(Stream data)
+    {
+        data.Position = 8;
+        Span<byte> webpMarker = stackalloc byte[4];
+        var bytesRead = data.Read(webpMarker);
+        data.Position = 0;
+
+        return bytesRead == 4 && webpMarker.SequenceEqual("WEBP"u8);
+    }
+
+
+    private static string GetMimeTypeFromExtension(string extension)
+    {
+        return _extensionToMimeType.TryGetValue(extension, out var mimeType)
+            ? mimeType
+            : "application/octet-stream";
     }
 
 
@@ -107,10 +134,6 @@ public class FileHelper
             "‰PNG"u8.ToArray(),
             [137, 80, 78, 71, 13, 10, 26, 10]
         ],
-        [".svg"] =
-        [
-            "<svg"u8.ToArray()
-        ],
         [".tif"] =
         [
             [0x49, 0x49, 0x2A, 0x00],
@@ -125,6 +148,20 @@ public class FileHelper
         [
             "RIFF"u8.ToArray()
         ]
+    };
+
+
+    private static readonly Dictionary<string, string> _extensionToMimeType = new(StringComparer.OrdinalIgnoreCase)
+    {
+        [".bmp"] = "image/bmp",
+        [".gif"] = "image/gif",
+        [".ico"] = "image/x-icon",
+        [".jpeg"] = "image/jpeg",
+        [".jpg"] = "image/jpeg",
+        [".png"] = "image/png",
+        [".tif"] = "image/tiff",
+        [".tiff"] = "image/tiff",
+        [".webp"] = "image/webp"
     };
 
     

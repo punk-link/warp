@@ -37,6 +37,7 @@ public readonly record struct EntryApiResponse
     public DateTimeOffset ExpiresAt { get; }
     public List<ImageInfoResponse> Images { get; } = [];
     public List<ImageInfoResponse> ExcludedImages { get; } = [];
+    public List<string> RejectedFiles { get; init; } = [];
     public string TextContent { get; } = string.Empty;
     public string? ContentDelta { get; }
     public long ViewCount { get; }

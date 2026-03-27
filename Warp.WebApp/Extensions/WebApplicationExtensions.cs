@@ -29,6 +29,7 @@ internal static class WebApplicationExtensions
         app.Use(async (context, next) =>
         {
             context.Response.Headers.ContentSecurityPolicy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:";
+            context.Response.Headers.XContentTypeOptions = "nosniff";
             await next();
         });
 

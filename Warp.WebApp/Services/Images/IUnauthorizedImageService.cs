@@ -50,4 +50,13 @@ public interface IUnauthorizedImageService
     /// or problem details if the operation fails.
     /// </returns>
     public Task<Result<Image, DomainError>> Get(Guid entryId, Guid imageId, CancellationToken cancellationToken);
+
+
+    /// <summary>
+    /// Gets the number of images that have been uploaded for the specified entry across all requests.
+    /// </summary>
+    /// <param name="entryId">The ID of the entry.</param>
+    /// <param name="cancellationToken">The token to monitor for cancellation requests.</param>
+    /// <returns>The count of images uploaded for this entry.</returns>
+    public Task<int> GetUploadedCount(Guid entryId, CancellationToken cancellationToken);
 }

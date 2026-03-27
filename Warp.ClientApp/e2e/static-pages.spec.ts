@@ -13,7 +13,7 @@ import { test, expect } from '@playwright/test'
 // Steps:
 // 1. Navigate to /privacy and /data-request and verify static content loads.
 test('@smoke privacy and data-request static pages load', async ({ page }) => {
-    await page.goto('/privacy', { waitUntil: 'networkidle' })
+    await page.goto('/privacy', { waitUntil: 'load' })
 
     await page.waitForSelector('.privacy-content h1', { timeout: 10000 })
     await expect(page.getByRole('heading', { name: /privacy policy|privacy policy|PRIVACY POLICY/i })).toBeVisible()

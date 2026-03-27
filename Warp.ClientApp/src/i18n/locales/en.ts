@@ -60,6 +60,10 @@ export default {
             title: 'Some images were removed',
             message: '{count} image(s) were flagged as potentially harmful and excluded from the entry.'
         },
+        rejectedFiles: {
+            title: 'Some files were not uploaded',
+            message: '{count} file(s) were rejected due to invalid type or size.'
+        },
         actions: {
             save: 'Save',
             delete: 'Delete',
