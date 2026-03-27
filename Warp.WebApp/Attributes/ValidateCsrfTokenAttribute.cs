@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Warp.WebApp.Extensions;
+using Warp.WebApp.Models.Errors;
 
 namespace Warp.WebApp.Attributes;
 
@@ -28,7 +30,15 @@ public sealed class ValidateCsrfTokenAttribute : Attribute, IAsyncActionFilter
         }
         catch (AntiforgeryValidationException)
         {
-            context.Result = new BadRequestResult();
+            var result = DomainErrors.CsrfTokenValidationFailure()
+                .ToProblemDetails();
+
+            context.Result = new ObjectResult(result)
+            {
+                StatusCode = result.Status,
+                ContentTypes = { "application/problem+json" }
+            };
+
             return;
         }
 

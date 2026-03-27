@@ -142,6 +142,16 @@ export async function getViewCount(page: Page): Promise<number> {
 }
 
 
+export async function expectViewCount(page: Page, expected: number, timeout = 5000): Promise<void> {
+    const viewCountSpan = page
+        .locator('.icofont-eye')
+        .locator('xpath=following-sibling::span[1]')
+        .first()
+
+    await expect(viewCountSpan).toHaveText(String(expected), { timeout })
+}
+
+
 export async function gotoHome(page: Page): Promise<void> {
     if (page.isClosed()) {
         throw new Error('Page was closed before navigation could complete')

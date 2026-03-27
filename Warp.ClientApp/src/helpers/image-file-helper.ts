@@ -7,6 +7,10 @@ function getAllowedExtensions(): Set<string> {
 }
 
 
+/** * Checks if the given file has an allowed image extension based on the application configuration.
+ * @param file The file to check.
+ * @returns True if the file has an allowed image extension, false otherwise.
+ */
 export function isAllowedImageExtension(file: File): boolean {
     const dotIndex = file.name.lastIndexOf('.')
     if (dotIndex < 0)

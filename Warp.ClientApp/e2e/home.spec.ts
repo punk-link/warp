@@ -69,7 +69,7 @@ test('@smoke editMode persists across reload and tabs', async ({ page }) => {
     await expect(getAdvancedModeToggle(page)).toHaveClass(/active/)
 
     const newTab = await page.context().newPage()
-    await newTab.goto('/')
+    await gotoHome(newTab)
     await expect(getAdvancedModeToggle(newTab)).toHaveClass(/active/)
     await newTab.close()
 })

@@ -59,7 +59,8 @@ export default {
         maliciousImagesExcluded: {
             title: 'Algunas imágenes fueron eliminadas',
             message: '{count} imagen(es) fueron detectadas como potencialmente dañinas y excluidas de la entrada.'
-        },        rejectedFiles: {
+        },        
+        rejectedFiles: {
             title: 'Algunos archivos no se subieron',
             message: '{count} archivo(s) fueron rechazados por tipo o tama\u00f1o inv\u00e1lido.'
         },        actions: {

@@ -100,7 +100,7 @@ public class EntryController : BaseController
                 if (appFileResult.IsFailure)
                 {
                     var rejectedFileName = contentDisposition.FileName.Value?.Trim('"');
-                    if (!string.IsNullOrEmpty(rejectedFileName))
+                    if (!string.IsNullOrEmpty(rejectedFileName) && rejectedFiles.Count < _imageOptions.MaxFileCount)
                         rejectedFiles.Add(rejectedFileName);
 
                     continue;
@@ -109,11 +109,13 @@ public class EntryController : BaseController
                 var decodedEntryId = IdCoder.Decode(id);
                 var addResult = await _unauthorizedImageService.Add(decodedEntryId, appFileResult.Value, cancellationToken);
                 if (addResult.IsSuccess)
+                {
                     uploadedImageIds.Add(IdCoder.Encode(addResult.Value.Id));
+                }
                 else
                 {
                     var rejectedFileName = contentDisposition.FileName.Value?.Trim('"');
-                    if (!string.IsNullOrEmpty(rejectedFileName))
+                    if (!string.IsNullOrEmpty(rejectedFileName) && rejectedFiles.Count < _imageOptions.MaxFileCount)
                         rejectedFiles.Add(rejectedFileName);
                 }
             }
