@@ -129,13 +129,17 @@ function normalize(options: NotificationOptions): NotificationItem {
 		title: options.title,
 		message: options.message ?? '',
 		details: options.details,
+		traceId: options.traceId,
+		diagnostics: options.diagnostics,
 		actions: options.actions,
 		dedupeKey: options.dedupeKey,
 		sticky,
 		ttlMs,
 		createdAt: now,
 		expiresAt,
-		occurrences: 1
+		occurrences: 1,
+		onRetry: options.onRetry,
+		showAsOverlay: options.showAsOverlay === true
 	}
 
 	return item

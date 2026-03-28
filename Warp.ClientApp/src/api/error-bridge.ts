@@ -1,6 +1,6 @@
 import type { Router } from 'vue-router'
-import { registerErrorBridge } from './fetch-service'
-import { buildDedupeKey, defaultNotifyLevel, isValidation } from './error-policy'
+import { fetchJson, registerErrorBridge } from './fetch-service'
+import { buildDedupeKey, defaultNotifyLevel } from './error-policy'
 import type { ApiError } from '../types/apis/api-error'
 import type { AppRequestInit } from '../types/apis/app-request-init'
 import { useNotifications } from '../composables/use-notifications'
@@ -94,7 +94,7 @@ function buildTitle(error: ApiError): string {
 }
 
 
-function copyDiagnostics(error: ApiError): void {
+function buildDiagnosticsText(error: ApiError): string | undefined {
     const parts: string[] = []
     if (error.traceId)
         parts.push(`traceId=${error.traceId}`)
@@ -108,7 +108,12 @@ function copyDiagnostics(error: ApiError): void {
     if (error.sentryId)
         parts.push(`sentryId=${error.sentryId}`)
 
-    const text = parts.join(' ')
+    return parts.length > 0 ? parts.join(' ') : undefined
+}
+
+
+function copyDiagnostics(error: ApiError): void {
+    const text = buildDiagnosticsText(error)
     if (text)
         void navigator.clipboard?.writeText(text)
 }
@@ -137,6 +142,15 @@ function handleRedirect(router: Router, status: number | undefined | null): bool
 }
 
 
+function buildRetry(error: ApiError, req: AppRequestInit): (() => Promise<void>) | undefined {
+    const isNetworkError = error.status == null || error.status === 0
+    if (!isNetworkError || !error.endpoint)
+        return undefined
+
+    return () => fetchJson(error.endpoint!, { ...req })
+}
+
+
 async function pushNotification(error: ApiError, req: AppRequestInit, dedupeKey: string): Promise<void> {
     const { push } = useNotifications()
     const level = req.notifyLevel ?? defaultNotifyLevel(error.status)
@@ -146,10 +160,14 @@ async function pushNotification(error: ApiError, req: AppRequestInit, dedupeKey:
         title: buildTitle(error),
         message: await buildMessage(error),
         details: buildDetails(error),
+        traceId: error.traceId ?? error.problem?.traceId ?? undefined,
+        diagnostics: buildDiagnosticsText(error),
         dedupeKey,
-        actions: level >= NotificationLevel.Warn 
-            ? buildActions(error) 
-            : undefined
+        actions: level >= NotificationLevel.Warn
+            ? buildActions(error)
+            : undefined,
+        onRetry: buildRetry(error, req),
+        showAsOverlay: true
     })
 }
 

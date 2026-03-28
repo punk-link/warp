@@ -8,8 +8,12 @@ export interface NotificationOptions {
     message?: string
     title: string
     details?: string
+    traceId?: string
+    diagnostics?: string
     dedupeKey?: string
     ttlMs?: number
     sticky?: boolean
     actions?: NotificationAction[]
+    onRetry?: () => void | Promise<void>
+    showAsOverlay?: boolean
 }

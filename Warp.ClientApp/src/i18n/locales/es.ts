@@ -152,6 +152,14 @@ export default {
             copyDetails: 'Copiar detalles',
             copyDiagnostics: 'Copiar identificadores de diagnóstico'
         },
+        errorOverlay: {
+            title: 'Algo salió mal',
+            subtitle: 'Por favor intenta de nuevo',
+            back: 'Atrás',
+            tryAgain: 'Intentar de nuevo',
+            traceIdLabel: 'ID de traza:',
+            copied: '¡Copiado!'
+        },
         contentSizeIndicator: {
             exceeded: 'Límite de tamaño de contenido excedido',
             approaching: 'Aproximándose al límite de tamaño',

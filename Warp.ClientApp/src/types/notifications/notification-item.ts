@@ -7,6 +7,8 @@ export interface NotificationItem extends Required<Pick<{ level: NotificationLev
     id: string
     title?: string
     details?: string
+    traceId?: string
+    diagnostics?: string
     actions?: NotificationAction[]
     dedupeKey?: string
     sticky: boolean
@@ -14,4 +16,6 @@ export interface NotificationItem extends Required<Pick<{ level: NotificationLev
     createdAt: number
     expiresAt: number | null
     occurrences: number
+    onRetry?: () => void | Promise<void>
+    showAsOverlay: boolean
 }
