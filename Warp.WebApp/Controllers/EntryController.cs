@@ -66,9 +66,6 @@ public class EntryController : BaseController
     [RequestSizeLimit(50 * 1024 * 1024)]
     public async Task<IActionResult> AddOrUpdateWithImages([FromRoute] string id, CancellationToken cancellationToken = default)
     {
-        var testError = DomainErrors.EntryModelValidationError();
-        return BadRequest(testError);
-
         if (Request.ContentType is null || !MultipartRequestHelper.IsMultipartContentType(Request.ContentType))
             return BadRequest(DomainErrors.MultipartContentTypeBoundaryError());
 

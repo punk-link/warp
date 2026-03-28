@@ -48,7 +48,6 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useNotifications } from '../composables/use-notifications'
 import { NotificationLevel } from '../types/notifications/enums/notification-level'
-import type { NotificationItem } from '../types/notifications/notification-item'
 import Button from './Button.vue'
 
 

@@ -75,7 +75,15 @@ const subtitleId = 'error-overlay-subtitle'
 const copied = ref(false)
 const retrying = ref(false)
 
-const current = computed(() => items.value?.find(n => n.showAsOverlay) ?? null)
+const current = computed(() => {
+    const arr = items.value ?? []
+    for (let i = arr.length - 1; i >= 0; i--) {
+        if (arr[i].showAsOverlay)
+            return arr[i]
+    }
+    
+    return null
+})
 
 
 function copyDiagnostics(): void {

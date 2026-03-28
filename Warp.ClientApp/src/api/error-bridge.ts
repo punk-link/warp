@@ -1,6 +1,6 @@
 import type { Router } from 'vue-router'
 import { fetchJson, registerErrorBridge } from './fetch-service'
-import { buildDedupeKey, defaultNotifyLevel, isValidation } from './error-policy'
+import { buildDedupeKey, defaultNotifyLevel } from './error-policy'
 import type { ApiError } from '../types/apis/api-error'
 import type { AppRequestInit } from '../types/apis/app-request-init'
 import { useNotifications } from '../composables/use-notifications'
