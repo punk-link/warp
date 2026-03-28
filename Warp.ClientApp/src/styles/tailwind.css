@@ -71,6 +71,22 @@
     .animate-spin {
         animation: spin 1s linear infinite;
     }
+
+    @keyframes overlay-slide-up {
+        0% {
+            opacity: 0;
+            transform: translateY(1.5rem);
+        }
+
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .animate-overlay-slide-up {
+        animation: overlay-slide-up 0.22s ease-out;
+    }
 }
 
 

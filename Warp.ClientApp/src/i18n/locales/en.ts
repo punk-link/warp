@@ -153,6 +153,14 @@ export default {
             copyDetails: 'Copy details',
             copyDiagnostics: 'Copy diagnostic identifiers'
         },
+        errorOverlay: {
+            title: 'Oops, something went wrong',
+            subtitle: 'Please try again',
+            back: 'Back',
+            tryAgain: 'Try again',
+            traceIdLabel: 'Trace ID:',
+            copied: 'Copied!'
+        },
         contentSizeIndicator: {
             exceeded: 'Content size limit exceeded',
             approaching: 'Approaching content size limit',
