@@ -47,7 +47,7 @@ public class ConsulConfigurationProvider : ConfigurationProvider
 
     private void LogLoadedConfiguration()
     {
-        var configData = string.Join(", ", Data.Select(kv => $"{kv.Key}={kv.Value}"));
+        var configData = ConfigurationLogHelper.BuildRedactedConfigData(Data);
         _logger.LogConsulConfigLoaded(_storageName, Data.Count, configData);
     }
 
