@@ -12,47 +12,49 @@ services:
       - warp-network
     restart: unless-stopped
 
-  loki:
-    image: grafana/loki:3.6.4
-    user: "0"
-    command: -config.file=/etc/loki/config.yaml
-    volumes:
-      - ./docker/telemetry/loki-config.yaml:/etc/loki/config.yaml
-      - loki-data:/tmp/loki
-    ports:
-      - "3100:3100"
-    networks:
-      - warp-network
-    restart: unless-stopped
-
-  tempo:
-    image: grafana/tempo:2.7.1
-    user: "0"
-    command: ["-config.file=/etc/tempo.yaml", "-log.level=debug"]
-    volumes:
-      - ./docker/telemetry/tempo-config.yaml:/etc/tempo.yaml
-      - tempo-data:/tmp/tempo
-    ports:
-      - "3200:3200"
-      - "9095:9095"
-    networks:
-      - warp-network
-    restart: unless-stopped
-
-  prometheus:
-    image: prom/prometheus:v3.5.1
+  victorialogs:
+    image: victoriametrics/victoria-logs:v1.49.0
     command:
-      - --config.file=/etc/prometheus/prometheus.yml
-      - --storage.tsdb.path=/prometheus
-      - --storage.tsdb.retention.time=7d
-      - --web.console.libraries=/usr/share/prometheus/console_libraries
-      - --web.console.templates=/usr/share/prometheus/consoles
-      - --web.enable-remote-write-receiver
+      - -storageDataPath=/victoria-logs-data
+      - -retentionPeriod=7d
+      - -httpListenAddr=:9428
     volumes:
-      - ./docker/telemetry/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus-data:/prometheus
+      - victorialogs-data:/victoria-logs-data
     ports:
-      - "9090:9090"
+      - "9428:9428"
+    networks:
+      - warp-network
+    restart: unless-stopped
+
+  victoriatraces:
+    image: victoriametrics/victoria-traces:v0.8.0
+    command:
+      - -storageDataPath=/victoria-traces-data
+      - -retentionPeriod=7d
+      - -httpListenAddr=:10428
+      - -otlpGRPCListenAddr=:4317
+      - -otlpGRPC.tls=false
+      - -servicegraph.enableTask=true
+    volumes:
+      - victoriatraces-data:/victoria-traces-data
+    ports:
+      - "10428:10428"
+    networks:
+      - warp-network
+    restart: unless-stopped
+
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:v1.119.0
+    command:
+      - -storageDataPath=/victoria-metrics-data
+      - -retentionPeriod=7d
+      - -promscrape.config=/etc/victoria-metrics/promscrape.yml
+      - -httpListenAddr=:8428
+    volumes:
+      - ./docker/telemetry/promscrape.yml:/etc/victoria-metrics/promscrape.yml
+      - victoriametrics-data:/victoria-metrics-data
+    ports:
+      - "8428:8428"
     networks:
       - warp-network
     restart: unless-stopped
@@ -63,7 +65,7 @@ services:
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
       - GF_AUTH_DISABLE_LOGIN_FORM=true
-      - GF_FEATURE_TOGGLES_ENABLE=traceqlEditor
+      - GF_PLUGINS_PREINSTALL_SYNC=victoriametrics-logs-datasource
     volumes:
       - ./docker/telemetry/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml
       - grafana-data:/var/lib/grafana
@@ -73,9 +75,9 @@ services:
       - warp-network
     restart: unless-stopped
     depends_on:
-      - prometheus
-      - loki
-      - tempo
+      - victoriametrics
+      - victorialogs
+      - victoriatraces
 
 networks:
   warp-network:
@@ -83,7 +85,7 @@ networks:
     driver: bridge
 
 volumes:
-  loki-data:
-  tempo-data:
-  prometheus-data:
+  victoriametrics-data:
+  victorialogs-data:
+  victoriatraces-data:
   grafana-data:

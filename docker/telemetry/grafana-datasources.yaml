@@ -2,50 +2,38 @@ apiVersion: 1
 
 datasources:
   - name: Prometheus
+    uid: prometheus
     type: prometheus
     access: proxy
-    url: http://prometheus:9090
+    url: http://victoriametrics:8428
     isDefault: true
     editable: true
     jsonData:
       timeInterval: 15s
 
-  - name: Loki
-    type: loki
+  - name: VictoriaLogs
+    uid: victorialogs
+    type: victoriametrics-logs-datasource
     access: proxy
-    url: http://loki:3100
+    url: http://victorialogs:9428
     editable: true
-    jsonData:
-      derivedFields:
-        - datasourceUid: tempo
-          matcherRegex: "traceId[\"=:]([0-9a-f]{32})"
-          name: TraceID
-          url: "$${__value.raw}"
 
-  - name: Tempo
-    type: tempo
+  - name: VictoriaTraces
+    uid: victoriatraces
+    type: jaeger
     access: proxy
-    url: http://tempo:3200
+    url: http://victoriatraces:10428/select/jaeger
     editable: true
     jsonData:
       tracesToLogsV2:
-        datasourceUid: loki
+        datasourceUid: victorialogs
         spanStartTimeShift: '-1m'
         spanEndTimeShift: '1m'
-        tags:
-          - key: 'traceId'
-            value: 'traceId'
         filterByTraceID: true
         filterBySpanID: false
       tracesToMetrics:
         datasourceUid: prometheus
         spanStartTimeShift: '-1m'
         spanEndTimeShift: '1m'
-      serviceMap:
-        datasourceUid: prometheus
       nodeGraph:
         enabled: true
-      search:
-        hide: false
-      lokiSearch:
-        datasourceUid: loki

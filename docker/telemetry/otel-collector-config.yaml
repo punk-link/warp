@@ -12,13 +12,13 @@ processors:
     send_batch_size: 1024
 
 exporters:
-  otlphttp/loki:
-    endpoint: http://loki:3100/otlp
+  otlphttp/victorialogs:
+    endpoint: http://victorialogs:9428/insert/opentelemetry
     tls:
       insecure: true
     
   otlp:
-    endpoint: tempo:4317
+    endpoint: victoriatraces:4317
     tls:
       insecure: true
   
@@ -44,4 +44,4 @@ service:
     logs:
       receivers: [otlp]
       processors: [batch]
-      exporters: [otlphttp/loki, debug]
+      exporters: [otlphttp/victorialogs, debug]
