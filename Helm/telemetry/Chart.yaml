@@ -1,6 +1,6 @@
 apiVersion: v2
 name: warp-telemetry
-description: Observability stack for Warp (Grafana LGTM - Loki, Grafana, Tempo, Metrics/Prometheus)
+description: Observability stack for Warp (VictoriaMetrics, VictoriaLogs, VictoriaTraces, Grafana)
 type: application
 version: 0.1.0
 appVersion: "1.0"
@@ -8,7 +8,7 @@ keywords:
   - observability
   - telemetry
   - grafana
-  - loki
-  - tempo
-  - prometheus
+  - victoriametrics
+  - victorialogs
+  - victoriatraces
   - opentelemetry

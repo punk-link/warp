@@ -1,0 +1,23 @@
+{{- if .Values.victoriaTraces.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.victoriaTraces.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "victoriatraces.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: http
+    port: {{ .Values.victoriaTraces.ports.http }}
+    targetPort: http
+    protocol: TCP
+  - name: otlp-grpc
+    port: {{ .Values.victoriaTraces.ports.otlpGrpc }}
+    targetPort: otlp-grpc
+    protocol: TCP
+  selector:
+    {{- include "victoriatraces.selectorLabels" . | nindent 4 }}
+{{- end }}

@@ -3,9 +3,9 @@
 This Helm chart deploys the complete observability stack for Warp, including:
 
 - **OTEL Collector** - OpenTelemetry Collector for receiving and routing telemetry data
-- **Loki** - Log aggregation system
-- **Tempo** - Distributed tracing backend (pinned to v2.7.1 due to MetricsGenerator bug in v2.10.0)
-- **Prometheus** - Metrics storage and querying
+- **VictoriaLogs** - Log aggregation and storage
+- **VictoriaTraces** - Distributed tracing backend (Jaeger-compatible API)
+- **VictoriaMetrics** - Metrics storage and querying (Prometheus-compatible)
 - **Grafana** - Unified visualization dashboard with pre-configured datasources
 
 ## Prerequisites
@@ -17,9 +17,9 @@ This Helm chart deploys the complete observability stack for Warp, including:
 ### Storage Requirements
 
 The chart requires persistent storage for:
-- **Loki**: 10Gi (dev) / 50Gi (prod)
-- **Tempo**: 10Gi (dev) / 100Gi (prod)
-- **Prometheus**: 20Gi (dev) / 200Gi (prod)
+- **VictoriaLogs**: 10Gi (dev) / 50Gi (prod)
+- **VictoriaTraces**: 10Gi (dev) / 100Gi (prod)
+- **VictoriaMetrics**: 20Gi (dev) / 200Gi (prod)
 - **Grafana**: 1Gi (dev) / 10Gi (prod)
 
 **Development**: Uses `local-path` StorageClass. Install the provisioner if not available:
@@ -89,10 +89,12 @@ All configuration is managed through values files. See [values_dev.yaml](values_
 |-----------|-------------|---------|
 | `namespace` | Target namespace | `observability` |
 | `otelCollector.enabled` | Enable OTEL Collector | `true` |
-| `loki.storage.size` | Loki PVC size | `10Gi` |
-| `tempo.storage.size` | Tempo PVC size | `10Gi` |
-| `prometheus.storage.size` | Prometheus PVC size | `20Gi` |
-| `prometheus.retention.time` | Metrics retention | `7d` |
+| `victoriaLogs.storage.size` | VictoriaLogs PVC size | `10Gi` |
+| `victoriaLogs.retention` | Log retention period | `7d` |
+| `victoriaTraces.storage.size` | VictoriaTraces PVC size | `10Gi` |
+| `victoriaTraces.retention` | Trace retention period | `7d` |
+| `victoriaMetrics.storage.size` | VictoriaMetrics PVC size | `20Gi` |
+| `victoriaMetrics.retention` | Metrics retention period | `7d` |
 | `grafana.auth.anonymousEnabled` | Enable anonymous access | `true` (dev only) |
 | `grafana.ingress.enabled` | Expose Grafana via Ingress | `false` |
 
@@ -101,7 +103,7 @@ All configuration is managed through values files. See [values_dev.yaml](values_
 By default, the chart uses the cluster's default StorageClass. Override per service:
 
 ```yaml
-loki:
+victoriaLogs:
   storage:
     storageClassName: "fast-ssd"
 ```
@@ -163,19 +165,19 @@ kubectl delete namespace observability
 kubectl logs -n observability -l app.kubernetes.io/component=otel-collector
 ```
 
-### Check Tempo traces ingestion
+### Check VictoriaTraces ingestion
 ```bash
-kubectl logs -n observability -l app.kubernetes.io/component=tempo
+kubectl logs -n observability -l app.kubernetes.io/component=victoriatraces
 ```
 
-### Verify Prometheus targets
-Port-forward and check http://localhost:9090/targets:
+### Verify VictoriaMetrics targets
+Port-forward and check http://localhost:8428/targets:
 ```bash
-kubectl port-forward -n observability svc/prometheus 9090:9090
+kubectl port-forward -n observability svc/victoriametrics 8428:8428
 ```
 
-### Check Loki logs ingestion
-Port-forward Grafana and query Loki datasource:
+### Check VictoriaLogs ingestion
+Port-forward Grafana and query the VictoriaLogs datasource:
 ```bash
 kubectl port-forward -n observability svc/grafana 3000:3000
 ```

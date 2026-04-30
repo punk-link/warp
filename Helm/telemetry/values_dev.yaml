@@ -23,13 +23,13 @@ otelCollector:
     http: 4318
     metrics: 8889
 
-# Loki
-loki:
+# VictoriaLogs
+victoriaLogs:
   enabled: true
-  name: loki
+  name: victorialogs
   image:
-    repository: grafana/loki
-    tag: "3.6.4"
+    repository: victoriametrics/victoria-logs
+    tag: "v1.49.0"
     pullPolicy: IfNotPresent
   replicas: 1
   resources:
@@ -40,21 +40,20 @@ loki:
       cpu: 500m
       memory: 512Mi
   ports:
-    http: 3100
-    grpc: 9096
+    http: 9428
   storage:
     size: 10Gi
-    storageClassName: "local-path"  # Explicit storage class
+    storageClassName: "local-path"
   retention:
-    period: 168h  # 7 days
+    period: 7d
 
-# Tempo
-tempo:
+# VictoriaTraces
+victoriaTraces:
   enabled: true
-  name: tempo
+  name: victoriatraces
   image:
-    repository: grafana/tempo
-    tag: "2.7.1"
+    repository: victoriametrics/victoria-traces
+    tag: "v0.8.0"
     pullPolicy: IfNotPresent
   replicas: 1
   resources:
@@ -65,21 +64,21 @@ tempo:
       cpu: 500m
       memory: 512Mi
   ports:
-    http: 3200
-    grpc: 9095
+    http: 10428
     otlpGrpc: 4317
-    otlpHttp: 4318
   storage:
     size: 10Gi
-    storageClassName: "local-path"  # Explicit storage class
+    storageClassName: "local-path"
+  retention:
+    period: 7d
 
-# Prometheus
-prometheus:
+# VictoriaMetrics
+victoriaMetrics:
   enabled: true
-  name: prometheus
+  name: victoriametrics
   image:
-    repository: prom/prometheus
-    tag: "v3.5.1"
+    repository: victoriametrics/victoria-metrics
+    tag: "v1.119.0"
     pullPolicy: IfNotPresent
   replicas: 1
   resources:
@@ -90,14 +89,13 @@ prometheus:
       cpu: 500m
       memory: 1Gi
   ports:
-    http: 9090
+    http: 8428
   storage:
     size: 20Gi
-    storageClassName: "local-path"  # Explicit storage class
+    storageClassName: "local-path"
   retention:
-    time: 7d
+    period: 7d
   scrapeInterval: 15s
-  evaluationInterval: 15s
 
 # Grafana
 grafana:
@@ -119,7 +117,7 @@ grafana:
     http: 3000
   storage:
     size: 1Gi
-    storageClassName: "local-path"  # Explicit storage class
+    storageClassName: "local-path"
   auth:
     anonymousEnabled: true
     anonymousOrgRole: Admin

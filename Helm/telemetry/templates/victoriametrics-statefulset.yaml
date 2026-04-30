@@ -1,0 +1,76 @@
+{{- if .Values.victoriaMetrics.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.victoriaMetrics.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "victoriametrics.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ .Values.victoriaMetrics.name }}
+  replicas: {{ .Values.victoriaMetrics.replicas }}
+  selector:
+    matchLabels:
+      {{- include "victoriametrics.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "victoriametrics.selectorLabels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/victoriametrics-configmap.yaml") . | sha256sum }}
+    spec:
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+        runAsNonRoot: true
+      containers:
+      - name: victoriametrics
+        image: "{{ .Values.victoriaMetrics.image.repository }}:{{ .Values.victoriaMetrics.image.tag }}"
+        imagePullPolicy: {{ .Values.victoriaMetrics.image.pullPolicy }}
+        args:
+          - -storageDataPath=/victoria-metrics-data
+          - -retentionPeriod={{ .Values.victoriaMetrics.retention.period }}
+          - -promscrape.config=/etc/victoria-metrics/promscrape.yml
+          - -httpListenAddr=:{{ .Values.victoriaMetrics.ports.http }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.victoriaMetrics.ports.http }}
+          protocol: TCP
+        volumeMounts:
+        - name: config
+          mountPath: /etc/victoria-metrics
+        - name: storage
+          mountPath: /victoria-metrics-data
+        resources:
+          {{- toYaml .Values.victoriaMetrics.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /-/healthy
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /-/ready
+            port: http
+          initialDelaySeconds: 15
+          periodSeconds: 5
+      volumes:
+      - name: config
+        configMap:
+          name: {{ .Values.victoriaMetrics.name }}-config
+  volumeClaimTemplates:
+  - metadata:
+      name: storage
+      labels:
+        {{- include "victoriametrics.labels" . | nindent 8 }}
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      {{- if .Values.victoriaMetrics.storage.storageClassName }}
+      storageClassName: {{ .Values.victoriaMetrics.storage.storageClassName }}
+      {{- end }}
+      resources:
+        requests:
+          storage: {{ .Values.victoriaMetrics.storage.size }}
+{{- end }}

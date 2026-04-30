@@ -12,51 +12,39 @@ data:
 
     datasources:
       - name: Prometheus
+        uid: prometheus
         type: prometheus
         access: proxy
-        url: http://{{ .Values.prometheus.name }}.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.prometheus.ports.http }}
+        url: http://{{ .Values.victoriaMetrics.name }}.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.victoriaMetrics.ports.http }}
         isDefault: true
         editable: true
         jsonData:
-          timeInterval: {{ .Values.prometheus.scrapeInterval }}
+          timeInterval: {{ .Values.victoriaMetrics.scrapeInterval }}
 
-      - name: Loki
-        type: loki
+      - name: VictoriaLogs
+        uid: victorialogs
+        type: victoriametrics-logs-datasource
         access: proxy
-        url: http://{{ .Values.loki.name }}.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.loki.ports.http }}
+        url: http://{{ .Values.victoriaLogs.name }}.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.victoriaLogs.ports.http }}
         editable: true
-        jsonData:
-          derivedFields:
-            - datasourceUid: tempo
-              matcherRegex: "traceId[\"=:]([0-9a-f]{32})"
-              name: TraceID
-              url: "$${__value.raw}"
 
-      - name: Tempo
-        type: tempo
+      - name: VictoriaTraces
+        uid: victoriatraces
+        type: jaeger
         access: proxy
-        url: http://{{ .Values.tempo.name }}.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.tempo.ports.http }}
+        url: http://{{ .Values.victoriaTraces.name }}.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.victoriaTraces.ports.http }}/select/jaeger
         editable: true
         jsonData:
           tracesToLogsV2:
-            datasourceUid: loki
+            datasourceUid: victorialogs
             spanStartTimeShift: '-1m'
             spanEndTimeShift: '1m'
-            tags:
-              - key: 'traceId'
-                value: 'traceId'
             filterByTraceID: true
             filterBySpanID: false
           tracesToMetrics:
             datasourceUid: prometheus
             spanStartTimeShift: '-1m'
             spanEndTimeShift: '1m'
-          serviceMap:
-            datasourceUid: prometheus
           nodeGraph:
             enabled: true
-          search:
-            hide: false
-          lokiSearch:
-            datasourceUid: loki
 {{- end }}

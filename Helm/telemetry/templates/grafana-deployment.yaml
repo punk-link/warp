@@ -33,8 +33,8 @@ spec:
           value: "{{ .Values.grafana.auth.anonymousOrgRole }}"
         - name: GF_AUTH_DISABLE_LOGIN_FORM
           value: "{{ .Values.grafana.auth.disableLoginForm }}"
-        - name: GF_FEATURE_TOGGLES_ENABLE
-          value: "traceqlEditor"
+        - name: GF_PLUGINS_PREINSTALL_SYNC
+          value: "victoriametrics-logs-datasource"
         ports:
         - name: http
           containerPort: {{ .Values.grafana.ports.http }}

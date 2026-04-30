@@ -1,0 +1,14 @@
+{{- if .Values.victoriaLogs.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.victoriaLogs.name }}-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "victorialogs.labels" . | nindent 4 }}
+data:
+  victorialogs.flags: |
+    -storageDataPath=/victoria-logs-data
+    -retentionPeriod={{ .Values.victoriaLogs.retention.period }}
+    -httpListenAddr=:{{ .Values.victoriaLogs.ports.http }}
+{{- end }}

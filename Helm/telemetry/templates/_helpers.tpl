@@ -65,51 +65,51 @@ app.kubernetes.io/component: otel-collector
 {{- end }}
 
 {{/*
-Loki labels
+VictoriaLogs labels
 */}}
-{{- define "loki.labels" -}}
+{{- define "victorialogs.labels" -}}
 {{ include "warp-telemetry.labels" . }}
-app.kubernetes.io/component: loki
+app.kubernetes.io/component: victorialogs
 {{- end }}
 
 {{/*
-Loki selector labels
+VictoriaLogs selector labels
 */}}
-{{- define "loki.selectorLabels" -}}
+{{- define "victorialogs.selectorLabels" -}}
 {{ include "warp-telemetry.selectorLabels" . }}
-app.kubernetes.io/component: loki
+app.kubernetes.io/component: victorialogs
 {{- end }}
 
 {{/*
-Tempo labels
+VictoriaTraces labels
 */}}
-{{- define "tempo.labels" -}}
+{{- define "victoriatraces.labels" -}}
 {{ include "warp-telemetry.labels" . }}
-app.kubernetes.io/component: tempo
+app.kubernetes.io/component: victoriatraces
 {{- end }}
 
 {{/*
-Tempo selector labels
+VictoriaTraces selector labels
 */}}
-{{- define "tempo.selectorLabels" -}}
+{{- define "victoriatraces.selectorLabels" -}}
 {{ include "warp-telemetry.selectorLabels" . }}
-app.kubernetes.io/component: tempo
+app.kubernetes.io/component: victoriatraces
 {{- end }}
 
 {{/*
-Prometheus labels
+VictoriaMetrics labels
 */}}
-{{- define "prometheus.labels" -}}
+{{- define "victoriametrics.labels" -}}
 {{ include "warp-telemetry.labels" . }}
-app.kubernetes.io/component: prometheus
+app.kubernetes.io/component: victoriametrics
 {{- end }}
 
 {{/*
-Prometheus selector labels
+VictoriaMetrics selector labels
 */}}
-{{- define "prometheus.selectorLabels" -}}
+{{- define "victoriametrics.selectorLabels" -}}
 {{ include "warp-telemetry.selectorLabels" . }}
-app.kubernetes.io/component: prometheus
+app.kubernetes.io/component: victoriametrics
 {{- end }}
 
 {{/*

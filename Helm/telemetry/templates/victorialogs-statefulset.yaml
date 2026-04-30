@@ -1,0 +1,69 @@
+{{- if .Values.victoriaLogs.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.victoriaLogs.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "victorialogs.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ .Values.victoriaLogs.name }}
+  replicas: {{ .Values.victoriaLogs.replicas }}
+  selector:
+    matchLabels:
+      {{- include "victorialogs.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "victorialogs.selectorLabels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/victorialogs-configmap.yaml") . | sha256sum }}
+    spec:
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+        runAsNonRoot: true
+      containers:
+      - name: victorialogs
+        image: "{{ .Values.victoriaLogs.image.repository }}:{{ .Values.victoriaLogs.image.tag }}"
+        imagePullPolicy: {{ .Values.victoriaLogs.image.pullPolicy }}
+        args:
+          - -storageDataPath=/victoria-logs-data
+          - -retentionPeriod={{ .Values.victoriaLogs.retention.period }}
+          - -httpListenAddr=:{{ .Values.victoriaLogs.ports.http }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.victoriaLogs.ports.http }}
+          protocol: TCP
+        volumeMounts:
+        - name: storage
+          mountPath: /victoria-logs-data
+        resources:
+          {{- toYaml .Values.victoriaLogs.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 15
+          periodSeconds: 5
+  volumeClaimTemplates:
+  - metadata:
+      name: storage
+      labels:
+        {{- include "victorialogs.labels" . | nindent 8 }}
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      {{- if .Values.victoriaLogs.storage.storageClassName }}
+      storageClassName: {{ .Values.victoriaLogs.storage.storageClassName }}
+      {{- end }}
+      resources:
+        requests:
+          storage: {{ .Values.victoriaLogs.storage.size }}
+{{- end }}

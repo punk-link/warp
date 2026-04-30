@@ -1,0 +1,75 @@
+{{- if .Values.victoriaTraces.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.victoriaTraces.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "victoriatraces.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ .Values.victoriaTraces.name }}
+  replicas: {{ .Values.victoriaTraces.replicas }}
+  selector:
+    matchLabels:
+      {{- include "victoriatraces.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "victoriatraces.selectorLabels" . | nindent 8 }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/victoriatraces-configmap.yaml") . | sha256sum }}
+    spec:
+      securityContext:
+        fsGroup: 1000
+        runAsUser: 1000
+        runAsNonRoot: true
+      containers:
+      - name: victoriatraces
+        image: "{{ .Values.victoriaTraces.image.repository }}:{{ .Values.victoriaTraces.image.tag }}"
+        imagePullPolicy: {{ .Values.victoriaTraces.image.pullPolicy }}
+        args:
+          - -storageDataPath=/victoria-traces-data
+          - -retentionPeriod={{ .Values.victoriaTraces.retention.period }}
+          - -httpListenAddr=:{{ .Values.victoriaTraces.ports.http }}
+          - -otlpGRPCListenAddr=:{{ .Values.victoriaTraces.ports.otlpGrpc }}
+          - -otlpGRPC.tls=false
+          - -servicegraph.enableTask=true
+        ports:
+        - name: http
+          containerPort: {{ .Values.victoriaTraces.ports.http }}
+          protocol: TCP
+        - name: otlp-grpc
+          containerPort: {{ .Values.victoriaTraces.ports.otlpGrpc }}
+          protocol: TCP
+        volumeMounts:
+        - name: storage
+          mountPath: /victoria-traces-data
+        resources:
+          {{- toYaml .Values.victoriaTraces.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 15
+          periodSeconds: 5
+  volumeClaimTemplates:
+  - metadata:
+      name: storage
+      labels:
+        {{- include "victoriatraces.labels" . | nindent 8 }}
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      {{- if .Values.victoriaTraces.storage.storageClassName }}
+      storageClassName: {{ .Values.victoriaTraces.storage.storageClassName }}
+      {{- end }}
+      resources:
+        requests:
+          storage: {{ .Values.victoriaTraces.storage.size }}
+{{- end }}

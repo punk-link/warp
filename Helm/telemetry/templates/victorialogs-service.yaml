@@ -1,0 +1,19 @@
+{{- if .Values.victoriaLogs.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.victoriaLogs.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "victorialogs.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: http
+    port: {{ .Values.victoriaLogs.ports.http }}
+    targetPort: http
+    protocol: TCP
+  selector:
+    {{- include "victorialogs.selectorLabels" . | nindent 4 }}
+{{- end }}

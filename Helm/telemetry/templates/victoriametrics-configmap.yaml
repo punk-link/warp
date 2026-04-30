@@ -1,0 +1,30 @@
+{{- if .Values.victoriaMetrics.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.victoriaMetrics.name }}-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "victoriametrics.labels" . | nindent 4 }}
+data:
+  promscrape.yml: |
+    global:
+      scrape_interval: {{ .Values.victoriaMetrics.scrapeInterval }}
+
+    scrape_configs:
+      - job_name: 'victoriametrics'
+        static_configs:
+          - targets: ['localhost:{{ .Values.victoriaMetrics.ports.http }}']
+
+      - job_name: 'otel-collector'
+        static_configs:
+          - targets: ['{{ .Values.otelCollector.name }}.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.otelCollector.ports.metrics }}']
+
+      - job_name: 'victorialogs'
+        static_configs:
+          - targets: ['{{ .Values.victoriaLogs.name }}.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.victoriaLogs.ports.http }}']
+
+      - job_name: 'victoriatraces'
+        static_configs:
+          - targets: ['{{ .Values.victoriaTraces.name }}.{{ .Values.namespace }}.svc.cluster.local:{{ .Values.victoriaTraces.ports.http }}']
+{{- end }}

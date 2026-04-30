@@ -1,0 +1,17 @@
+{{- if .Values.victoriaTraces.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.victoriaTraces.name }}-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "victoriatraces.labels" . | nindent 4 }}
+data:
+  victoriatraces.flags: |
+    -storageDataPath=/victoria-traces-data
+    -retentionPeriod={{ .Values.victoriaTraces.retention.period }}
+    -httpListenAddr=:{{ .Values.victoriaTraces.ports.http }}
+    -otlpGRPCListenAddr=:{{ .Values.victoriaTraces.ports.otlpGrpc }}
+    -otlpGRPC.tls=false
+    -servicegraph.enableTask=true
+{{- end }}
