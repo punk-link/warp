@@ -1,8 +1,10 @@
 ﻿using System.IO.Hashing;
+using System.Security.Cryptography;
 using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Files;
 using Warp.WebApp.Models.Images;
+using Warp.WebApp.Models.Moderation;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
 
@@ -56,6 +58,26 @@ public static class CacheKeyBuilder
 
     public static string BuildViewCountServiceCacheKey(in Guid id)
         => BuildCacheKey<ViewCountService>(nameof(Entry), id);
+
+
+    public static string BuildModerationJobKey(string member)
+        => BuildCacheKey<EntryModerationJob>(nameof(Entry), member);
+
+
+    public static string BuildModerationLockKey(string member)
+        => BuildCacheKey<EntryModerationJob>("Lock", member);
+
+
+    public static string BuildModerationMemberKey(in Guid entryId)
+    {
+        Span<byte> entryBytes = stackalloc byte[16];
+        entryId.TryWriteBytes(entryBytes);
+
+        Span<byte> hashBytes = stackalloc byte[32];
+        SHA256.HashData(entryBytes, hashBytes);
+
+        return Convert.ToHexString(hashBytes);
+    }
 
 
     private static string BuildCacheKey<T>(params object[] identifiers)

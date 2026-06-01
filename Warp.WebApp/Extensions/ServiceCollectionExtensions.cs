@@ -15,6 +15,7 @@ using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Encryption;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
+using Warp.WebApp.Services.Moderation;
 using Warp.WebApp.Services.OpenGraph;
 using Warp.WebApp.Telemetry.Logging;
 using Warp.WebApp.Telemetry.Metrics;
@@ -32,6 +33,7 @@ internal static class ServiceCollectionExtensions
         services.AddTransient<IDistributedStore, KeyDbStore>();
         services.AddTransient<IS3FileStorage, S3FileStorage>();
         services.AddSingleton<IEntryLifecycleIndexStore, EntryLifecycleIndexStore>();
+        services.AddSingleton<IModerationIndexStore, ModerationIndexStore>();
 
         if (configuration["EncryptionOptions:Type"] == "AesEncryptionService")
             services.AddTransient<IEncryptionService, AesEncryptionService>();
@@ -44,6 +46,7 @@ internal static class ServiceCollectionExtensions
         services.AddTransient<IImageService, ImageService>();
         services.AddTransient<IMalwareScanService, MalwareScanService>();
         services.AddScoped<IEntryImageLifecycleService, EntryImageLifecycleService>();
+        services.AddTransient<IContentModerationService, ContentModerationService>();
         services.AddTransient<IDataStorage, DataStorage>();
         services.AddTransient<IAmazonS3Factory, AmazonS3Factory>();
         services.AddTransient<IReportService, ReportService>();
@@ -54,15 +57,20 @@ internal static class ServiceCollectionExtensions
         services.AddTransient<ICookieService, CookieService>();
         services.AddSingleton<IEntryInfoMetrics, EntryInfoMetrics>();
     
+        services.AddSingleton<ContentModerationRateLimiter>();
         services.AddSingleton<IRouteWarmer, RouteWarmerService>();
         services.AddSingleton<IServiceWarmer, ServiceWarmerService>();
 
         services.AddScoped<RequireCreatorCookieFilter>();
         services.AddScoped<ValidateIdFilter>();
+        services.AddScoped<IModerationJobService, ModerationJobService>();
 
         services.AddHostedService<WarmupService>();
         services.AddHostedService<EntryImageCleanupService>();
         services.AddHostedService<OrphanImageCleanupService>();
+        services.AddHostedService<ContentModerationWorker>();
+
+        services.AddHttpClient(ContentModerationService.HttpClientName);
 
         return services;
     }
@@ -110,6 +118,11 @@ internal static class ServiceCollectionExtensions
 
             services.AddOptions<OrphanImageCleanupOptions>()
                 .BindConfiguration(nameof(OrphanImageCleanupOptions))
+                .ValidateDataAnnotations()
+                .ValidateOnStart();
+
+            services.AddOptions<ContentModerationOptions>()
+                .BindConfiguration(nameof(ContentModerationOptions))
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 

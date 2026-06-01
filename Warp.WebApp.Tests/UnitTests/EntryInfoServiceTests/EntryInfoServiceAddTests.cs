@@ -15,6 +15,7 @@ using Warp.WebApp.Services;
 using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
+using Warp.WebApp.Services.Moderation;
 using Warp.WebApp.Services.OpenGraph;
 using Warp.WebApp.Models.Files;
 using Warp.WebApp.Telemetry.Metrics;
@@ -42,11 +43,15 @@ public class EntryInfoServiceAddTests
             _reportServiceSubstitute,
             _viewCountServiceSubstitute,
             _entryInfoMetricsSubstitute,
-            _malwareScanServiceSubstitute
+            _malwareScanServiceSubstitute,
+            _moderationJobServiceSubstitute
         );
         _creator = new Creator(Guid.NewGuid());
 
         _entryImageLifecycleServiceSubstitute.Track(Arg.Any<Guid>(), Arg.Any<DateTimeOffset>(), Arg.Any<IEnumerable<Guid>>(), Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+
+        _moderationJobServiceSubstitute.Schedule(Arg.Any<EntryInfo>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
     }
 
@@ -321,4 +326,5 @@ public class EntryInfoServiceAddTests
     private readonly IEntryImageLifecycleService _entryImageLifecycleServiceSubstitute = Substitute.For<IEntryImageLifecycleService>();
     private readonly IEntryInfoMetrics _entryInfoMetricsSubstitute = Substitute.For<IEntryInfoMetrics>();
     private readonly IMalwareScanService _malwareScanServiceSubstitute = Substitute.For<IMalwareScanService>();
+    private readonly IModerationJobService _moderationJobServiceSubstitute = Substitute.For<IModerationJobService>();
 }
