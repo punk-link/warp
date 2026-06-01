@@ -5,12 +5,12 @@ namespace Warp.WebApp.Models.Images.Converters;
 
 public static class ImageInfoConverters
 {
-    public static List<ImageInfoResponse> ToImageInfoResponse(this ICollection<ImageInfo> imageInfos)
-        => [.. imageInfos.Select(imageInfo => imageInfo.ToImageInfoResponse())];
+    public static List<ImageInfoResponse> ToImageInfoResponse(this ICollection<ImageInfo> imageInfos, bool isCreator = false)
+        => [.. imageInfos.Select(imageInfo => imageInfo.ToImageInfoResponse(isCreator))];
 
 
-    public static ImageInfoResponse ToImageInfoResponse(this ImageInfo imageInfo)
-        => new(imageInfo);
+    public static ImageInfoResponse ToImageInfoResponse(this ImageInfo imageInfo, bool isCreator = false)
+        => new(imageInfo, isCreator);
 
 
     public static async Task<Result<ImageUploadResult, DomainError>> ToImageResponse(this Task<Result<ImageInfo, DomainError>> target, string? clientFileName)

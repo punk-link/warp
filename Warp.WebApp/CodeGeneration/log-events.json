@@ -358,6 +358,43 @@
           "generateLogMessage": false,
           "obsolete": false,
           "httpCode": 409
+        },
+        {
+          "id": 12402,
+          "name": "ContentModerationJobEnqueued",
+          "description": "Content moderation job enqueued for entry '{EntryId:Guid}' with {ImageCount:int} image(s).",
+          "logLevel": "Information",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 200
+        },
+        {
+          "id": 12403,
+          "name": "ContentModerationWorkerBatchError",
+          "description": "Unexpected error while processing content moderation batch. Details: '{ErrorMessage:string?}'.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "includeException": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
+          "id": 12404,
+          "name": "ContentModerationJobAbandoned",
+          "description": "Giving up on moderating entry '{EntryId:Guid}' after {FailureCount:int} attempts.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
+        },
+        {
+          "id": 12405,
+          "name": "ContentModerationProviderError",
+          "description": "Content moderation provider returned an error for entry '{EntryId:Guid}'. Details: '{ErrorMessage:string}'.",
+          "logLevel": "Error",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 500
         }
       ]
     },
@@ -647,6 +684,15 @@
           "generateLogMessage": false,
           "obsolete": false,
           "httpCode": 400
+        },
+        {
+          "id": 20316,
+          "name": "TextContentFlagged",
+          "description": "Text content of entry '{EntryId:Guid}' was flagged by the content moderation provider.",
+          "logLevel": "Warning",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 200
         }
       ]
     },
@@ -731,6 +777,15 @@
           "generateLogMessage": true,
           "obsolete": false,
           "httpCode": 500
+        },
+        {
+          "id": 20408,
+          "name": "ImageContentFlagged",
+          "description": "Image '{ImageId:Guid}' of entry '{EntryId:Guid}' was flagged by the content moderation provider.",
+          "logLevel": "Warning",
+          "generateLogMessage": true,
+          "obsolete": false,
+          "httpCode": 200
         }
       ]
     },

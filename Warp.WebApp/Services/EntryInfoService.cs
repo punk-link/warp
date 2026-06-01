@@ -10,10 +10,12 @@ using Warp.WebApp.Models.Entries.Enums;
 using Warp.WebApp.Models.Errors;
 using Warp.WebApp.Models.Files;
 using Warp.WebApp.Models.Images;
+using Warp.WebApp.Models.Moderation;
 using Warp.WebApp.Models.Validators;
 using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
+using Warp.WebApp.Services.Moderation;
 using Warp.WebApp.Services.OpenGraph;
 using Warp.WebApp.Telemetry.Logging;
 using Warp.WebApp.Telemetry.Metrics;
@@ -40,6 +42,7 @@ public class EntryInfoService : IEntryInfoService
     /// <param name="viewCountService">The service for tracking entry view counts.</param>
     /// <param name="entryInfoMetrics">The metrics recorder for entry info actions.</param>
     /// <param name="malwareScanService">The service for scanning images for malware via GuardDuty.</param>
+    /// <param name="moderationJobService">The service for scheduling content moderation jobs.</param>
     public EntryInfoService(ICreatorService creatorService, 
         IDataStorage dataStorage,
         IEntryService entryService,
@@ -50,7 +53,8 @@ public class EntryInfoService : IEntryInfoService
         IReportService reportService,
         IViewCountService viewCountService,
         IEntryInfoMetrics entryInfoMetrics,
-        IMalwareScanService malwareScanService)
+        IMalwareScanService malwareScanService,
+        IModerationJobService moderationJobService)
     {
         _logger = loggerFactory.CreateLogger<EntryInfoService>();
 
@@ -60,6 +64,7 @@ public class EntryInfoService : IEntryInfoService
         _entryService = entryService;
         _imageService = imageService;
         _malwareScanService = malwareScanService;
+        _moderationJobService = moderationJobService;
         _openGraphService = openGraphService;
         _reportService = reportService;
         _viewCountService = viewCountService;
@@ -87,6 +92,7 @@ public class EntryInfoService : IEntryInfoService
             .Tap(CacheEntryInfo)
             .Tap(CacheEntryImages)
             .Tap(TrackEntryLifecycle)
+            .Tap(ScheduleModeration)
             .Finally(result =>
             {
                 TrackResult(EntryInfoMetricActions.Add, stopwatch, result);
@@ -251,6 +257,10 @@ public class EntryInfoService : IEntryInfoService
             var imageIds = entryInfo.ImageInfos.Select(imageInfo => imageInfo.Id);
             return _entryImageLifecycleService.Track(entryInfo.Id, entryInfo.ExpiresAt, imageIds, cancellationToken);
         }
+
+
+        Task ScheduleModeration(EntryInfo entryInfo)
+            => _moderationJobService.Schedule(entryInfo, cancellationToken);
     }
 
 
@@ -609,6 +619,7 @@ public class EntryInfoService : IEntryInfoService
     private readonly IEntryService _entryService;
     private readonly IImageService _imageService;
     private readonly IMalwareScanService _malwareScanService;
+    private readonly IModerationJobService _moderationJobService;
     private readonly IEntryInfoMetrics _entryInfoMetrics;
     private readonly ILogger<EntryInfoService> _logger;
     private readonly IOpenGraphService _openGraphService;

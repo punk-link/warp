@@ -43,6 +43,10 @@ export default {
             close: 'Close',
             copyLink: 'Copy Link'
         },
+        sensitiveContent: {
+            label: 'Sensitive content',
+            reveal: 'Reveal'
+        },
         reportModal: {
             title: 'Report content',
             description: 'You are about to report this content. Use the feature in case of inappropriate content only. This action restricts access to the content for all viewers. Are you sure?',

@@ -3,6 +3,7 @@ using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Files;
 using Warp.WebApp.Models.Images;
+using Warp.WebApp.Models.Moderation;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
 
@@ -48,6 +49,18 @@ public static class CacheKeyBuilder
 
     public static string BuildLockKey(string member)
         => BuildCacheKey<EntryImageLifecycle>("Lock", member);
+
+
+    public static string BuildModerationJobKey(string member)
+        => BuildCacheKey<EntryModerationJob>(nameof(Entry), member);
+
+
+    public static string BuildModerationLockKey(string member)
+        => BuildCacheKey<EntryModerationJob>("Lock", member);
+
+
+    public static string BuildModerationMemberKey(in Guid entryId)
+        => entryId.ToString("N");
 
 
     public static string BuildReportServiceCacheKey(in Guid id)
