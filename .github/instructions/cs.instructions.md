@@ -47,6 +47,15 @@ Use XML documentation comments before each public member and class definition. K
 - Avoid imperative-style checking (e.g., `if (result.IsFailure) return result.Error;`) inside methods that can be expressed as a chain.
 - Use local functions as named pipeline steps to keep chains readable and self-documenting.
 
+## When NOT to use railway
+
+Do not force railway chaining when:
+- The logic must collect *all* failures before deciding the outcome (e.g., process every item in a list, gather errors, then retry or discard). `.Bind()` stops at the first failure; that conflicts with "run everything, record what failed".
+- There is no meaningful `DomainError` at the call site — internal status flags (e.g., `ModerationStatus.Failed`) are not domain errors and should not be wrapped in `Result<T, E>`.
+- The only stop-on-failure gate is a single null/default guard at the top of the method. One guard does not justify restructuring the whole method into a chain.
+
+In these cases prefer named local functions that compose sequentially. This gives the same readability benefits without the tuple-accumulation overhead that arises when carrying partial results across `.Bind()` steps.
+
 
 # Code Annotations And Comments
 

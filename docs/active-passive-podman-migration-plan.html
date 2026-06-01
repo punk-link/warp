@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Warp Infrastructure Migration Plan</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4efe6;
+      --panel: rgba(255, 252, 246, 0.9);
+      --panel-strong: #fffaf2;
+      --text: #1f1c17;
+      --muted: #5f564a;
+      --line: rgba(73, 58, 36, 0.18);
+      --accent: #0f766e;
+      --accent-strong: #115e59;
+      --accent-soft: rgba(15, 118, 110, 0.12);
+      --warn: #b45309;
+      --warn-soft: rgba(180, 83, 9, 0.12);
+      --danger: #b91c1c;
+      --danger-soft: rgba(185, 28, 28, 0.1);
+      --shadow: 0 18px 50px rgba(38, 28, 14, 0.08);
+      --radius: 20px;
+      --radius-sm: 14px;
+      --max-width: 1180px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      background:
+        radial-gradient(circle at top left, rgba(15, 118, 110, 0.12), transparent 28%),
+        radial-gradient(circle at top right, rgba(180, 83, 9, 0.11), transparent 24%),
+        linear-gradient(180deg, #faf7f0 0%, var(--bg) 100%);
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    a {
+      color: var(--accent-strong);
+    }
+
+    .page {
+      width: min(calc(100% - 32px), var(--max-width));
+      margin: 0 auto;
+      padding: 28px 0 64px;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 34px;
+      border: 1px solid var(--line);
+      border-radius: calc(var(--radius) + 8px);
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(255, 249, 238, 0.95)),
+        linear-gradient(120deg, rgba(15, 118, 110, 0.12), rgba(180, 83, 9, 0.1));
+      box-shadow: var(--shadow);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -60px -80px auto;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(15, 118, 110, 0.18), transparent 68%);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    h1, h2, h3 {
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 4vw, 4.2rem);
+      max-width: 14ch;
+    }
+
+    h2 {
+      font-size: clamp(1.5rem, 2vw, 2.15rem);
+      margin-bottom: 14px;
+    }
+
+    h3 {
+      font-size: 1.05rem;
+      margin-bottom: 10px;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .hero-copy {
+      max-width: 78ch;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 1.02rem;
+    }
+
+    .hero-grid,
+    .section-grid,
+    .card-grid,
+    .phase-grid,
+    .detail-grid,
+    .risk-grid,
+    .evidence-grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .hero-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-top: 28px;
+    }
+
+    .hero-stat,
+    .card,
+    .phase,
+    .detail,
+    .risk,
+    .evidence,
+    .decision,
+    .summary-box,
+    .diagram-node {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: var(--panel);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 10px 24px rgba(31, 28, 23, 0.04);
+    }
+
+    .hero-stat {
+      padding: 16px;
+    }
+
+    .hero-stat strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 1.05rem;
+    }
+
+    .hero-stat span {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    nav {
+      position: sticky;
+      top: 16px;
+      z-index: 5;
+      margin: 20px 0 28px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 250, 242, 0.88);
+      box-shadow: 0 8px 18px rgba(31, 28, 23, 0.06);
+      overflow-x: auto;
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      min-width: max-content;
+    }
+
+    nav a {
+      display: inline-block;
+      text-decoration: none;
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: transparent;
+      font-size: 0.95rem;
+    }
+
+    nav a:hover,
+    nav a:focus-visible {
+      background: var(--accent-soft);
+      outline: none;
+    }
+
+    section {
+      margin-top: 30px;
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255, 252, 246, 0.88), rgba(255, 249, 241, 0.92));
+      box-shadow: var(--shadow);
+    }
+
+    .lead {
+      max-width: 80ch;
+      color: var(--muted);
+      margin-top: 10px;
+    }
+
+    .summary-box {
+      padding: 18px;
+      background: linear-gradient(180deg, rgba(15, 118, 110, 0.09), rgba(255, 255, 255, 0.9));
+      margin-top: 18px;
+    }
+
+    .section-grid,
+    .card-grid,
+    .detail-grid,
+    .risk-grid,
+    .evidence-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-top: 20px;
+    }
+
+    .card,
+    .detail,
+    .risk,
+    .evidence,
+    .decision {
+      padding: 18px;
+    }
+
+    .phase-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-top: 20px;
+    }
+
+    .phase {
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .phase::before {
+      content: attr(data-step);
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .tag-row,
+    .decision-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .tag,
+    .decision-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: var(--panel-strong);
+      font-size: 0.92rem;
+    }
+
+    .tag.warn {
+      background: var(--warn-soft);
+      color: #7c3d08;
+    }
+
+    .tag.danger {
+      background: var(--danger-soft);
+      color: #7f1d1d;
+    }
+
+    .tag.good {
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+    }
+
+    ul,
+    ol {
+      margin: 14px 0 0;
+      padding-left: 22px;
+    }
+
+    li + li {
+      margin-top: 10px;
+    }
+
+    .diagram {
+      margin-top: 22px;
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      align-items: center;
+    }
+
+    .diagram-node {
+      padding: 18px;
+      text-align: center;
+      min-height: 108px;
+      display: grid;
+      align-content: center;
+      gap: 6px;
+    }
+
+    .diagram-arrow {
+      text-align: center;
+      font-size: 1.6rem;
+      color: var(--accent-strong);
+      opacity: 0.8;
+    }
+
+    .code-path {
+      display: block;
+      margin-top: 10px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px dashed var(--line);
+      background: rgba(31, 28, 23, 0.03);
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.9rem;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+    }
+
+    .callout {
+      margin-top: 18px;
+      padding: 16px 18px;
+      border-left: 4px solid var(--warn);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      background: var(--warn-soft);
+    }
+
+    .fine-print {
+      margin-top: 24px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .footer {
+      margin-top: 28px;
+      padding: 20px 0 0;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    @media (max-width: 980px) {
+      .hero-grid,
+      .section-grid,
+      .card-grid,
+      .phase-grid,
+      .detail-grid,
+      .risk-grid,
+      .evidence-grid,
+      .diagram {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .diagram-arrow {
+        display: none;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .page {
+        width: min(calc(100% - 20px), var(--max-width));
+        padding-top: 18px;
+      }
+
+      .hero,
+      section {
+        padding: 22px;
+      }
+
+      .hero-grid,
+      .section-grid,
+      .card-grid,
+      .phase-grid,
+      .detail-grid,
+      .risk-grid,
+      .evidence-grid,
+      .diagram {
+        grid-template-columns: 1fr;
+      }
+
+      nav {
+        border-radius: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero" id="top">
+      <p class="eyebrow">Warp Infrastructure Simplification</p>
+      <h1>Active/Passive Podman Migration Plan</h1>
+      <p class="hero-copy">
+        This document reframes the earlier draft into an execution-ready plan for moving Warp from Kubernetes, Consul, and Vault KV to a simpler Podman-based deployment.
+        It keeps dedicated servers, preserves the application architecture, starts with a single production node, and keeps active/passive as a later expansion step if usage grows enough to justify it.
+      </p>
+      <div class="hero-grid">
+        <div class="hero-stat">
+          <strong>Target Runtime</strong>
+          <span>Podman plus systemd Quadlets and host-level Caddy</span>
+        </div>
+        <div class="hero-stat">
+          <strong>Availability Model</strong>
+          <span>Single node first, active/passive later if needed</span>
+        </div>
+        <div class="hero-stat">
+          <strong>Secrets Strategy</strong>
+          <span>appsettings.Production.json plus host-injected secrets</span>
+        </div>
+        <div class="hero-stat">
+          <strong>Encryption Strategy</strong>
+          <span>KMS-wrapped AES data key, not direct KMS on the hot path</span>
+        </div>
+      </div>
+    </header>
+
+    <nav aria-label="Document navigation">
+      <ul>
+        <li><a href="#summary">Summary</a></li>
+        <li><a href="#corrections">Corrections</a></li>
+        <li><a href="#topology">Target Topology</a></li>
+        <li><a href="#phases">Migration Phases</a></li>
+        <li><a href="#risks">Risks</a></li>
+        <li><a href="#validation">Validation</a></li>
+        <li><a href="#evidence">Repo Evidence</a></li>
+      </ul>
+    </nav>
+
+    <section id="summary">
+      <h2>Executive Summary</h2>
+      <p class="lead">
+        The original conclusion was broadly right: Kubernetes, Consul, and Vault KV add more complexity than value for this application. Warp is a monolithic web app with in-process workers,
+        HPA is disabled, and the operational footprint can be reduced substantially by moving first to one dedicated server using Podman, systemd, and Caddy. The important corrections are in the cutover mechanics,
+        especially around encryption format changes, the fact that passive-node worker behavior only matters once a second node exists, and the fact that GitHub Actions is the current CI/CD surface.
+      </p>
+      <div class="summary-box">
+        <strong>Recommended end state:</strong>
+        Keep S3, GuardDuty, OpenAI, and Sentry as they are. Replace Kubernetes with Podman plus Quadlets, replace Consul with standard ASP.NET Core configuration sources,
+        remove Vault KV, and replace Vault Transit with envelope encryption using AWS KMS only to unwrap a local AES data key at startup. Roll out on one node first and add a passive host only when traffic justifies the extra operational complexity.
+      </div>
+      <div class="decision-row">
+        <span class="decision-pill">Use Podman plus systemd, not Kubernetes</span>
+        <span class="decision-pill">Start single-node, not two-node day one</span>
+        <span class="decision-pill">Change the ciphertext version at cutover</span>
+        <span class="decision-pill">Adapt GitHub Actions for the new deploy path</span>
+      </div>
+    </section>
+
+    <section id="corrections">
+      <h2>Corrections to the Draft</h2>
+      <p class="lead">
+        These are the ambiguous or misleading parts that needed to be tightened before the plan could be treated as executable.
+      </p>
+      <div class="card-grid">
+        <article class="card">
+          <h3>1. Direct KMS per payload is the wrong model</h3>
+          <p>
+            The application encrypts and decrypts data inside the KeyDB access path. Moving every payload through AWS KMS Encrypt and Decrypt would shift a hot path to a network-bound service,
+            increasing latency and request cost. The correct replacement for Vault Transit here is envelope encryption: unwrap a single AES data key at startup, then encrypt payloads locally.
+          </p>
+          <div class="tag-row">
+            <span class="tag danger">Do not call KMS on every KeyDB read/write</span>
+            <span class="tag good">Use KMS to unwrap an AES-256 key once</span>
+          </div>
+        </article>
+
+        <article class="card">
+          <h3>2. Ciphertext versioning still changes, but migration can be skipped</h3>
+          <p>
+            The post-Vault scheme still needs its own explicit format version so the application does not confuse old Vault Transit payloads with the new local-encryption format.
+            Because production usage is currently low, the default plan can be a clean cutover during a maintenance window instead of building dual-read logic and a re-encryption utility.
+          </p>
+          <div class="tag-row">
+            <span class="tag warn">Prefer clean cutover over migration by default</span>
+            <span class="tag good">New format version is still mandatory</span>
+          </div>
+        </article>
+
+        <article class="card">
+          <h3>3. Vault is wired into startup, not just deployment</h3>
+          <p>
+            Production startup currently uses Vault to fetch bootstrap secrets and then loads the main runtime configuration from Consul. DI also registers a Vault client unconditionally today.
+            That means removing Vault requires code changes in startup and dependency registration, not just container changes.
+          </p>
+          <div class="tag-row">
+            <span class="tag warn">Startup refactor required</span>
+          </div>
+        </article>
+
+        <article class="card">
+          <h3>4. Active/passive changes worker behavior, but it is not phase one</h3>
+          <p>
+            Warp runs background workers in the same web process. That matters once a passive node exists, because the standby app must not run duplicate cleanup or processing roles by accident.
+            It does not need to block the initial migration, because the rollout can start with a single production node and defer passive-node worker policy until scale requires a second host.
+          </p>
+          <div class="tag-row">
+            <span class="tag good">Single-node first avoids worker collisions</span>
+            <span class="tag warn">Define passive role before adding node two</span>
+          </div>
+        </article>
+
+        <article class="card">
+          <h3>5. GitHub Actions is the current CI/CD path</h3>
+          <p>
+            The repository contains GitHub Actions workflows that build, push, and deploy the current Helm-based environments. The migration plan therefore needs to adapt the existing GitHub Actions deployment path
+            away from Kubernetes and Helm rather than inventing a Jenkins-centered rollout.
+          </p>
+          <div class="tag-row">
+            <span class="tag warn">Replace Helm-oriented GitHub Actions steps</span>
+            <span class="tag good">No Jenkins dependency in the target plan</span>
+          </div>
+        </article>
+
+        <article class="card">
+          <h3>6. Podman is a fit, but systemd matters</h3>
+          <p>
+            Even for the initial dedicated server, raw compose files are not enough as the operational model. The production control plane should be Podman plus systemd Quadlets, with Caddy on the host.
+            That gives you clean boot behavior, restart policy integration, and a predictable service boundary without rebuilding a mini-cluster.
+          </p>
+          <div class="tag-row">
+            <span class="tag good">Podman plus Quadlets plus Caddy</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="topology">
+      <h2>Target Topology</h2>
+      <p class="lead">
+        The rollout starts with one production server that removes cluster orchestration immediately. A second passive server remains an optional later step if traffic and operational requirements justify it.
+      </p>
+
+      <div class="diagram" aria-label="Target architecture diagram">
+        <div class="diagram-node">
+          <strong>Internet</strong>
+          <span>warplyn.com</span>
+        </div>
+        <div class="diagram-arrow">→</div>
+        <div class="diagram-node">
+          <strong>Caddy</strong>
+          <span>Host TLS termination and reverse proxy</span>
+        </div>
+        <div class="diagram-arrow">→</div>
+        <div class="diagram-node">
+          <strong>Initial Production Server</strong>
+          <span>Warp app + workers + KeyDB primary</span>
+        </div>
+        <div class="diagram-node">
+          <strong>Optional Passive Server</strong>
+          <span>Add later: standby app role or cold app + KeyDB replica</span>
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <article class="detail">
+          <h3>Initial Node</h3>
+          <ul>
+            <li>Runs Caddy on the host if traffic lands here.</li>
+            <li>Runs Warp in Podman with the worker profile enabled.</li>
+            <li>Runs KeyDB as the writable primary.</li>
+            <li>Uses host-injected secrets and production appsettings.</li>
+          </ul>
+        </article>
+
+        <article class="detail">
+          <h3>Passive Node Later</h3>
+          <ul>
+            <li>Is not required for the first production rollout.</li>
+            <li>Can run KeyDB as a replica of the initial node when capacity or resilience needs increase.</li>
+            <li>Must not run the same worker profile unless that is explicitly made safe.</li>
+            <li>Can keep the web app stopped until failover, or run a no-workers profile.</li>
+          </ul>
+        </article>
+
+        <article class="detail">
+          <h3>Configuration and Secrets</h3>
+          <ul>
+            <li>Move non-sensitive settings into appsettings.Production.json.</li>
+            <li>Inject secrets via environment files or host secret injection.</li>
+            <li>Remove Consul and Vault KV from the runtime path.</li>
+          </ul>
+        </article>
+
+        <article class="detail">
+          <h3>Encryption</h3>
+          <ul>
+            <li>Use AWS KMS only to unwrap a locally used AES data key at startup.</li>
+            <li>Keep encryption in-process for KeyDB payload performance.</li>
+            <li>Change the ciphertext version and prefer a low-volume maintenance cutover over a migration utility.</li>
+          </ul>
+        </article>
+      </div>
+
+      <div class="callout">
+        <strong>Operational posture:</strong> start with one node. If growth later justifies a second host, start with manual failover or provider-side IP switch and add automatic VIP movement only if manual promotion becomes a real operational burden.
+      </div>
+    </section>
+
+    <section id="phases">
+      <h2>Migration Phases</h2>
+      <p class="lead">
+        The sequence below is ordered to minimize coupled changes and avoid mixing infrastructure simplification with encryption cutover in a single risky step.
+      </p>
+      <div class="phase-grid">
+        <article class="phase" data-step="1">
+          <h3>Flatten runtime configuration</h3>
+          <p>
+            Export the Consul KV tree for the real environments, separate sensitive and non-sensitive values, move non-secrets into appsettings.Production.json,
+            and shift secrets to host-injected environment values. After that, remove the Consul configuration provider from startup.
+          </p>
+        </article>
+
+        <article class="phase" data-step="2">
+          <h3>Remove Vault from startup bootstrap</h3>
+          <p>
+            Decouple Vault from the application boot path by removing the production Vault bootstrap for Consul and S3 secret injection.
+            Keep Vault code only where still needed for the temporary migration path or E2E.
+          </p>
+        </article>
+
+        <article class="phase" data-step="3">
+          <h3>Introduce envelope encryption</h3>
+          <p>
+            Add a new encryption mode that uses AWS KMS to unwrap a stored AES key at startup, then performs local symmetric encryption for KeyDB payloads.
+            This replaces Vault Transit without pushing every record operation to AWS.
+          </p>
+        </article>
+
+        <article class="phase" data-step="4">
+          <h3>Add a new ciphertext version</h3>
+          <p>
+            Make the post-Vault format distinguishable at read time. New writes must use the new version, and the production cutover can assume a clean break instead of carrying dual-read compatibility by default.
+          </p>
+        </article>
+
+        <article class="phase" data-step="5">
+          <h3>Plan the low-volume production cutover</h3>
+          <p>
+            Because production usage is currently low, prefer a maintenance window that accepts legacy encrypted payloads expiring or being discarded rather than building a one-time KeyDB migration utility.
+            Revisit migration tooling only if production usage materially increases before rollout.
+          </p>
+        </article>
+
+        <article class="phase" data-step="6">
+          <h3>Run the new stack on one production node</h3>
+          <p>
+            Deploy one Podman-managed production node with the normal worker profile enabled. Do not introduce passive-node runtime branching until a second host is actually needed.
+          </p>
+        </article>
+
+        <article class="phase" data-step="7">
+          <h3>Move to Podman plus systemd</h3>
+          <p>
+            Convert the production deployment to Podman-managed services, define systemd units or Quadlets, keep Caddy on the host, and carry forward only the resource controls that still matter.
+          </p>
+        </article>
+
+        <article class="phase" data-step="8">
+          <h3>Add KeyDB active/passive failover later</h3>
+          <p>
+            If traffic later justifies a second server, run a primary on the main host and a replica on the passive host. Start with a documented manual promotion procedure and only add extra coordination if it proves necessary.
+          </p>
+        </article>
+
+        <article class="phase" data-step="9">
+          <h3>Adapt GitHub Actions deployment automation</h3>
+          <p>
+            Replace the current GitHub Actions Helm deploy steps with the Podman-host deployment flow. If a second host is added later, update the passive host first and then the primary host.
+          </p>
+        </article>
+
+        <article class="phase" data-step="10">
+          <h3>Right-size observability separately</h3>
+          <p>
+            The Loki, Tempo, Prometheus, and Grafana stack can remain on Podman, but it should be evaluated as a separate cost-reduction track rather than bundled into the control-plane migration.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section id="risks">
+      <h2>Primary Risks and Controls</h2>
+      <div class="risk-grid">
+        <article class="risk">
+          <h3>Encryption cutover risk</h3>
+          <p>
+            A broken format cutover or a mistaken assumption about low-value legacy data would affect core data access.
+          </p>
+          <ul>
+            <li>Introduce explicit format versioning.</li>
+            <li>Use a maintenance window with clear handling for legacy encrypted payloads.</li>
+            <li>Dry-run the new write path before cutover.</li>
+          </ul>
+        </article>
+
+        <article class="risk">
+          <h3>Future passive-node worker collisions</h3>
+          <p>
+            Running the same hosted services on both nodes later could cause duplicate cleanup behavior or unexpected cross-node side effects.
+          </p>
+          <ul>
+            <li>Avoid the problem entirely by starting single-node.</li>
+            <li>Keep the standby app cold, or add a no-workers role before node two goes live.</li>
+          </ul>
+        </article>
+
+        <article class="risk">
+          <h3>Config drift during Consul removal</h3>
+          <p>
+            Missing or misclassified settings could break startup or subtle runtime features.
+          </p>
+          <ul>
+            <li>Inventory the Consul tree first.</li>
+            <li>Validate production startup before infrastructure cutover.</li>
+          </ul>
+        </article>
+
+        <article class="risk">
+          <h3>Hidden operational dependence on Kubernetes</h3>
+          <p>
+            Probes, restarts, and TLS termination must all be re-owned explicitly by the host runtime.
+          </p>
+          <ul>
+            <li>Use Quadlets or systemd units for restart policy.</li>
+            <li>Use Caddy for TLS and reverse proxy.</li>
+            <li>Recreate health checks and deploy sequencing.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section id="validation">
+      <h2>Validation Gates</h2>
+      <ol>
+        <li>Production startup succeeds without Consul and without Vault KV bootstrap, using only appsettings.Production.json and environment values.</li>
+        <li>The new encryption service writes the new ciphertext version and the production cutover plan for legacy Vault Transit payloads is explicitly documented.</li>
+        <li>The initial Podman deployment is verified on one production node with reads, writes, image flows, and background work behaving normally.</li>
+        <li>If and when a passive node is added, its runtime is verified to keep workers disabled or the app stopped before failover.</li>
+        <li>If and when a passive node is added, failover is rehearsed end-to-end: promote KeyDB replica, start or activate the passive app role, switch traffic, and verify reads, writes, image flows, and background work.</li>
+        <li>The container image no longer embeds a Vault token and GitHub Actions performs the explicit deployment sequence for the new Podman-based runtime.</li>
+      </ol>
+
+      <div class="section-grid">
+        <article class="decision">
+          <h3>In Scope</h3>
+          <ul>
+            <li>Kubernetes removal</li>
+            <li>Consul removal</li>
+            <li>Vault KV removal</li>
+            <li>Vault Transit replacement</li>
+            <li>KeyDB active/passive design</li>
+            <li>Deployment flow definition</li>
+          </ul>
+        </article>
+
+        <article class="decision">
+          <h3>Out of Scope</h3>
+          <ul>
+            <li>S3 migration</li>
+            <li>GuardDuty migration</li>
+            <li>OpenAI migration</li>
+            <li>Sentry migration</li>
+            <li>Frontend redesign</li>
+            <li>Major application behavior changes</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section id="evidence">
+      <h2>Repo Evidence Behind the Plan</h2>
+      <p class="lead">
+        The plan is anchored in the current code and infrastructure files rather than generic migration advice.
+      </p>
+      <div class="evidence-grid">
+        <article class="evidence">
+          <h3>Startup and configuration</h3>
+          <p>Production startup bootstraps through Vault and then loads Consul-backed config.</p>
+          <span class="code-path">Warp.WebApp/Extensions/WebApplicationBuilderExtensions.cs</span>
+          <span class="code-path">Warp.WebApp/Helpers/Configuration/ConsulHelper.cs</span>
+          <span class="code-path">Warp.WebApp/Helpers/Configuration/ConfigurationProviders/ConsulConfigurationProvider.cs</span>
+          <span class="code-path">Warp.WebApp/Models/Options/ProgramSecrets.cs</span>
+        </article>
+
+        <article class="evidence">
+          <h3>Vault wiring and DI</h3>
+          <p>Vault is not optional in the current DI setup and the image still accepts a Vault token at build time.</p>
+          <span class="code-path">Warp.WebApp/Extensions/ServiceCollectionExtensions.cs</span>
+          <span class="code-path">Warp.WebApp/Helpers/Configuration/VaultHelper.cs</span>
+          <span class="code-path">Dockerfile</span>
+        </article>
+
+        <article class="evidence">
+          <h3>Encryption path</h3>
+          <p>KeyDB payload encryption is an application hot path and the current format is shared across implementations.</p>
+          <span class="code-path">Warp.WebApp/Data/Redis/KeyDbStore.cs</span>
+          <span class="code-path">Warp.WebApp/Services/Encryption/EncryptionServiceBase.cs</span>
+          <span class="code-path">Warp.WebApp/Services/Encryption/TransitEncryptionService.cs</span>
+          <span class="code-path">Warp.WebApp/Services/Encryption/AesEncryptionService.cs</span>
+        </article>
+
+        <article class="evidence">
+          <h3>KeyDB structure awareness</h3>
+          <p>The migration tool has to distinguish encrypted value stores from sorted-set scheduling indexes and lock keys.</p>
+          <span class="code-path">Warp.WebApp/Data/Redis/RedisStoreBase.cs</span>
+          <span class="code-path">Warp.WebApp/Data/Redis/EntryLifecycleIndexStore.cs</span>
+          <span class="code-path">Warp.WebApp/Data/Redis/ModerationIndexStore.cs</span>
+        </article>
+
+        <article class="evidence">
+          <h3>Worker behavior</h3>
+          <p>The application runs background work in the web process, which affects the passive-node design.</p>
+          <span class="code-path">Warp.WebApp/Extensions/ServiceCollectionExtensions.cs</span>
+          <span class="code-path">Warp.WebApp/Services/Moderation/ContentModerationWorker.cs</span>
+          <span class="code-path">Warp.WebApp/Services/Images/EntryImageCleanupService.cs</span>
+          <span class="code-path">Warp.WebApp/Services/Images/OrphanImageCleanupService.cs</span>
+        </article>
+
+        <article class="evidence">
+          <h3>Current infrastructure</h3>
+          <p>The existing deployment model already shows a minimal Compose baseline and a separate telemetry stack.</p>
+          <span class="code-path">docker-compose.yml</span>
+          <span class="code-path">docker-compose.e2e.yml</span>
+          <span class="code-path">docker-compose.telemetry.yml</span>
+          <span class="code-path">Helm/values_prod.yaml</span>
+          <span class="code-path">Helm/templates/deployment.yaml</span>
+        </article>
+
+        <article class="evidence">
+          <h3>CI/CD reality</h3>
+          <p>GitHub Actions is the current automation path and it already builds, pushes, and deploys Helm-based environments. The legacy Jenkins file is not the primary path this plan should optimize for.</p>
+          <span class="code-path">.github/workflows/image.yml</span>
+          <span class="code-path">Jenkinsfile/cicd.jenkins</span>
+        </article>
+      </div>
+
+      <p class="fine-print">
+        Prepared as a standalone document so it can be viewed directly in a browser, shared internally, or attached to a migration discussion without any external assets or markdown rendering.
+      </p>
+
+      <div class="footer">
+        <p><strong>Recommended first implementation sequence:</strong> flatten configuration, decouple Vault from startup, add the new encryption format, define the low-volume cutover plan, shift the runtime to Podman plus systemd on one node, and then adapt GitHub Actions for the new deployment flow. Add passive-node policy only when a second host is actually needed.</p>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

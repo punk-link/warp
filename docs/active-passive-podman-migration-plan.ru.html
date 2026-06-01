@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>План миграции инфраструктуры Warp</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4efe6;
+      --panel: rgba(255, 252, 246, 0.9);
+      --panel-strong: #fffaf2;
+      --text: #1f1c17;
+      --muted: #5f564a;
+      --line: rgba(73, 58, 36, 0.18);
+      --accent: #0f766e;
+      --accent-strong: #115e59;
+      --accent-soft: rgba(15, 118, 110, 0.12);
+      --warn: #b45309;
+      --warn-soft: rgba(180, 83, 9, 0.12);
+      --danger: #b91c1c;
+      --danger-soft: rgba(185, 28, 28, 0.1);
+      --shadow: 0 18px 50px rgba(38, 28, 14, 0.08);
+      --radius: 20px;
+      --radius-sm: 14px;
+      --max-width: 1180px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      background:
+        radial-gradient(circle at top left, rgba(15, 118, 110, 0.12), transparent 28%),
+        radial-gradient(circle at top right, rgba(180, 83, 9, 0.11), transparent 24%),
+        linear-gradient(180deg, #faf7f0 0%, var(--bg) 100%);
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    a {
+      color: var(--accent-strong);
+    }
+
+    .page {
+      width: min(calc(100% - 32px), var(--max-width));
+      margin: 0 auto;
+      padding: 28px 0 64px;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: 34px;
+      border: 1px solid var(--line);
+      border-radius: calc(var(--radius) + 8px);
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(255, 249, 238, 0.95)),
+        linear-gradient(120deg, rgba(15, 118, 110, 0.12), rgba(180, 83, 9, 0.1));
+      box-shadow: var(--shadow);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -60px -80px auto;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(15, 118, 110, 0.18), transparent 68%);
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    h1, h2, h3 {
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 4vw, 4.2rem);
+      max-width: 14ch;
+    }
+
+    h2 {
+      font-size: clamp(1.5rem, 2vw, 2.15rem);
+      margin-bottom: 14px;
+    }
+
+    h3 {
+      font-size: 1.05rem;
+      margin-bottom: 10px;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .hero-copy {
+      max-width: 78ch;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 1.02rem;
+    }
+
+    .hero-grid,
+    .section-grid,
+    .card-grid,
+    .phase-grid,
+    .detail-grid,
+    .risk-grid,
+    .evidence-grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .hero-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-top: 28px;
+    }
+
+    .hero-stat,
+    .card,
+    .phase,
+    .detail,
+    .risk,
+    .evidence,
+    .decision,
+    .summary-box,
+    .diagram-node {
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: var(--panel);
+      backdrop-filter: blur(8px);
+      box-shadow: 0 10px 24px rgba(31, 28, 23, 0.04);
+    }
+
+    .hero-stat {
+      padding: 16px;
+    }
+
+    .hero-stat strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 1.05rem;
+    }
+
+    .hero-stat span {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    nav {
+      position: sticky;
+      top: 16px;
+      z-index: 5;
+      margin: 20px 0 28px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 250, 242, 0.88);
+      box-shadow: 0 8px 18px rgba(31, 28, 23, 0.06);
+      overflow-x: auto;
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      min-width: max-content;
+    }
+
+    nav a {
+      display: inline-block;
+      text-decoration: none;
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: transparent;
+      font-size: 0.95rem;
+    }
+
+    nav a:hover,
+    nav a:focus-visible {
+      background: var(--accent-soft);
+      outline: none;
+    }
+
+    section {
+      margin-top: 30px;
+      padding: 28px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255, 252, 246, 0.88), rgba(255, 249, 241, 0.92));
+      box-shadow: var(--shadow);
+    }
+
+    .lead {
+      max-width: 80ch;
+      color: var(--muted);
+      margin-top: 10px;
+    }
+
+    .summary-box {
+      padding: 18px;
+      background: linear-gradient(180deg, rgba(15, 118, 110, 0.09), rgba(255, 255, 255, 0.9));
+      margin-top: 18px;
+    }
+
+    .section-grid,
+    .card-grid,
+    .detail-grid,
+    .risk-grid,
+    .evidence-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-top: 20px;
+    }
+
+    .card,
+    .detail,
+    .risk,
+    .evidence,
+    .decision {
+      padding: 18px;
+    }
+
+    .phase-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-top: 20px;
+    }
+
+    .phase {
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .phase::before {
+      content: attr(data-step);
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .tag-row,
+    .decision-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .tag,
+    .decision-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: var(--panel-strong);
+      font-size: 0.92rem;
+    }
+
+    .tag.warn {
+      background: var(--warn-soft);
+      color: #7c3d08;
+    }
+
+    .tag.danger {
+      background: var(--danger-soft);
+      color: #7f1d1d;
+    }
+
+    .tag.good {
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+    }
+
+    ul,
+    ol {
+      margin: 14px 0 0;
+      padding-left: 22px;
+    }
+
+    li + li {
+      margin-top: 10px;
+    }
+
+    .diagram {
+      margin-top: 22px;
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      align-items: center;
+    }
+
+    .diagram-node {
+      padding: 18px;
+      text-align: center;
+      min-height: 108px;
+      display: grid;
+      align-content: center;
+      gap: 6px;
+    }
+
+    .diagram-arrow {
+      text-align: center;
+      font-size: 1.6rem;
+      color: var(--accent-strong);
+      opacity: 0.8;
+    }
+
+    .code-path {
+      display: block;
+      margin-top: 10px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px dashed var(--line);
+      background: rgba(31, 28, 23, 0.03);
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.9rem;
+      line-height: 1.45;
+      overflow-wrap: anywhere;
+    }
+
+    .callout {
+      margin-top: 18px;
+      padding: 16px 18px;
+      border-left: 4px solid var(--warn);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      background: var(--warn-soft);
+    }
+
+    .fine-print {
+      margin-top: 24px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .footer {
+      margin-top: 28px;
+      padding: 20px 0 0;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    @media (max-width: 980px) {
+      .hero-grid,
+      .section-grid,
+      .card-grid,
+      .phase-grid,
+      .detail-grid,
+      .risk-grid,
+      .evidence-grid,
+      .diagram {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .diagram-arrow {
+        display: none;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .page {
+        width: min(calc(100% - 20px), var(--max-width));
+        padding-top: 18px;
+      }
+
+      .hero,
+      section {
+        padding: 22px;
+      }
+
+      .hero-grid,
+      .section-grid,
+      .card-grid,
+      .phase-grid,
+      .detail-grid,
+      .risk-grid,
+      .evidence-grid,
+      .diagram {
+        grid-template-columns: 1fr;
+      }
+
+      nav {
+        border-radius: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero" id="top">
+      <p class="eyebrow">Упрощение инфраструктуры Warp</p>
+      <h1>План миграции Active/Passive на Podman</h1>
+      <p class="hero-copy">
+        Этот документ переформулирует предыдущий черновик в готовый к выполнению план переноса Warp из Kubernetes, Consul и Vault KV на более простую схему развертывания на базе Podman.
+        План сохраняет выделенные серверы, архитектуру приложения, начинается с одного производственного узла и оставляет Active/Passive как последующий этап расширения, если рост нагрузки оправдает его внедрение.
+      </p>
+      <div class="hero-grid">
+        <div class="hero-stat">
+          <strong>Целевая среда</strong>
+          <span>Podman плюс systemd Quadlets и Caddy на уровне хоста</span>
+        </div>
+        <div class="hero-stat">
+          <strong>Модель доступности</strong>
+          <span>Сначала один узел, Active/Passive позже при необходимости</span>
+        </div>
+        <div class="hero-stat">
+          <strong>Стратегия секретов</strong>
+          <span>appsettings.Production.json плюс инъекция секретов на хосте</span>
+        </div>
+        <div class="hero-stat">
+          <strong>Стратегия шифрования</strong>
+          <span>AES ключ данных, обернутый в KMS; исключение прямых вызовов KMS при обработке данных</span>
+        </div>
+      </div>
+    </header>
+
+    <nav aria-label="Навигация по документу">
+      <ul>
+        <li><a href="#summary">Сводка</a></li>
+        <li><a href="#corrections">Исправления</a></li>
+        <li><a href="#topology">Целевая топология</a></li>
+        <li><a href="#phases">Этапы миграции</a></li>
+        <li><a href="#risks">Риски</a></li>
+        <li><a href="#validation">Валидация</a></li>
+        <li><a href="#evidence">Данные репозитория</a></li>
+      </ul>
+    </nav>
+
+    <section id="summary">
+      <h2>Краткое изложение</h2>
+      <p class="lead">
+        Исходный вывод был в целом верным: Kubernetes, Consul и Vault KV вносят больше сложности, чем приносят пользы для данного приложения. Warp представляет собой монолитное веб-приложение с внутрипроцессными воркерами,
+        HPA отключен, а операционный след может быть существенно уменьшен путем перехода вначале на один выделенный сервер с использованием Podman, systemd и Caddy. Важные исправления касаются механики переключения,
+        особенно изменений формата шифрования, того факта, что поведение воркера на пассивном узле имеет значение только после появления второго узла, и того, что GitHub Actions является текущим инструментом CI/CD.
+      </p>
+      <div class="summary-box">
+        <strong>Рекомендуемое конечное состояние:</strong>
+        Оставить S3, GuardDuty, OpenAI и Sentry без изменений. Заменить Kubernetes на Podman с Quadlets, заменить Consul стандартными источниками конфигурации ASP.NET Core,
+        удалить Vault KV и заменить Vault Transit конвертным шифрованием (Envelope Encryption) с использованием AWS KMS только для развертывания локального AES-ключа данных при запуске. Развертывание сначала на одном узле, добавление пассивного хоста только тогда, когда трафик оправдает дополнительные операционные расходы.
+      </div>
+      <div class="decision-row">
+        <span class="decision-pill">Использовать Podman и systemd вместо Kubernetes</span>
+        <span class="decision-pill">Старт с одного узла, а не с двух в первый день</span>
+        <span class="decision-pill">Смена версии шифротекста при переключении</span>
+        <span class="decision-pill">Адаптация GitHub Actions для нового пути развертывания</span>
+      </div>
+    </section>
+
+    <section id="corrections">
+      <h2>Исправления к черновику</h2>
+      <p class="lead">
+        Это неоднозначные или вводящие в заблуждение части, которые необходимо было уточнить, прежде чем считать план готовым к исполнению.
+      </p>
+      <div class="card-grid">
+        <article class="card">
+          <h3>1. Прямой KMS для каждой порции данных — неверная модель</h3>
+          <p>
+            Приложение шифрует и дешифрует данные в процессе доступа к KeyDB. Пропуск каждой порции данных через AWS KMS Encrypt и Decrypt превратит критический путь в зависимый от сети сервис,
+            увеличивая задержку и стоимость запросов. Правильной заменой Vault Transit здесь является конвертное шифрование: развертывание одного AES-ключа данных при запуске и последующее локальное шифрование.
+          </p>
+          <div class="tag-row">
+            <span class="tag danger">Не вызывать KMS при каждой записи/чтении KeyDB</span>
+            <span class="tag good">Использовать KMS для развертывания AES-256 ключа один раз</span>
+          </div>
+        </article>
+
+        <article class="card">
+          <h3>2. Версионирование шифротекста меняется, но миграцию можно пропустить</h3>
+          <p>
+            Схема после удаления Vault по-прежнему требует собственной явной версии формата, чтобы приложение не путало старые данные Vault Transit с новым форматом локального шифрования.
+            Поскольку текущее использование в рабочей среде невелико, стандартным планом может быть чистое переключение во время окна обслуживания вместо разработки логики двойного чтения и утилиты перешифрования.
+          </p>
+          <div class="tag-row">
+            <span class="tag warn">Предпочтение чистому переключению перед миграцией</span>
+            <span class="tag good">Новая версия формата обязательна</span>
+          </div>
+        </article>
+
+        <article class="card">
+          <h3>3. Vault задействован в запуске, а не только в развертывании</h3>
+          <p>
+            Запуск в рабочей среде в настоящее время использует Vault для получения секретов начальной загрузки, после чего загружается основная конфигурация из Consul. DI также регистрирует клиент Vault безусловно.
+            Это означает, что удаление Vault требует изменений в коде запуска и регистрации зависимостей, а не только изменений в контейнерах.
+          </p>
+          <div class="tag-row">
+            <span class="tag warn">Требуется рефакторинг процесса запуска (Startup)</span>
+          </div>
+        </article>
+
+        <article class="card">
+          <h3>4. Active/Passive меняет поведение воркеров, но это не первая фаза</h3>
+          <p>
+            Warp запускает фоновые воркеры в том же веб-процессе. Это становится важным при появлении пассивного узла, так как резервное приложение не должно случайно дублировать задачи по очистке или обработке.
+            Это не должно блокировать первоначальную миграцию, так как развертывание можно начать с одного узла и отложить политику воркеров на пассивном узле до момента, когда потребуется второй хост.
+          </p>
+          <div class="tag-row">
+            <span class="tag good">Один узел на старте исключает коллизии воркеров</span>
+            <span class="tag warn">Определить роль пассивного узла до добавления второго хоста</span>
+          </div>
+        </article>
+
+        <article class="card">
+          <h3>5. GitHub Actions — текущий путь CI/CD</h3>
+          <p>
+            Репозиторий содержит рабочие процессы GitHub Actions, которые собирают, отправляют и развертывают текущие среды на базе Helm. Следовательно, план миграции должен адаптировать существующий путь развертывания GitHub Actions,
+            отойдя от Kubernetes и Helm, а не внедрять развертывание через Jenkins.
+          </p>
+          <div class="tag-row">
+            <span class="tag warn">Заменить шаги GitHub Actions, ориентированные на Helm</span>
+            <span class="tag good">Отсутствие зависимости от Jenkins в целевом плане</span>
+          </div>
+        </article>
+
+        <article class="card">
+          <h3>6. Podman подходит, но важен systemd</h3>
+          <p>
+            Даже для первоначального выделенного сервера обычных compose-файлов недостаточно для операционной модели. Продуктивной средой управления должен быть Podman плюс systemd Quadlets с Caddy на хосте.
+            Это обеспечивает чистое поведение при загрузке, интеграцию политик перезапуска и предсказуемые границы сервисов без необходимости создания мини-кластера.
+          </p>
+          <div class="tag-row">
+            <span class="tag good">Podman плюс Quadlets плюс Caddy</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="topology">
+      <h2>Целевая топология</h2>
+      <p class="lead">
+        Развертывание начинается с одного производственного сервера, что немедленно устраняет сложность оркестрации кластера. Второй пассивный сервер остается опциональным шагом в будущем.
+      </p>
+
+      <div class="diagram" aria-label="Диаграмма целевой архитектуры">
+        <div class="diagram-node">
+          <strong>Интернет</strong>
+          <span>warplyn.com</span>
+        </div>
+        <div class="diagram-arrow">→</div>
+        <div class="diagram-node">
+          <strong>Caddy</strong>
+          <span>Терминация TLS и обратный прокси на хосте</span>
+        </div>
+        <div class="diagram-arrow">→</div>
+        <div class="diagram-node">
+          <strong>Основной сервер</strong>
+          <span>Приложение Warp + воркеры + KeyDB primary</span>
+        </div>
+        <div class="diagram-node">
+          <strong>Пассивный сервер (опц)</strong>
+          <span>Добавить позже: резервная роль или холодное приложение + KeyDB replica</span>
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <article class="detail">
+          <h3>Начальный узел</h3>
+          <ul>
+            <li>Запускает Caddy на хосте для приема трафика.</li>
+            <li>Запускает Warp в Podman с включенным профилем воркера.</li>
+            <li>Запускает KeyDB как основной узел с возможностью записи.</li>
+            <li>Использует секреты, внедренные на хосте, и производственные конфиги.</li>
+          </ul>
+        </article>
+
+        <article class="detail">
+          <h3>Пассивный узел (позже)</h3>
+          <ul>
+            <li>Не требуется для первого этапа развертывания.</li>
+            <li>Может запускать KeyDB как реплику при росте потребности в отказоустойчивости.</li>
+            <li>Не должен запускать тот же профиль воркера без обеспечения безопасности.</li>
+            <li>Может держать веб-приложение остановленным до момента отказа или использовать профиль без воркеров.</li>
+          </ul>
+        </article>
+
+        <article class="detail">
+          <h3>Конфигурация и секреты</h3>
+          <ul>
+            <li>Перенос нечувствительных настроек в appsettings.Production.json.</li>
+            <li>Внедрение секретов через файлы окружения или инъекцию на уровне хоста.</li>
+            <li>Удаление Consul и Vault KV из процесса выполнения.</li>
+          </ul>
+        </article>
+
+        <article class="detail">
+          <h3>Шифрование</h3>
+          <ul>
+            <li>Использование AWS KMS только для дешифрования локально используемого AES-ключа при запуске.</li>
+            <li>Сохранение шифрования внутри процесса для обеспечения производительности KeyDB.</li>
+            <li>Смена версии шифротекста; предпочтение окна обслуживания для переключения системы.</li>
+          </ul>
+        </article>
+      </div>
+
+      <div class="callout">
+        <strong>Операционный подход:</strong> начать с одного узла. Если рост нагрузки оправдает второй хост, использовать ручное переключение или смену IP на стороне провайдера, и добавлять автоматический VIP только если ручное продвижение станет реальным бременем.
+      </div>
+    </section>
+
+    <section id="phases">
+      <h2>Этапы миграции</h2>
+      <p class="lead">
+        Последовательность ниже выстроена так, чтобы минимизировать связанные изменения и избежать смешивания упрощения инфраструктуры с переключением шифрования в один рискованный шаг.
+      </p>
+      <div class="phase-grid">
+        <article class="phase" data-step="1">
+          <h3>Уплощение конфигурации среды</h3>
+          <p>
+            Экспорт дерева Consul KV для реальных сред, разделение чувствительных и нечувствительных данных, перенос несекретных данных в appsettings.Production.json
+             и переход к секретам через переменные окружения на хосте. После этого удаление провайдера Consul при запуске.
+          </p>
+        </article>
+
+        <article class="phase" data-step="2">
+          <h3>Удаление Vault из этапа запуска</h3>
+          <p>
+            Отделение Vault от пути загрузки приложения путем удаления механизма получения секретов для Consul и S3 через Vault.
+            Сохранение кода Vault только там, где это необходимо для временного пути миграции или E2E-тестов.
+          </p>
+        </article>
+
+        <article class="phase" data-step="3">
+          <h3>Внедрение конвертного шифрования</h3>
+          <p>
+            Добавление нового режима шифрования, использующего AWS KMS для развертывания сохраненного ключа AES при запуске с последующим локальным симметричным шифрованием для KeyDB.
+            Это заменяет Vault Transit без отправки каждой операции с записью в AWS.
+          </p>
+        </article>
+
+        <article class="phase" data-step="4">
+          <h3>Введение новой версии шифротекста</h3>
+          <p>
+            Обеспечение различимости нового формата (после удаления Vault) при чтении. Новые записи должны использовать новую версию, а переключение в рабочей среде предполагает "чистый разрыв" без поддержки обратной совместимости по умолчанию.
+          </p>
+        </article>
+
+        <article class="phase" data-step="5">
+          <h3>Планирование переключения при низкой нагрузке</h3>
+          <p>
+            Учитывая текущую низкую нагрузку, предпочтительно использовать окно обслуживания, при котором старые зашифрованные данные могут истечь или быть отброшены, вместо создания разовой утилиты миграции KeyDB.
+            Вернуться к инструментам миграции только при существенном росте использования системы.
+          </p>
+        </article>
+
+        <article class="phase" data-step="6">
+          <h3>Запуск нового стека на одном узле</h3>
+          <p>
+            Развертывание одного производственного узла под управлением Podman с включенным стандартным профилем воркера. Не вводить ветвление логики для пассивного узла до тех пор, пока второй хост не потребуется фактически.
+          </p>
+        </article>
+
+        <article class="phase" data-step="7">
+          <h3>Переход на Podman и systemd</h3>
+          <p>
+            Конвертация деплоя в сервисы под управлением Podman, определение юнитов systemd или Quadlets, использование Caddy на хосте и перенос только тех ограничений ресурсов, которые все еще важны.
+          </p>
+        </article>
+
+        <article class="phase" data-step="8">
+          <h3>Добавление Active/Passive для KeyDB позже</h3>
+          <p>
+            Если нагрузка позже оправдает второй сервер, запустить основной узел на главном хосте и реплику на пассивном. Начать с документированной процедуры ручного продвижения реплики и добавлять координацию только при необходимости.
+          </p>
+        </article>
+
+        <article class="phase" data-step="9">
+          <h3>Адаптация автоматизации деплоя GitHub Actions</h3>
+          <p>
+            Замена текущих шагов Helm-деплоя в GitHub Actions на поток развертывания для Podman-хоста. При добавлении второго хоста сначала обновлять пассивный, затем основной.
+          </p>
+        </article>
+
+        <article class="phase" data-step="10">
+          <h3>Оптимизация мониторинга отдельно</h3>
+          <p>
+            Стек Loki, Tempo, Prometheus и Grafana может оставаться на Podman, но его следует оценивать как отдельный трек по снижению затрат, а не смешивать с миграцией уровня управления.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section id="risks">
+      <h2>Основные риски и меры контроля</h2>
+      <div class="risk-grid">
+        <article class="risk">
+          <h3>Риск переключения шифрования</h3>
+          <p>
+            Нарушение формата переключения или ошибочное предположение о низкой ценности старых данных может повлиять на доступ к основным данным.
+          </p>
+          <ul>
+            <li>Внедрение явного версионирования формата.</li>
+            <li>Использование окна обслуживания с четким регламентом обработки старых зашифрованных данных.</li>
+            <li>Тестовый запуск новой схемы записи перед окончательным переключением.</li>
+          </ul>
+        </article>
+
+        <article class="risk">
+          <h3>Коллизии воркеров на пассивном узле в будущем</h3>
+          <p>
+            Запуск одинаковых сервисов на обоих узлах в будущем может привести к дублирующей очистке или неожиданным побочным эффектам.
+          </p>
+          <ul>
+            <li>Полное избегание проблемы путем старта с одного узла.</li>
+            <li>Держать резервное приложение в "холодном" состоянии или добавить роль без воркеров до ввода второго узла в строй.</li>
+          </ul>
+        </article>
+
+        <article class="risk">
+          <h3>Расхождение конфигураций при удалении Consul</h3>
+          <p>
+            Пропущенные или неверно классифицированные настройки могут нарушить запуск или тонкие функции системы.
+          </p>
+          <ul>
+            <li>Предварительная инвентаризация дерева Consul.</li>
+            <li>Валидация запуска производственной среды до переключения инфраструктуры.</li>
+          </ul>
+        </article>
+
+        <article class="risk">
+          <h3>Скрытая операционная зависимость от Kubernetes</h3>
+          <p>
+            Проверки состояния (probes), перезапуски и терминация TLS должны быть явно перенесены на уровень хоста.
+          </p>
+          <ul>
+            <li>Использование Quadlets или юнитов systemd для политик перезапуска.</li>
+            <li>Использование Caddy для TLS и обратного прокси.</li>
+            <li>Воссоздание проверок здоровья и последовательности развертывания.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section id="validation">
+      <h2>Контрольные точки валидации</h2>
+      <ol>
+        <li>Запуск рабочей среды проходит успешно без Consul и без инициализации Vault KV, используя только appsettings.Production.json и переменные окружения.</li>
+        <li>Новый сервис шифрования записывает данные версии с новым форматом, а план переключения для старых данных Vault Transit явно задокументирован.</li>
+        <li>Первоначальное развертывание в Podman верифицировано на одном производственном узле: чтение, запись, потоки изображений и фоновая работа выполняются штатно.</li>
+        <li>При добавлении пассивного узла верифицировано, что воркеры на нем отключены или приложение остановлено до момента переключения.</li>
+        <li>При добавлении пассивного узла процедура переключения отработана полностью: продвижение реплики KeyDB, активация пассивного приложения, переключение трафика и проверка всех функций.</li>
+        <li>Образ контейнера больше не содержит токен Vault, а GitHub Actions выполняет явную последовательность развертывания для новой среды на базе Podman.</li>
+      </ol>
+
+      <div class="section-grid">
+        <article class="decision">
+          <h3>В рамках проекта</h3>
+          <ul>
+            <li>Удаление Kubernetes</li>
+            <li>Удаление Consul</li>
+            <li>Удаление Vault KV</li>
+            <li>Замена Vault Transit</li>
+            <li>Проектирование Active/Passive для KeyDB</li>
+            <li>Определение потока развертывания</li>
+          </ul>
+        </article>
+
+        <article class="decision">
+          <h3>Вне рамок проекта</h3>
+          <ul>
+            <li>Миграция S3</li>
+            <li>Миграция GuardDuty</li>
+            <li>Миграция OpenAI</li>
+            <li>Миграция Sentry</li>
+            <li>Редизайн фронтенда</li>
+            <li>Крупные изменения логики приложения</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section id="evidence">
+      <h2>Данные из репозитория</h2>
+      <p class="lead">
+        План опирается на текущий код и файлы конфигурации, а не на общие советы по миграции.
+      </p>
+      <div class="evidence-grid">
+        <article class="evidence">
+          <h3>Запуск и конфигурация</h3>
+          <p>Запуск в рабочей среде инициализируется через Vault и затем загружает конфигурацию из Consul.</p>
+          <span class="code-path">Warp.WebApp/Extensions/WebApplicationBuilderExtensions.cs</span>
+          <span class="code-path">Warp.WebApp/Helpers/Configuration/ConsulHelper.cs</span>
+          <span class="code-path">Warp.WebApp/Helpers/Configuration/ConfigurationProviders/ConsulConfigurationProvider.cs</span>
+          <span class="code-path">Warp.WebApp/Models/Options/ProgramSecrets.cs</span>
+        </article>
+
+        <article class="evidence">
+          <h3>Связи с Vault и DI</h3>
+          <p>Vault не является опциональным в текущей настройке DI, и образ все еще принимает токен Vault во время сборки.</p>
+          <span class="code-path">Warp.WebApp/Extensions/ServiceCollectionExtensions.cs</span>
+          <span class="code-path">Warp.WebApp/Helpers/Configuration/VaultHelper.cs</span>
+          <span class="code-path">Dockerfile</span>
+        </article>
+
+        <article class="evidence">
+          <h3>Путь шифрования</h3>
+          <p>Шифрование данных KeyDB является критическим путем приложения, и текущий формат используется в разных реализациях.</p>
+          <span class="code-path">Warp.WebApp/Data/Redis/KeyDbStore.cs</span>
+          <span class="code-path">Warp.WebApp/Services/Encryption/EncryptionServiceBase.cs</span>
+          <span class="code-path">Warp.WebApp/Services/Encryption/TransitEncryptionService.cs</span>
+          <span class="code-path">Warp.WebApp/Services/Encryption/AesEncryptionService.cs</span>
+        </article>
+
+        <article class="evidence">
+          <h3>Структура KeyDB</h3>
+          <p>Инструменту миграции необходимо отличать зашифрованные хранилища значений от индексов планирования и ключей блокировки.</p>
+          <span class="code-path">Warp.WebApp/Data/Redis/RedisStoreBase.cs</span>
+          <span class="code-path">Warp.WebApp/Data/Redis/EntryLifecycleIndexStore.cs</span>
+          <span class="code-path">Warp.WebApp/Data/Redis/ModerationIndexStore.cs</span>
+        </article>
+
+        <article class="evidence">
+          <h3>Поведение воркеров</h3>
+          <p>Приложение запускает фоновые задачи в веб-процессе, что влияет на архитектуру пассивного узла.</p>
+          <span class="code-path">Warp.WebApp/Extensions/ServiceCollectionExtensions.cs</span>
+          <span class="code-path">Warp.WebApp/Services/Moderation/ContentModerationWorker.cs</span>
+          <span class="code-path">Warp.WebApp/Services/Images/EntryImageCleanupService.cs</span>
+          <span class="code-path">Warp.WebApp/Services/Images/OrphanImageCleanupService.cs</span>
+        </article>
+
+        <article class="evidence">
+          <h3>Текущая инфраструктура</h3>
+          <p>Существующая модель развертывания уже имеет минимальный Compose и отдельный стек телеметрии.</p>
+          <span class="code-path">docker-compose.yml</span>
+          <span class="code-path">docker-compose.e2e.yml</span>
+          <span class="code-path">docker-compose.telemetry.yml</span>
+          <span class="code-path">Helm/values_prod.yaml</span>
+          <span class="code-path">Helm/templates/deployment.yaml</span>
+        </article>
+
+        <article class="evidence">
+          <h3>Реальность CI/CD</h3>
+          <p>GitHub Actions — это текущий путь автоматизации, который уже собирает и развертывает среды на базе Helm. Устаревший файл Jenkins не является приоритетным для оптимизации.</p>
+          <span class="code-path">.github/workflows/image.yml</span>
+          <span class="code-path">Jenkinsfile/cicd.jenkins</span>
+        </article>
+      </div>
+
+      <p class="fine-print">
+        Подготовлено как автономный документ, который можно просматривать непосредственно в браузере, передавать внутри команды или прикреплять к обсуждениям миграции без внешних ресурсов или рендеринга markdown.
+      </p>
+
+      <div class="footer">
+        <p><strong>Рекомендуемая последовательность:</strong> уплотнение конфигурации, отделение Vault от запуска, добавление нового формата шифрования, определение плана переключения, перенос среды на Podman и systemd на одном узле, а затем адаптация GitHub Actions. Политика для пассивного узла вводится только при фактической необходимости второго хоста.</p>
+      </div>
+    </section>
+  </div>
+</body>
+</html>
