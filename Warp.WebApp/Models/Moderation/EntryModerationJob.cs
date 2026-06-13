@@ -17,6 +17,9 @@ public sealed record EntryModerationJob
         DateTimeOffset nextAttemptAt = default)
     {
         EntryId = entryId;
+        NeedsTextModeration = needsTextModeration;
+        PendingImageIds = pendingImageIds;
+        FailureCount = failureCount;
         ExpiresAt = expiresAt;
         FailureCount = failureCount;
         NeedsTextModeration = needsTextModeration;

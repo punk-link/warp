@@ -38,4 +38,6 @@ public readonly record struct EntryInfo
     public List<ImageInfo> ExcludedImageInfos { get; init; } = [];
     public ModerationResult? TextModerationResult { get; init; }
     public long ViewCount { get; init; }
+
+    public ModerationResult? TextModerationResult { get; init; }
 }

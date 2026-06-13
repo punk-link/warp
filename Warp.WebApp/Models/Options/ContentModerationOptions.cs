@@ -8,6 +8,10 @@ namespace Warp.WebApp.Models.Options;
 /// </summary>
 public sealed class ContentModerationOptions
 {
+    /// <summary>Base URL of the OpenAI-compatible moderation API endpoint.</summary>
+    [Required]
+    public string Endpoint { get; set; } = "https://api.openai.com/v1";
+
     /// <summary>
     /// API key used to authorize moderation requests.
     /// Prefer providing this via secrets or environment configuration rather than checked-in settings files.
@@ -19,6 +23,10 @@ public sealed class ContentModerationOptions
     /// Maximum number of jobs processed in a single worker cycle.
     /// 10 is a reasonable value, because it matches the maximum allowed image number per entry of our system.
     /// </summary>
+    [Required]
+    public string Model { get; set; } = "omni-moderation-latest";
+
+    /// <summary>Maximum number of jobs processed in a single worker cycle.</summary>
     [Range(1, 100)]
     public int BatchSize { get; set; } = 10;
 
@@ -79,4 +87,11 @@ public sealed class ContentModerationOptions
     /// </summary>
     [Range(0.01, 1.0)]
     public double SuccessThreshold { get; set; } = 0.95;
+
+    /// <summary>Sliding window duration used to calculate the success rate.</summary>
+    public TimeSpan SuccessRateWindow { get; set; } = TimeSpan.FromMinutes(1);
+
+    /// <summary>Fine-grained options for the adaptive rate limiter algorithm.</summary>
+    [ValidateObjectMembers]
+    public ContentModerationRateLimiterOptions RateLimiter { get; set; } = new();
 }
