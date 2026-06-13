@@ -19,10 +19,6 @@ public sealed class ContentModerationRateLimiterOptions
     [Range(1, 10)]
     public int ConcurrencyIncrement { get; set; } = 1;
 
-    /// <summary>Fraction (0.0–1.0) of current concurrency removed on each decrease step.</summary>
-    [Range(0.01, 1.0)]
-    public double ConcurrencyDecreaseRatio { get; set; } = 0.3;
-
     /// <summary>
     /// Multiplier applied to <see cref="ContentModerationOptions.SuccessThreshold"/> to determine the lower bound
     /// at which concurrency should be decreased.

@@ -72,26 +72,6 @@ public static class CacheKeyBuilder
         => BuildCacheKey<ViewCountService>(nameof(Entry), id);
 
 
-    public static string BuildModerationJobKey(string member)
-        => BuildCacheKey<EntryModerationJob>(nameof(Entry), member);
-
-
-    public static string BuildModerationLockKey(string member)
-        => BuildCacheKey<EntryModerationJob>("Lock", member);
-
-
-    public static string BuildModerationMemberKey(in Guid entryId)
-    {
-        Span<byte> entryBytes = stackalloc byte[16];
-        entryId.TryWriteBytes(entryBytes);
-
-        Span<byte> hashBytes = stackalloc byte[32];
-        SHA256.HashData(entryBytes, hashBytes);
-
-        return Convert.ToHexString(hashBytes);
-    }
-
-
     private static string BuildCacheKey<T>(params object[] identifiers)
         => $"{typeof(T).Name}::{string.Join("::", identifiers)}";
 }

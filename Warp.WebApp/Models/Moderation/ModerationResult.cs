@@ -23,8 +23,6 @@ public readonly record struct ModerationResult
     public static ModerationResult CreateCompleted(bool isFlagged, IReadOnlyDictionary<string, double>? categoryScores)
         => new()
         {
-            Status = ModerationStatus.Completed,
-            IsFlagged = isFlagged,
             CategoryScores = categoryScores,
             CompletedAt = DateTimeOffset.UtcNow,
             IsFlagged = isFlagged,
@@ -38,9 +36,12 @@ public readonly record struct ModerationResult
     public static ModerationResult CreateFailed()
         => new() { Status = ModerationStatus.Failed };
 
-
-    /// <summary>Gets the current moderation processing state.</summary>
-    public ModerationStatus Status { get; init; }
+    /// <summary>
+    /// The UTC timestamp when moderation was completed.
+    /// <c>null</c> when <see cref="Status"/> is not <see cref="ModerationStatus.Completed"/>.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public DateTimeOffset? CompletedAt { get; init; }
 
     /// <summary>
     /// Indicates whether the provider flagged this content.
@@ -54,19 +55,6 @@ public readonly record struct ModerationResult
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public IReadOnlyDictionary<string, double>? CategoryScores { get; init; }
-
-    /// <summary>
-    /// The UTC timestamp when moderation was completed.
-    /// <c>null</c> when <see cref="Status"/> is not <see cref="ModerationStatus.Completed"/>.
-    /// </summary>
-    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public DateTimeOffset? CompletedAt { get; init; }
-
-    /// <summary>
-    /// Indicates whether the provider flagged this content.
-    /// Only meaningful when <see cref="Status"/> is <see cref="ModerationStatus.Completed"/>.
-    /// </summary>
-    public bool IsFlagged { get; init; }
 
     /// <summary>Gets the current moderation processing state.</summary>
     public ModerationStatus Status { get; init; }

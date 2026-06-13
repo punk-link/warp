@@ -18,5 +18,4 @@ public readonly record struct ImageInfo
     public Guid EntryId { get; init; }
     public ModerationResult? ModerationResult { get; init; }
     public Uri Url { get; init; }
-    public ModerationResult? ModerationResult { get; init; }
 }

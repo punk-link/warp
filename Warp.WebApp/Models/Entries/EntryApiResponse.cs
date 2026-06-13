@@ -53,8 +53,4 @@ public readonly record struct EntryApiResponse
     public string TextContent { get; } = string.Empty;
     public ModerationResult? TextModerationResult { get; }
     public long ViewCount { get; }
-
-
-    private static bool IsFlaggedByModeration(ModerationResult? result)
-        => result is { Status: ModerationStatus.Completed, IsFlagged: true };
 }

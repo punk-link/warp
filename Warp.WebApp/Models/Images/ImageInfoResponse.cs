@@ -30,8 +30,4 @@ public readonly record struct ImageInfoResponse
     public bool IsBlurred { get; init; }
     public ModerationResult? ModerationResult { get; init; }
     public Uri Url { get; init; }
-
-
-    private static bool IsFlaggedByModeration(ModerationResult? result)
-        => result is { Status: ModerationStatus.Completed, IsFlagged: true };
 }
