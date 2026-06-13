@@ -29,7 +29,8 @@ internal static class WebApplicationBuilderExtensions
 
             builder.Configuration.AddInMemoryCollection(
             [
-                new KeyValuePair<string, string?>("S3Options:SecretAccessKey", secrets.S3SecretAccessKey)
+                new KeyValuePair<string, string?>("S3Options:SecretAccessKey", secrets.S3SecretAccessKey),
+                new KeyValuePair<string, string?>("ContentModerationOptions:ApiKey", secrets.OpenAiModerationApiKey)
             ]);
         }
 

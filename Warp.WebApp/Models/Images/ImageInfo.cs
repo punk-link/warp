@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using Warp.WebApp.Models.Moderation;
 
 namespace Warp.WebApp.Models.Images;
 
@@ -15,5 +16,6 @@ public readonly record struct ImageInfo
 
     public Guid Id { get; init; }
     public Guid EntryId { get; init; }
+    public ModerationResult? ModerationResult { get; init; }
     public Uri Url { get; init; }
 }

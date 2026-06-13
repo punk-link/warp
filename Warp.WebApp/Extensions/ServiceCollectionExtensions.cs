@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.Extensions.Options;
+using System.Net.Http.Headers;
 using System.Text.Json.Serialization;
 using Warp.WebApp.Constants;
 using Warp.WebApp.Data;
@@ -15,6 +17,7 @@ using Warp.WebApp.Services.Creators;
 using Warp.WebApp.Services.Encryption;
 using Warp.WebApp.Services.Entries;
 using Warp.WebApp.Services.Images;
+using Warp.WebApp.Services.Moderation;
 using Warp.WebApp.Services.OpenGraph;
 using Warp.WebApp.Telemetry.Logging;
 using Warp.WebApp.Telemetry.Metrics;
@@ -32,6 +35,7 @@ internal static class ServiceCollectionExtensions
         services.AddTransient<IDistributedStore, KeyDbStore>();
         services.AddTransient<IS3FileStorage, S3FileStorage>();
         services.AddSingleton<IEntryLifecycleIndexStore, EntryLifecycleIndexStore>();
+        services.AddSingleton<IModerationIndexStore, ModerationIndexStore>();
 
         if (configuration["EncryptionOptions:Type"] == "AesEncryptionService")
             services.AddTransient<IEncryptionService, AesEncryptionService>();
@@ -44,6 +48,16 @@ internal static class ServiceCollectionExtensions
         services.AddTransient<IImageService, ImageService>();
         services.AddTransient<IMalwareScanService, MalwareScanService>();
         services.AddScoped<IEntryImageLifecycleService, EntryImageLifecycleService>();
+        services.AddHttpClient<IContentModerationService, ContentModerationService>((serviceProvider, client) =>
+        {
+            var options = serviceProvider.GetRequiredService<IOptions<ContentModerationOptions>>().Value;
+            var endpoint = options.Endpoint.EndsWith('/') ? options.Endpoint : options.Endpoint + "/";
+            client.BaseAddress = new Uri(endpoint, UriKind.Absolute);
+
+            if (!string.IsNullOrWhiteSpace(options.ApiKey))
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", options.ApiKey);
+        });
+
         services.AddTransient<IDataStorage, DataStorage>();
         services.AddTransient<IAmazonS3Factory, AmazonS3Factory>();
         services.AddTransient<IReportService, ReportService>();
@@ -54,15 +68,18 @@ internal static class ServiceCollectionExtensions
         services.AddTransient<ICookieService, CookieService>();
         services.AddSingleton<IEntryInfoMetrics, EntryInfoMetrics>();
     
+        services.AddSingleton<ContentModerationRateLimiter>();
         services.AddSingleton<IRouteWarmer, RouteWarmerService>();
         services.AddSingleton<IServiceWarmer, ServiceWarmerService>();
 
         services.AddScoped<RequireCreatorCookieFilter>();
         services.AddScoped<ValidateIdFilter>();
+        services.AddScoped<IModerationJobService, ModerationJobService>();
 
         services.AddHostedService<WarmupService>();
         services.AddHostedService<EntryImageCleanupService>();
         services.AddHostedService<OrphanImageCleanupService>();
+        services.AddHostedService<ContentModerationWorker>();
 
         return services;
     }
@@ -113,6 +130,13 @@ internal static class ServiceCollectionExtensions
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 
+            var contentModerationOptionsBuilder = services.AddOptions<ContentModerationOptions>()
+                .BindConfiguration(nameof(ContentModerationOptions))
+                .ValidateDataAnnotations();
+
+            if (builder.Configuration.GetValue<bool>("FeatureManagement:ContentModeration"))
+                contentModerationOptionsBuilder.ValidateOnStart();
+
             if (builder.Environment.IsLocal() || builder.Environment.IsEndToEndTests())
             {
                 services.AddOptions<EncryptionOptions>()
@@ -122,6 +146,7 @@ internal static class ServiceCollectionExtensions
                         { 
                             string base64EncryptionKey;
 
+                            // TODO: move log messages to resources
                             logger.LogInformation("Using AesEncryptionService encryption configuration");
                             var encryptionKeyPath = builder.Configuration["EncryptionOptions:KeyFilePath"];
                             if (!string.IsNullOrEmpty(encryptionKeyPath) && File.Exists(encryptionKeyPath))

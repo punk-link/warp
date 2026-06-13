@@ -22,6 +22,19 @@ public static class EntryInfoConverters
     }
 
 
+    public static Result<EntryApiResponse, DomainError> ToEntryApiResponse(this Result<EntryInfo, DomainError> target, bool isCreator)
+    {
+        if (target.IsFailure)
+            return Result.Failure<EntryApiResponse, DomainError>(target.Error);
+
+        return Result.Success<EntryApiResponse, DomainError>(target.Value.ToEntryApiResponse(isCreator));
+    }
+
+
     public static EntryApiResponse ToEntryApiResponse(this EntryInfo target) 
-        => new (IdCoder.Encode(target.Id), target);
+        => new(IdCoder.Encode(target.Id), target);
+
+
+    public static EntryApiResponse ToEntryApiResponse(this EntryInfo target, bool isCreator) 
+        => new(IdCoder.Encode(target.Id), target, isCreator: isCreator);
 }

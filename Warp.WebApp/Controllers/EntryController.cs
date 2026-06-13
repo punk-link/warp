@@ -241,10 +241,10 @@ public class EntryController : BaseController
             return Create();
 
         var creator = await GetCreatorOrDefault(cancellationToken);
-        var result = await _entryInfoService.Get(creator, decodedId, cancellationToken)
-            .ToEntryApiResponse();
+        var entryResult = await _entryInfoService.Get(creator, decodedId, cancellationToken);
+        var isCreator = entryResult.IsSuccess && entryResult.Value.CreatorId == creator.Id;
 
-        return OkOrBadRequest(result);
+        return OkOrBadRequest(entryResult.ToEntryApiResponse(isCreator: isCreator));
     }
 
 

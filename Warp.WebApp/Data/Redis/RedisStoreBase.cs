@@ -3,6 +3,7 @@ using Warp.WebApp.Models;
 using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Files;
 using Warp.WebApp.Models.Images;
+using Warp.WebApp.Models.Moderation;
 
 namespace Warp.WebApp.Data.Redis;
 
@@ -61,17 +62,22 @@ public abstract class RedisStoreBase
 
 
     private static int ToDatabaseIndex(Type type)
-        => type switch
+    {
+        var effectiveType = Nullable.GetUnderlyingType(type) ?? type;
+
+        return effectiveType switch
         {
-            _ when type == typeof(EntryInfo) => 1,
-            _ when type == typeof(ImageInfo) => 2,
-            _ when type == typeof(Report) => 3,
-            _ when type == typeof(string) => 4,
-            _ when type == typeof(Guid) => 5,
-            _ when type == typeof(EntryImageLifecycle) => 6,
-            _ when type == typeof(CachedImage) => 7,
+            _ when effectiveType == typeof(EntryInfo) => 1,
+            _ when effectiveType == typeof(ImageInfo) => 2,
+            _ when effectiveType == typeof(Report) => 3,
+            _ when effectiveType == typeof(string) => 4,
+            _ when effectiveType == typeof(Guid) => 5,
+            _ when effectiveType == typeof(EntryImageLifecycle) => 6,
+            _ when effectiveType == typeof(CachedImage) => 7,
+            _ when effectiveType == typeof(EntryModerationJob) => 8,
             _ => 0
         };
+    }
 
 
     protected readonly IConnectionMultiplexer _multiplexer;

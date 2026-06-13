@@ -43,6 +43,10 @@ export default {
             close: 'Cerrar',
             copyLink: 'Copiar enlace'
         },
+        sensitiveContent: {
+            label: 'Contenido sensible',
+            reveal: 'Mostrar'
+        },
         reportModal: {
             title: 'Reportar contenido',
             description: 'Estás a punto de reportar este contenido. Usa esta función solo en caso de contenido inapropiado. Esta acción restringe el acceso al contenido para todos los usuarios. ¿Estás seguro?',

@@ -1,6 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using Warp.WebApp.Models.Entries.Enums;
 using Warp.WebApp.Models.Images;
+using Warp.WebApp.Models.Moderation;
 
 namespace Warp.WebApp.Models.Entries;
 
@@ -35,5 +36,6 @@ public readonly record struct EntryInfo
     public DateTimeOffset ExpiresAt { get; }
     public List<ImageInfo> ImageInfos { get; init; }
     public List<ImageInfo> ExcludedImageInfos { get; init; } = [];
+    public ModerationResult? TextModerationResult { get; init; }
     public long ViewCount { get; init; }
 }
