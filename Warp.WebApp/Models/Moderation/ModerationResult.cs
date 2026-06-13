@@ -23,6 +23,8 @@ public readonly record struct ModerationResult
     public static ModerationResult CreateCompleted(bool isFlagged, IReadOnlyDictionary<string, double>? categoryScores)
         => new()
         {
+            Status = ModerationStatus.Completed,
+            IsFlagged = isFlagged,
             CategoryScores = categoryScores,
             CompletedAt = DateTimeOffset.UtcNow,
             IsFlagged = isFlagged,
@@ -37,6 +39,14 @@ public readonly record struct ModerationResult
         => new() { Status = ModerationStatus.Failed };
 
 
+    /// <summary>Gets the current moderation processing state.</summary>
+    public ModerationStatus Status { get; init; }
+
+    /// <summary>
+    /// Indicates whether the provider flagged this content.
+    /// Only meaningful when <see cref="Status"/> is <see cref="ModerationStatus.Completed"/>.
+    /// </summary>
+    public bool IsFlagged { get; init; }
 
     /// <summary>
     /// Provider-supplied confidence scores per moderation category.
