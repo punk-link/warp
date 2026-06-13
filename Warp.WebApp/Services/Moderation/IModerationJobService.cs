@@ -10,9 +10,9 @@ namespace Warp.WebApp.Services.Moderation;
 public interface IModerationJobService
 {
     /// <summary>
-    /// Retrieves a moderation job by its hashed member string.
+    /// Retrieves a moderation job by its index member key.
     /// </summary>
-    /// <param name="member">The hashed member string used in the index.</param>
+    /// <param name="member">The member key used in the index (N-formatted GUID from <see cref="Warp.WebApp.Services.CacheKeyBuilder.BuildModerationMemberKey"/>).</param>
     /// <param name="cancellationToken">Token used to observe cancellation requests.</param>
     public ValueTask<EntryModerationJob?> GetByMember(string member, CancellationToken cancellationToken);
 
@@ -41,7 +41,7 @@ public interface IModerationJobService
     /// Removes a member directly from the index without loading the job first.
     /// Used when the backing job record is missing.
     /// </summary>
-    /// <param name="member">The hashed member string used in the index.</param>
+    /// <param name="member">The member key used in the index (N-formatted GUID from <see cref="Warp.WebApp.Services.CacheKeyBuilder.BuildModerationMemberKey"/>).</param>
     /// <param name="cancellationToken">Token used to observe cancellation requests.</param>
     public Task RemoveMember(string member, CancellationToken cancellationToken);
 

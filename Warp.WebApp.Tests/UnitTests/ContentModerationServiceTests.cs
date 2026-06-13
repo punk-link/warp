@@ -1,8 +1,8 @@
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using Microsoft.Extensions.Options;
-using NSubstitute;
 using Warp.WebApp.Models.Options;
 using Warp.WebApp.Services.Moderation;
 
@@ -15,11 +15,12 @@ public class ContentModerationServiceTests
     {
         var cancellationToken = TestContext.Current.CancellationToken;
         var handler = new RecordingHandler();
-        var httpClient = new HttpClient(handler);
-        var httpClientFactory = Substitute.For<IHttpClientFactory>();
-        httpClientFactory
-            .CreateClient(ContentModerationService.HttpClientName)
-            .Returns(httpClient);
+
+        var httpClient = new HttpClient(handler)
+        {
+            BaseAddress = new Uri("https://example.test/custom/v1/", UriKind.Absolute)
+        };
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "test-api-key");
 
         var options = Options.Create(new ContentModerationOptions
         {
@@ -32,7 +33,7 @@ public class ContentModerationServiceTests
             SuccessRateWindow = TimeSpan.FromMinutes(1)
         });
         using var rateLimiter = new ContentModerationRateLimiter(options);
-        var service = new ContentModerationService(httpClientFactory, rateLimiter, options);
+        var service = new ContentModerationService(httpClient, rateLimiter, options);
 
         var result = await service.ModerateText("hello world", cancellationToken);
 

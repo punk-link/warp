@@ -45,8 +45,8 @@ test.describe('entry blur flows', () => {
     // 2. Navigate to the entry page.
     // 3. Assert the text content has the blur class and the text reveal overlay is visible.
     // 4. Assert the gallery has no data-fancybox anchor (image is sensitive).
-    // 5. Click the image sensitive overlay; assert a data-fancybox anchor now exists.
-    // 6. Click the text reveal overlay; assert the blur class is removed from the text content.
+    // 5. Click the Reveal button inside the image sensitive overlay; assert a data-fancybox anchor now exists.
+    // 6. Click the Reveal button inside the text reveal overlay; assert the blur class is removed from the text content.
     test('blurred text and image show reveal overlays and can be revealed', async ({ page }) => {
         await page.context().clearCookies()
         await page.context().addInitScript(() => {
@@ -88,15 +88,15 @@ test.describe('entry blur flows', () => {
         await expect(gallery.locator('[data-fancybox="entry"]')).toHaveCount(0)
 
         // Image sensitive overlay is visible.
-        const imageRevealOverlay = gallery.locator('.image-container .absolute.inset-0.cursor-pointer')
-        await expect(imageRevealOverlay).toBeVisible()
+        const imageSensitiveOverlay = gallery.locator('.image-container .absolute.inset-0')
+        await expect(imageSensitiveOverlay).toBeVisible()
 
-        // Reveal the image — fancybox anchor should appear.
-        await imageRevealOverlay.click()
+        // Reveal the image by clicking the Reveal button inside the overlay — fancybox anchor should appear.
+        await imageSensitiveOverlay.locator('button').click()
         await expect(gallery.locator('[data-fancybox="entry"]')).toHaveCount(1)
 
-        // Reveal the text — blur class should be removed.
-        await textRevealOverlay.click()
+        // Reveal the text by clicking the Reveal button inside the overlay — blur class should be removed.
+        await textRevealOverlay.locator('button').click()
         await expect(textContent).not.toHaveClass(/blur-sm/)
         await expect(textRevealOverlay).not.toBeVisible()
     })

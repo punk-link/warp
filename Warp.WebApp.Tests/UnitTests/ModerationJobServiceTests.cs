@@ -21,7 +21,7 @@ public class ModerationJobServiceTests
 
         _dataStorage
             .Set(Arg.Any<string>(), Arg.Any<EntryModerationJob>(), Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>())
-            .Returns(UnitResult.Success<DomainError>());
+            .Returns(Task.FromResult(UnitResult.Success<DomainError>()));
 
         _indexStore
             .Schedule(Arg.Any<Guid>(), Arg.Any<DateTimeOffset>(), Arg.Any<CancellationToken>())
@@ -40,7 +40,7 @@ public class ModerationJobServiceTests
                 Arg.Do<EntryModerationJob>(job => persistedJob = job),
                 Arg.Any<TimeSpan>(),
                 Arg.Any<CancellationToken>())
-            .Returns(UnitResult.Success<DomainError>());
+            .Returns(Task.FromResult(UnitResult.Success<DomainError>()));
         _indexStore
             .Schedule(Arg.Any<Guid>(), Arg.Do<DateTimeOffset>(value => scheduledAt = value), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
@@ -71,7 +71,7 @@ public class ModerationJobServiceTests
                 Arg.Do<EntryModerationJob>(job => persistedJob = job),
                 Arg.Any<TimeSpan>(),
                 Arg.Any<CancellationToken>())
-            .Returns(UnitResult.Success<DomainError>());
+            .Returns(Task.FromResult(UnitResult.Success<DomainError>()));
         _indexStore
             .Schedule(Arg.Any<Guid>(), Arg.Do<DateTimeOffset>(value => scheduledAt = value), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);

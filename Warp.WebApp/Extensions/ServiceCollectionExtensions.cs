@@ -130,10 +130,12 @@ internal static class ServiceCollectionExtensions
                 .ValidateDataAnnotations()
                 .ValidateOnStart();
 
-            services.AddOptions<ContentModerationOptions>()
+            var contentModerationOptionsBuilder = services.AddOptions<ContentModerationOptions>()
                 .BindConfiguration(nameof(ContentModerationOptions))
-                .ValidateDataAnnotations()
-                .ValidateOnStart();
+                .ValidateDataAnnotations();
+
+            if (builder.Configuration.GetValue<bool>("FeatureManagement:ContentModeration"))
+                contentModerationOptionsBuilder.ValidateOnStart();
 
             if (builder.Environment.IsLocal() || builder.Environment.IsEndToEndTests())
             {

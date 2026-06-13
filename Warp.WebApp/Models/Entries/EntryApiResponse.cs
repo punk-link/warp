@@ -21,8 +21,6 @@ public readonly record struct EntryApiResponse
         TextContent = textContent;
         TextModerationResult = textModerationResult;
         ViewCount = viewCount;
-        TextModerationResult = textModerationResult;
-        IsTextBlurred = !isCreator && IsFlaggedByModeration(textModerationResult);
     }
 
 

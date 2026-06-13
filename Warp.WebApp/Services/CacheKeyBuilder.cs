@@ -1,5 +1,4 @@
 ﻿using System.IO.Hashing;
-using System.Security.Cryptography;
 using Warp.WebApp.Models.Creators;
 using Warp.WebApp.Models.Entries;
 using Warp.WebApp.Models.Files;
