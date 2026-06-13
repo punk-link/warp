@@ -1,6 +1,5 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Net.Http.Headers;
 using Microsoft.Extensions.Options;
 using Warp.WebApp.Models.Moderation;
 using Warp.WebApp.Models.Options;
@@ -9,27 +8,20 @@ namespace Warp.WebApp.Services.Moderation;
 
 /// <summary>
 /// Calls the OpenAI Moderation API to assess text and image content.
-/// Uses the named <c>ContentModeration</c> <see cref="HttpClient"/> registered in DI.
+/// Uses a typed <see cref="HttpClient"/> registered in DI with the base address and authorization header pre-configured.
 /// </summary>
 public sealed class ContentModerationService : IContentModerationService
 {
     /// <summary>
     /// Initializes a new instance of the <see cref="ContentModerationService"/> class.
     /// </summary>
-    /// <param name="httpClientFactory">Factory used to create the named HTTP client.</param>
+    /// <param name="httpClient">Pre-configured HTTP client injected by the typed client factory.</param>
     /// <param name="rateLimiter">Adaptive rate limiter for API call concurrency.</param>
     /// <param name="options">Moderation configuration options.</param>
-    public ContentModerationService(IHttpClientFactory httpClientFactory, ContentModerationRateLimiter rateLimiter, IOptions<ContentModerationOptions> options)
+    public ContentModerationService(HttpClient httpClient, ContentModerationRateLimiter rateLimiter, IOptions<ContentModerationOptions> options)
     {
-        var moderationOptions = options.Value;
-
-        _httpClient = httpClientFactory.CreateClient(HttpClientName);
-        _httpClient.BaseAddress = new Uri(EnsureTrailingSlash(moderationOptions.Endpoint), UriKind.Absolute);
-
-        if (!string.IsNullOrWhiteSpace(moderationOptions.ApiKey))
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", moderationOptions.ApiKey);
-
-        _model = moderationOptions.Model;
+        _httpClient = httpClient;
+        _model = options.Value.Model;
         _rateLimiter = rateLimiter;
     }
 
@@ -82,10 +74,6 @@ public sealed class ContentModerationService : IContentModerationService
     }
 
 
-    private static string EnsureTrailingSlash(string endpoint)
-        => endpoint.EndsWith('/') ? endpoint : endpoint + "/";
-
-
     private async Task<ModerationResult> SendRequest(object body, CancellationToken cancellationToken)
     {
         using var _ = await _rateLimiter.Acquire(cancellationToken);
@@ -121,9 +109,6 @@ public sealed class ContentModerationService : IContentModerationService
         return ModerationResult.CreateCompleted(first.Flagged, first.CategoryScores);
     }
 
-
-    /// <summary>The named HTTP client key used when registering this service's client in DI.</summary>
-    public const string HttpClientName = "ContentModeration";
 
     private const string ModerationPath = "moderations";
 

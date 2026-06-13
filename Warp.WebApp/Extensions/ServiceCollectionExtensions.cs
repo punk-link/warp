@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.Extensions.Options;
+using System.Net.Http.Headers;
 using System.Text.Json.Serialization;
 using Warp.WebApp.Constants;
 using Warp.WebApp.Data;
@@ -46,7 +48,16 @@ internal static class ServiceCollectionExtensions
         services.AddTransient<IImageService, ImageService>();
         services.AddTransient<IMalwareScanService, MalwareScanService>();
         services.AddScoped<IEntryImageLifecycleService, EntryImageLifecycleService>();
-        services.AddTransient<IContentModerationService, ContentModerationService>();
+        services.AddHttpClient<IContentModerationService, ContentModerationService>((serviceProvider, client) =>
+        {
+            var options = serviceProvider.GetRequiredService<IOptions<ContentModerationOptions>>().Value;
+            var endpoint = options.Endpoint.EndsWith('/') ? options.Endpoint : options.Endpoint + "/";
+            client.BaseAddress = new Uri(endpoint, UriKind.Absolute);
+
+            if (!string.IsNullOrWhiteSpace(options.ApiKey))
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", options.ApiKey);
+        });
+
         services.AddTransient<IDataStorage, DataStorage>();
         services.AddTransient<IAmazonS3Factory, AmazonS3Factory>();
         services.AddTransient<IReportService, ReportService>();
@@ -69,8 +80,6 @@ internal static class ServiceCollectionExtensions
         services.AddHostedService<EntryImageCleanupService>();
         services.AddHostedService<OrphanImageCleanupService>();
         services.AddHostedService<ContentModerationWorker>();
-
-        services.AddHttpClient(ContentModerationService.HttpClientName);
 
         return services;
     }
