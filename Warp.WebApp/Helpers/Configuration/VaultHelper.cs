@@ -73,11 +73,11 @@ public static class VaultHelper
     /// <exception cref="InvalidOperationException">Thrown when PNKL_VAULT_ADDR or PNKL_VAULT_TOKEN is not configured or empty.</exception>
     public static IVaultClient GetVaultClient(IConfiguration configuration)
     {
-        var vaultAddress = configuration["PNKL_VAULT_ADDR"];
+        var vaultAddress = EnvironmentVariableHelper.NormalizeUrl(configuration["PNKL_VAULT_ADDR"]);
         if (string.IsNullOrWhiteSpace(vaultAddress))
             throw new InvalidOperationException("PNKL_VAULT_ADDR is not configured or empty. Ensure the environment variable is set.");
 
-        var vaultToken = configuration["PNKL_VAULT_TOKEN"];
+        var vaultToken = EnvironmentVariableHelper.Normalize(configuration["PNKL_VAULT_TOKEN"]);
         if (string.IsNullOrWhiteSpace(vaultToken))
             throw new InvalidOperationException("PNKL_VAULT_TOKEN is not configured or empty. For E2E tests, ensure PNKL_VAULT_TOKEN_FILE points to a valid token file.");
 

@@ -2,6 +2,7 @@ using Microsoft.Extensions.Options;
 using System.Diagnostics;
 using Warp.WebApp.Attributes;
 using Warp.WebApp.Constants;
+using Warp.WebApp.Helpers.Configuration;
 
 namespace Warp.WebApp.Helpers.Warmups;
 
@@ -27,6 +28,7 @@ public class RouteWarmerService : IRouteWarmer
         
         var stopwatch = Stopwatch.StartNew();
         var client = _httpClientFactory.CreateClient(HttpClients.Warmup);
+        var normalizedBaseUrl = EnvironmentVariableHelper.NormalizeUrl(_options.BaseUrl);
 
         int successCount = 0;
         foreach (var route in _options.Routes)
@@ -40,7 +42,7 @@ public class RouteWarmerService : IRouteWarmer
             try
             {
                 var routeStopwatch = Stopwatch.StartNew();
-                var requestUri = new Uri($"{_options.BaseUrl}{route}");
+                var requestUri = new Uri($"{normalizedBaseUrl}{route}");
                 
                 _logger.LogDebug($"Warming route: {requestUri}");
                 
