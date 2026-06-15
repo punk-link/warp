@@ -12,8 +12,11 @@ To run the service you have to pass the following environment variables:
 
 |Variable        |Type  |Notes|Description                        |
 |----------------|------|-----|-----------------------------------|
-|PNKL_VAULT_ADDR |String|     |An address of a Vault instance     |
+|PNKL_VAULT_ADDR |String|URL  |An address of a Vault instance     |
 |PNKL_VAULT_TOKEN|String|     |An access token of a Vault instance|
+|PNKL_VAULT_TOKEN_FILE|String|Optional|A path to a file containing the Vault token for End-to-End runs|
+
+Warp trims leading and trailing whitespace from environment variable values before using them. URL values such as `PNKL_VAULT_ADDR` are also normalized to a single trailing slash.
 
 ### Docker Compose
 
@@ -261,6 +264,8 @@ set WARP_ENCRYPTION_KEY=your_base64_key_here
 # Linux/macOS
 export WARP_ENCRYPTION_KEY=your_base64_key_here
 ```
+
+`WARP_ENCRYPTION_KEY` is trimmed before the application validates and decodes it.
 
 ### Using TransitEncryptionService
 

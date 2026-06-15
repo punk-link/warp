@@ -51,7 +51,7 @@ internal static class ServiceCollectionExtensions
         services.AddHttpClient<IContentModerationService, ContentModerationService>((serviceProvider, client) =>
         {
             var options = serviceProvider.GetRequiredService<IOptions<ContentModerationOptions>>().Value;
-            var endpoint = options.Endpoint.EndsWith('/') ? options.Endpoint : options.Endpoint + "/";
+            var endpoint = EnvironmentVariableHelper.NormalizeUrl(options.Endpoint);
             client.BaseAddress = new Uri(endpoint, UriKind.Absolute);
 
             if (!string.IsNullOrWhiteSpace(options.ApiKey))
@@ -157,11 +157,11 @@ internal static class ServiceCollectionExtensions
                             else
                             {
                                 logger.LogWarning($"Encryption key file not found at {encryptionKeyPath} or not specified. Using encryption key from WARP_ENCRYPTION_KEY environment variable");
-                                var envKey = Environment.GetEnvironmentVariable("WARP_ENCRYPTION_KEY");
+                                var envKey = EnvironmentVariableHelper.Normalize(Environment.GetEnvironmentVariable("WARP_ENCRYPTION_KEY"));
                                 if (string.IsNullOrEmpty(envKey))
                                     throw new Exception("Encryption key not found in any source. Please specify it in the configuration or as an environment variable.");
 
-                                base64EncryptionKey = envKey ?? string.Empty;
+                                base64EncryptionKey = envKey;
                             }
 
                             var encryptionKey = Convert.FromBase64String(base64EncryptionKey);

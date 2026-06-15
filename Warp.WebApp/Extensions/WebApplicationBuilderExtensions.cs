@@ -42,7 +42,7 @@ internal static class WebApplicationBuilderExtensions
 
     private static void AddVaultTokenFromFile(WebApplicationBuilder builder, ILogger logger)
     {
-        var tokenFile = builder.Configuration["PNKL_VAULT_TOKEN_FILE"];
+        var tokenFile = EnvironmentVariableHelper.Normalize(builder.Configuration["PNKL_VAULT_TOKEN_FILE"]);
         if (string.IsNullOrWhiteSpace(tokenFile))
             return;
 
@@ -56,7 +56,7 @@ internal static class WebApplicationBuilderExtensions
             return;
         }
 
-        var fileToken = File.ReadAllText(rootedPath).Trim();
+        var fileToken = EnvironmentVariableHelper.Normalize(File.ReadAllText(rootedPath));
         if (string.IsNullOrWhiteSpace(fileToken))
         {
             logger.LogVaultTokenFileIsEmpty(tokenFile: rootedPath);
