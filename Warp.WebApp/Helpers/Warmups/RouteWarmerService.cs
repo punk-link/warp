@@ -28,7 +28,7 @@ public class RouteWarmerService : IRouteWarmer
         
         var stopwatch = Stopwatch.StartNew();
         var client = _httpClientFactory.CreateClient(HttpClients.Warmup);
-        var normalizedBaseUrl = EnvironmentVariableHelper.NormalizeUrl(_options.BaseUrl);
+        var baseUri = new Uri(EnvironmentVariableHelper.NormalizeUrl(_options.BaseUrl), UriKind.Absolute);
 
         int successCount = 0;
         foreach (var route in _options.Routes)
@@ -42,7 +42,7 @@ public class RouteWarmerService : IRouteWarmer
             try
             {
                 var routeStopwatch = Stopwatch.StartNew();
-                var requestUri = new Uri($"{normalizedBaseUrl}{route}");
+                var requestUri = new Uri(baseUri, route);
                 
                 _logger.LogDebug($"Warming route: {requestUri}");
                 
