@@ -48,16 +48,7 @@ internal static class ServiceCollectionExtensions
         services.AddTransient<IImageService, ImageService>();
         services.AddTransient<IMalwareScanService, MalwareScanService>();
         services.AddScoped<IEntryImageLifecycleService, EntryImageLifecycleService>();
-        services.AddHttpClient<IContentModerationService, ContentModerationService>((serviceProvider, client) =>
-        {
-            var options = serviceProvider.GetRequiredService<IOptions<ContentModerationOptions>>().Value;
-            var endpoint = EnvironmentVariableHelper.NormalizeUrl(options.Endpoint);
-            client.BaseAddress = new Uri(endpoint, UriKind.Absolute);
-
-            if (!string.IsNullOrWhiteSpace(options.ApiKey))
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", options.ApiKey);
-        });
-
+        
         services.AddTransient<IDataStorage, DataStorage>();
         services.AddTransient<IAmazonS3Factory, AmazonS3Factory>();
         services.AddTransient<IReportService, ReportService>();
@@ -68,18 +59,37 @@ internal static class ServiceCollectionExtensions
         services.AddTransient<ICookieService, CookieService>();
         services.AddSingleton<IEntryInfoMetrics, EntryInfoMetrics>();
     
-        services.AddSingleton<ContentModerationRateLimiter>();
         services.AddSingleton<IRouteWarmer, RouteWarmerService>();
         services.AddSingleton<IServiceWarmer, ServiceWarmerService>();
 
         services.AddScoped<RequireCreatorCookieFilter>();
         services.AddScoped<ValidateIdFilter>();
-        services.AddScoped<IModerationJobService, ModerationJobService>();
+
+        var isContentModerationEnabled = configuration.GetValue<bool>("FeatureManagement:ContentModeration");
+        if (isContentModerationEnabled)
+        {
+            services.AddHttpClient<IContentModerationService, ContentModerationService>((serviceProvider, client) =>
+            {
+                var options = serviceProvider.GetRequiredService<IOptions<ContentModerationOptions>>().Value;
+                var endpoint = EnvironmentVariableHelper.NormalizeUrl(options.Endpoint);
+                client.BaseAddress = new Uri(endpoint, UriKind.Absolute);
+
+                if (!string.IsNullOrWhiteSpace(options.ApiKey))
+                    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", options.ApiKey);
+            });
+
+            services.AddSingleton<ContentModerationRateLimiter>();
+            services.AddScoped<IModerationJobService, ModerationJobService>();
+            services.AddHostedService<ContentModerationWorker>();
+        }
+        else
+        {
+            services.AddScoped<IModerationJobService, DisabledModerationJobService>();
+        }
 
         services.AddHostedService<WarmupService>();
         services.AddHostedService<EntryImageCleanupService>();
         services.AddHostedService<OrphanImageCleanupService>();
-        services.AddHostedService<ContentModerationWorker>();
 
         return services;
     }
