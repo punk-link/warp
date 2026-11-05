@@ -1,7 +1,7 @@
 // English locale messages (authoritative base for type inference)
 export default {
     app: {
-        title: 'Warplyn',
+        title: 'Warp',
         actions: {
             copy: 'Copy',
             cancel: 'Cancel',
@@ -133,7 +133,7 @@ export default {
             imagesHint: 'Drag and drop or browse for images'
         },
         logo: {
-            title: 'Warplyn', // do not translate
+            title: 'Warp', // do not translate
             beta: 'beta 4' // do not translate
         },
         footer: {

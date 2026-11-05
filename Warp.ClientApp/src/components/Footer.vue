@@ -32,7 +32,7 @@
             <a href="https://github.com/punk-link/warp" target="_blank" rel="noopener" class="hover:underline">{{ t('components.footer.links.sources') }}</a>
         </nav>
         <p class="text-gray-300 text-sm mt-3">
-            &copy; warplyn.com {{ yearDisplay }} | {{ t('components.footer.copyright') }}
+            &copy; warp.punk.link {{ yearDisplay }} | {{ t('components.footer.copyright') }}
         </p>
     </footer>
 </template>
