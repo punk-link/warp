@@ -8,7 +8,7 @@ describe('i18n bootstrap & switching', () => {
         const t = (i18n.global as unknown as Composer).t
         const title = t('app.title')
         
-        expect(title).toBe('Warplyn')
+        expect(title).toBe('Warp')
     })
 
     it('switches locale at runtime', async () => {

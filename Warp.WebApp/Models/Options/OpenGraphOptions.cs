@@ -3,5 +3,5 @@
 public class OpenGraphOptions
 {
     public Uri DefaultImageUrl { get; set; } = default!;
-    public string Title { get; set; } = "Warplyn";
+    public string Title { get; set; } = "Warp";
 }

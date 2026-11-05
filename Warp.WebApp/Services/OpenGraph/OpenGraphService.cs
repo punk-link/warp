@@ -37,7 +37,7 @@ public partial class OpenGraphService : IOpenGraphService
 
     /// <inheritdoc />
     public EntryOpenGraphDescription Get() 
-        => new(_options.Title, _localizer["Warplyn is a simple and secure way to share text and images."], _options.DefaultImageUrl);
+        => new(_options.Title, _localizer["Warp is a simple and secure way to share text and images."], _options.DefaultImageUrl);
 
 
     /// <inheritdoc />
@@ -109,7 +109,7 @@ public partial class OpenGraphService : IOpenGraphService
     {
         var processedText = StripHtmlAndNormalizeWhitespace(description);
         if (string.IsNullOrWhiteSpace(processedText))
-            return _localizer["Warplyn is a simple and secure way to share text and images."];
+            return _localizer["Warp is a simple and secure way to share text and images."];
 
         return TrimDescription(processedText);
     }

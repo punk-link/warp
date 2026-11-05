@@ -1,7 +1,7 @@
 // Spanish locale messages
 export default {
     app: {
-        title: 'Warplyn',
+        title: 'Warp',
         actions: {
             copy: 'Copiar',
             cancel: 'Cancelar',
@@ -132,7 +132,7 @@ export default {
             imagesHint: 'Arrastra y suelta o busca imágenes'
         },
         logo: {
-            title: 'Warplyn', // do not translate
+            title: 'Warp', // do not translate
             beta: 'beta 4' // do not translate
         },
         footer: {

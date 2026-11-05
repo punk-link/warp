@@ -9,4 +9,4 @@ Disallow: /config.js
 Disallow: /analytics.js
 Allow: /
 
-Sitemap: https://warplyn.com/sitemap.xml
+Sitemap: https://warp.punk.link/sitemap.xml

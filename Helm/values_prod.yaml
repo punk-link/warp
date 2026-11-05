@@ -55,14 +55,14 @@ ingress:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
   hosts:
-    - host: warplyn.com
+    - host: warp.punk.link
       paths:
         - path: /
           pathType: Prefix
   tls:
-   - secretName: warplynprod-prod-apex-tls
+   - secretName: warp-prod-tls
      hosts:
-       - warplyn.com
+       - warp.punk.link
 
 resources:
   limits:

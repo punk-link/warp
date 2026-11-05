@@ -15,8 +15,8 @@ public class OpenGraphServiceTests
     public OpenGraphServiceTests()
     {
         var localizerSubstitute = Substitute.For<IStringLocalizer<ServerResources>>();
-        localizerSubstitute["Warplyn is a simple and secure way to share text and images."]
-            .Returns(new LocalizedString("Warplyn is a simple and secure way to share text and images.", DefaultDescription));
+        localizerSubstitute["Warp is a simple and secure way to share text and images."]
+            .Returns(new LocalizedString("Warp is a simple and secure way to share text and images.", DefaultDescription));
         _localizer = localizerSubstitute;
 
         _optionsSnapshot = Substitute.For<IOptionsSnapshot<OpenGraphOptions>>();
